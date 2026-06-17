@@ -39,33 +39,33 @@ export type StdUiMeterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMeterConfig {
-  /** Default: `true` */
-  showValue?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `[{"value":1,"label":"Label","color":"Color"}]` */
-  thresholds?: EntityRow[];
-  /** Default: `100` */
-  max?: number;
-  /** Default: `"linear"` */
-  variant?: 'linear' | 'radial' | 'segmented';
+  /** Default: `[{"label":"Label","variant":"primary","navigatesTo":"Navigates To"}]` */
+  actions?: EntityRow[];
   /** Default: `0` */
   min?: number;
-  /** Default: `"Unit"` */
-  unit?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[{"variant":"primary","navigatesTo":"Navigates To","label":"Label"}]` */
-  actions?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
   /** Default: `0` */
   value?: number;
+  /** Default: `100` */
+  max?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"Label"` */
   label?: string;
-  error?: EntityRow;
+  /** Default: `"Unit"` */
+  unit?: string;
+  /** Default: `"linear"` */
+  variant?: 'linear' | 'radial' | 'segmented';
   /** Default: `5` */
   segments?: number;
+  /** Default: `true` */
+  showValue?: boolean;
+  error?: EntityRow;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"value":1,"color":"Color","label":"Label"}]` */
+  thresholds?: EntityRow[];
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

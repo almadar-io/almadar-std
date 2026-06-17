@@ -123,19 +123,19 @@
                     "render-ui",
                     "main",
                     {
+                      "onSelectBefore": "SELECT_BEFORE",
                       "revertEvent": "REVERT",
+                      "selectBeforeEvent": "SELECT_BEFORE",
+                      "afterId": "@config.afterId",
                       "revisions": "@config.revisions",
                       "onSelectAfter": "SELECT_AFTER",
-                      "beforeId": "@config.beforeId",
-                      "afterId": "@config.afterId",
-                      "onSelectBefore": "SELECT_BEFORE",
-                      "language": "@config.language",
                       "onRevert": "REVERT",
-                      "selectBeforeEvent": "SELECT_BEFORE",
+                      "beforeId": "@config.beforeId",
+                      "selectAfterEvent": "SELECT_AFTER",
+                      "language": "@config.language",
                       "className": "@config.className",
-                      "view": "@config.view",
                       "type": "version-diff",
-                      "selectAfterEvent": "SELECT_AFTER"
+                      "view": "@config.view"
                     }
                   ]
                 ]
@@ -148,6 +148,58 @@
               "default": "",
               "label": "Class Name",
               "description": "Additional CSS classes.",
+              "tier": "presentation"
+            },
+            "revisions": {
+              "type": "[VersionDiffRevisionsItem]",
+              "default": [
+                {
+                  "timestamp": "Timestamp",
+                  "author": "Author",
+                  "id": "Id",
+                  "label": "Label",
+                  "content": "Content"
+                }
+              ],
+              "label": "Revisions",
+              "description": "All available revisions (at least 2). Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.revisions`). Narrowed to `[]` internally when the value isn't an array.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "author": {
+                    "name": "author",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "afterId": {
+              "type": "string",
+              "default": "After Id",
+              "label": "After Id",
+              "description": "Currently selected 'after' revision id.",
               "tier": "presentation"
             },
             "beforeId": {
@@ -163,58 +215,6 @@
               "label": "Language",
               "description": "Language label (informational).",
               "tier": "presentation"
-            },
-            "afterId": {
-              "type": "string",
-              "default": "After Id",
-              "label": "After Id",
-              "description": "Currently selected 'after' revision id.",
-              "tier": "presentation"
-            },
-            "revisions": {
-              "type": "[VersionDiffRevisionsItem]",
-              "default": [
-                {
-                  "content": "Content",
-                  "timestamp": "Timestamp",
-                  "author": "Author",
-                  "label": "Label",
-                  "id": "Id"
-                }
-              ],
-              "label": "Revisions",
-              "description": "All available revisions (at least 2). Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.revisions`). Narrowed to `[]` internally when the value isn't an array.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "timestamp": {
-                    "name": "timestamp",
-                    "type": "string",
-                    "required": false
-                  },
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "author": {
-                    "name": "author",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
             },
             "view": {
               "type": "string",

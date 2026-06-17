@@ -41,18 +41,18 @@ export type StdUiScoreDisplayEventKey = 'INIT';
 export interface StdUiScoreDisplayConfig {
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `0` */
-  value?: number;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"circle"` */
   icon?: unknown;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `true` */
   animated?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"en-US"` */
   locale?: string;
+  /** Default: `0` */
+  value?: number;
 }
 
 /**

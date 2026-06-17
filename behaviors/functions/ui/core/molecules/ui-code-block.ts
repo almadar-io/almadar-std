@@ -46,45 +46,45 @@ export interface StdUiCodeBlockChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeBlockConfig {
+  /** Default: `"Code"` */
+  code?: string;
+  /** Default: `"60vh"` */
+  maxHeight?: string;
   /** Default: `true` */
   showLanguageBadge?: boolean;
   /** Default: `"text"` */
   language?: 'text' | 'json' | 'javascript' | 'js' | 'typescript' | 'ts' | 'jsx' | 'tsx' | 'css' | 'markdown' | 'md' | 'bash' | 'shell' | 'sh' | 'yaml' | 'yml' | 'rust' | 'python' | 'py' | 'sql' | 'diff' | 'toml' | 'go' | 'graphql' | 'html' | 'xml' | 'orb' | 'lolo';
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  editable?: boolean;
-  /** Default: `[{"afterLineNumber":1,"beforeLineNumber":1,"content":"Content","type":"added"}]` */
-  diff?: EntityRow[];
-  /** Default: `false` */
-  foldable?: boolean;
-  /** Default: `false` */
-  showLineNumbers?: boolean;
-  /** Default: `"code"` */
-  mode?: 'code' | 'diff';
   /** Default: `"Old Value"` */
   oldValue?: string;
-  /** Default: `true` */
-  showCopyButton?: boolean;
-  /** Default: `"60vh"` */
-  maxHeight?: string;
-  /** Default: `false` */
-  showCopy?: boolean;
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
-  actions?: EntityRow[];
-  /** Default: `"New Value"` */
-  newValue?: string;
-  /** Default: `"Code"` */
-  code?: string;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `[{"code":"Code","language":"text","label":"Label"}]` */
-  files?: EntityRow[];
+  error?: EntityRow;
   /** Default: `false` */
   wordWrap?: boolean;
-  error?: EntityRow;
+  /** Default: `false` */
+  foldable?: boolean;
+  /** Default: `"New Value"` */
+  newValue?: string;
+  /** Default: `[{"label":"Label","code":"Code","language":"text"}]` */
+  files?: EntityRow[];
+  /** Default: `true` */
+  showCopyButton?: boolean;
+  /** Default: `false` */
+  showLineNumbers?: boolean;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `[{"type":"added","content":"Content","beforeLineNumber":1,"afterLineNumber":1}]` */
+  diff?: EntityRow[];
+  /** Default: `"code"` */
+  mode?: 'code' | 'diff';
+  /** Default: `[{"navigatesTo":"Navigates To","variant":"primary","label":"Label"}]` */
+  actions?: EntityRow[];
+  /** Default: `false` */
+  editable?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  showCopy?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

@@ -39,39 +39,39 @@ export type StdUiChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartConfig {
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
-  actions?: EntityRow[];
-  /** Default: `200` */
-  height?: number;
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `true` */
-  showLegend?: boolean;
-  /** Default: `[{"value":1,"color":"Color","label":"Label"}]` */
+  /** Default: `[{"dashed":false,"name":"Name","color":"Color","data":[{"label":"Label","value":1,"color":"Color"}]}]` */
+  series?: EntityRow[];
+  /** Default: `[{"color":"Color","label":"Label","value":1}]` */
   data?: EntityRow[];
   /** Default: `false` */
-  timeAxis?: boolean;
+  showValues?: boolean;
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `[{"y":1,"label":"Label","size":1,"x":1,"color":"Color"}]` */
+  scatterData?: EntityRow[];
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  actions?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `200` */
+  height?: number;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
   /** Default: `"Drill Event"` */
   drillEvent?: string;
-  /** Default: `[{"name":"Name","color":"Color","dashed":false,"data":[{"value":1,"color":"Color","label":"Label"}]}]` */
-  series?: EntityRow[];
+  /** Default: `true` */
+  showLegend?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"bar-vertical"` */
   look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
   /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
-  /** Default: `[{"x":1,"size":1,"label":"Label","color":"Color","y":1}]` */
-  scatterData?: EntityRow[];
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
+  timeAxis?: boolean;
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
 }
 
 /**

@@ -46,18 +46,18 @@ export interface StdUiTransitionArrowClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTransitionArrowConfig {
-  /** Default: `"Event Label"` */
-  eventLabel?: string;
-  /** Default: `{"x":1,"y":1}` */
-  fromProp?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Guard Hint"` */
-  guardHint?: string;
-  /** Default: `{"y":1,"x":1}` */
-  toProp?: EntityRow;
   /** Default: `false` */
   isActive?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `{"x":1,"y":1}` */
+  fromProp?: EntityRow;
+  /** Default: `"Event Label"` */
+  eventLabel?: string;
+  /** Default: `"Guard Hint"` */
+  guardHint?: string;
+  /** Default: `{"x":1,"y":1}` */
+  toProp?: EntityRow;
 }
 
 /**
@@ -187,14 +187,14 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
                   'render-ui',
                   'main',
                   {
-                    'onClick': 'CLICK',
-                    'eventLabel': '@config.eventLabel',
                     'isActive': '@config.isActive',
                     'type': 'transition-arrow',
-                    'className': '@config.className',
-                    'from': '@config.fromProp',
                     'to': '@config.toProp',
+                    'onClick': 'CLICK',
+                    'className': '@config.className',
+                    'eventLabel': '@config.eventLabel',
                     'guardHint': '@config.guardHint',
+                    'from': '@config.fromProp',
                   },
                 ],
               ],
@@ -202,11 +202,18 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
           ],
         },
         'config': {
-          'eventLabel': {
+          'isActive': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Active',
+            'description': 'Whether this transition is currently active',
+            'tier': 'presentation',
+          },
+          'className': {
             'type': 'string',
-            'default': 'Event Label',
-            'label': 'Event Label',
-            'description': 'Event label shown on the arrow',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes for the SVG group',
             'tier': 'presentation',
           },
           'fromProp': {
@@ -220,23 +227,23 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
             'synonyms': 'from',
             'tier': 'presentation',
             'properties': {
-              'y': {
-                'name': 'y',
-                'type': 'number',
-                'required': true,
-              },
               'x': {
                 'name': 'x',
                 'type': 'number',
                 'required': true,
               },
+              'y': {
+                'name': 'y',
+                'type': 'number',
+                'required': true,
+              },
             },
           },
-          'className': {
+          'eventLabel': {
             'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes for the SVG group',
+            'default': 'Event Label',
+            'label': 'Event Label',
+            'description': 'Event label shown on the arrow',
             'tier': 'presentation',
           },
           'guardHint': {
@@ -249,8 +256,8 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
           'toProp': {
             'type': 'TransitionArrowTo',
             'default': {
-              'y': 1,
               'x': 1,
+              'y': 1,
             },
             'label': 'To',
             'description': 'End position (center of to-node)',
@@ -268,13 +275,6 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
                 'required': true,
               },
             },
-          },
-          'isActive': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Active',
-            'description': 'Whether this transition is currently active',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

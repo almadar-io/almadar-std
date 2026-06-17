@@ -54,13 +54,13 @@ export interface StdUiTextareaChangePayload {
  */
 export interface StdUiTextareaConfig {
   /** Default: `""` */
-  className?: string;
+  error?: string;
   /** Default: `"Placeholder"` */
   placeholder?: string;
   /** Default: `0` */
   rows?: number;
   /** Default: `""` */
-  error?: string;
+  className?: string;
 }
 
 /**

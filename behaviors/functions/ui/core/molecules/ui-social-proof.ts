@@ -43,7 +43,7 @@ export interface StdUiSocialProofConfig {
   variant?: 'logos' | 'quotes' | 'badges';
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"name":"Name","logo":"Logo","quote":"Quote"}]` */
+  /** Default: `[{"quote":"Quote","logo":"Logo","name":"Name"}]` */
   items?: EntityRow[];
 }
 

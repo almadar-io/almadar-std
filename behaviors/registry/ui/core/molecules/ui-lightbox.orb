@@ -126,8 +126,8 @@
                     "render-ui",
                     "main",
                     {
-                      "label": "Open Lightbox",
                       "type": "button",
+                      "label": "Open Lightbox",
                       "action": "OPEN"
                     }
                   ]
@@ -142,15 +142,15 @@
                     "render-ui",
                     "overlay",
                     {
+                      "onClose": "CLOSE",
+                      "isOpen": "@config.isOpen",
                       "showCounter": "@config.showCounter",
-                      "closeAction": "@config.closeAction",
                       "images": "@config.images",
                       "currentIndex": "@config.currentIndex",
-                      "isOpen": "@config.isOpen",
-                      "onClose": "CLOSE",
-                      "className": "@config.className",
+                      "onIndexChange": "INDEX_CHANGE",
                       "type": "lightbox",
-                      "onIndexChange": "INDEX_CHANGE"
+                      "closeAction": "@config.closeAction",
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -179,32 +179,44 @@
             ]
           },
           "config": {
-            "currentIndex": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current Index",
-              "description": "Current image index",
-              "tier": "presentation"
+            "images": {
+              "type": "[LightboxImagesItem]",
+              "default": [
+                {
+                  "alt": "Alt",
+                  "src": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+                  "caption": "Caption"
+                }
+              ],
+              "label": "Images",
+              "description": "Array of images to display",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "alt": {
+                    "name": "alt",
+                    "type": "string",
+                    "required": false
+                  },
+                  "src": {
+                    "name": "src",
+                    "type": "string",
+                    "required": false
+                  },
+                  "caption": {
+                    "name": "caption",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "closeAction": {
               "type": "string",
               "default": "Close Action",
               "label": "Close Action",
               "description": "Declarative close event name",
-              "tier": "presentation"
-            },
-            "isOpen": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Open",
-              "description": "Whether the lightbox is open",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "showCounter": {
@@ -214,38 +226,26 @@
               "description": "Show image counter (e.g., '3 of 12')",
               "tier": "presentation"
             },
-            "images": {
-              "type": "[LightboxImagesItem]",
-              "default": [
-                {
-                  "alt": "Alt",
-                  "caption": "Caption",
-                  "src": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"
-                }
-              ],
-              "label": "Images",
-              "description": "Array of images to display",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "caption": {
-                    "name": "caption",
-                    "type": "string",
-                    "required": false
-                  },
-                  "src": {
-                    "name": "src",
-                    "type": "string",
-                    "required": false
-                  },
-                  "alt": {
-                    "name": "alt",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "currentIndex": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Current Index",
+              "description": "Current image index",
+              "tier": "presentation"
+            },
+            "isOpen": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Open",
+              "description": "Whether the lightbox is open",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

@@ -46,17 +46,17 @@ export interface StdUiTraitStateViewerStateClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTraitStateViewerConfig {
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `true` */
   showTransitions?: boolean;
-  error?: EntityRow;
   /** Default: `"compact"` */
   variant?: 'linear' | 'compact' | 'full';
-  /** Default: `{"name":"Name","description":"Description","currentState":"Current State","states":["Item"],"transitions":[{"from":"From","event":"Event","guardHint":"Guard Hint","to":"To"}]}` */
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `{"states":["Item"],"transitions":[{"event":"Event","to":"To","from":"From","guardHint":"Guard Hint"}],"description":"Description","currentState":"Current State","name":"Name"}` */
   traitProp?: EntityRow;
   /** Default: `{}` */
   stateStyles?: unknown;
+  error?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
@@ -195,17 +195,17 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
                   'render-ui',
                   'main',
                   {
-                    'onStateClick': 'STATE_CLICK',
+                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
                     'entity': 'TraitStateViewerItem',
                     'trait': '@config.traitProp',
                     'stateStyles': '@config.stateStyles',
                     'variant': '@config.variant',
-                    'size': '@config.size',
-                    'showTransitions': '@config.showTransitions',
-                    'className': '@config.className',
-                    'isLoading': '@config.isLoading',
-                    'error': '@config.error',
                     'type': 'trait-state-viewer',
+                    'onStateClick': 'STATE_CLICK',
+                    'showTransitions': '@config.showTransitions',
+                    'size': '@config.size',
                   },
                 ],
               ],
@@ -213,52 +213,12 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
           ],
         },
         'config': {
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Size variant',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
-          },
           'showTransitions': {
             'type': 'boolean',
             'default': true,
             'label': 'Show Transitions',
             'description': 'Whether to show transition labels',
             'tier': 'presentation',
-          },
-          'error': {
-            'type': 'TraitStateViewerError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-            },
           },
           'variant': {
             'type': 'string',
@@ -272,23 +232,35 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
               'full',
             ],
           },
+          'size': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Size',
+            'description': 'Size variant',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
+          },
           'traitProp': {
             'type': 'TraitStateViewerTrait',
             'default': {
-              'name': 'Name',
-              'description': 'Description',
-              'currentState': 'Current State',
               'states': [
                 'Item',
               ],
               'transitions': [
                 {
-                  'from': 'From',
                   'event': 'Event',
-                  'guardHint': 'Guard Hint',
                   'to': 'To',
+                  'from': 'From',
+                  'guardHint': 'Guard Hint',
                 },
               ],
+              'description': 'Description',
+              'currentState': 'Current State',
+              'name': 'Name',
             },
             'label': 'Trait',
             'description': 'The trait / state machine to visualize',
@@ -303,6 +275,16 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
                   'type': 'string',
                 },
               },
+              'currentState': {
+                'name': 'currentState',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
               'transitions': {
                 'name': 'transitions',
                 'type': 'array',
@@ -310,6 +292,11 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
                 'items': {
                   'type': 'object',
                   'properties': {
+                    'from': {
+                      'name': 'from',
+                      'type': 'string',
+                      'required': true,
+                    },
                     'event': {
                       'name': 'event',
                       'type': 'string',
@@ -317,11 +304,6 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
                     },
                     'to': {
                       'name': 'to',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'from': {
-                      'name': 'from',
                       'type': 'string',
                       'required': true,
                     },
@@ -337,16 +319,6 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
                 'name': 'description',
                 'type': 'string',
                 'required': false,
-              },
-              'currentState': {
-                'name': 'currentState',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': true,
               },
             },
           },
@@ -369,6 +341,34 @@ export function stdUiTraitStateViewerTraitStateViewerOrbital(params: StdUiTraitS
                   'type': 'string',
                   'required': true,
                 },
+              },
+            },
+          },
+          'error': {
+            'type': 'TraitStateViewerError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
               },
             },
           },

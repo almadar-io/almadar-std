@@ -39,10 +39,18 @@ export type StdUiBattleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBattleTemplateConfig {
-  /** Default: `""` */
-  className?: string;
+  /** Default: `[{"x":0,"terrain":"stone","y":0,"passable":false},{"passable":false,"x":1,"terrain":"stone","y":0},{"terrain":"stone","x":2,"passable":false,"y":0},{"x":3,"y":0,"terrain":"stone","passable":false},{"terrain":"stone","passable":false,"x":4,"y":0},{"terrain":"stone","y":1,"x":0,"passable":false},{"x":1,"passable":true,"terrain":"dirt","y":1},{"y":1,"x":2,"terrain":"grass","passable":true},{"terrain":"grass","passable":true,"y":1,"x":3},{"passable":false,"x":4,"y":1,"terrain":"stone"},{"passable":false,"terrain":"stone","x":0,"y":2},{"x":1,"terrain":"grass","passable":true,"y":2},{"y":2,"x":2,"terrain":"dirt","passable":true},{"terrain":"grass","y":2,"x":3,"passable":true},{"passable":false,"terrain":"stone","x":4,"y":2},{"passable":false,"x":0,"terrain":"stone","y":3},{"x":1,"terrain":"grass","passable":true,"y":3},{"x":2,"terrain":"grass","y":3,"passable":true},{"x":3,"y":3,"passable":true,"terrain":"dirt"},{"passable":false,"x":4,"terrain":"stone","y":3},{"x":0,"y":4,"terrain":"stone","passable":false},{"passable":false,"y":4,"terrain":"stone","x":1},{"passable":false,"terrain":"stone","y":4,"x":2},{"terrain":"stone","x":3,"passable":false,"y":4},{"x":4,"y":4,"passable":false,"terrain":"stone"}]` */
+  tiles?: EntityRow[];
   /** Default: `0.45` */
   scale?: number;
+  /** Default: `[{"id":"f1","y":2,"type":"gold_mine","x":2},{"y":1,"id":"f2","x":3,"type":"portal"}]` */
+  features?: EntityRow[];
+  /** Default: `""` */
+  assetManifest?: string;
+  /** Default: `[{"maxHealth":10,"unitType":"worker","name":"Worker","team":"player","id":"u1","position":{"x":1,"y":1},"health":10},{"position":{"x":3,"y":3},"health":8,"unitType":"guardian","name":"Guardian","team":"enemy","id":"u2","maxHealth":10}]` */
+  units?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
   /** Default: `1` */
   unitScale?: number;
 }

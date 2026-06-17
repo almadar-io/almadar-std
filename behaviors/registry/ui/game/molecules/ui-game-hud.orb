@@ -49,14 +49,14 @@
                     "render-ui",
                     "main",
                     {
-                      "stats": "@config.stats",
-                      "transparent": "@config.transparent",
-                      "size": "@config.size",
-                      "className": "@config.className",
-                      "type": "game-hud",
                       "position": "@config.position",
+                      "className": "@config.className",
+                      "stats": "@config.stats",
+                      "elements": "@config.elements",
+                      "size": "@config.size",
+                      "type": "game-hud",
                       "items": "@config.items",
-                      "elements": "@config.elements"
+                      "transparent": "@config.transparent"
                     }
                   ]
                 ]
@@ -64,6 +64,69 @@
             ]
           },
           "config": {
+            "elements": {
+              "type": "[GameHudElementsItem]",
+              "default": [
+                {
+                  "max": 1.0,
+                  "type": "Type",
+                  "icon": "circle",
+                  "format": "Format",
+                  "position": "Position",
+                  "label": "Label",
+                  "bind": "Bind",
+                  "value": "Value"
+                }
+              ],
+              "label": "Elements",
+              "description": "Schema-style elements array (alternative to stats). Converted to stats internally for backwards compatibility.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "bind": {
+                    "name": "bind",
+                    "type": "string",
+                    "required": false
+                  },
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "max": {
+                    "name": "max",
+                    "type": "number",
+                    "required": false
+                  },
+                  "position": {
+                    "name": "position",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
             "transparent": {
               "type": "boolean",
               "default": true,
@@ -71,17 +134,39 @@
               "description": "Whether to use a semi-transparent background",
               "tier": "presentation"
             },
-            "size": {
+            "className": {
               "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "stats": {
+              "type": "[GameHudStatsItem]",
+              "default": [
+                {
+                  "field": "Field",
+                  "source": "Source"
+                }
+              ],
+              "label": "Stats",
+              "description": "Stats to display - accepts readonly for compatibility with generated const arrays",
               "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  },
+                  "source": {
+                    "name": "source",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "items": {
               "type": "[GameHudItemsItem]",
@@ -97,13 +182,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "field": {
-                    "name": "field",
+                  "source": {
+                    "name": "source",
                     "type": "string",
                     "required": false
                   },
-                  "source": {
-                    "name": "source",
+                  "field": {
+                    "name": "field",
                     "type": "string",
                     "required": false
                   }
@@ -122,102 +207,17 @@
                 "corners"
               ]
             },
-            "stats": {
-              "type": "[GameHudStatsItem]",
-              "default": [
-                {
-                  "field": "Field",
-                  "source": "Source"
-                }
-              ],
-              "label": "Stats",
-              "description": "Stats to display - accepts readonly for compatibility with generated const arrays",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "source": {
-                    "name": "source",
-                    "type": "string",
-                    "required": false
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "elements": {
-              "type": "[GameHudElementsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "bind": "Bind",
-                  "value": "Value",
-                  "format": "Format",
-                  "position": "Position",
-                  "max": 1.0,
-                  "icon": "circle",
-                  "type": "Type"
-                }
-              ],
-              "label": "Elements",
-              "description": "Schema-style elements array (alternative to stats). Converted to stats internally for backwards compatibility.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "position": {
-                    "name": "position",
-                    "type": "string",
-                    "required": false
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": false
-                  },
-                  "max": {
-                    "name": "max",
-                    "type": "number",
-                    "required": false
-                  },
-                  "bind": {
-                    "name": "bind",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "className": {
+            "size": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
             }
           },
           "scope": "instance"

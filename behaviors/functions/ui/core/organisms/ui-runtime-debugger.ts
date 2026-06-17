@@ -41,15 +41,15 @@ export type StdUiRuntimeDebuggerEventKey = 'INIT';
 export interface StdUiRuntimeDebuggerConfig {
   /** Default: `"Default Tab"` */
   defaultTab?: string;
-  schema?: unknown;
+  /** Default: `""` */
+  className?: string;
   /** Default: `true` */
   defaultCollapsed?: boolean;
   /** Default: `"floating"` */
   mode?: 'floating' | 'inline' | 'verify';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"bottom-right"` */
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  schema?: unknown;
 }
 
 /**
@@ -153,13 +153,13 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
                   'render-ui',
                   'main',
                   {
+                    'type': 'runtime-debugger',
+                    'schema': '@config.schema',
                     'position': '@config.position',
                     'className': '@config.className',
-                    'mode': '@config.mode',
-                    'schema': '@config.schema',
-                    'defaultTab': '@config.defaultTab',
-                    'type': 'runtime-debugger',
                     'defaultCollapsed': '@config.defaultCollapsed',
+                    'mode': '@config.mode',
+                    'defaultTab': '@config.defaultTab',
                   },
                 ],
               ],
@@ -174,10 +174,11 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
             'description': 'Default active tab id',
             'tier': 'presentation',
           },
-          'schema': {
-            'type': 'json',
-            'label': 'Schema',
-            'description': 'Raw schema for EventDispatcherTab payload extraction',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'defaultCollapsed': {
@@ -199,13 +200,6 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'verify',
             ],
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'position': {
             'type': 'string',
             'default': 'bottom-right',
@@ -218,6 +212,12 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'top-right',
               'top-left',
             ],
+          },
+          'schema': {
+            'type': 'json',
+            'label': 'Schema',
+            'description': 'Raw schema for EventDispatcherTab payload extraction',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

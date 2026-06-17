@@ -46,9 +46,9 @@ export interface StdUiSimpleGridConfig {
   /** Default: `""` */
   className?: string;
   /** Default: `1` */
-  cols?: number;
-  /** Default: `1` */
   maxCols?: number;
+  /** Default: `1` */
+  cols?: number;
 }
 
 /**

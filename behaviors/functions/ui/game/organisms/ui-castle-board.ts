@@ -66,18 +66,18 @@ export interface StdUiCastleBoardTileClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCastleBoardConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `{"terrains":{"grass":"isometric-blocks/PNG/Abstract tiles/abstractTile_01.png","stone":"isometric-blocks/PNG/Abstract tiles/abstractTile_06.png","dirt":"isometric-blocks/PNG/Abstract tiles/abstractTile_08.png","water":"isometric-blocks/PNG/Abstract tiles/abstractTile_03.png"},"features":{"castle":"world-map/battle_marker.png","portal":"world-map/portal_open.png"},"units":{"hero":"characters/archetypes/01_innocent.png"}}` */
-  assetManifest?: EntityRow;
-  /** Default: `[{"position":{"x":1,"y":1},"name":"Hero","team":"player","health":10,"maxHealth":10,"id":"unit-1","unitType":"hero"},{"name":"Guard","team":"enemy","maxHealth":10,"id":"unit-2","unitType":"hero","health":8,"position":{"x":3,"y":2}}]` */
+  /** Default: `[{"name":"Worker","health":10,"position":{"x":1,"y":1},"team":"player","maxHealth":10,"unitType":"worker","id":"u1"},{"unitType":"guardian","position":{"y":3,"x":3},"name":"Guardian","team":"enemy","maxHealth":10,"id":"u2","health":8}]` */
   units?: EntityRow[];
-  /** Default: `[{"x":0,"y":0,"passable":false,"terrain":"stone"},{"terrain":"water","x":1,"passable":false,"y":0},{"passable":false,"y":0,"x":2,"terrain":"water"},{"y":0,"passable":false,"x":3,"terrain":"water"},{"x":4,"y":0,"passable":false,"terrain":"stone"},{"y":1,"passable":false,"terrain":"water","x":0},{"y":1,"x":1,"passable":true,"terrain":"grass"},{"y":1,"passable":true,"terrain":"grass","x":2},{"passable":true,"y":1,"x":3,"terrain":"grass"},{"passable":false,"x":4,"y":1,"terrain":"water"},{"terrain":"water","x":0,"passable":false,"y":2},{"passable":true,"x":1,"terrain":"grass","y":2},{"x":2,"y":2,"passable":true,"terrain":"grass"},{"terrain":"grass","y":2,"x":3,"passable":true},{"x":4,"y":2,"passable":false,"terrain":"water"},{"x":0,"terrain":"water","passable":false,"y":3},{"y":3,"passable":true,"x":1,"terrain":"grass"},{"y":3,"x":2,"terrain":"grass","passable":true},{"x":3,"y":3,"terrain":"grass","passable":true},{"passable":false,"x":4,"y":3,"terrain":"water"},{"y":4,"terrain":"stone","passable":false,"x":0},{"terrain":"water","x":1,"y":4,"passable":false},{"y":4,"x":2,"terrain":"water","passable":false},{"terrain":"water","x":3,"y":4,"passable":false},{"y":4,"x":4,"terrain":"stone","passable":false}]` */
-  tiles?: EntityRow[];
-  /** Default: `[{"type":"castle","y":0,"x":2},{"x":4,"y":4,"type":"portal"}]` */
-  features?: EntityRow[];
+  /** Default: `{"units":{"guardian":"units/guardian.png","mender":"units/mender.png","worker":"units/worker.png","scrapper":"units/scrapper.png"},"terrains":{"forest":"isometric-dungeon/Isometric/planks_E.png","stone":"isometric-dungeon/Isometric/stoneInset_E.png","dirt":"isometric-dungeon/Isometric/dirtTiles_E.png","grass":"isometric-dungeon/Isometric/dirt_E.png","castle":"isometric-dungeon/Isometric/stoneTile_E.png"},"features":{"gold_mine":"world-map/gold_mine.png","portal":"world-map/portal_open.png","castle":"castle/resonator_citadel.png"}}` */
+  assetManifest?: EntityRow;
   /** Default: `0.45` */
   scale?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"y":0,"x":0,"terrain":"stone","passable":false},{"x":1,"passable":false,"y":0,"terrain":"stone"},{"y":0,"passable":false,"x":2,"terrain":"stone"},{"terrain":"stone","passable":false,"x":3,"y":0},{"x":4,"passable":false,"y":0,"terrain":"stone"},{"passable":false,"terrain":"stone","y":1,"x":0},{"terrain":"dirt","y":1,"x":1,"passable":true},{"x":2,"terrain":"grass","y":1,"passable":true},{"y":1,"terrain":"grass","x":3,"passable":true},{"terrain":"stone","y":1,"x":4,"passable":false},{"x":0,"terrain":"stone","passable":false,"y":2},{"terrain":"grass","passable":true,"y":2,"x":1},{"x":2,"y":2,"terrain":"dirt","passable":true},{"y":2,"terrain":"grass","x":3,"passable":true},{"x":4,"passable":false,"y":2,"terrain":"stone"},{"x":0,"passable":false,"terrain":"stone","y":3},{"y":3,"terrain":"grass","passable":true,"x":1},{"x":2,"y":3,"terrain":"grass","passable":true},{"passable":true,"terrain":"dirt","x":3,"y":3},{"x":4,"y":3,"terrain":"stone","passable":false},{"y":4,"x":0,"terrain":"stone","passable":false},{"x":1,"y":4,"terrain":"stone","passable":false},{"x":2,"passable":false,"y":4,"terrain":"stone"},{"passable":false,"terrain":"stone","x":3,"y":4},{"x":4,"terrain":"stone","passable":false,"y":4}]` */
+  tiles?: EntityRow[];
+  /** Default: `[{"x":2,"y":2,"id":"f1","type":"gold_mine"},{"y":1,"x":3,"id":"f2","type":"portal"}]` */
+  features?: EntityRow[];
 }
 
 /**
@@ -626,19 +626,19 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'render-ui',
                   'main',
                   {
-                    'tiles': '@config.tiles',
                     'tileClickEvent': 'TILE_CLICK',
-                    'entity': '@entity',
-                    'assetManifest': '@config.assetManifest',
                     'onFeatureClick': 'FEATURE_CLICK',
                     'onUnitClick': 'UNIT_CLICK',
                     'onTileClick': 'TILE_CLICK',
-                    'units': '@config.units',
-                    'features': '@config.features',
-                    'featureClickEvent': 'FEATURE_CLICK',
                     'scale': '@config.scale',
                     'unitClickEvent': 'UNIT_CLICK',
+                    'features': '@config.features',
+                    'entity': '@entity',
                     'className': '@config.className',
+                    'featureClickEvent': 'FEATURE_CLICK',
+                    'assetManifest': '@config.assetManifest',
+                    'tiles': '@config.tiles',
+                    'units': '@config.units',
                     'type': 'castle-board',
                   },
                 ],
@@ -647,28 +647,205 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
+          'units': {
+            'type': '[CastleBoardUnitsItem]',
+            'default': [
+              {
+                'name': 'Worker',
+                'health': 10,
+                'position': {
+                  'x': 1,
+                  'y': 1,
+                },
+                'team': 'player',
+                'maxHealth': 10,
+                'unitType': 'worker',
+                'id': 'u1',
+              },
+              {
+                'unitType': 'guardian',
+                'position': {
+                  'y': 3,
+                  'x': 3,
+                },
+                'name': 'Guardian',
+                'team': 'enemy',
+                'maxHealth': 10,
+                'id': 'u2',
+                'health': 8,
+              },
+            ],
+            'label': 'Units',
+            'description': 'Direct unit data — takes priority over entity-derived units.',
             'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'position': {
+                  'name': 'position',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'previousPosition': {
+                  'name': 'previousPosition',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'heroId': {
+                  'name': 'heroId',
+                  'type': 'string',
+                  'required': false,
+                },
+                'unitType': {
+                  'name': 'unitType',
+                  'type': 'string',
+                  'required': false,
+                },
+                'faction': {
+                  'name': 'faction',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'player',
+                    'enemy',
+                    'neutral',
+                  ],
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
+                'team': {
+                  'name': 'team',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'player',
+                    'enemy',
+                    'neutral',
+                  ],
+                },
+                'health': {
+                  'name': 'health',
+                  'type': 'number',
+                  'required': false,
+                },
+                'maxHealth': {
+                  'name': 'maxHealth',
+                  'type': 'number',
+                  'required': false,
+                },
+                'traits': {
+                  'name': 'traits',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'cooldown': {
+                        'name': 'cooldown',
+                        'type': 'number',
+                        'required': true,
+                      },
+                      'currentState': {
+                        'name': 'currentState',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'name': {
+                        'name': 'name',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'states': {
+                        'name': 'states',
+                        'type': 'array',
+                        'required': true,
+                        'items': {
+                          'type': 'string',
+                        },
+                      },
+                    },
+                  },
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
           },
           'assetManifest': {
             'type': 'CastleBoardAssetManifest',
             'default': {
+              'units': {
+                'guardian': 'units/guardian.png',
+                'mender': 'units/mender.png',
+                'worker': 'units/worker.png',
+                'scrapper': 'units/scrapper.png',
+              },
               'terrains': {
-                'grass': 'isometric-blocks/PNG/Abstract tiles/abstractTile_01.png',
-                'stone': 'isometric-blocks/PNG/Abstract tiles/abstractTile_06.png',
-                'dirt': 'isometric-blocks/PNG/Abstract tiles/abstractTile_08.png',
-                'water': 'isometric-blocks/PNG/Abstract tiles/abstractTile_03.png',
+                'forest': 'isometric-dungeon/Isometric/planks_E.png',
+                'stone': 'isometric-dungeon/Isometric/stoneInset_E.png',
+                'dirt': 'isometric-dungeon/Isometric/dirtTiles_E.png',
+                'grass': 'isometric-dungeon/Isometric/dirt_E.png',
+                'castle': 'isometric-dungeon/Isometric/stoneTile_E.png',
               },
               'features': {
-                'castle': 'world-map/battle_marker.png',
+                'gold_mine': 'world-map/gold_mine.png',
                 'portal': 'world-map/portal_open.png',
-              },
-              'units': {
-                'hero': 'characters/archetypes/01_innocent.png',
+                'castle': 'castle/resonator_citadel.png',
               },
             },
             'label': 'Asset Manifest',
@@ -688,14 +865,6 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                 'type': 'string',
                 'required': false,
               },
-              'units': {
-                'name': 'units',
-                'type': 'object',
-                'required': false,
-                'items': {
-                  'type': 'string',
-                },
-              },
               'terrains': {
                 'name': 'terrains',
                 'type': 'object',
@@ -704,339 +873,182 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'type': 'string',
                 },
               },
+              'units': {
+                'name': 'units',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
             },
           },
-          'units': {
-            'type': '[CastleBoardUnitsItem]',
-            'default': [
-              {
-                'position': {
-                  'x': 1,
-                  'y': 1,
-                },
-                'name': 'Hero',
-                'team': 'player',
-                'health': 10,
-                'maxHealth': 10,
-                'id': 'unit-1',
-                'unitType': 'hero',
-              },
-              {
-                'name': 'Guard',
-                'team': 'enemy',
-                'maxHealth': 10,
-                'id': 'unit-2',
-                'unitType': 'hero',
-                'health': 8,
-                'position': {
-                  'x': 3,
-                  'y': 2,
-                },
-              },
-            ],
-            'label': 'Units',
-            'description': 'Direct unit data — takes priority over entity-derived units.',
+          'scale': {
+            'type': 'number',
+            'default': 0.45,
+            'label': 'Scale',
+            'description': 'Canvas render scale',
             'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'faction': {
-                  'name': 'faction',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'player',
-                    'enemy',
-                    'neutral',
-                  ],
-                },
-                'traits': {
-                  'name': 'traits',
-                  'type': 'array',
-                  'required': false,
-                  'items': {
-                    'type': 'object',
-                    'properties': {
-                      'states': {
-                        'name': 'states',
-                        'type': 'array',
-                        'required': true,
-                        'items': {
-                          'type': 'string',
-                        },
-                      },
-                      'cooldown': {
-                        'name': 'cooldown',
-                        'type': 'number',
-                        'required': true,
-                      },
-                      'currentState': {
-                        'name': 'currentState',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      'name': {
-                        'name': 'name',
-                        'type': 'string',
-                        'required': true,
-                      },
-                    },
-                  },
-                },
-                'name': {
-                  'name': 'name',
-                  'type': 'string',
-                  'required': false,
-                },
-                'heroId': {
-                  'name': 'heroId',
-                  'type': 'string',
-                  'required': false,
-                },
-                'position': {
-                  'name': 'position',
-                  'type': 'object',
-                  'required': false,
-                  'properties': {
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                  },
-                },
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                  'required': false,
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'type': 'number',
-                  'required': false,
-                },
-                'maxHealth': {
-                  'name': 'maxHealth',
-                  'type': 'number',
-                  'required': false,
-                },
-                'z': {
-                  'name': 'z',
-                  'type': 'number',
-                  'required': false,
-                },
-                'previousPosition': {
-                  'name': 'previousPosition',
-                  'type': 'object',
-                  'required': false,
-                  'properties': {
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                  },
-                },
-                'sprite': {
-                  'name': 'sprite',
-                  'type': 'string',
-                  'required': false,
-                },
-                'team': {
-                  'name': 'team',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'player',
-                    'enemy',
-                    'neutral',
-                  ],
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
-                'unitType': {
-                  'name': 'unitType',
-                  'type': 'string',
-                  'required': false,
-                },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': false,
-                },
-                'health': {
-                  'name': 'health',
-                  'type': 'number',
-                  'required': false,
-                },
-              },
-            },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
+            'tier': 'presentation',
           },
           'tiles': {
             'type': '[CastleBoardTilesItem]',
             'default': [
               {
-                'x': 0,
                 'y': 0,
+                'x': 0,
+                'terrain': 'stone',
                 'passable': false,
+              },
+              {
+                'x': 1,
+                'passable': false,
+                'y': 0,
                 'terrain': 'stone',
               },
               {
-                'terrain': 'water',
-                'x': 1,
-                'passable': false,
                 'y': 0,
-              },
-              {
                 'passable': false,
-                'y': 0,
                 'x': 2,
-                'terrain': 'water',
-              },
-              {
-                'y': 0,
-                'passable': false,
-                'x': 3,
-                'terrain': 'water',
-              },
-              {
-                'x': 4,
-                'y': 0,
-                'passable': false,
                 'terrain': 'stone',
               },
               {
-                'y': 1,
+                'terrain': 'stone',
                 'passable': false,
-                'terrain': 'water',
-                'x': 0,
-              },
-              {
-                'y': 1,
-                'x': 1,
-                'passable': true,
-                'terrain': 'grass',
-              },
-              {
-                'y': 1,
-                'passable': true,
-                'terrain': 'grass',
-                'x': 2,
-              },
-              {
-                'passable': true,
-                'y': 1,
                 'x': 3,
-                'terrain': 'grass',
+                'y': 0,
               },
               {
-                'passable': false,
                 'x': 4,
-                'y': 1,
-                'terrain': 'water',
-              },
-              {
-                'terrain': 'water',
-                'x': 0,
                 'passable': false,
-                'y': 2,
+                'y': 0,
+                'terrain': 'stone',
               },
               {
-                'passable': true,
+                'passable': false,
+                'terrain': 'stone',
+                'y': 1,
+                'x': 0,
+              },
+              {
+                'terrain': 'dirt',
+                'y': 1,
                 'x': 1,
-                'terrain': 'grass',
-                'y': 2,
+                'passable': true,
               },
               {
                 'x': 2,
-                'y': 2,
-                'passable': true,
                 'terrain': 'grass',
+                'y': 1,
+                'passable': true,
               },
               {
+                'y': 1,
                 'terrain': 'grass',
-                'y': 2,
                 'x': 3,
                 'passable': true,
               },
               {
+                'terrain': 'stone',
+                'y': 1,
                 'x': 4,
-                'y': 2,
                 'passable': false,
-                'terrain': 'water',
               },
               {
                 'x': 0,
-                'terrain': 'water',
+                'terrain': 'stone',
                 'passable': false,
+                'y': 2,
+              },
+              {
+                'terrain': 'grass',
+                'passable': true,
+                'y': 2,
+                'x': 1,
+              },
+              {
+                'x': 2,
+                'y': 2,
+                'terrain': 'dirt',
+                'passable': true,
+              },
+              {
+                'y': 2,
+                'terrain': 'grass',
+                'x': 3,
+                'passable': true,
+              },
+              {
+                'x': 4,
+                'passable': false,
+                'y': 2,
+                'terrain': 'stone',
+              },
+              {
+                'x': 0,
+                'passable': false,
+                'terrain': 'stone',
                 'y': 3,
               },
               {
                 'y': 3,
+                'terrain': 'grass',
                 'passable': true,
                 'x': 1,
-                'terrain': 'grass',
               },
               {
-                'y': 3,
                 'x': 2,
+                'y': 3,
                 'terrain': 'grass',
                 'passable': true,
               },
               {
+                'passable': true,
+                'terrain': 'dirt',
                 'x': 3,
                 'y': 3,
-                'terrain': 'grass',
-                'passable': true,
               },
               {
-                'passable': false,
                 'x': 4,
                 'y': 3,
-                'terrain': 'water',
+                'terrain': 'stone',
+                'passable': false,
               },
               {
+                'y': 4,
+                'x': 0,
+                'terrain': 'stone',
+                'passable': false,
+              },
+              {
+                'x': 1,
                 'y': 4,
                 'terrain': 'stone',
                 'passable': false,
-                'x': 0,
               },
               {
-                'terrain': 'water',
-                'x': 1,
-                'y': 4,
-                'passable': false,
-              },
-              {
-                'y': 4,
                 'x': 2,
-                'terrain': 'water',
                 'passable': false,
+                'y': 4,
+                'terrain': 'stone',
               },
               {
-                'terrain': 'water',
+                'passable': false,
+                'terrain': 'stone',
                 'x': 3,
                 'y': 4,
-                'passable': false,
               },
               {
-                'y': 4,
                 'x': 4,
                 'terrain': 'stone',
                 'passable': false,
+                'y': 4,
               },
             ],
             'label': 'Tiles',
@@ -1045,6 +1057,21 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
             'items': {
               'type': 'object',
               'properties': {
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'terrainSprite': {
+                  'name': 'terrainSprite',
+                  'type': 'string',
+                  'required': false,
+                },
                 'elevation': {
                   'name': 'elevation',
                   'type': 'number',
@@ -1055,13 +1082,8 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'type': 'boolean',
                   'required': false,
                 },
-                'tileType': {
-                  'name': 'tileType',
-                  'type': 'string',
-                  'required': false,
-                },
-                'type': {
-                  'name': 'type',
+                'terrain': {
+                  'name': 'terrain',
                   'type': 'string',
                   'required': false,
                 },
@@ -1070,30 +1092,20 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'type': 'string',
                   'required': false,
                 },
-                'terrainSprite': {
-                  'name': 'terrainSprite',
-                  'type': 'string',
-                  'required': false,
-                },
                 'z': {
                   'name': 'z',
                   'type': 'number',
                   'required': false,
                 },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': true,
-                },
-                'terrain': {
-                  'name': 'terrain',
+                'type': {
+                  'name': 'type',
                   'type': 'string',
                   'required': false,
                 },
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                  'required': true,
+                'tileType': {
+                  'name': 'tileType',
+                  'type': 'string',
+                  'required': false,
                 },
                 'movementCost': {
                   'name': 'movementCost',
@@ -1107,13 +1119,15 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
             'type': '[CastleBoardFeaturesItem]',
             'default': [
               {
-                'type': 'castle',
-                'y': 0,
                 'x': 2,
+                'y': 2,
+                'id': 'f1',
+                'type': 'gold_mine',
               },
               {
-                'x': 4,
-                'y': 4,
+                'y': 1,
+                'x': 3,
+                'id': 'f2',
                 'type': 'portal',
               },
             ],
@@ -1123,14 +1137,9 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
             'items': {
               'type': 'object',
               'properties': {
-                'elevation': {
-                  'name': 'elevation',
+                'x': {
+                  'name': 'x',
                   'type': 'number',
-                  'required': false,
-                },
-                'type': {
-                  'name': 'type',
-                  'type': 'string',
                   'required': true,
                 },
                 'id': {
@@ -1138,24 +1147,19 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'type': 'string',
                   'required': false,
                 },
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                  'required': true,
-                },
-                'z': {
-                  'name': 'z',
-                  'type': 'number',
-                  'required': false,
-                },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': true,
-                },
                 'assetUrl': {
                   'name': 'assetUrl',
                   'type': 'string',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
                   'required': false,
                 },
                 'color': {
@@ -1163,20 +1167,23 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'type': 'string',
                   'required': false,
                 },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
                 'sprite': {
                   'name': 'sprite',
                   'type': 'string',
                   'required': false,
                 },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
               },
             },
-          },
-          'scale': {
-            'type': 'number',
-            'default': 0.45,
-            'label': 'Scale',
-            'description': 'Canvas render scale',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

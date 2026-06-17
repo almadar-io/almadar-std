@@ -153,8 +153,8 @@ export function stdUiVariablePanelVariablePanelOrbital(params: StdUiVariablePane
                   {
                     'entityName': '@config.entityName',
                     'type': 'variable-panel',
-                    'className': '@config.className',
                     'variables': '@entity',
+                    'className': '@config.className',
                   },
                 ],
               ],

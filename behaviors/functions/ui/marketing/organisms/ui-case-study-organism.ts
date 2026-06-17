@@ -39,30 +39,30 @@ export type StdUiCaseStudyOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCaseStudyOrganismConfig {
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
   /** Default: `"Search Value"` */
   searchValue?: string;
+  error?: EntityRow;
   /** Default: `0` */
   totalCount?: number;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  activeFilters?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `0` */
+  pageProp?: number;
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `"Heading"` */
   heading?: string;
-  /** Default: `0` */
-  pageProp?: number;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `0` */
-  pageSize?: number;
-  activeFilters?: unknown;
 }
 
 /**
@@ -176,21 +176,21 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
                   'render-ui',
                   'main',
                   {
-                    'totalCount': '@config.totalCount',
-                    'heading': '@config.heading',
                     'subtitle': '@config.subtitle',
-                    'type': 'case-study-organism',
-                    'sortBy': '@config.sortBy',
-                    'activeFilters': '@config.activeFilters',
-                    'entity': '@entity',
-                    'selectedIds': '@config.selectedIds',
-                    'className': '@config.className',
-                    'pageSize': '@config.pageSize',
-                    'page': '@config.pageProp',
-                    'error': '@config.error',
-                    'sortDirection': '@config.sortDirection',
-                    'searchValue': '@config.searchValue',
                     'isLoading': '@config.isLoading',
+                    'pageSize': '@config.pageSize',
+                    'selectedIds': '@config.selectedIds',
+                    'activeFilters': '@config.activeFilters',
+                    'sortBy': '@config.sortBy',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'className': '@config.className',
+                    'totalCount': '@config.totalCount',
+                    'page': '@config.pageProp',
+                    'heading': '@config.heading',
+                    'type': 'case-study-organism',
+                    'searchValue': '@config.searchValue',
+                    'sortDirection': '@config.sortDirection',
                   },
                 ],
               ],
@@ -198,22 +198,18 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
           ],
         },
         'config': {
-          'sortDirection': {
+          'subtitle': {
             'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
+            'default': 'Subtitle',
+            'label': 'Subtitle',
+            'description': 'subtitle prop',
             'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
           },
           'error': {
@@ -232,31 +228,17 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
                 'type': 'string',
                 'required': false,
               },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
               'code': {
                 'name': 'code',
                 'type': 'string',
                 'required': false,
               },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
             },
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
           },
           'totalCount': {
             'type': 'number',
@@ -265,11 +247,57 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
             'description': 'Total number of items',
             'tier': 'presentation',
           },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
             'tier': 'presentation',
           },
           'selectedIds': {
@@ -287,34 +315,6 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
             'default': 'Heading',
             'label': 'Heading',
             'description': 'heading prop',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'subtitle': {
-            'type': 'string',
-            'default': 'Subtitle',
-            'label': 'Subtitle',
-            'description': 'subtitle prop',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
             'tier': 'presentation',
           },
         },

@@ -43,10 +43,10 @@ export interface StdUiPopoverConfig {
   trigger?: 'click' | 'hover';
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom' | 'left' | 'right';
-  /** Default: `""` */
-  className?: string;
   /** Default: `true` */
   showArrow?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

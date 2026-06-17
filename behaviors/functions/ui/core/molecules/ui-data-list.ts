@@ -88,57 +88,57 @@ export interface StdUiDataListViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataListConfig {
-  /** Default: `false` */
-  reorderable?: boolean;
-  /** Default: `false` */
-  hasMore?: boolean;
-  /** Default: `[{"icon":"circle","variant":"primary","label":"Label"}]` */
-  swipeLeftActions?: EntityRow[];
-  /** Default: `[{"label":"Label","icon":"circle","variant":"primary"}]` */
-  swipeRightActions?: EntityRow[];
-  /** Default: `"Group By"` */
-  groupBy?: string;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
-  /** Default: `[{"label":"Label","name":"Name","format":"date","variant":"h3","icon":"circle"}]` */
-  columns?: EntityRow[];
-  /** Default: `false` */
-  dndRoot?: boolean;
   /** Default: `"Accepts"` */
   accepts?: string;
-  /** Default: `[{"label":"Label","name":"Name","format":"date","icon":"circle","variant":"h3"}]` */
-  fields?: EntityRow[];
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `"none"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg';
-  error?: EntityRow;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"Dnd Item Id Field"` */
-  dndItemIdField?: string;
-  /** Default: `"Sender Field"` */
-  senderField?: string;
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `"Current User"` */
-  currentUser?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'card' | 'compact' | 'message';
+  /** Default: `[{"label":"Label","icon":"circle","variant":"primary"}]` */
+  swipeRightActions?: EntityRow[];
   /** Default: `5` */
   pageSize?: number;
+  /** Default: `false` */
+  hasMore?: boolean;
+  /** Default: `"Group By"` */
+  groupBy?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"Drop Event"` */
   dropEvent?: string;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `false` */
+  reorderable?: boolean;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `"Sender Field"` */
+  senderField?: string;
+  /** Default: `"none"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `[{"name":"Name","label":"Label","format":"date","icon":"circle","variant":"h3"}]` */
+  columns?: EntityRow[];
+  /** Default: `"Current User"` */
+  currentUser?: string;
+  error?: EntityRow;
+  /** Default: `"default"` */
+  variant?: 'default' | 'card' | 'compact' | 'message';
+  /** Default: `[{"variant":"primary","label":"Label","icon":"circle"}]` */
+  swipeLeftActions?: EntityRow[];
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"name":"Name","label":"Label","format":"date","variant":"h3","icon":"circle"}]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

@@ -33,6 +33,23 @@ const ALIAS = 'UiUncontrolledBattleBoard';
 export type StdUiUncontrolledBattleBoardEventKey = 'INIT';
 
 /**
+ * Typed call-site config block for this trait — every
+ * field maps to a `config { ... }` entry in the source
+ * .lolo. The agent fills these to specialise the trait
+ * without modifying its state-machine topology.
+ */
+export interface StdUiUncontrolledBattleBoardConfig {
+  /** Default: `[{"y":2,"id":"f1","x":2,"type":"gold_mine"},{"x":3,"y":1,"type":"portal","id":"f2"}]` */
+  features?: EntityRow[];
+  /** Default: `""` */
+  assetManifest?: string;
+  /** Default: `[{"x":0,"y":0,"terrain":"stone","passable":false},{"passable":false,"y":0,"x":1,"terrain":"stone"},{"terrain":"stone","x":2,"passable":false,"y":0},{"passable":false,"y":0,"terrain":"stone","x":3},{"x":4,"passable":false,"y":0,"terrain":"stone"},{"y":1,"passable":false,"terrain":"stone","x":0},{"y":1,"terrain":"dirt","passable":true,"x":1},{"terrain":"grass","y":1,"x":2,"passable":true},{"x":3,"y":1,"passable":true,"terrain":"grass"},{"y":1,"terrain":"stone","x":4,"passable":false},{"x":0,"terrain":"stone","y":2,"passable":false},{"y":2,"passable":true,"terrain":"grass","x":1},{"y":2,"terrain":"dirt","x":2,"passable":true},{"x":3,"passable":true,"y":2,"terrain":"grass"},{"y":2,"passable":false,"x":4,"terrain":"stone"},{"x":0,"y":3,"passable":false,"terrain":"stone"},{"terrain":"grass","x":1,"passable":true,"y":3},{"passable":true,"y":3,"x":2,"terrain":"grass"},{"y":3,"passable":true,"terrain":"dirt","x":3},{"passable":false,"x":4,"terrain":"stone","y":3},{"terrain":"stone","y":4,"passable":false,"x":0},{"y":4,"terrain":"stone","x":1,"passable":false},{"y":4,"x":2,"passable":false,"terrain":"stone"},{"x":3,"y":4,"terrain":"stone","passable":false},{"terrain":"stone","x":4,"y":4,"passable":false}]` */
+  tiles?: EntityRow[];
+  /** Default: `[{"health":10,"name":"Worker","team":"player","maxHealth":10,"id":"u1","position":{"y":1,"x":1},"unitType":"worker"},{"id":"u2","position":{"y":3,"x":3},"unitType":"guardian","team":"enemy","name":"Guardian","health":8,"maxHealth":10}]` */
+  units?: EntityRow[];
+}
+
+/**
  * Tunable params for the UncontrolledBattleBoardOrbital orbital.
  *
  * Canonical entity: UncontrolledBattleBoardItem — overridable via
@@ -138,13 +155,493 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'render-ui',
                   'main',
                   {
+                    'assetManifest': '@config.assetManifest',
+                    'units': '@config.units',
                     'entity': '@entity',
+                    'features': '@config.features',
+                    'tiles': '@config.tiles',
                     'type': 'uncontrolled-battle-board',
                   },
                 ],
               ],
             },
           ],
+        },
+        'config': {
+          'features': {
+            'type': '[UncontrolledBattleBoardFeaturesItem]',
+            'default': [
+              {
+                'y': 2,
+                'id': 'f1',
+                'x': 2,
+                'type': 'gold_mine',
+              },
+              {
+                'x': 3,
+                'y': 1,
+                'type': 'portal',
+                'id': 'f2',
+              },
+            ],
+            'label': 'Features',
+            'description': 'Direct feature data — takes priority over entity-derived features.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'assetManifest': {
+            'type': 'string',
+            'default': '',
+            'label': 'Asset Manifest',
+            'description': 'Direct asset manifest — takes priority over entity-derived manifest.',
+            'tier': 'presentation',
+          },
+          'tiles': {
+            'type': '[UncontrolledBattleBoardTilesItem]',
+            'default': [
+              {
+                'x': 0,
+                'y': 0,
+                'terrain': 'stone',
+                'passable': false,
+              },
+              {
+                'passable': false,
+                'y': 0,
+                'x': 1,
+                'terrain': 'stone',
+              },
+              {
+                'terrain': 'stone',
+                'x': 2,
+                'passable': false,
+                'y': 0,
+              },
+              {
+                'passable': false,
+                'y': 0,
+                'terrain': 'stone',
+                'x': 3,
+              },
+              {
+                'x': 4,
+                'passable': false,
+                'y': 0,
+                'terrain': 'stone',
+              },
+              {
+                'y': 1,
+                'passable': false,
+                'terrain': 'stone',
+                'x': 0,
+              },
+              {
+                'y': 1,
+                'terrain': 'dirt',
+                'passable': true,
+                'x': 1,
+              },
+              {
+                'terrain': 'grass',
+                'y': 1,
+                'x': 2,
+                'passable': true,
+              },
+              {
+                'x': 3,
+                'y': 1,
+                'passable': true,
+                'terrain': 'grass',
+              },
+              {
+                'y': 1,
+                'terrain': 'stone',
+                'x': 4,
+                'passable': false,
+              },
+              {
+                'x': 0,
+                'terrain': 'stone',
+                'y': 2,
+                'passable': false,
+              },
+              {
+                'y': 2,
+                'passable': true,
+                'terrain': 'grass',
+                'x': 1,
+              },
+              {
+                'y': 2,
+                'terrain': 'dirt',
+                'x': 2,
+                'passable': true,
+              },
+              {
+                'x': 3,
+                'passable': true,
+                'y': 2,
+                'terrain': 'grass',
+              },
+              {
+                'y': 2,
+                'passable': false,
+                'x': 4,
+                'terrain': 'stone',
+              },
+              {
+                'x': 0,
+                'y': 3,
+                'passable': false,
+                'terrain': 'stone',
+              },
+              {
+                'terrain': 'grass',
+                'x': 1,
+                'passable': true,
+                'y': 3,
+              },
+              {
+                'passable': true,
+                'y': 3,
+                'x': 2,
+                'terrain': 'grass',
+              },
+              {
+                'y': 3,
+                'passable': true,
+                'terrain': 'dirt',
+                'x': 3,
+              },
+              {
+                'passable': false,
+                'x': 4,
+                'terrain': 'stone',
+                'y': 3,
+              },
+              {
+                'terrain': 'stone',
+                'y': 4,
+                'passable': false,
+                'x': 0,
+              },
+              {
+                'y': 4,
+                'terrain': 'stone',
+                'x': 1,
+                'passable': false,
+              },
+              {
+                'y': 4,
+                'x': 2,
+                'passable': false,
+                'terrain': 'stone',
+              },
+              {
+                'x': 3,
+                'y': 4,
+                'terrain': 'stone',
+                'passable': false,
+              },
+              {
+                'terrain': 'stone',
+                'x': 4,
+                'y': 4,
+                'passable': false,
+              },
+            ],
+            'label': 'Tiles',
+            'description': 'Direct tile data — takes priority over entity-derived tiles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': false,
+                },
+                'passable': {
+                  'name': 'passable',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'terrainSprite': {
+                  'name': 'terrainSprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'terrain': {
+                  'name': 'terrain',
+                  'type': 'string',
+                  'required': false,
+                },
+                'movementCost': {
+                  'name': 'movementCost',
+                  'type': 'number',
+                  'required': false,
+                },
+                'tileType': {
+                  'name': 'tileType',
+                  'type': 'string',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
+            },
+          },
+          'units': {
+            'type': '[UncontrolledBattleBoardUnitsItem]',
+            'default': [
+              {
+                'health': 10,
+                'name': 'Worker',
+                'team': 'player',
+                'maxHealth': 10,
+                'id': 'u1',
+                'position': {
+                  'y': 1,
+                  'x': 1,
+                },
+                'unitType': 'worker',
+              },
+              {
+                'id': 'u2',
+                'position': {
+                  'y': 3,
+                  'x': 3,
+                },
+                'unitType': 'guardian',
+                'team': 'enemy',
+                'name': 'Guardian',
+                'health': 8,
+                'maxHealth': 10,
+              },
+            ],
+            'label': 'Units',
+            'description': 'Direct unit data — takes priority over entity-derived units.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'sprite': {
+                  'name': 'sprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': false,
+                },
+                'health': {
+                  'name': 'health',
+                  'type': 'number',
+                  'required': false,
+                },
+                'maxHealth': {
+                  'name': 'maxHealth',
+                  'type': 'number',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': false,
+                },
+                'heroId': {
+                  'name': 'heroId',
+                  'type': 'string',
+                  'required': false,
+                },
+                'traits': {
+                  'name': 'traits',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'currentState': {
+                        'name': 'currentState',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'name': {
+                        'name': 'name',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'states': {
+                        'name': 'states',
+                        'type': 'array',
+                        'required': true,
+                        'items': {
+                          'type': 'string',
+                        },
+                      },
+                      'cooldown': {
+                        'name': 'cooldown',
+                        'type': 'number',
+                        'required': true,
+                      },
+                    },
+                  },
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'position': {
+                  'name': 'position',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'unitType': {
+                  'name': 'unitType',
+                  'type': 'string',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
+                'team': {
+                  'name': 'team',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'player',
+                    'enemy',
+                    'neutral',
+                  ],
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'faction': {
+                  'name': 'faction',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'player',
+                    'enemy',
+                    'neutral',
+                  ],
+                },
+                'previousPosition': {
+                  'name': 'previousPosition',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
         'scope': 'instance',
       } as never, 'UncontrolledBattleBoardItem', canonicalName) as never,

@@ -39,47 +39,47 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Prefix"` */
-  prefix?: string;
-  /** Default: `0` */
-  trend?: number;
-  /** Default: `[]` */
-  sparklineData?: number[];
-  /** Default: `"Suffix"` */
-  suffix?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
-  /** Default: `"Value"` */
-  value?: string;
   /** Default: `"Click Event"` */
   clickEvent?: string;
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `"higher-is-better"` */
-  trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `"Format"` */
-  format?: string;
-  /** Default: `false` */
-  compact?: boolean;
-  error?: EntityRow;
-  /** Default: `0` */
-  max?: number;
-  /** Default: `"absolute"` */
-  trendFormat?: 'absolute' | 'percent';
-  /** Default: `"Label"` */
-  label?: string;
   /** Default: `"circle"` */
   icon?: unknown;
+  /** Default: `"Prefix"` */
+  prefix?: string;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `[]` */
+  sparklineData?: number[];
+  /** Default: `"higher-is-better"` */
+  trendPolarity?: 'higher-is-better' | 'lower-is-better';
+  /** Default: `0` */
+  trend?: number;
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `"absolute"` */
+  trendFormat?: 'absolute' | 'percent';
+  /** Default: `"Suffix"` */
+  suffix?: string;
+  /** Default: `"Format"` */
+  format?: string;
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
+  /** Default: `0` */
+  max?: number;
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `false` */
+  compact?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
   /** Default: `0` */
   target?: number;
 }

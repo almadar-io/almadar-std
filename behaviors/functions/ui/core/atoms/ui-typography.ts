@@ -39,25 +39,25 @@ export type StdUiTypographyEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTypographyConfig {
-  /** Default: `false` */
-  truncate?: boolean;
-  /** Default: `"h1"` */
-  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
-  style?: unknown;
-  /** Default: `"left"` */
-  align?: 'left' | 'center' | 'right';
-  /** Default: `"visible"` */
-  overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
-  /** Default: `"light"` */
-  weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `1` */
-  level?: number;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'muted' | 'error' | 'success' | 'warning' | 'inherit';
   /** Default: `"xs"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  /** Default: `"visible"` */
+  overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
+  /** Default: `"left"` */
+  align?: 'left' | 'center' | 'right';
+  /** Default: `""` */
+  className?: string;
+  style?: unknown;
+  /** Default: `"h1"` */
+  variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'heading' | 'subheading' | 'body1' | 'body2' | 'body' | 'caption' | 'overline' | 'small' | 'large' | 'label';
+  /** Default: `1` */
+  level?: number;
+  /** Default: `"light"` */
+  weight?: 'light' | 'normal' | 'medium' | 'semibold' | 'bold';
+  /** Default: `false` */
+  truncate?: boolean;
 }
 
 /**

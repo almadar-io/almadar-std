@@ -75,13 +75,13 @@
                     "render-ui",
                     "main",
                     {
-                      "rulesChangeEvent": "RULES_CHANGE",
-                      "readOnly": "@config.readOnly",
-                      "type": "branching-logic-builder",
                       "className": "@config.className",
+                      "type": "branching-logic-builder",
+                      "onRulesChange": "RULES_CHANGE",
                       "questions": "@config.questions",
                       "rules": "@config.rules",
-                      "onRulesChange": "RULES_CHANGE"
+                      "rulesChangeEvent": "RULES_CHANGE",
+                      "readOnly": "@config.readOnly"
                     }
                   ]
                 ]
@@ -95,69 +95,6 @@
               "label": "Read Only",
               "description": "readOnly prop",
               "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "rules": {
-              "type": "[BranchingLogicBuilderRulesItem]",
-              "default": [
-                {
-                  "sourceQuestionId": "Source Question Id",
-                  "targetQuestionId": "Target Question Id",
-                  "operator": "equals",
-                  "id": "Id",
-                  "value": [
-                    "Item"
-                  ]
-                }
-              ],
-              "label": "Rules",
-              "description": "Rules. Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.data`). Narrowed to `[]` internally when the value isn't an array.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "sourceQuestionId": {
-                    "name": "sourceQuestionId",
-                    "type": "string",
-                    "required": true
-                  },
-                  "targetQuestionId": {
-                    "name": "targetQuestionId",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "operator": {
-                    "name": "operator",
-                    "type": "string",
-                    "required": true,
-                    "values": [
-                      "equals",
-                      "not-equals",
-                      "contains",
-                      "in"
-                    ]
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "array",
-                    "required": true,
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
             },
             "questions": {
               "type": "[BranchingLogicBuilderQuestionsItem]",
@@ -176,6 +113,11 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
                   "label": {
                     "name": "label",
                     "type": "string",
@@ -188,14 +130,72 @@
                     "items": {
                       "type": "string"
                     }
-                  },
+                  }
+                }
+              }
+            },
+            "rules": {
+              "type": "[BranchingLogicBuilderRulesItem]",
+              "default": [
+                {
+                  "value": [
+                    "Item"
+                  ],
+                  "operator": "equals",
+                  "targetQuestionId": "Target Question Id",
+                  "id": "Id",
+                  "sourceQuestionId": "Source Question Id"
+                }
+              ],
+              "label": "Rules",
+              "description": "Rules. Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.data`). Narrowed to `[]` internally when the value isn't an array.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
                   "id": {
                     "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "operator": {
+                    "name": "operator",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "equals",
+                      "not-equals",
+                      "contains",
+                      "in"
+                    ]
+                  },
+                  "sourceQuestionId": {
+                    "name": "sourceQuestionId",
+                    "type": "string",
+                    "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "array",
+                    "required": true,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "targetQuestionId": {
+                    "name": "targetQuestionId",
                     "type": "string",
                     "required": true
                   }
                 }
               }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

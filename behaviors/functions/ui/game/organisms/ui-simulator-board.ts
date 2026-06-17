@@ -47,26 +47,26 @@ export interface StdUiSimulatorBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulatorBoardConfig {
-  /** Default: `0` */
-  pageProp?: number;
   /** Default: `"Sort By"` */
   sortBy?: string;
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `""` */
-  className?: string;
-  error?: EntityRow;
   /** Default: `0` */
-  totalCount?: number;
+  pageProp?: number;
   activeFilters?: unknown;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[]` */
-  selectedIds?: string[];
 }
 
 /**
@@ -213,20 +213,20 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'pageSize': '@config.pageSize',
-                    'totalCount': '@config.totalCount',
-                    'sortDirection': '@config.sortDirection',
-                    'page': '@config.pageProp',
                     'isLoading': '@config.isLoading',
-                    'error': '@config.error',
-                    'selectedIds': '@config.selectedIds',
-                    'searchValue': '@config.searchValue',
                     'completeEvent': 'COMPLETE',
-                    'type': 'simulator-board',
-                    'sortBy': '@config.sortBy',
-                    'entity': '@entity',
                     'className': '@config.className',
+                    'totalCount': '@config.totalCount',
+                    'sortBy': '@config.sortBy',
+                    'error': '@config.error',
+                    'searchValue': '@config.searchValue',
                     'activeFilters': '@config.activeFilters',
+                    'page': '@config.pageProp',
+                    'type': 'simulator-board',
+                    'pageSize': '@config.pageSize',
+                    'selectedIds': '@config.selectedIds',
+                    'entity': '@entity',
+                    'sortDirection': '@config.sortDirection',
                   },
                 ],
               ],
@@ -234,14 +234,6 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           ],
         },
         'config': {
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
           'sortBy': {
             'type': 'string',
             'default': 'Sort By',
@@ -249,23 +241,29 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'description': 'Current sort field',
             'tier': 'presentation',
           },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
           },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
             'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
           },
           'className': {
             'type': 'string',
@@ -302,26 +300,6 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               },
             },
           },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
@@ -329,15 +307,37 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
             'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

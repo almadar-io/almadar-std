@@ -40,12 +40,12 @@ export type StdUiBreadcrumbEventKey = 'INIT';
  */
 export interface StdUiBreadcrumbConfig {
   separator?: unknown;
+  /** Default: `[{"path":"Path","label":"Label","href":"Href","icon":"circle","isCurrent":false}]` */
+  items?: EntityRow[];
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
   maxItems?: number;
-  /** Default: `[{"href":"Href","path":"Path","icon":"circle","isCurrent":false,"label":"Label"}]` */
-  items?: EntityRow[];
 }
 
 /**

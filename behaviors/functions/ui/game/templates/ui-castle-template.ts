@@ -39,18 +39,18 @@ export type StdUiCastleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCastleTemplateConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"terrain":"stone","passable":false,"y":0,"x":0},{"terrain":"water","x":1,"y":0,"passable":false},{"x":2,"terrain":"water","y":0,"passable":false},{"y":0,"passable":false,"terrain":"water","x":3},{"passable":false,"x":4,"y":0,"terrain":"stone"},{"terrain":"water","passable":false,"x":0,"y":1},{"passable":true,"y":1,"terrain":"grass","x":1},{"x":2,"y":1,"terrain":"grass","passable":true},{"x":3,"y":1,"passable":true,"terrain":"grass"},{"y":1,"terrain":"water","x":4,"passable":false},{"passable":false,"y":2,"x":0,"terrain":"water"},{"y":2,"terrain":"grass","x":1,"passable":true},{"terrain":"grass","x":2,"passable":true,"y":2},{"y":2,"terrain":"grass","x":3,"passable":true},{"x":4,"passable":false,"terrain":"water","y":2},{"terrain":"water","x":0,"y":3,"passable":false},{"x":1,"passable":true,"y":3,"terrain":"grass"},{"y":3,"passable":true,"terrain":"grass","x":2},{"x":3,"y":3,"terrain":"grass","passable":true},{"x":4,"passable":false,"terrain":"water","y":3},{"terrain":"stone","passable":false,"y":4,"x":0},{"x":1,"terrain":"water","y":4,"passable":false},{"y":4,"terrain":"water","passable":false,"x":2},{"x":3,"terrain":"water","y":4,"passable":false},{"x":4,"passable":false,"y":4,"terrain":"stone"}]` */
-  tiles?: EntityRow[];
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `[{"maxHealth":10,"position":{"y":1,"x":1},"name":"Hero","id":"unit-1","unitType":"hero","team":"player","health":10},{"position":{"y":2,"x":3},"maxHealth":10,"unitType":"hero","id":"unit-2","name":"Guard","team":"enemy","health":8}]` */
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"y":0,"terrain":"stone","passable":false,"x":0},{"x":1,"terrain":"stone","passable":false,"y":0},{"y":0,"passable":false,"x":2,"terrain":"stone"},{"y":0,"passable":false,"x":3,"terrain":"stone"},{"x":4,"terrain":"stone","passable":false,"y":0},{"terrain":"stone","y":1,"passable":false,"x":0},{"passable":true,"x":1,"terrain":"dirt","y":1},{"y":1,"x":2,"terrain":"grass","passable":true},{"y":1,"x":3,"passable":true,"terrain":"grass"},{"terrain":"stone","x":4,"y":1,"passable":false},{"x":0,"y":2,"passable":false,"terrain":"stone"},{"terrain":"grass","passable":true,"y":2,"x":1},{"y":2,"terrain":"dirt","x":2,"passable":true},{"terrain":"grass","passable":true,"x":3,"y":2},{"y":2,"terrain":"stone","x":4,"passable":false},{"terrain":"stone","passable":false,"y":3,"x":0},{"y":3,"x":1,"passable":true,"terrain":"grass"},{"y":3,"x":2,"terrain":"grass","passable":true},{"y":3,"terrain":"dirt","x":3,"passable":true},{"y":3,"terrain":"stone","x":4,"passable":false},{"y":4,"terrain":"stone","passable":false,"x":0},{"terrain":"stone","passable":false,"x":1,"y":4},{"y":4,"x":2,"terrain":"stone","passable":false},{"x":3,"y":4,"passable":false,"terrain":"stone"},{"x":4,"y":4,"passable":false,"terrain":"stone"}]` */
+  tiles?: EntityRow[];
+  /** Default: `[{"name":"Worker","health":10,"maxHealth":10,"team":"player","id":"u1","position":{"x":1,"y":1},"unitType":"worker"},{"unitType":"guardian","id":"u2","team":"enemy","health":8,"name":"Guardian","position":{"x":3,"y":3},"maxHealth":10}]` */
   units?: EntityRow[];
+  /** Default: `[{"id":"f1","type":"gold_mine","x":2,"y":2},{"id":"f2","x":3,"type":"portal","y":1}]` */
+  features?: EntityRow[];
   /** Default: `""` */
   assetManifest?: string;
-  /** Default: `[{"x":2,"y":0,"type":"castle"},{"x":4,"y":4,"type":"portal"}]` */
-  features?: EntityRow[];
 }
 
 /**

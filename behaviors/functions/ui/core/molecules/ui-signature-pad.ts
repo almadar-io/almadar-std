@@ -60,25 +60,25 @@ export interface StdUiSignaturePadClearPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSignaturePadConfig {
-  error?: EntityRow;
+  /** Default: `false` */
+  readOnly?: boolean;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"Stroke Color"` */
+  strokeColor?: string;
+  /** Default: `"Helper Text"` */
+  helperText?: string;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `200` */
   height?: number;
-  /** Default: `"Stroke Color"` */
-  strokeColor?: string;
   /** Default: `"Value"` */
   value?: string;
-  /** Default: `"Helper Text"` */
-  helperText?: string;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `2` */
   strokeWidth?: number;
-  /** Default: `false` */
-  readOnly?: boolean;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
 }
 
 /**

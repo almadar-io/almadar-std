@@ -39,11 +39,11 @@ export type StdUiStateMachineViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
-  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `""` */
   className?: string;
+  error?: EntityRow;
 }
 
 /**
@@ -147,10 +147,10 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'type': 'state-machine-view',
                     'className': '@config.className',
+                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
+                    'type': 'state-machine-view',
                   },
                 ],
               ],
@@ -158,34 +158,6 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
           ],
         },
         'config': {
-          'error': {
-            'type': 'StateMachineViewError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
@@ -199,6 +171,34 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
             'label': 'Class Name',
             'description': 'Additional CSS classes',
             'tier': 'presentation',
+          },
+          'error': {
+            'type': 'StateMachineViewError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
         },
         'scope': 'instance',

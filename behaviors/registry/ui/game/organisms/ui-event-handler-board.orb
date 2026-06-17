@@ -106,22 +106,22 @@
                     "render-ui",
                     "main",
                     {
-                      "page": "@config.pageProp",
-                      "isLoading": "@config.isLoading",
-                      "pageSize": "@config.pageSize",
-                      "className": "@config.className",
-                      "stepDurationMs": "@config.stepDurationMs",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "entity": "@entity",
-                      "activeFilters": "@config.activeFilters",
-                      "error": "@config.error",
-                      "playEvent": "PLAY",
-                      "selectedIds": "@config.selectedIds",
                       "type": "event-handler-board",
+                      "error": "@config.error",
+                      "selectedIds": "@config.selectedIds",
+                      "sortBy": "@config.sortBy",
+                      "searchValue": "@config.searchValue",
+                      "sortDirection": "@config.sortDirection",
+                      "isLoading": "@config.isLoading",
                       "completeEvent": "COMPLETE",
+                      "activeFilters": "@config.activeFilters",
+                      "pageSize": "@config.pageSize",
+                      "stepDurationMs": "@config.stepDurationMs",
+                      "className": "@config.className",
+                      "entity": "@entity",
+                      "playEvent": "PLAY",
                       "totalCount": "@config.totalCount",
-                      "searchValue": "@config.searchValue"
+                      "page": "@config.pageProp"
                     }
                   ]
                 ]
@@ -135,6 +135,16 @@
               "description": "Error state (UiError)",
               "tier": "presentation",
               "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
                 "name": {
                   "name": "name",
                   "type": "string",
@@ -144,17 +154,44 @@
                   "name": "code",
                   "type": "string",
                   "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
                 }
+              }
+            },
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
               }
             },
             "totalCount": {
@@ -171,58 +208,6 @@
               "description": "Playback speed in ms per event",
               "tier": "presentation"
             },
-            "searchValue": {
-              "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
             "sortDirection": {
               "type": "string",
               "default": "asc",
@@ -233,6 +218,21 @@
                 "asc",
                 "desc"
               ]
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             },
             "sortBy": {
               "type": "string",

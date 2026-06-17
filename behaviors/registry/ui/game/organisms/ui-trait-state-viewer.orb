@@ -80,17 +80,17 @@
                     "render-ui",
                     "main",
                     {
-                      "onStateClick": "STATE_CLICK",
+                      "className": "@config.className",
+                      "isLoading": "@config.isLoading",
+                      "error": "@config.error",
                       "entity": "TraitStateViewerItem",
                       "trait": "@config.traitProp",
                       "stateStyles": "@config.stateStyles",
                       "variant": "@config.variant",
-                      "size": "@config.size",
+                      "type": "trait-state-viewer",
+                      "onStateClick": "STATE_CLICK",
                       "showTransitions": "@config.showTransitions",
-                      "className": "@config.className",
-                      "isLoading": "@config.isLoading",
-                      "error": "@config.error",
-                      "type": "trait-state-viewer"
+                      "size": "@config.size"
                     }
                   ]
                 ]
@@ -98,52 +98,12 @@
             ]
           },
           "config": {
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
             "showTransitions": {
               "type": "boolean",
               "default": true,
               "label": "Show Transitions",
               "description": "Whether to show transition labels",
               "tier": "presentation"
-            },
-            "error": {
-              "type": "TraitStateViewerError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
             },
             "variant": {
               "type": "string",
@@ -157,23 +117,35 @@
                 "full"
               ]
             },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
             "traitProp": {
               "type": "TraitStateViewerTrait",
               "default": {
-                "name": "Name",
-                "description": "Description",
-                "currentState": "Current State",
                 "states": [
                   "Item"
                 ],
                 "transitions": [
                   {
-                    "from": "From",
                     "event": "Event",
-                    "guardHint": "Guard Hint",
-                    "to": "To"
+                    "to": "To",
+                    "from": "From",
+                    "guardHint": "Guard Hint"
                   }
-                ]
+                ],
+                "description": "Description",
+                "currentState": "Current State",
+                "name": "Name"
               },
               "label": "Trait",
               "description": "The trait / state machine to visualize",
@@ -188,6 +160,16 @@
                     "type": "string"
                   }
                 },
+                "currentState": {
+                  "name": "currentState",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
                 "transitions": {
                   "name": "transitions",
                   "type": "array",
@@ -195,6 +177,11 @@
                   "items": {
                     "type": "object",
                     "properties": {
+                      "from": {
+                        "name": "from",
+                        "type": "string",
+                        "required": true
+                      },
                       "event": {
                         "name": "event",
                         "type": "string",
@@ -202,11 +189,6 @@
                       },
                       "to": {
                         "name": "to",
-                        "type": "string",
-                        "required": true
-                      },
-                      "from": {
-                        "name": "from",
                         "type": "string",
                         "required": true
                       },
@@ -222,16 +204,6 @@
                   "name": "description",
                   "type": "string",
                   "required": false
-                },
-                "currentState": {
-                  "name": "currentState",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
                 }
               }
             },
@@ -254,6 +226,34 @@
                     "type": "string",
                     "required": true
                   }
+                }
+              }
+            },
+            "error": {
+              "type": "TraitStateViewerError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
                 }
               }
             },

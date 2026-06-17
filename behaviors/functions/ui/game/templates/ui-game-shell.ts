@@ -39,10 +39,10 @@ export type StdUiGameShellEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameShellConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `true` */
   showTopBar?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"Game"` */
   appName?: string;
 }

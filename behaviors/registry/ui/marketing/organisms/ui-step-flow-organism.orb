@@ -59,22 +59,22 @@
                     "render-ui",
                     "main",
                     {
-                      "sortDirection": "@config.sortDirection",
-                      "showConnectors": "@config.showConnectors",
-                      "subtitle": "@config.subtitle",
+                      "error": "@config.error",
+                      "className": "@config.className",
                       "page": "@config.pageProp",
+                      "sortDirection": "@config.sortDirection",
+                      "entity": "@entity",
+                      "subtitle": "@config.subtitle",
+                      "searchValue": "@config.searchValue",
+                      "totalCount": "@config.totalCount",
+                      "type": "step-flow-organism",
                       "activeFilters": "@config.activeFilters",
-                      "orientation": "@config.orientation",
                       "heading": "@config.heading",
                       "isLoading": "@config.isLoading",
-                      "totalCount": "@config.totalCount",
-                      "error": "@config.error",
-                      "type": "step-flow-organism",
-                      "className": "@config.className",
-                      "selectedIds": "@config.selectedIds",
+                      "showConnectors": "@config.showConnectors",
                       "sortBy": "@config.sortBy",
-                      "searchValue": "@config.searchValue",
-                      "entity": "@entity",
+                      "orientation": "@config.orientation",
+                      "selectedIds": "@config.selectedIds",
                       "pageSize": "@config.pageSize"
                     }
                   ]
@@ -83,22 +83,20 @@
             ]
           },
           "config": {
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
               "tier": "presentation"
             },
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
             },
             "className": {
               "type": "string",
@@ -107,19 +105,30 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "subtitle": {
+            "heading": {
               "type": "string",
-              "default": "Subtitle",
-              "label": "Subtitle",
-              "description": "subtitle prop",
+              "default": "Heading",
+              "label": "Heading",
+              "description": "heading prop",
               "tier": "presentation"
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
               "tier": "presentation"
+            },
+            "orientation": {
+              "type": "string",
+              "default": "horizontal",
+              "label": "Orientation",
+              "description": "orientation prop",
+              "tier": "presentation",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
             },
             "sortBy": {
               "type": "string",
@@ -127,6 +136,41 @@
               "label": "Sort By",
               "description": "Current sort field",
               "tier": "presentation"
+            },
+            "showConnectors": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Connectors",
+              "description": "showConnectors prop",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "StepFlowOrganismError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                }
+              }
             },
             "pageSize": {
               "type": "number",
@@ -145,79 +189,35 @@
                 "type": "string"
               }
             },
-            "orientation": {
+            "subtitle": {
               "type": "string",
-              "default": "horizontal",
-              "label": "Orientation",
-              "description": "orientation prop",
+              "default": "Subtitle",
+              "label": "Subtitle",
+              "description": "subtitle prop",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
               "tier": "presentation",
               "values": [
-                "horizontal",
-                "vertical"
+                "asc",
+                "desc"
               ]
             },
-            "searchValue": {
-              "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "showConnectors": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Connectors",
-              "description": "showConnectors prop",
-              "tier": "presentation"
-            },
-            "heading": {
-              "type": "string",
-              "default": "Heading",
-              "label": "Heading",
-              "description": "heading prop",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "StepFlowOrganismError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
               "tier": "presentation"
             }
           },

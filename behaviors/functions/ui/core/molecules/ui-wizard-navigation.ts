@@ -85,27 +85,27 @@ export interface StdUiWizardNavigationCompleteClickPayload {
  */
 export interface StdUiWizardNavigationConfig {
   /** Default: `true` */
-  showComplete?: boolean;
-  /** Default: `"Complete Label"` */
-  completeLabel?: string;
-  /** Default: `0` */
-  totalSteps?: number;
-  /** Default: `true` */
-  showBack?: boolean;
-  /** Default: `0` */
-  currentStep?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `true` */
   showNext?: boolean;
-  /** Default: `"Next Label"` */
-  nextLabel?: string;
   /** Default: `true` */
-  isValid?: boolean;
+  showComplete?: boolean;
   /** Default: `false` */
   compact?: boolean;
+  /** Default: `true` */
+  isValid?: boolean;
+  /** Default: `true` */
+  showBack?: boolean;
+  /** Default: `"Next Label"` */
+  nextLabel?: string;
+  /** Default: `0` */
+  totalSteps?: number;
+  /** Default: `"Complete Label"` */
+  completeLabel?: string;
   /** Default: `"Back Label"` */
   backLabel?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  currentStep?: number;
 }
 
 /**

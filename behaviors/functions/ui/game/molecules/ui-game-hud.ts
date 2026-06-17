@@ -39,20 +39,20 @@ export type StdUiGameHudEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameHudConfig {
+  /** Default: `[{"max":1,"type":"Type","icon":"circle","format":"Format","position":"Position","label":"Label","bind":"Bind","value":"Value"}]` */
+  elements?: EntityRow[];
   /** Default: `true` */
   transparent?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"field":"Field","source":"Source"}]` */
+  stats?: EntityRow[];
   /** Default: `[{"source":"Source","field":"Field"}]` */
   items?: EntityRow[];
   /** Default: `"top"` */
   position?: 'top' | 'bottom' | 'corners';
-  /** Default: `[{"field":"Field","source":"Source"}]` */
-  stats?: EntityRow[];
-  /** Default: `[{"label":"Label","bind":"Bind","value":"Value","format":"Format","position":"Position","max":1,"icon":"circle","type":"Type"}]` */
-  elements?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

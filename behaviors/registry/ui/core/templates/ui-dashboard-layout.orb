@@ -149,35 +149,35 @@
                     "render-ui",
                     "main",
                     {
-                      "searchEvent": "SEARCH",
-                      "topBarActions": "@config.topBarActions",
-                      "notificationClickEvent": "NOTIFICATION_CLICK",
-                      "showThemeToggle": "@config.showThemeToggle",
-                      "logo": [
-                        {
-                          "type": "typography",
-                          "content": "Logo"
-                        }
-                      ],
-                      "headerActions": "@config.headerActions",
-                      "sidebarFooter": "@config.sidebarFooter",
-                      "currentPath": "@config.currentPath",
-                      "notifications": "@config.notifications",
-                      "onSignOut": "SIGN_OUT",
-                      "user": "@config.user",
-                      "onSearchSubmit": "SEARCH_SUBMIT",
-                      "showSearch": "@config.showSearch",
+                      "onNotificationClick": "NOTIFICATION_CLICK",
                       "children": [
                         {
-                          "content": "Sample content",
+                          "type": "typography",
+                          "content": "Sample content"
+                        }
+                      ],
+                      "sidebarFooter": "@config.sidebarFooter",
+                      "topBarActions": "@config.topBarActions",
+                      "type": "dashboard-layout",
+                      "onSearchSubmit": "SEARCH_SUBMIT",
+                      "showThemeToggle": "@config.showThemeToggle",
+                      "currentPath": "@config.currentPath",
+                      "searchEvent": "SEARCH",
+                      "logo": [
+                        {
+                          "content": "Logo",
                           "type": "typography"
                         }
                       ],
-                      "onNotificationClick": "NOTIFICATION_CLICK",
-                      "appName": "@config.appName",
                       "layoutMode": "@config.layoutMode",
-                      "type": "dashboard-layout",
-                      "navItems": "@config.navItems"
+                      "navItems": "@config.navItems",
+                      "notifications": "@config.notifications",
+                      "headerActions": "@config.headerActions",
+                      "appName": "@config.appName",
+                      "user": "@config.user",
+                      "notificationClickEvent": "NOTIFICATION_CLICK",
+                      "onSignOut": "SIGN_OUT",
+                      "showSearch": "@config.showSearch"
                     }
                   ]
                 ]
@@ -185,12 +185,174 @@
             ]
           },
           "config": {
-            "showThemeToggle": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Theme Toggle",
-              "description": "Show the theme toggle button in the header. Default `true` — universally useful for a11y / dark mode.",
+            "sidebarFooter": {
+              "type": "node",
+              "label": "Sidebar Footer",
+              "description": "Custom sidebar footer (optional). When omitted, the sidebar has no footer — apps that need Settings/etc. add them via navItems.",
               "tier": "presentation"
+            },
+            "notifications": {
+              "type": "[DashboardLayoutNotificationsItem]",
+              "default": [
+                {
+                  "description": "Description",
+                  "read": false,
+                  "createdAt": "Created At",
+                  "id": "Id",
+                  "message": "Message"
+                }
+              ],
+              "label": "Notifications",
+              "description": "Notification list. Pass an empty array to show the bell with no badge; omit / pass null to hide the bell entirely.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "read": {
+                    "name": "read",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "message": {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  "createdAt": {
+                    "name": "createdAt",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "topBarActions": {
+              "type": "[DashboardLayoutTopBarActionsItem]",
+              "default": [],
+              "label": "Top Bar Actions",
+              "description": "Generic top-bar action buttons rendered between the search bar and the notifications bell. Each entry: `{icon, label?, event, badge?, variant?}`. Domain-agnostic — consumers add a cart icon, profile button, help-bubble, or any other top-bar action by appending entries. Empty array (default) renders nothing.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": true
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "default",
+                      "primary",
+                      "danger"
+                    ]
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "user": {
+              "type": "DashboardLayoutUser",
+              "default": {
+                "email": "Email",
+                "avatar": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+                "name": "Name"
+              },
+              "label": "User",
+              "description": "Current user info (optional - auto-populated from auth context if not provided)",
+              "tier": "presentation",
+              "properties": {
+                "email": {
+                  "name": "email",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
+                },
+                "avatar": {
+                  "name": "avatar",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "navItems": {
+              "type": "[DashboardLayoutNavItemsItem]",
+              "default": [
+                {
+                  "badge": "Badge",
+                  "icon": "circle",
+                  "children": [],
+                  "href": "Href",
+                  "label": "Label"
+                }
+              ],
+              "label": "Nav Items",
+              "description": "Navigation items. Apps that need a Settings page should add it as a navItems entry, not depend on baked-in chrome.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "children": {
+                    "name": "children",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
             },
             "showSearch": {
               "type": "boolean",
@@ -204,6 +366,13 @@
               "default": "{{APP_TITLE}}",
               "label": "App Name",
               "description": "App name shown in sidebar",
+              "tier": "presentation"
+            },
+            "showThemeToggle": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Theme Toggle",
+              "description": "Show the theme toggle button in the header. Default `true` — universally useful for a11y / dark mode.",
               "tier": "presentation"
             },
             "currentPath": {
@@ -226,180 +395,11 @@
                 "minimal"
               ]
             },
-            "notifications": {
-              "type": "[DashboardLayoutNotificationsItem]",
-              "default": [
-                {
-                  "description": "Description",
-                  "message": "Message",
-                  "id": "Id",
-                  "createdAt": "Created At",
-                  "read": false
-                }
-              ],
-              "label": "Notifications",
-              "description": "Notification list. Pass an empty array to show the bell with no badge; omit / pass null to hide the bell entirely.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "read": {
-                    "name": "read",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "createdAt": {
-                    "name": "createdAt",
-                    "type": "string",
-                    "required": false
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "message": {
-                    "name": "message",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
             "headerActions": {
               "type": "node",
               "label": "Header Actions",
               "description": "Header actions (extra slots beyond bell/search/theme).",
               "tier": "presentation"
-            },
-            "topBarActions": {
-              "type": "[DashboardLayoutTopBarActionsItem]",
-              "default": [],
-              "label": "Top Bar Actions",
-              "description": "Generic top-bar action buttons rendered between the search bar and the notifications bell. Each entry: `{icon, label?, event, badge?, variant?}`. Domain-agnostic — consumers add a cart icon, profile button, help-bubble, or any other top-bar action by appending entries. Empty array (default) renders nothing.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "default",
-                      "primary",
-                      "danger"
-                    ]
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "sidebarFooter": {
-              "type": "node",
-              "label": "Sidebar Footer",
-              "description": "Custom sidebar footer (optional). When omitted, the sidebar has no footer — apps that need Settings/etc. add them via navItems.",
-              "tier": "presentation"
-            },
-            "user": {
-              "type": "DashboardLayoutUser",
-              "default": {
-                "avatar": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
-                "name": "Name",
-                "email": "Email"
-              },
-              "label": "User",
-              "description": "Current user info (optional - auto-populated from auth context if not provided)",
-              "tier": "presentation",
-              "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                "avatar": {
-                  "name": "avatar",
-                  "type": "string",
-                  "required": false
-                },
-                "email": {
-                  "name": "email",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "navItems": {
-              "type": "[DashboardLayoutNavItemsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "href": "Href",
-                  "badge": "Badge",
-                  "children": [],
-                  "icon": "circle"
-                }
-              ],
-              "label": "Nav Items",
-              "description": "Navigation items. Apps that need a Settings page should add it as a navItems entry, not depend on baked-in chrome.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": true
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "children": {
-                    "name": "children",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
             }
           },
           "scope": "instance"

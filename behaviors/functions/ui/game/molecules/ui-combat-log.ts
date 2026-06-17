@@ -43,14 +43,14 @@ export interface StdUiCombatLogConfig {
   showTimestamps?: boolean;
   /** Default: `true` */
   autoScroll?: boolean;
-  /** Default: `[{"turn":1,"message":"Message","targetName":"Target Name","id":"Id","type":"attack","actorName":"Actor Name","value":1,"timestamp":1}]` */
+  /** Default: `[{"timestamp":1,"message":"Message","targetName":"Target Name","value":1,"actorName":"Actor Name","type":"attack","turn":1,"id":"Id"}]` */
   events?: EntityRow[];
   /** Default: `50` */
   maxVisible?: number;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Combat Log"` */
   title?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
