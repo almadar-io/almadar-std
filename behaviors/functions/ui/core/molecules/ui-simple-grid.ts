@@ -41,14 +41,14 @@ export type StdUiSimpleGridEventKey = 'INIT';
 export interface StdUiSimpleGridConfig {
   /** Default: `"Min Child Width"` */
   minChildWidth?: string;
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `""` */
-  className?: string;
   /** Default: `1` */
   maxCols?: number;
   /** Default: `1` */
   cols?: number;
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

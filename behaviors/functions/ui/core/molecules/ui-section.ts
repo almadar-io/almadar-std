@@ -40,25 +40,25 @@ export type StdUiSectionEventKey = 'INIT';
  */
 export interface StdUiSectionConfig {
   /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Header Class Name"` */
-  headerClassName?: string;
-  error?: EntityRow;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'card' | 'bordered' | 'filled';
-  /** Default: `"Description"` */
-  description?: string;
+  divider?: boolean;
   /** Default: `"md"` */
   padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `"Description"` */
+  description?: string;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
+  /** Default: `"Header Class Name"` */
+  headerClassName?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  action?: unknown;
+  /** Default: `"default"` */
+  variant?: 'default' | 'card' | 'bordered' | 'filled';
   /** Default: `"Content Class Name"` */
   contentClassName?: string;
-  action?: unknown;
-  /** Default: `false` */
-  divider?: boolean;
 }
 
 /**

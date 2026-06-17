@@ -96,35 +96,29 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "PageHeaderItem",
-                    {}
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "tabs": "@config.tabs",
-                      "backEvent": "BACK",
-                      "isLoading": "@config.isLoading",
-                      "status": "@config.status",
-                      "showBack": "@config.showBack",
-                      "entity": "PageHeaderItem",
-                      "breadcrumbs": "@config.breadcrumbs",
-                      "actions": "@config.actions",
-                      "subtitle": "@config.subtitle",
-                      "title": "@config.title",
-                      "activeTab": "@config.activeTab",
-                      "type": "page-header",
-                      "error": "@config.error",
-                      "onTabChange": "TAB_CHANGE",
                       "children": [
                         {
-                          "content": "Sample content",
-                          "type": "typography"
+                          "type": "typography",
+                          "content": "Sample content"
                         }
                       ],
-                      "className": "@config.className"
+                      "subtitle": "@config.subtitle",
+                      "backEvent": "BACK",
+                      "type": "page-header",
+                      "activeTab": "@config.activeTab",
+                      "title": "@config.title",
+                      "breadcrumbs": "@config.breadcrumbs",
+                      "actions": "@config.actions",
+                      "status": "@config.status",
+                      "isLoading": "@config.isLoading",
+                      "className": "@config.className",
+                      "showBack": "@config.showBack",
+                      "tabs": "@config.tabs",
+                      "onTabChange": "TAB_CHANGE",
+                      "error": "@config.error"
                     }
                   ]
                 ]
@@ -132,55 +126,22 @@
             ]
           },
           "config": {
-            "title": {
-              "type": "json",
-              "label": "Title",
-              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
-              "tier": "presentation"
-            },
             "subtitle": {
               "type": "json",
               "label": "Subtitle",
               "description": "Optional subtitle/description",
               "tier": "presentation"
             },
-            "breadcrumbs": {
-              "type": "[PageHeaderBreadcrumbsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "href": "Href"
-                }
-              ],
-              "label": "Breadcrumbs",
-              "description": "Breadcrumbs",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
             "actions": {
               "type": "[PageHeaderActionsItem]",
               "default": [
                 {
+                  "navigatesTo": "Navigates To",
                   "icon": "circle",
                   "loading": false,
                   "disabled": false,
                   "label": "Label",
-                  "variant": "primary",
-                  "navigatesTo": "Navigates To"
+                  "variant": "primary"
                 }
               ],
               "label": "Actions",
@@ -189,6 +150,16 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
@@ -200,11 +171,6 @@
                       "danger"
                     ]
                   },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
                   "icon": {
                     "name": "icon",
                     "type": "string",
@@ -214,11 +180,6 @@
                     "name": "loading",
                     "type": "boolean",
                     "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
                   },
                   "navigatesTo": {
                     "name": "navigatesTo",
@@ -232,20 +193,6 @@
                   }
                 }
               }
-            },
-            "showBack": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Back",
-              "description": "Show back button",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
             },
             "status": {
               "type": "PageHeaderStatus",
@@ -272,6 +219,19 @@
                 }
               }
             },
+            "activeTab": {
+              "type": "string",
+              "default": "Active Tab",
+              "label": "Active Tab",
+              "description": "activeTab prop",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "json",
+              "label": "Title",
+              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
+              "tier": "presentation"
+            },
             "tabs": {
               "type": "[PageHeaderTabsItem]",
               "default": [
@@ -287,15 +247,56 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "count": {
-                    "name": "count",
-                    "type": "number",
-                    "required": false
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
                   },
                   "value": {
                     "name": "value",
                     "type": "string",
                     "required": true
+                  },
+                  "count": {
+                    "name": "count",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
+              "tier": "presentation"
+            },
+            "showBack": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Back",
+              "description": "Show back button",
+              "tier": "presentation"
+            },
+            "breadcrumbs": {
+              "type": "[PageHeaderBreadcrumbsItem]",
+              "default": [
+                {
+                  "label": "Label",
+                  "href": "Href"
+                }
+              ],
+              "label": "Breadcrumbs",
+              "description": "Breadcrumbs",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
                   },
                   "label": {
                     "name": "label",
@@ -311,11 +312,6 @@
               "description": "Error state",
               "tier": "presentation",
               "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
                 "code": {
                   "name": "code",
                   "type": "string",
@@ -326,6 +322,11 @@
                   "type": "string",
                   "required": false
                 },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
                 "name": {
                   "name": "name",
                   "type": "string",
@@ -333,18 +334,11 @@
                 }
               }
             },
-            "activeTab": {
-              "type": "string",
-              "default": "Active Tab",
-              "label": "Active Tab",
-              "description": "activeTab prop",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             }
           },

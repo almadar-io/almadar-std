@@ -50,14 +50,14 @@ export interface StdUiTabsConfig {
   variant?: 'default' | 'pills' | 'underline';
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
+  /** Default: `[{"disabled":false,"badge":"Badge","content":"Content","icon":"circle","label":"Label","active":false,"id":"Id","value":"Value"}]` */
+  tabs?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"icon":"circle","value":"Value","active":false,"badge":"Badge","id":"Id","disabled":false,"label":"Label","content":"Content"}]` */
-  tabs?: EntityRow[];
-  /** Default: `[{"id":"Id","icon":"circle","value":"Value","label":"Label","disabled":false,"badge":"Badge","active":false,"content":"Content"}]` */
-  items?: EntityRow[];
   /** Default: `"Default Active Tab"` */
   defaultActiveTab?: string;
+  /** Default: `[{"active":false,"label":"Label","id":"Id","value":"Value","badge":"Badge","icon":"circle","disabled":false,"content":"Content"}]` */
+  items?: EntityRow[];
   /** Default: `"Active Tab"` */
   activeTab?: string;
 }

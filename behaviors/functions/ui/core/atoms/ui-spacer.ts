@@ -41,10 +41,10 @@ export type StdUiSpacerEventKey = 'INIT';
 export interface StdUiSpacerConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"horizontal"` */
-  axis?: 'horizontal' | 'vertical';
   /** Default: `"auto"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
+  /** Default: `"horizontal"` */
+  axis?: 'horizontal' | 'vertical';
 }
 
 /**

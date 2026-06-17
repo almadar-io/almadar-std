@@ -47,26 +47,26 @@ export interface StdUiNegotiatorBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiNegotiatorBoardConfig {
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `0` */
-  pageSize?: number;
+  activeFilters?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
-  error?: EntityRow;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
   /** Default: `""` */
   className?: string;
   /** Default: `"Sort By"` */
   sortBy?: string;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  activeFilters?: unknown;
   /** Default: `"Search Value"` */
   searchValue?: string;
   /** Default: `0` */
   pageProp?: number;
   /** Default: `0` */
+  pageSize?: number;
+  /** Default: `0` */
   totalCount?: number;
+  error?: EntityRow;
 }
 
 /**
@@ -213,20 +213,20 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'render-ui',
                   'main',
                   {
-                    'isLoading': '@config.isLoading',
-                    'sortDirection': '@config.sortDirection',
-                    'selectedIds': '@config.selectedIds',
-                    'activeFilters': '@config.activeFilters',
-                    'searchValue': '@config.searchValue',
-                    'error': '@config.error',
-                    'className': '@config.className',
-                    'pageSize': '@config.pageSize',
-                    'entity': '@entity',
-                    'completeEvent': 'COMPLETE',
-                    'totalCount': '@config.totalCount',
-                    'sortBy': '@config.sortBy',
                     'type': 'negotiator-board',
+                    'sortDirection': '@config.sortDirection',
+                    'className': '@config.className',
+                    'error': '@config.error',
                     'page': '@config.pageProp',
+                    'sortBy': '@config.sortBy',
+                    'isLoading': '@config.isLoading',
+                    'selectedIds': '@config.selectedIds',
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'activeFilters': '@config.activeFilters',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'totalCount': '@config.totalCount',
                   },
                 ],
               ],
@@ -234,6 +234,19 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
           ],
         },
         'config': {
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
           'selectedIds': {
             'type': '[string]',
             'default': [],
@@ -244,47 +257,16 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
               'type': 'string',
             },
           },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
             'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'NegotiatorBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
+            'values': [
+              'asc',
+              'desc',
+            ],
           },
           'className': {
             'type': 'string',
@@ -298,23 +280,6 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             'default': 'Sort By',
             'label': 'Sort By',
             'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
             'tier': 'presentation',
           },
           'searchValue': {
@@ -332,12 +297,47 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             'synonyms': 'page',
             'tier': 'presentation',
           },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
           'totalCount': {
             'type': 'number',
             'default': 0,
             'label': 'Total Count',
             'description': 'Total number of items',
             'tier': 'presentation',
+          },
+          'error': {
+            'type': 'NegotiatorBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
         },
         'scope': 'instance',

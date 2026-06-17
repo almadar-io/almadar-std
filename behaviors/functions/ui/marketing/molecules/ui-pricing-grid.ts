@@ -39,10 +39,10 @@ export type StdUiPricingGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiPricingGridConfig {
-  /** Default: `[{"name":"Name","badge":"Badge","price":"Price","className":"Class Name","features":["Item"],"action":{"href":"Href","label":"Label"},"description":"Description","highlighted":false}]` */
-  plans?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"name":"Name","badge":"Badge","description":"Description","highlighted":false,"className":"Class Name","action":{"label":"Label","href":"Href"},"features":["Item"],"price":"Price"}]` */
+  plans?: EntityRow[];
 }
 
 /**

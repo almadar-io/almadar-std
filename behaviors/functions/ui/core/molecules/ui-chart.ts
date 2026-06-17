@@ -39,39 +39,39 @@ export type StdUiChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartConfig {
-  /** Default: `[{"dashed":false,"name":"Name","color":"Color","data":[{"label":"Label","value":1,"color":"Color"}]}]` */
-  series?: EntityRow[];
-  /** Default: `[{"color":"Color","label":"Label","value":1}]` */
-  data?: EntityRow[];
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `"none"` */
-  stack?: 'none' | 'stack' | 'normalize';
-  /** Default: `[{"y":1,"label":"Label","size":1,"x":1,"color":"Color"}]` */
-  scatterData?: EntityRow[];
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
-  actions?: EntityRow[];
-  error?: EntityRow;
-  /** Default: `200` */
-  height?: number;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
+  /** Default: `"bar-vertical"` */
+  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
   /** Default: `"Drill Event"` */
   drillEvent?: string;
+  /** Default: `200` */
+  height?: number;
+  /** Default: `[{"color":"Color","value":1,"label":"Label"}]` */
+  data?: EntityRow[];
+  /** Default: `[{"navigatesTo":"Navigates To","variant":"primary","label":"Label"}]` */
+  actions?: EntityRow[];
+  /** Default: `"bar"` */
+  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `[{"label":"Label","y":1,"x":1,"size":1,"color":"Color"}]` */
+  scatterData?: EntityRow[];
+  /** Default: `"none"` */
+  stack?: 'none' | 'stack' | 'normalize';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `[{"name":"Name","data":[{"value":1,"label":"Label","color":"Color"}],"color":"Color","dashed":false}]` */
+  series?: EntityRow[];
   /** Default: `true` */
   showLegend?: boolean;
   /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"bar-vertical"` */
-  look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `false` */
-  timeAxis?: boolean;
-  /** Default: `"bar"` */
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
+  showValues?: boolean;
 }
 
 /**

@@ -41,10 +41,10 @@ export type StdUiUnitCommandBarEventKey = 'INIT';
 export interface StdUiUnitCommandBarConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"icon":"circle","disabled":false,"hotkey":"Hotkey","label":"Label"}]` */
-  commands?: EntityRow[];
   /** Default: `"Selected Unit Id"` */
   selectedUnitId?: string;
+  /** Default: `[{"label":"Label","disabled":false,"icon":"circle","hotkey":"Hotkey"}]` */
+  commands?: EntityRow[];
 }
 
 /**

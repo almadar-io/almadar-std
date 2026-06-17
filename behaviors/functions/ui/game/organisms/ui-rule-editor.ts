@@ -54,15 +54,15 @@ export interface StdUiRuleEditorRemovePayload {
  */
 export interface StdUiRuleEditorConfig {
   /** Default: `[{"value":"Value","label":"Label"}]` */
-  availableActions?: EntityRow[];
-  /** Default: `{"thenAction":"Then Action","id":"Id","whenEvent":"When Event"}` */
+  availableEvents?: EntityRow[];
+  /** Default: `{"id":"Id","thenAction":"Then Action","whenEvent":"When Event"}` */
   rule?: EntityRow;
   /** Default: `false` */
   disabled?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"label":"Label","value":"Value"}]` */
-  availableEvents?: EntityRow[];
+  /** Default: `[{"value":"Value","label":"Label"}]` */
+  availableActions?: EntityRow[];
 }
 
 /**
@@ -250,14 +250,14 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
                   'render-ui',
                   'main',
                   {
-                    'onChange': 'CHANGE',
-                    'rule': '@config.rule',
-                    'availableEvents': '@config.availableEvents',
-                    'disabled': '@config.disabled',
-                    'type': 'rule-editor',
-                    'availableActions': '@config.availableActions',
-                    'className': '@config.className',
                     'onRemove': 'REMOVE',
+                    'className': '@config.className',
+                    'availableEvents': '@config.availableEvents',
+                    'rule': '@config.rule',
+                    'type': 'rule-editor',
+                    'disabled': '@config.disabled',
+                    'onChange': 'CHANGE',
+                    'availableActions': '@config.availableActions',
                   },
                 ],
               ],
@@ -265,16 +265,16 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
           ],
         },
         'config': {
-          'availableActions': {
-            'type': '[RuleEditorAvailableActionsItem]',
+          'availableEvents': {
+            'type': '[RuleEditorAvailableEventsItem]',
             'default': [
               {
                 'value': 'Value',
                 'label': 'Label',
               },
             ],
-            'label': 'Available Actions',
-            'description': 'Available actions to perform',
+            'label': 'Available Events',
+            'description': 'Available event triggers to listen for',
             'tier': 'presentation',
             'items': {
               'type': 'object',
@@ -295,14 +295,19 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
           'rule': {
             'type': 'RuleEditorRule',
             'default': {
-              'thenAction': 'Then Action',
               'id': 'Id',
+              'thenAction': 'Then Action',
               'whenEvent': 'When Event',
             },
             'label': 'Rule',
             'description': 'The current rule',
             'tier': 'presentation',
             'properties': {
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
               'whenEvent': {
                 'name': 'whenEvent',
                 'type': 'string',
@@ -310,11 +315,6 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
               },
               'thenAction': {
                 'name': 'thenAction',
-                'type': 'string',
-                'required': true,
-              },
-              'id': {
-                'name': 'id',
                 'type': 'string',
                 'required': true,
               },
@@ -334,27 +334,27 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'availableEvents': {
-            'type': '[RuleEditorAvailableEventsItem]',
+          'availableActions': {
+            'type': '[RuleEditorAvailableActionsItem]',
             'default': [
               {
-                'label': 'Label',
                 'value': 'Value',
+                'label': 'Label',
               },
             ],
-            'label': 'Available Events',
-            'description': 'Available event triggers to listen for',
+            'label': 'Available Actions',
+            'description': 'Available actions to perform',
             'tier': 'presentation',
             'items': {
               'type': 'object',
               'properties': {
-                'label': {
-                  'name': 'label',
+                'value': {
+                  'name': 'value',
                   'type': 'string',
                   'required': true,
                 },
-                'value': {
-                  'name': 'value',
+                'label': {
+                  'name': 'label',
                   'type': 'string',
                   'required': true,
                 },

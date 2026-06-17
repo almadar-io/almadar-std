@@ -53,20 +53,20 @@ export interface StdUiFloatingActionButtonClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFloatingActionButtonConfig {
-  /** Default: `"primary"` */
-  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning';
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `"bottom-right"` */
-  position?: 'bottom-right' | 'bottom-left' | 'bottom-center' | 'top-right' | 'top-left' | 'top-center';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"label":"Label","icon":"circle","id":"Id","variant":"primary"}]` */
-  actions?: EntityRow[];
-  /** Default: `"circle"` */
-  icon?: unknown;
   /** Default: `{}` */
   actionPayload?: unknown;
+  /** Default: `[{"variant":"primary","id":"Id","label":"Label","icon":"circle"}]` */
+  actions?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"bottom-right"` */
+  position?: 'bottom-right' | 'bottom-left' | 'bottom-center' | 'top-right' | 'top-left' | 'top-center';
+  /** Default: `"primary"` */
+  variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning';
+  /** Default: `"circle"` */
+  icon?: unknown;
+  /** Default: `"Label"` */
+  label?: string;
 }
 
 /**

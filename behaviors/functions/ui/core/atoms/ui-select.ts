@@ -55,14 +55,14 @@ export interface StdUiSelectChangePayload {
 export interface StdUiSelectConfig {
   /** Default: `"Placeholder"` */
   placeholder?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Value"` */
   value?: string;
-  /** Default: `""` */
-  error?: string;
   /** Default: `[{"value":"Value","label":"Label"}]` */
   options?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `""` */
+  error?: string;
 }
 
 /**

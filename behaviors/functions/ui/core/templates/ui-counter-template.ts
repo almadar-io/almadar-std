@@ -66,10 +66,10 @@ export interface StdUiCounterTemplateConfig {
   className?: string;
   /** Default: `"Counter"` */
   title?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `"minimal"` */
   variant?: 'minimal' | 'standard' | 'full';
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

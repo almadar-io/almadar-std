@@ -57,22 +57,22 @@ export interface StdUiAvatarConfig {
   actionPayload?: unknown;
   /** Default: `"md"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `"Initials"` */
-  initials?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  src?: unknown;
   /** Default: `"Name"` */
   name?: string;
-  /** Default: `"circle"` */
-  icon?: unknown;
-  /** Default: `"Alt"` */
-  alt?: string;
-  /** Default: `"Badge"` */
-  badge?: string;
+  /** Default: `"Initials"` */
+  initials?: string;
   /** Default: `"online"` */
   status?: 'online' | 'offline' | 'away' | 'busy';
+  /** Default: `"circle"` */
+  icon?: unknown;
+  /** Default: `"Badge"` */
+  badge?: string;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  src?: unknown;
+  /** Default: `"Alt"` */
+  alt?: string;
 }
 
 /**

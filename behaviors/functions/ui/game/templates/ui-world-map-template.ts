@@ -39,24 +39,24 @@ export type StdUiWorldMapTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiWorldMapTemplateConfig {
-  /** Default: `0` */
-  diamondTopY?: number;
-  /** Default: `[{"passable":false,"x":0,"y":0,"terrain":"stone"},{"y":0,"passable":false,"x":1,"terrain":"stone"},{"passable":false,"terrain":"stone","x":2,"y":0},{"y":0,"terrain":"stone","x":3,"passable":false},{"passable":false,"terrain":"stone","y":0,"x":4},{"passable":false,"y":1,"x":0,"terrain":"stone"},{"terrain":"dirt","passable":true,"y":1,"x":1},{"terrain":"grass","passable":true,"x":2,"y":1},{"x":3,"passable":true,"terrain":"grass","y":1},{"passable":false,"terrain":"stone","y":1,"x":4},{"x":0,"y":2,"passable":false,"terrain":"stone"},{"passable":true,"x":1,"y":2,"terrain":"grass"},{"y":2,"x":2,"terrain":"dirt","passable":true},{"x":3,"y":2,"passable":true,"terrain":"grass"},{"x":4,"terrain":"stone","y":2,"passable":false},{"passable":false,"terrain":"stone","y":3,"x":0},{"y":3,"terrain":"grass","passable":true,"x":1},{"x":2,"y":3,"terrain":"grass","passable":true},{"x":3,"y":3,"passable":true,"terrain":"dirt"},{"passable":false,"terrain":"stone","y":3,"x":4},{"terrain":"stone","x":0,"passable":false,"y":4},{"passable":false,"x":1,"terrain":"stone","y":4},{"passable":false,"y":4,"terrain":"stone","x":2},{"y":4,"passable":false,"x":3,"terrain":"stone"},{"passable":false,"terrain":"stone","x":4,"y":4}]` */
-  tiles?: EntityRow[];
+  /** Default: `2.5` */
+  unitScale?: number;
   /** Default: `0.4` */
   scale?: number;
   /** Default: `""` */
-  className?: string;
-  /** Default: `2.5` */
-  unitScale?: number;
-  /** Default: `""` */
   assetManifest?: string;
-  /** Default: `[{"id":"f1","x":2,"y":2,"type":"gold_mine"},{"type":"portal","y":1,"id":"f2","x":3}]` */
-  features?: EntityRow[];
-  /** Default: `[{"name":"Worker","maxHealth":10,"id":"u1","position":{"x":1,"y":1},"team":"player","health":10,"unitType":"worker"},{"position":{"x":3,"y":3},"id":"u2","unitType":"guardian","name":"Guardian","team":"enemy","health":8,"maxHealth":10}]` */
-  units?: EntityRow[];
+  /** Default: `0` */
+  diamondTopY?: number;
   /** Default: `false` */
   allowMoveAllHeroes?: boolean;
+  /** Default: `[{"type":"gold_mine","id":"f1","assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","x":2,"y":2},{"y":1,"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","x":3,"type":"portal"}]` */
+  features?: EntityRow[];
+  /** Default: `[{"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","x":0,"y":0,"terrain":"stone"},{"y":0,"passable":false,"terrain":"stone","x":1,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb"},{"terrain":"stone","passable":false,"x":2,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","y":0},{"passable":false,"terrain":"stone","y":0,"x":3,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb"},{"terrain":"stone","passable":false,"x":4,"y":0,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb"},{"passable":false,"x":0,"terrain":"stone","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","y":1},{"terrain":"dirt","y":1,"x":1,"passable":true,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb"},{"terrain":"grass","y":1,"x":2,"passable":true,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb"},{"terrain":"grass","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","x":3,"y":1,"passable":true},{"x":4,"y":1,"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone"},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","y":2,"passable":false,"terrain":"stone","x":0},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","x":1,"y":2,"terrain":"grass","passable":true},{"y":2,"passable":true,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","x":2,"terrain":"dirt"},{"y":2,"x":3,"terrain":"grass","passable":true,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb"},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone","y":2,"passable":false,"x":4},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","y":3,"terrain":"stone","x":0,"passable":false},{"terrain":"grass","x":1,"passable":true,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","y":3},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","x":2,"y":3,"terrain":"grass","passable":true},{"x":3,"terrain":"dirt","passable":true,"y":3,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb"},{"passable":false,"y":3,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone","x":4},{"terrain":"stone","x":0,"y":4,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","passable":false},{"x":1,"terrain":"stone","y":4,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","passable":false},{"y":4,"terrain":"stone","passable":false,"x":2,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb"},{"terrain":"stone","y":4,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","x":3,"passable":false},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","y":4,"x":4,"passable":false,"terrain":"stone"}]` */
+  tiles?: EntityRow[];
+  /** Default: `[{"id":"u1","team":"player","health":10,"position":{"y":1,"x":1},"unitType":"worker","name":"Worker","maxHealth":10},{"team":"enemy","health":8,"name":"Guardian","maxHealth":10,"id":"u2","unitType":"guardian","position":{"y":3,"x":3}}]` */
+  units?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

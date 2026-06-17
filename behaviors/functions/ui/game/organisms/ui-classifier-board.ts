@@ -47,26 +47,26 @@ export interface StdUiClassifierBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiClassifierBoardConfig {
-  /** Default: `0` */
-  pageProp?: number;
+  error?: EntityRow;
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
+  activeFilters?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `0` */
   pageSize?: number;
-  error?: EntityRow;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  activeFilters?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `0` */
   totalCount?: number;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
 }
 
 /**
@@ -213,20 +213,20 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'render-ui',
                   'main',
                   {
-                    'sortBy': '@config.sortBy',
-                    'isLoading': '@config.isLoading',
-                    'page': '@config.pageProp',
-                    'totalCount': '@config.totalCount',
-                    'activeFilters': '@config.activeFilters',
-                    'sortDirection': '@config.sortDirection',
-                    'searchValue': '@config.searchValue',
-                    'entity': '@entity',
-                    'selectedIds': '@config.selectedIds',
-                    'completeEvent': 'COMPLETE',
-                    'className': '@config.className',
-                    'pageSize': '@config.pageSize',
-                    'type': 'classifier-board',
                     'error': '@config.error',
+                    'page': '@config.pageProp',
+                    'className': '@config.className',
+                    'entity': '@entity',
+                    'pageSize': '@config.pageSize',
+                    'activeFilters': '@config.activeFilters',
+                    'completeEvent': 'COMPLETE',
+                    'selectedIds': '@config.selectedIds',
+                    'totalCount': '@config.totalCount',
+                    'sortDirection': '@config.sortDirection',
+                    'type': 'classifier-board',
+                    'isLoading': '@config.isLoading',
+                    'searchValue': '@config.searchValue',
+                    'sortBy': '@config.sortBy',
                   },
                 ],
               ],
@@ -234,13 +234,33 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
           ],
         },
         'config': {
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
+          'error': {
+            'type': 'ClassifierBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
             'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'searchValue': {
             'type': 'string',
@@ -249,15 +269,40 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             'description': 'Current search query value',
             'tier': 'presentation',
           },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
           },
           'sortDirection': {
             'type': 'string',
@@ -277,54 +322,6 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             'description': 'Number of items per page',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'ClassifierBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'totalCount': {
             'type': 'number',
             'default': 0,
@@ -332,12 +329,15 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             'description': 'Total number of items',
             'tier': 'presentation',
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
             'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
           },
         },
         'scope': 'instance',

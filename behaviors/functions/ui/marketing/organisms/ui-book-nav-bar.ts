@@ -42,11 +42,11 @@ export interface StdUiBookNavBarConfig {
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
-  totalPages?: number;
+  currentPage?: number;
   /** Default: `"Chapter Title"` */
   chapterTitle?: string;
   /** Default: `0` */
-  currentPage?: number;
+  totalPages?: number;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
 }
@@ -152,12 +152,12 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
                   'render-ui',
                   'main',
                   {
-                    'type': 'book-nav-bar',
                     'totalPages': '@config.totalPages',
+                    'chapterTitle': '@config.chapterTitle',
+                    'type': 'book-nav-bar',
+                    'currentPage': '@config.currentPage',
                     'className': '@config.className',
                     'direction': '@config.direction',
-                    'currentPage': '@config.currentPage',
-                    'chapterTitle': '@config.chapterTitle',
                   },
                 ],
               ],
@@ -172,11 +172,11 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'totalPages': {
+          'currentPage': {
             'type': 'number',
             'default': 0,
-            'label': 'Total Pages',
-            'description': 'totalPages prop',
+            'label': 'Current Page',
+            'description': 'currentPage prop',
             'tier': 'presentation',
           },
           'chapterTitle': {
@@ -186,11 +186,11 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
             'description': 'chapterTitle prop',
             'tier': 'presentation',
           },
-          'currentPage': {
+          'totalPages': {
             'type': 'number',
             'default': 0,
-            'label': 'Current Page',
-            'description': 'currentPage prop',
+            'label': 'Total Pages',
+            'description': 'totalPages prop',
             'tier': 'presentation',
           },
           'direction': {

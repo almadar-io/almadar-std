@@ -49,8 +49,8 @@
                     "render-ui",
                     "main",
                     {
-                      "data": "@config.data",
-                      "type": "behavior-view"
+                      "type": "behavior-view",
+                      "data": "@config.data"
                     }
                   ]
                 ]
@@ -61,76 +61,90 @@
             "data": {
               "type": "BehaviorViewData",
               "default": {
-                "entityName": "Entity Name",
-                "fields": [
-                  {
-                    "type": "Type",
-                    "name": "Name",
-                    "required": false,
-                    "hasDefault": false
-                  }
-                ],
-                "externalLinks": [
-                  {
-                    "eventName": "Event Name",
-                    "traitName": "Trait Name",
-                    "direction": "out",
-                    "targetOrbital": "Target Orbital"
-                  }
-                ],
-                "orbitalName": "Orbital Name",
-                "pages": [
-                  {
-                    "route": "Route",
-                    "name": "Name"
-                  }
-                ],
+                "traitDetails": {},
+                "persistence": "Persistence",
                 "traits": [
                   {
-                    "stateCount": 1.0,
-                    "eventCount": 1.0,
-                    "transitionCount": 1.0,
                     "name": "Name",
                     "listens": [
                       "Item"
                     ],
+                    "stateCount": 1.0,
+                    "eventCount": 1.0,
+                    "transitionCount": 1.0,
                     "emits": [
                       "Item"
                     ]
                   }
                 ],
-                "traitDetails": {},
-                "persistence": "Persistence"
+                "pages": [
+                  {
+                    "name": "Name",
+                    "route": "Route"
+                  }
+                ],
+                "externalLinks": [
+                  {
+                    "eventName": "Event Name",
+                    "targetOrbital": "Target Orbital",
+                    "direction": "out",
+                    "traitName": "Trait Name"
+                  }
+                ],
+                "orbitalName": "Orbital Name",
+                "entityName": "Entity Name",
+                "fields": [
+                  {
+                    "required": false,
+                    "hasDefault": false,
+                    "name": "Name",
+                    "type": "Type"
+                  }
+                ]
               },
               "label": "Data",
               "description": "data prop",
               "tier": "presentation",
               "properties": {
-                "fields": {
-                  "name": "fields",
+                "entityName": {
+                  "name": "entityName",
+                  "type": "string",
+                  "required": true
+                },
+                "persistence": {
+                  "name": "persistence",
+                  "type": "string",
+                  "required": true
+                },
+                "externalLinks": {
+                  "name": "externalLinks",
                   "type": "array",
                   "required": true,
                   "items": {
                     "type": "object",
                     "properties": {
-                      "type": {
-                        "name": "type",
+                      "direction": {
+                        "name": "direction",
+                        "type": "string",
+                        "required": true,
+                        "values": [
+                          "out",
+                          "in"
+                        ]
+                      },
+                      "targetOrbital": {
+                        "name": "targetOrbital",
                         "type": "string",
                         "required": true
                       },
-                      "name": {
-                        "name": "name",
+                      "eventName": {
+                        "name": "eventName",
                         "type": "string",
                         "required": true
                       },
-                      "hasDefault": {
-                        "name": "hasDefault",
-                        "type": "boolean",
-                        "required": true
-                      },
-                      "required": {
-                        "name": "required",
-                        "type": "boolean",
+                      "traitName": {
+                        "name": "traitName",
+                        "type": "string",
                         "required": true
                       }
                     }
@@ -143,73 +157,18 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "name": {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
+                      "emittedEvents": {
+                        "name": "emittedEvents",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
                       },
                       "linkedEntity": {
                         "name": "linkedEntity",
                         "type": "string",
                         "required": true
-                      },
-                      "transitions": {
-                        "name": "transitions",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "effects": {
-                              "name": "effects",
-                              "type": "array",
-                              "required": true,
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "type": {
-                                    "name": "type",
-                                    "type": "string",
-                                    "required": true
-                                  },
-                                  "args": {
-                                    "name": "args",
-                                    "type": "array",
-                                    "required": true,
-                                    "items": {
-                                      "type": "string"
-                                    }
-                                  }
-                                }
-                              }
-                            },
-                            "from": {
-                              "name": "from",
-                              "type": "string",
-                              "required": true
-                            },
-                            "event": {
-                              "name": "event",
-                              "type": "string",
-                              "required": true
-                            },
-                            "guard": {
-                              "name": "guard",
-                              "type": "string",
-                              "required": false
-                            },
-                            "index": {
-                              "name": "index",
-                              "type": "number",
-                              "required": true
-                            },
-                            "to": {
-                              "name": "to",
-                              "type": "string",
-                              "required": true
-                            }
-                          }
-                        }
                       },
                       "listenedEvents": {
                         "name": "listenedEvents",
@@ -218,6 +177,11 @@
                         "items": {
                           "type": "string"
                         }
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
                       },
                       "states": {
                         "name": "states",
@@ -231,78 +195,109 @@
                               "type": "string",
                               "required": true
                             },
-                            "isTerminal": {
-                              "name": "isTerminal",
+                            "isInitial": {
+                              "name": "isInitial",
                               "type": "boolean",
                               "required": false
                             },
-                            "isInitial": {
-                              "name": "isInitial",
+                            "isTerminal": {
+                              "name": "isTerminal",
                               "type": "boolean",
                               "required": false
                             }
                           }
                         }
                       },
-                      "emittedEvents": {
-                        "name": "emittedEvents",
+                      "transitions": {
+                        "name": "transitions",
                         "type": "array",
                         "required": true,
                         "items": {
-                          "type": "string"
+                          "type": "object",
+                          "properties": {
+                            "to": {
+                              "name": "to",
+                              "type": "string",
+                              "required": true
+                            },
+                            "guard": {
+                              "name": "guard",
+                              "type": "string",
+                              "required": false
+                            },
+                            "from": {
+                              "name": "from",
+                              "type": "string",
+                              "required": true
+                            },
+                            "index": {
+                              "name": "index",
+                              "type": "number",
+                              "required": true
+                            },
+                            "effects": {
+                              "name": "effects",
+                              "type": "array",
+                              "required": true,
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "args": {
+                                    "name": "args",
+                                    "type": "array",
+                                    "required": true,
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "type": {
+                                    "name": "type",
+                                    "type": "string",
+                                    "required": true
+                                  }
+                                }
+                              }
+                            },
+                            "event": {
+                              "name": "event",
+                              "type": "string",
+                              "required": true
+                            }
+                          }
                         }
                       }
                     }
                   }
                 },
-                "externalLinks": {
-                  "name": "externalLinks",
+                "fields": {
+                  "name": "fields",
                   "type": "array",
                   "required": true,
                   "items": {
                     "type": "object",
                     "properties": {
-                      "eventName": {
-                        "name": "eventName",
+                      "hasDefault": {
+                        "name": "hasDefault",
+                        "type": "boolean",
+                        "required": true
+                      },
+                      "name": {
+                        "name": "name",
                         "type": "string",
                         "required": true
                       },
-                      "targetOrbital": {
-                        "name": "targetOrbital",
-                        "type": "string",
+                      "required": {
+                        "name": "required",
+                        "type": "boolean",
                         "required": true
                       },
-                      "traitName": {
-                        "name": "traitName",
+                      "type": {
+                        "name": "type",
                         "type": "string",
                         "required": true
-                      },
-                      "direction": {
-                        "name": "direction",
-                        "type": "string",
-                        "required": true,
-                        "values": [
-                          "out",
-                          "in"
-                        ]
                       }
                     }
                   }
-                },
-                "entityName": {
-                  "name": "entityName",
-                  "type": "string",
-                  "required": true
-                },
-                "persistence": {
-                  "name": "persistence",
-                  "type": "string",
-                  "required": true
-                },
-                "orbitalName": {
-                  "name": "orbitalName",
-                  "type": "string",
-                  "required": true
                 },
                 "traits": {
                   "name": "traits",
@@ -311,14 +306,27 @@
                   "items": {
                     "type": "object",
                     "properties": {
-                      "eventCount": {
-                        "name": "eventCount",
+                      "emits": {
+                        "name": "emits",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "transitionCount": {
+                        "name": "transitionCount",
                         "type": "number",
                         "required": true
                       },
                       "stateCount": {
                         "name": "stateCount",
                         "type": "number",
+                        "required": true
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
                         "required": true
                       },
                       "listens": {
@@ -329,26 +337,18 @@
                           "type": "string"
                         }
                       },
-                      "name": {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
-                      },
-                      "transitionCount": {
-                        "name": "transitionCount",
+                      "eventCount": {
+                        "name": "eventCount",
                         "type": "number",
                         "required": true
-                      },
-                      "emits": {
-                        "name": "emits",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "string"
-                        }
                       }
                     }
                   }
+                },
+                "orbitalName": {
+                  "name": "orbitalName",
+                  "type": "string",
+                  "required": true
                 },
                 "pages": {
                   "name": "pages",

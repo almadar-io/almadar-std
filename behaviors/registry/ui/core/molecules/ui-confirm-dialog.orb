@@ -131,9 +131,9 @@
                     "render-ui",
                     "main",
                     {
-                      "action": "OPEN",
+                      "label": "Open Confirm-dialog",
                       "type": "button",
-                      "label": "Open Confirm-dialog"
+                      "action": "OPEN"
                     }
                   ]
                 ]
@@ -147,23 +147,23 @@
                     "render-ui",
                     "modal",
                     {
-                      "size": "@config.size",
-                      "title": "@config.title",
+                      "cancelLabel": "@config.cancelLabel",
                       "cancelText": "@config.cancelText",
-                      "description": "@config.description",
-                      "error": "@config.error",
-                      "confirmLabel": "@config.confirmLabel",
-                      "variant": "@config.variant",
                       "isLoading": "@config.isLoading",
-                      "message": "@config.message",
-                      "type": "confirm-dialog",
-                      "className": "@config.className",
-                      "confirmText": "@config.confirmText",
+                      "description": "@config.description",
                       "onClose": "CLOSE",
+                      "error": "@config.error",
+                      "className": "@config.className",
                       "entity": "ConfirmDialogItem",
-                      "onConfirm": "CONFIRM",
+                      "variant": "@config.variant",
+                      "confirmText": "@config.confirmText",
+                      "type": "confirm-dialog",
+                      "title": "@config.title",
+                      "size": "@config.size",
+                      "confirmLabel": "@config.confirmLabel",
                       "isOpen": "@config.isOpen",
-                      "cancelLabel": "@config.cancelLabel"
+                      "message": "@config.message",
+                      "onConfirm": "CONFIRM"
                     }
                   ]
                 ]
@@ -192,18 +192,51 @@
             ]
           },
           "config": {
-            "className": {
+            "variant": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
+              "default": "danger",
+              "label": "Variant",
+              "description": "Dialog variant",
+              "tier": "presentation",
+              "values": [
+                "danger",
+                "warning",
+                "info",
+                "default"
+              ]
             },
-            "cancelText": {
-              "type": "string",
-              "default": "Cancel Text",
-              "label": "Cancel Text",
-              "description": "Cancel button text",
+            "error": {
+              "type": "ConfirmDialogError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "message": {
+              "type": "node",
+              "label": "Message",
+              "description": "Dialog message/description",
               "tier": "presentation"
             },
             "confirmLabel": {
@@ -211,6 +244,48 @@
               "default": "Confirm Label",
               "label": "Confirm Label",
               "description": "Alias for confirmText (schema compatibility)",
+              "tier": "presentation"
+            },
+            "confirmText": {
+              "type": "string",
+              "default": "Confirm Text",
+              "label": "Confirm Text",
+              "description": "Confirm button text",
+              "tier": "presentation"
+            },
+            "isOpen": {
+              "type": "boolean",
+              "default": true,
+              "label": "Is Open",
+              "description": "Whether the dialog is open (defaults to true when rendered by slot wrapper)",
+              "tier": "presentation"
+            },
+            "title": {
+              "type": "string",
+              "default": "Title",
+              "label": "Title",
+              "description": "Dialog title",
+              "tier": "presentation"
+            },
+            "cancelLabel": {
+              "type": "string",
+              "default": "Cancel Label",
+              "label": "Cancel Label",
+              "description": "Alias for cancelText (schema compatibility)",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state for confirm button",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "description": {
@@ -233,86 +308,11 @@
                 "full"
               ]
             },
-            "title": {
+            "cancelText": {
               "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Dialog title",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "ConfirmDialogError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "cancelLabel": {
-              "type": "string",
-              "default": "Cancel Label",
-              "label": "Cancel Label",
-              "description": "Alias for cancelText (schema compatibility)",
-              "tier": "presentation"
-            },
-            "isOpen": {
-              "type": "boolean",
-              "default": true,
-              "label": "Is Open",
-              "description": "Whether the dialog is open (defaults to true when rendered by slot wrapper)",
-              "tier": "presentation"
-            },
-            "message": {
-              "type": "node",
-              "label": "Message",
-              "description": "Dialog message/description",
-              "tier": "presentation"
-            },
-            "confirmText": {
-              "type": "string",
-              "default": "Confirm Text",
-              "label": "Confirm Text",
-              "description": "Confirm button text",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "danger",
-              "label": "Variant",
-              "description": "Dialog variant",
-              "tier": "presentation",
-              "values": [
-                "danger",
-                "warning",
-                "info",
-                "default"
-              ]
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state for confirm button",
+              "default": "Cancel Text",
+              "label": "Cancel Text",
+              "description": "Cancel button text",
               "tier": "presentation"
             }
           },

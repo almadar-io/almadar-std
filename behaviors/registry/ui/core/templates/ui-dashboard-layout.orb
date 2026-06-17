@@ -149,35 +149,35 @@
                     "render-ui",
                     "main",
                     {
-                      "onNotificationClick": "NOTIFICATION_CLICK",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Sample content"
-                        }
-                      ],
-                      "sidebarFooter": "@config.sidebarFooter",
-                      "topBarActions": "@config.topBarActions",
-                      "type": "dashboard-layout",
-                      "onSearchSubmit": "SEARCH_SUBMIT",
                       "showThemeToggle": "@config.showThemeToggle",
-                      "currentPath": "@config.currentPath",
-                      "searchEvent": "SEARCH",
                       "logo": [
                         {
-                          "content": "Logo",
+                          "type": "typography",
+                          "content": "Logo"
+                        }
+                      ],
+                      "user": "@config.user",
+                      "currentPath": "@config.currentPath",
+                      "notificationClickEvent": "NOTIFICATION_CLICK",
+                      "type": "dashboard-layout",
+                      "headerActions": "@config.headerActions",
+                      "appName": "@config.appName",
+                      "topBarActions": "@config.topBarActions",
+                      "sidebarFooter": "@config.sidebarFooter",
+                      "searchEvent": "SEARCH",
+                      "children": [
+                        {
+                          "content": "Sample content",
                           "type": "typography"
                         }
                       ],
-                      "layoutMode": "@config.layoutMode",
                       "navItems": "@config.navItems",
+                      "onSearchSubmit": "SEARCH_SUBMIT",
                       "notifications": "@config.notifications",
-                      "headerActions": "@config.headerActions",
-                      "appName": "@config.appName",
-                      "user": "@config.user",
-                      "notificationClickEvent": "NOTIFICATION_CLICK",
+                      "layoutMode": "@config.layoutMode",
+                      "showSearch": "@config.showSearch",
                       "onSignOut": "SIGN_OUT",
-                      "showSearch": "@config.showSearch"
+                      "onNotificationClick": "NOTIFICATION_CLICK"
                     }
                   ]
                 ]
@@ -185,56 +185,46 @@
             ]
           },
           "config": {
-            "sidebarFooter": {
-              "type": "node",
-              "label": "Sidebar Footer",
-              "description": "Custom sidebar footer (optional). When omitted, the sidebar has no footer — apps that need Settings/etc. add them via navItems.",
-              "tier": "presentation"
-            },
-            "notifications": {
-              "type": "[DashboardLayoutNotificationsItem]",
-              "default": [
-                {
-                  "description": "Description",
-                  "read": false,
-                  "createdAt": "Created At",
-                  "id": "Id",
-                  "message": "Message"
-                }
-              ],
-              "label": "Notifications",
-              "description": "Notification list. Pass an empty array to show the bell with no badge; omit / pass null to hide the bell entirely.",
+            "user": {
+              "type": "DashboardLayoutUser",
+              "default": {
+                "name": "Name",
+                "avatar": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+                "email": "Email"
+              },
+              "label": "User",
+              "description": "Current user info (optional - auto-populated from auth context if not provided)",
               "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "read": {
-                    "name": "read",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "message": {
-                    "name": "message",
-                    "type": "string",
-                    "required": true
-                  },
-                  "createdAt": {
-                    "name": "createdAt",
-                    "type": "string",
-                    "required": false
-                  }
+              "properties": {
+                "avatar": {
+                  "name": "avatar",
+                  "type": "string",
+                  "required": false
+                },
+                "email": {
+                  "name": "email",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": true
                 }
               }
+            },
+            "headerActions": {
+              "type": "node",
+              "label": "Header Actions",
+              "description": "Header actions (extra slots beyond bell/search/theme).",
+              "tier": "presentation"
+            },
+            "showSearch": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Search",
+              "description": "Show the top-bar search box. Default `false` — opt in by setting `searchEvent` (any truthy value implies showSearch) or this flag.",
+              "tier": "presentation"
             },
             "topBarActions": {
               "type": "[DashboardLayoutTopBarActionsItem]",
@@ -245,11 +235,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": true
-                  },
                   "label": {
                     "name": "label",
                     "type": "string",
@@ -260,6 +245,16 @@
                     "type": "string",
                     "required": true
                   },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": true
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
@@ -269,40 +264,59 @@
                       "primary",
                       "danger"
                     ]
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
             },
-            "user": {
-              "type": "DashboardLayoutUser",
-              "default": {
-                "email": "Email",
-                "avatar": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
-                "name": "Name"
-              },
-              "label": "User",
-              "description": "Current user info (optional - auto-populated from auth context if not provided)",
+            "showThemeToggle": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Theme Toggle",
+              "description": "Show the theme toggle button in the header. Default `true` — universally useful for a11y / dark mode.",
+              "tier": "presentation"
+            },
+            "notifications": {
+              "type": "[DashboardLayoutNotificationsItem]",
+              "default": [
+                {
+                  "id": "Id",
+                  "createdAt": "Created At",
+                  "read": false,
+                  "description": "Description",
+                  "message": "Message"
+                }
+              ],
+              "label": "Notifications",
+              "description": "Notification list. Pass an empty array to show the bell with no badge; omit / pass null to hide the bell entirely.",
               "tier": "presentation",
-              "properties": {
-                "email": {
-                  "name": "email",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                "avatar": {
-                  "name": "avatar",
-                  "type": "string",
-                  "required": false
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "message": {
+                    "name": "message",
+                    "type": "string",
+                    "required": true
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "createdAt": {
+                    "name": "createdAt",
+                    "type": "string",
+                    "required": false
+                  },
+                  "read": {
+                    "name": "read",
+                    "type": "boolean",
+                    "required": false
+                  }
                 }
               }
             },
@@ -310,11 +324,11 @@
               "type": "[DashboardLayoutNavItemsItem]",
               "default": [
                 {
+                  "children": [],
+                  "label": "Label",
                   "badge": "Badge",
                   "icon": "circle",
-                  "children": [],
-                  "href": "Href",
-                  "label": "Label"
+                  "href": "Href"
                 }
               ],
               "label": "Nav Items",
@@ -323,16 +337,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "href": {
                     "name": "href",
                     "type": "string",
@@ -350,30 +354,19 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
-            },
-            "showSearch": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Search",
-              "description": "Show the top-bar search box. Default `false` — opt in by setting `searchEvent` (any truthy value implies showSearch) or this flag.",
-              "tier": "presentation"
-            },
-            "appName": {
-              "type": "string",
-              "default": "{{APP_TITLE}}",
-              "label": "App Name",
-              "description": "App name shown in sidebar",
-              "tier": "presentation"
-            },
-            "showThemeToggle": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Theme Toggle",
-              "description": "Show the theme toggle button in the header. Default `true` — universally useful for a11y / dark mode.",
-              "tier": "presentation"
             },
             "currentPath": {
               "type": "string",
@@ -395,10 +388,17 @@
                 "minimal"
               ]
             },
-            "headerActions": {
+            "sidebarFooter": {
               "type": "node",
-              "label": "Header Actions",
-              "description": "Header actions (extra slots beyond bell/search/theme).",
+              "label": "Sidebar Footer",
+              "description": "Custom sidebar footer (optional). When omitted, the sidebar has no footer — apps that need Settings/etc. add them via navItems.",
+              "tier": "presentation"
+            },
+            "appName": {
+              "type": "string",
+              "default": "{{APP_TITLE}}",
+              "label": "App Name",
+              "description": "App name shown in sidebar",
               "tier": "presentation"
             }
           },

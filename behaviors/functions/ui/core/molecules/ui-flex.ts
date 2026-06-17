@@ -39,26 +39,26 @@ export type StdUiFlexEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFlexConfig {
-  /** Default: `"start"` */
-  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
-  /** Default: `"stretch"` */
-  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
-  /** Default: `0` */
-  grow?: number;
-  /** Default: `0` */
-  shrink?: number;
-  /** Default: `"Basis"` */
-  basis?: string;
-  /** Default: `"nowrap"` */
-  wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
-  /** Default: `false` */
-  inline?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"none"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `"row"` */
   direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  /** Default: `false` */
+  inline?: boolean;
+  /** Default: `"start"` */
+  justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
+  /** Default: `0` */
+  grow?: number;
+  /** Default: `"nowrap"` */
+  wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
+  /** Default: `0` */
+  shrink?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Basis"` */
+  basis?: string;
+  /** Default: `"none"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
 /**

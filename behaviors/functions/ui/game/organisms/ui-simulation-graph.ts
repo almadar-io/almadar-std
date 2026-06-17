@@ -39,22 +39,22 @@ export type StdUiSimulationGraphEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulationGraphConfig {
-  /** Default: `120` */
-  height?: number;
-  /** Default: `"#e94560"` */
-  color?: string;
   /** Default: `[{"value":1,"time":1}]` */
   data?: EntityRow[];
   /** Default: `300` */
   width?: number;
-  /** Default: `"Unit"` */
-  unit?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `120` */
+  height?: number;
   /** Default: `200` */
   maxPoints?: number;
+  /** Default: `"Unit"` */
+  unit?: string;
+  /** Default: `"#e94560"` */
+  color?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -158,15 +158,15 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
                   'render-ui',
                   'main',
                   {
-                    'width': '@config.width',
-                    'className': '@config.className',
                     'color': '@config.color',
-                    'unit': '@config.unit',
                     'data': '@config.data',
                     'height': '@config.height',
-                    'maxPoints': '@config.maxPoints',
-                    'label': '@config.label',
+                    'className': '@config.className',
+                    'width': '@config.width',
                     'type': 'simulation-graph',
+                    'unit': '@config.unit',
+                    'label': '@config.label',
+                    'maxPoints': '@config.maxPoints',
                   },
                 ],
               ],
@@ -174,20 +174,6 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
           ],
         },
         'config': {
-          'height': {
-            'type': 'number',
-            'default': 120,
-            'label': 'Height',
-            'description': 'height prop',
-            'tier': 'presentation',
-          },
-          'color': {
-            'type': 'string',
-            'default': '#e94560',
-            'label': 'Color',
-            'description': 'color prop',
-            'tier': 'presentation',
-          },
           'data': {
             'type': '[SimulationGraphDataItem]',
             'default': [
@@ -202,13 +188,13 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
             'items': {
               'type': 'object',
               'properties': {
-                'time': {
-                  'name': 'time',
+                'value': {
+                  'name': 'value',
                   'type': 'number',
                   'required': true,
                 },
-                'value': {
-                  'name': 'value',
+                'time': {
+                  'name': 'time',
                   'type': 'number',
                   'required': true,
                 },
@@ -222,20 +208,6 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
             'description': 'width prop',
             'tier': 'presentation',
           },
-          'unit': {
-            'type': 'string',
-            'default': 'Unit',
-            'label': 'Unit',
-            'description': 'unit prop',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
-          },
           'label': {
             'type': 'string',
             'default': 'Label',
@@ -243,11 +215,39 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
             'description': 'label prop',
             'tier': 'presentation',
           },
+          'height': {
+            'type': 'number',
+            'default': 120,
+            'label': 'Height',
+            'description': 'height prop',
+            'tier': 'presentation',
+          },
           'maxPoints': {
             'type': 'number',
             'default': 200,
             'label': 'Max Points',
             'description': 'maxPoints prop',
+            'tier': 'presentation',
+          },
+          'unit': {
+            'type': 'string',
+            'default': 'Unit',
+            'label': 'Unit',
+            'description': 'unit prop',
+            'tier': 'presentation',
+          },
+          'color': {
+            'type': 'string',
+            'default': '#e94560',
+            'label': 'Color',
+            'description': 'color prop',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
             'tier': 'presentation',
           },
         },

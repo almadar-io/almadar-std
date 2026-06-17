@@ -39,34 +39,34 @@ export type StdUiGameCanvas3dCastleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas3dCastleTemplateConfig {
-  /** Default: `true` */
-  showHeader?: boolean;
-  /** Default: `true` */
-  showGrid?: boolean;
-  /** Default: `"Build Event"` */
-  buildEvent?: string;
-  /** Default: `[]` */
-  selectedTileIds?: string[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Exit Event"` */
-  exitEvent?: string;
-  /** Default: `"Selected Building Id"` */
-  selectedBuildingId?: string;
-  /** Default: `true` */
-  shadows?: boolean;
   /** Default: `"Recruit Event"` */
   recruitEvent?: string;
+  /** Default: `true` */
+  showGrid?: boolean;
+  /** Default: `[{"x":1,"z":1}]` */
+  availableBuildSites?: EntityRow[];
+  /** Default: `true` */
+  showHeader?: boolean;
+  /** Default: `"#1e1e2e"` */
+  backgroundColor?: string;
+  /** Default: `[]` */
+  selectedTileIds?: string[];
+  /** Default: `"Unit Click Event"` */
+  unitClickEvent?: string;
+  /** Default: `"Exit Event"` */
+  exitEvent?: string;
   /** Default: `"isometric"` */
   cameraMode?: 'isometric' | 'perspective' | 'top-down';
   /** Default: `"Building Click Event"` */
   buildingClickEvent?: string;
-  /** Default: `"#1e1e2e"` */
-  backgroundColor?: string;
-  /** Default: `"Unit Click Event"` */
-  unitClickEvent?: string;
-  /** Default: `[{"x":1,"z":1}]` */
-  availableBuildSites?: EntityRow[];
+  /** Default: `"Selected Building Id"` */
+  selectedBuildingId?: string;
+  /** Default: `"Build Event"` */
+  buildEvent?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `true` */
+  shadows?: boolean;
 }
 
 /**

@@ -49,12 +49,12 @@ export interface StdUiActionButtonsActionPayload {
 export interface StdUiActionButtonsConfig {
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `[{"label":"Label","icon":"circle","variant":"primary","id":"Id"}]` */
-  buttons?: EntityRow[];
   /** Default: `"horizontal"` */
   layout?: 'horizontal' | 'vertical' | 'diamond';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `[{"variant":"primary","id":"Id","label":"Label","icon":"circle"}]` */
+  buttons?: EntityRow[];
   /** Default: `""` */
   className?: string;
 }

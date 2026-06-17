@@ -70,30 +70,30 @@ export interface StdUiTraitSlotConfig {
   /** Default: `{}` */
   categoryColors?: unknown;
   /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
   selected?: boolean;
   /** Default: `false` */
   draggable?: boolean;
-  /** Default: `"correct"` */
-  feedback?: 'correct' | 'wrong';
   /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
   tooltipFrameUrl?: unknown;
-  /** Default: `true` */
-  showTooltip?: boolean;
-  /** Default: `false` */
-  locked?: boolean;
-  /** Default: `"Lock Label"` */
-  lockLabel?: string;
+  /** Default: `"correct"` */
+  feedback?: 'correct' | 'wrong';
   /** Default: `""` */
   className?: string;
-  /** Default: `{"id":"Id","stateMachine":{"currentState":"Current State","states":["Item"],"description":"Description","transitions":[{"to":"To","event":"Event","from":"From","guardHint":"Guard Hint"}],"name":"Name"},"category":"Category","iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","name":"Name","iconEmoji":"Icon Emoji","description":"Description"}` */
+  error?: EntityRow;
+  /** Default: `"Lock Label"` */
+  lockLabel?: string;
+  /** Default: `true` */
+  showTooltip?: boolean;
+  /** Default: `{"iconEmoji":"Icon Emoji","name":"Name","iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","stateMachine":{"name":"Name","currentState":"Current State","transitions":[{"from":"From","to":"To","event":"Event","guardHint":"Guard Hint"}],"states":["Item"],"description":"Description"},"category":"Category","description":"Description"}` */
   equippedItem?: EntityRow;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */
   slotNumber?: number;
   /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
+  locked?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**
@@ -636,28 +636,28 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                   'render-ui',
                   'main',
                   {
-                    'onDragStart': 'DRAG_START',
-                    'entity': 'TraitSlotItem',
-                    'showTooltip': '@config.showTooltip',
-                    'isLoading': '@config.isLoading',
-                    'feedback': '@config.feedback',
-                    'error': '@config.error',
-                    'onItemDrop': 'ITEM_DROP',
-                    'draggable': '@config.draggable',
-                    'size': '@config.size',
-                    'slotNumber': '@entity.slotNumber',
-                    'equippedItem': '@config.equippedItem',
-                    'onClick': 'CLICK',
                     'onRemove': 'REMOVE',
-                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
+                    'type': 'trait-slot',
+                    'entity': 'TraitSlotItem',
+                    'onItemDrop': 'ITEM_DROP',
                     'removeEvent': 'REMOVE',
+                    'locked': '@config.locked',
+                    'clickEvent': 'CLICK',
+                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
+                    'size': '@config.size',
+                    'onClick': 'CLICK',
+                    'onDragStart': 'DRAG_START',
+                    'equippedItem': '@config.equippedItem',
                     'selected': '@config.selected',
+                    'showTooltip': '@config.showTooltip',
+                    'slotNumber': '@entity.slotNumber',
+                    'error': '@config.error',
+                    'draggable': '@config.draggable',
+                    'feedback': '@config.feedback',
                     'lockLabel': '@config.lockLabel',
                     'categoryColors': '@config.categoryColors',
-                    'clickEvent': 'CLICK',
-                    'type': 'trait-slot',
-                    'locked': '@config.locked',
-                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -676,28 +676,28 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                   'render-ui',
                   'main',
                   {
-                    'onItemDrop': 'ITEM_DROP',
-                    'feedback': '@config.feedback',
-                    'entity': 'TraitSlotItem',
-                    'selected': '@config.selected',
-                    'equippedItem': '@config.equippedItem',
-                    'onRemove': 'REMOVE',
-                    'removeEvent': 'REMOVE',
-                    'type': 'trait-slot',
-                    'categoryColors': '@config.categoryColors',
-                    'showTooltip': '@config.showTooltip',
-                    'onDragStart': 'DRAG_START',
-                    'onClick': 'CLICK',
-                    'locked': '@config.locked',
-                    'error': '@config.error',
-                    'size': '@config.size',
-                    'isLoading': '@config.isLoading',
-                    'draggable': '@config.draggable',
-                    'clickEvent': 'CLICK',
                     'slotNumber': '@entity.slotNumber',
+                    'lockLabel': '@config.lockLabel',
+                    'removeEvent': 'REMOVE',
+                    'onClick': 'CLICK',
+                    'equippedItem': '@config.equippedItem',
+                    'error': '@config.error',
+                    'showTooltip': '@config.showTooltip',
+                    'selected': '@config.selected',
+                    'isLoading': '@config.isLoading',
+                    'onRemove': 'REMOVE',
+                    'clickEvent': 'CLICK',
+                    'locked': '@config.locked',
+                    'categoryColors': '@config.categoryColors',
                     'tooltipFrameUrl': '@config.tooltipFrameUrl',
                     'className': '@config.className',
-                    'lockLabel': '@config.lockLabel',
+                    'entity': 'TraitSlotItem',
+                    'draggable': '@config.draggable',
+                    'onItemDrop': 'ITEM_DROP',
+                    'feedback': '@config.feedback',
+                    'type': 'trait-slot',
+                    'size': '@config.size',
+                    'onDragStart': 'DRAG_START',
                   },
                 ],
               ],
@@ -716,28 +716,28 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                   'render-ui',
                   'main',
                   {
-                    'categoryColors': '@config.categoryColors',
-                    'isLoading': '@config.isLoading',
-                    'equippedItem': '@config.equippedItem',
-                    'clickEvent': 'CLICK',
-                    'onClick': 'CLICK',
-                    'onDragStart': 'DRAG_START',
-                    'error': '@config.error',
-                    'onRemove': 'REMOVE',
-                    'removeEvent': 'REMOVE',
-                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
-                    'onItemDrop': 'ITEM_DROP',
-                    'selected': '@config.selected',
-                    'locked': '@config.locked',
-                    'size': '@config.size',
                     'showTooltip': '@config.showTooltip',
+                    'onClick': 'CLICK',
+                    'removeEvent': 'REMOVE',
                     'className': '@config.className',
-                    'type': 'trait-slot',
+                    'onRemove': 'REMOVE',
+                    'error': '@config.error',
+                    'categoryColors': '@config.categoryColors',
+                    'clickEvent': 'CLICK',
                     'draggable': '@config.draggable',
-                    'feedback': '@config.feedback',
-                    'entity': 'TraitSlotItem',
+                    'onDragStart': 'DRAG_START',
+                    'locked': '@config.locked',
                     'lockLabel': '@config.lockLabel',
                     'slotNumber': '@entity.slotNumber',
+                    'entity': 'TraitSlotItem',
+                    'onItemDrop': 'ITEM_DROP',
+                    'equippedItem': '@config.equippedItem',
+                    'tooltipFrameUrl': '@config.tooltipFrameUrl',
+                    'selected': '@config.selected',
+                    'isLoading': '@config.isLoading',
+                    'type': 'trait-slot',
+                    'size': '@config.size',
+                    'feedback': '@config.feedback',
                   },
                 ],
               ],
@@ -754,18 +754,25 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
             'items': {
               'type': 'object',
               'properties': {
-                'bg': {
-                  'name': 'bg',
-                  'type': 'string',
-                  'required': true,
-                },
                 'border': {
                   'name': 'border',
                   'type': 'string',
                   'required': true,
                 },
+                'bg': {
+                  'name': 'bg',
+                  'type': 'string',
+                  'required': true,
+                },
               },
             },
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state',
+            'tier': 'presentation',
           },
           'selected': {
             'type': 'boolean',
@@ -781,6 +788,13 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
             'description': 'Whether this slot\'s equipped item is draggable',
             'tier': 'presentation',
           },
+          'tooltipFrameUrl': {
+            'type': 'asset',
+            'default': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
+            'label': 'Tooltip Frame Url',
+            'description': 'Optional tooltip frame image URL',
+            'tier': 'presentation',
+          },
           'feedback': {
             'type': 'string',
             'default': 'correct',
@@ -792,11 +806,46 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
               'wrong',
             ],
           },
-          'tooltipFrameUrl': {
-            'type': 'asset',
-            'default': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
-            'label': 'Tooltip Frame Url',
-            'description': 'Optional tooltip frame image URL',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'TraitSlotError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'lockLabel': {
+            'type': 'string',
+            'default': 'Lock Label',
+            'label': 'Lock Label',
+            'description': 'Label shown when locked',
             'tier': 'presentation',
           },
           'showTooltip': {
@@ -806,59 +855,98 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
             'description': 'Show tooltip on hover',
             'tier': 'presentation',
           },
-          'locked': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Locked',
-            'description': 'Whether slot is locked',
-            'tier': 'presentation',
-          },
-          'lockLabel': {
-            'type': 'string',
-            'default': 'Lock Label',
-            'label': 'Lock Label',
-            'description': 'Label shown when locked',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'equippedItem': {
             'type': 'TraitSlotEquippedItem',
             'default': {
+              'iconEmoji': 'Icon Emoji',
+              'name': 'Name',
+              'iconUrl': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
               'id': 'Id',
               'stateMachine': {
+                'name': 'Name',
                 'currentState': 'Current State',
+                'transitions': [
+                  {
+                    'from': 'From',
+                    'to': 'To',
+                    'event': 'Event',
+                    'guardHint': 'Guard Hint',
+                  },
+                ],
                 'states': [
                   'Item',
                 ],
                 'description': 'Description',
-                'transitions': [
-                  {
-                    'to': 'To',
-                    'event': 'Event',
-                    'from': 'From',
-                    'guardHint': 'Guard Hint',
-                  },
-                ],
-                'name': 'Name',
               },
               'category': 'Category',
-              'iconUrl': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
-              'name': 'Name',
-              'iconEmoji': 'Icon Emoji',
               'description': 'Description',
             },
             'label': 'Equipped Item',
             'description': 'Currently equipped item, if any',
             'tier': 'presentation',
             'properties': {
-              'id': {
-                'name': 'id',
+              'stateMachine': {
+                'name': 'stateMachine',
+                'type': 'object',
+                'required': false,
+                'properties': {
+                  'description': {
+                    'name': 'description',
+                    'type': 'string',
+                    'required': false,
+                  },
+                  'currentState': {
+                    'name': 'currentState',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'transitions': {
+                    'name': 'transitions',
+                    'type': 'array',
+                    'required': true,
+                    'items': {
+                      'type': 'object',
+                      'properties': {
+                        'to': {
+                          'name': 'to',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'guardHint': {
+                          'name': 'guardHint',
+                          'type': 'string',
+                          'required': false,
+                        },
+                        'from': {
+                          'name': 'from',
+                          'type': 'string',
+                          'required': true,
+                        },
+                        'event': {
+                          'name': 'event',
+                          'type': 'string',
+                          'required': true,
+                        },
+                      },
+                    },
+                  },
+                  'name': {
+                    'name': 'name',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'states': {
+                    'name': 'states',
+                    'type': 'array',
+                    'required': true,
+                    'items': {
+                      'type': 'string',
+                    },
+                  },
+                },
+              },
+              'category': {
+                'name': 'category',
                 'type': 'string',
                 'required': true,
               },
@@ -872,82 +960,36 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                 'type': 'string',
                 'required': false,
               },
-              'stateMachine': {
-                'name': 'stateMachine',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'states': {
-                    'name': 'states',
-                    'type': 'array',
-                    'required': true,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'name': {
-                    'name': 'name',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'transitions': {
-                    'name': 'transitions',
-                    'type': 'array',
-                    'required': true,
-                    'items': {
-                      'type': 'object',
-                      'properties': {
-                        'from': {
-                          'name': 'from',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'event': {
-                          'name': 'event',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'to': {
-                          'name': 'to',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'guardHint': {
-                          'name': 'guardHint',
-                          'type': 'string',
-                          'required': false,
-                        },
-                      },
-                    },
-                  },
-                  'description': {
-                    'name': 'description',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'currentState': {
-                    'name': 'currentState',
-                    'type': 'string',
-                    'required': true,
-                  },
-                },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': true,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
               },
               'iconUrl': {
                 'name': 'iconUrl',
                 'type': 'string',
                 'required': false,
               },
-              'category': {
-                'name': 'category',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
             },
+          },
+          'slotNumber': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Slot Number',
+            'description': 'Slot index (1-based)',
+            'tier': 'presentation',
+          },
+          'locked': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Locked',
+            'description': 'Whether slot is locked',
+            'tier': 'presentation',
           },
           'size': {
             'type': 'string',
@@ -960,48 +1002,6 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
               'md',
               'lg',
             ],
-          },
-          'slotNumber': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Slot Number',
-            'description': 'Slot index (1-based)',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'TraitSlotError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
           },
         },
         'scope': 'instance',

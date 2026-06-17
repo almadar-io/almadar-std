@@ -39,12 +39,12 @@ export type StdUiMarkdownContentEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMarkdownContentConfig {
+  /** Default: `"ltr"` */
+  direction?: 'ltr' | 'rtl';
   /** Default: `""` */
   className?: string;
   /** Default: `"Content"` */
   content?: string;
-  /** Default: `"ltr"` */
-  direction?: 'ltr' | 'rtl';
 }
 
 /**

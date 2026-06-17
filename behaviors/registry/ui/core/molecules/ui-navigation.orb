@@ -46,21 +46,15 @@
                 "event": "INIT",
                 "effects": [
                   [
-                    "fetch",
-                    "NavigationItem",
-                    {}
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "items": "@config.items",
-                      "entity": "NavigationItem",
-                      "error": "@config.error",
-                      "type": "navigation",
                       "isLoading": "@config.isLoading",
+                      "type": "navigation",
                       "orientation": "@config.orientation",
-                      "className": "@config.className"
+                      "items": "@config.items",
+                      "className": "@config.className",
+                      "error": "@config.error"
                     }
                   ]
                 ]
@@ -68,12 +62,71 @@
             ]
           },
           "config": {
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
+            "items": {
+              "type": "[NavigationItemsItem]",
+              "default": [
+                {
+                  "icon": "circle",
+                  "badge": "Badge",
+                  "label": "Label",
+                  "id": "Id",
+                  "href": "Href",
+                  "isActive": false,
+                  "disabled": false,
+                  "subMenu": []
+                }
+              ],
+              "label": "Items",
+              "description": "Navigation items",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "type": "string",
+                    "required": false
+                  },
+                  "subMenu": {
+                    "name": "subMenu",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "isActive": {
+                    "name": "isActive",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "error": {
               "type": "NavigationError",
@@ -81,8 +134,8 @@
               "description": "Error state",
               "tier": "presentation",
               "properties": {
-                "name": {
-                  "name": "name",
+                "code": {
+                  "name": "code",
                   "type": "string",
                   "required": false
                 },
@@ -96,8 +149,8 @@
                   "type": "string",
                   "required": true
                 },
-                "code": {
-                  "name": "code",
+                "name": {
+                  "name": "name",
                   "type": "string",
                   "required": false
                 }
@@ -110,71 +163,12 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "items": {
-              "type": "[NavigationItemsItem]",
-              "default": [
-                {
-                  "subMenu": [],
-                  "icon": "circle",
-                  "isActive": false,
-                  "id": "Id",
-                  "disabled": false,
-                  "label": "Label",
-                  "badge": "Badge",
-                  "href": "Href"
-                }
-              ],
-              "label": "Items",
-              "description": "Navigation items",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "subMenu": {
-                    "name": "subMenu",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  },
-                  "isActive": {
-                    "name": "isActive",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
             },
             "orientation": {
               "type": "string",

@@ -39,20 +39,20 @@ export type StdUiBattleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBattleTemplateConfig {
-  /** Default: `[{"x":0,"terrain":"stone","y":0,"passable":false},{"passable":false,"x":1,"terrain":"stone","y":0},{"terrain":"stone","x":2,"passable":false,"y":0},{"x":3,"y":0,"terrain":"stone","passable":false},{"terrain":"stone","passable":false,"x":4,"y":0},{"terrain":"stone","y":1,"x":0,"passable":false},{"x":1,"passable":true,"terrain":"dirt","y":1},{"y":1,"x":2,"terrain":"grass","passable":true},{"terrain":"grass","passable":true,"y":1,"x":3},{"passable":false,"x":4,"y":1,"terrain":"stone"},{"passable":false,"terrain":"stone","x":0,"y":2},{"x":1,"terrain":"grass","passable":true,"y":2},{"y":2,"x":2,"terrain":"dirt","passable":true},{"terrain":"grass","y":2,"x":3,"passable":true},{"passable":false,"terrain":"stone","x":4,"y":2},{"passable":false,"x":0,"terrain":"stone","y":3},{"x":1,"terrain":"grass","passable":true,"y":3},{"x":2,"terrain":"grass","y":3,"passable":true},{"x":3,"y":3,"passable":true,"terrain":"dirt"},{"passable":false,"x":4,"terrain":"stone","y":3},{"x":0,"y":4,"terrain":"stone","passable":false},{"passable":false,"y":4,"terrain":"stone","x":1},{"passable":false,"terrain":"stone","y":4,"x":2},{"terrain":"stone","x":3,"passable":false,"y":4},{"x":4,"y":4,"passable":false,"terrain":"stone"}]` */
-  tiles?: EntityRow[];
-  /** Default: `0.45` */
-  scale?: number;
-  /** Default: `[{"id":"f1","y":2,"type":"gold_mine","x":2},{"y":1,"id":"f2","x":3,"type":"portal"}]` */
+  /** Default: `[{"y":2,"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","x":2,"type":"gold_mine"},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","type":"portal","id":"f2","x":3,"y":1}]` */
   features?: EntityRow[];
-  /** Default: `""` */
-  assetManifest?: string;
-  /** Default: `[{"maxHealth":10,"unitType":"worker","name":"Worker","team":"player","id":"u1","position":{"x":1,"y":1},"health":10},{"position":{"x":3,"y":3},"health":8,"unitType":"guardian","name":"Guardian","team":"enemy","id":"u2","maxHealth":10}]` */
-  units?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
   /** Default: `1` */
   unitScale?: number;
+  /** Default: `[{"unitType":"worker","health":10,"team":"player","maxHealth":10,"position":{"y":1,"x":1},"name":"Worker","id":"u1"},{"position":{"x":3,"y":3},"name":"Guardian","team":"enemy","id":"u2","maxHealth":10,"health":8,"unitType":"guardian"}]` */
+  units?: EntityRow[];
+  /** Default: `""` */
+  assetManifest?: string;
+  /** Default: `0.45` */
+  scale?: number;
+  /** Default: `[{"y":0,"x":0,"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone"},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","x":1,"passable":false,"terrain":"stone","y":0},{"x":2,"y":0,"terrain":"stone","passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb"},{"y":0,"terrain":"stone","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","passable":false,"x":3},{"y":0,"x":4,"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone"},{"x":0,"terrain":"stone","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","y":1,"passable":false},{"x":1,"y":1,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","passable":true,"terrain":"dirt"},{"terrain":"grass","x":2,"y":1,"passable":true,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb"},{"x":3,"y":1,"terrain":"grass","passable":true,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb"},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone","y":1,"x":4,"passable":false},{"y":2,"passable":false,"x":0,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone"},{"passable":true,"x":1,"y":2,"terrain":"grass","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb"},{"terrain":"dirt","passable":true,"y":2,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","x":2},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"y":2,"terrain":"grass","x":3},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","x":4,"terrain":"stone","passable":false,"y":2},{"x":0,"passable":false,"terrain":"stone","y":3,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb"},{"terrain":"grass","x":1,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","y":3,"passable":true},{"x":2,"passable":true,"terrain":"grass","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","y":3},{"y":3,"x":3,"passable":true,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","terrain":"dirt"},{"y":3,"passable":false,"x":4,"terrain":"stone","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb"},{"y":4,"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","x":0,"terrain":"stone"},{"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone","x":1,"y":4},{"y":4,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","x":2,"terrain":"stone","passable":false},{"passable":false,"y":4,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","x":3,"terrain":"stone"},{"y":4,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","passable":false,"terrain":"stone","x":4}]` */
+  tiles?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

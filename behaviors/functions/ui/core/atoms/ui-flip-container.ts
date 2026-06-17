@@ -46,10 +46,10 @@ export interface StdUiFlipContainerClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFlipContainerConfig {
-  /** Default: `false` */
-  flipped?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  flipped?: boolean;
 }
 
 /**

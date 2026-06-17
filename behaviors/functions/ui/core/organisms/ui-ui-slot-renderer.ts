@@ -41,17 +41,17 @@ export type StdUiUiSlotRendererEventKey = 'INIT';
 export interface StdUiUiSlotRendererConfig {
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `false` */
-  includeFloating?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `"fixed"` */
-  hudMode?: 'fixed' | 'inline';
+  /** Default: `false` */
+  includeFloating?: boolean;
   /** Default: `false` */
   includeHud?: boolean;
+  error?: EntityRow;
   /** Default: `{"enabled":false}` */
   suspense?: EntityRow;
-  error?: EntityRow;
+  /** Default: `"fixed"` */
+  hudMode?: 'fixed' | 'inline';
 }
 
 /**
@@ -160,15 +160,15 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                   'render-ui',
                   'main',
                   {
-                    'entity': 'UiSlotRendererItem',
                     'suspense': '@config.suspense',
                     'includeHud': '@config.includeHud',
+                    'hudMode': '@config.hudMode',
+                    'type': 'ui-slot-renderer',
                     'includeFloating': '@config.includeFloating',
                     'className': '@config.className',
-                    'isLoading': '@config.isLoading',
-                    'type': 'ui-slot-renderer',
-                    'hudMode': '@config.hudMode',
+                    'entity': 'UiSlotRendererItem',
                     'error': '@config.error',
+                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -183,13 +183,6 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'includeFloating': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Include Floating',
-            'description': 'Include floating slot',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -197,16 +190,12 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             'description': 'Additional class name for the container',
             'tier': 'presentation',
           },
-          'hudMode': {
-            'type': 'string',
-            'default': 'fixed',
-            'label': 'Hud Mode',
-            'description': 'HUD positioning mode: \'fixed\' (default, viewport-relative) or \'inline\' (container-relative, uses sticky)',
+          'includeFloating': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Include Floating',
+            'description': 'Include floating slot',
             'tier': 'presentation',
-            'values': [
-              'fixed',
-              'inline',
-            ],
           },
           'includeHud': {
             'type': 'boolean',
@@ -214,30 +203,6 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
             'label': 'Include Hud',
             'description': 'Include HUD slots',
             'tier': 'presentation',
-          },
-          'suspense': {
-            'type': 'UiSlotRendererSuspense',
-            'default': {
-              'enabled': false,
-            },
-            'label': 'Suspense',
-            'description': 'Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works.',
-            'tier': 'presentation',
-            'properties': {
-              'slotFallbacks': {
-                'name': 'slotFallbacks',
-                'type': 'object',
-                'required': false,
-                'items': {
-                  'type': 'string',
-                },
-              },
-              'enabled': {
-                'name': 'enabled',
-                'type': 'boolean',
-                'required': true,
-              },
-            },
           },
           'error': {
             'type': 'UiSlotRendererError',
@@ -250,6 +215,11 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                 'type': 'string',
                 'required': false,
               },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
               'name': {
                 'name': 'name',
                 'type': 'string',
@@ -260,12 +230,42 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                 'type': 'string',
                 'required': false,
               },
-              'message': {
-                'name': 'message',
-                'type': 'string',
+            },
+          },
+          'suspense': {
+            'type': 'UiSlotRendererSuspense',
+            'default': {
+              'enabled': false,
+            },
+            'label': 'Suspense',
+            'description': 'Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works.',
+            'tier': 'presentation',
+            'properties': {
+              'enabled': {
+                'name': 'enabled',
+                'type': 'boolean',
                 'required': true,
               },
+              'slotFallbacks': {
+                'name': 'slotFallbacks',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
             },
+          },
+          'hudMode': {
+            'type': 'string',
+            'default': 'fixed',
+            'label': 'Hud Mode',
+            'description': 'HUD positioning mode: \'fixed\' (default, viewport-relative) or \'inline\' (container-relative, uses sticky)',
+            'tier': 'presentation',
+            'values': [
+              'fixed',
+              'inline',
+            ],
           },
         },
         'scope': 'instance',

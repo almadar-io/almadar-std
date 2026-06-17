@@ -54,30 +54,30 @@ export interface StdUiSequencerBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSequencerBoardConfig {
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `""` */
-  className?: string;
   error?: EntityRow;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `1000` */
-  stepDurationMs?: number;
-  activeFilters?: unknown;
   /** Default: `0` */
   pageProp?: number;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"Sort By"` */
+  sortBy?: string;
   /** Default: `{}` */
   categoryColors?: unknown;
+  /** Default: `1000` */
+  stepDurationMs?: number;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  totalCount?: number;
+  activeFilters?: unknown;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -250,23 +250,23 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'activeFilters': '@config.activeFilters',
                     'sortBy': '@config.sortBy',
-                    'selectedIds': '@config.selectedIds',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'entity': '@entity',
-                    'categoryColors': '@config.categoryColors',
-                    'error': '@config.error',
-                    'totalCount': '@config.totalCount',
-                    'completeEvent': 'COMPLETE',
-                    'searchValue': '@config.searchValue',
-                    'type': 'sequencer-board',
                     'isLoading': '@config.isLoading',
-                    'page': '@config.pageProp',
+                    'activeFilters': '@config.activeFilters',
+                    'className': '@config.className',
+                    'entity': '@entity',
+                    'completeEvent': 'COMPLETE',
+                    'selectedIds': '@config.selectedIds',
+                    'pageSize': '@config.pageSize',
+                    'stepDurationMs': '@config.stepDurationMs',
+                    'categoryColors': '@config.categoryColors',
                     'sortDirection': '@config.sortDirection',
                     'playEvent': 'PLAY',
-                    'pageSize': '@config.pageSize',
-                    'className': '@config.className',
+                    'error': '@config.error',
+                    'page': '@config.pageProp',
+                    'totalCount': '@config.totalCount',
+                    'type': 'sequencer-board',
+                    'searchValue': '@config.searchValue',
                   },
                 ],
               ],
@@ -274,15 +274,48 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           ],
         },
         'config': {
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
+          'error': {
+            'type': 'SequencerBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
             'tier': 'presentation',
-            'items': {
-              'type': 'string',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
             },
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
           },
           'sortDirection': {
             'type': 'string',
@@ -295,95 +328,11 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               'desc',
             ],
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'SequencerBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
           'sortBy': {
             'type': 'string',
             'default': 'Sort By',
             'label': 'Sort By',
             'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'stepDurationMs': {
-            'type': 'number',
-            'default': 1000,
-            'label': 'Step Duration Ms',
-            'description': 'Playback speed in ms per step',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
             'tier': 'presentation',
           },
           'categoryColors': {
@@ -395,18 +344,69 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'items': {
               'type': 'object',
               'properties': {
-                'border': {
-                  'name': 'border',
-                  'type': 'string',
-                  'required': true,
-                },
                 'bg': {
                   'name': 'bg',
                   'type': 'string',
                   'required': true,
                 },
+                'border': {
+                  'name': 'border',
+                  'type': 'string',
+                  'required': true,
+                },
               },
             },
+          },
+          'stepDurationMs': {
+            'type': 'number',
+            'default': 1000,
+            'label': 'Step Duration Ms',
+            'description': 'Playback speed in ms per step',
+            'tier': 'presentation',
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

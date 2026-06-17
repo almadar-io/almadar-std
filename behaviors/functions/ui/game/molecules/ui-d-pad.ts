@@ -48,13 +48,13 @@ export interface StdUiDPadDirectionPayload {
  */
 export interface StdUiDPadConfig {
   /** Default: `false` */
-  includeDiagonals?: boolean;
-  /** Default: `false` */
   disabled?: boolean;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  includeDiagonals?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

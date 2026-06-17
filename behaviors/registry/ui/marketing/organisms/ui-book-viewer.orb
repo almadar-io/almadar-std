@@ -54,21 +54,21 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "book-viewer",
-                      "selectedIds": "@config.selectedIds",
+                      "page": "@config.pageProp",
                       "fieldMap": "@config.fieldMap",
-                      "pageSize": "@config.pageSize",
-                      "searchValue": "@config.searchValue",
-                      "sortBy": "@config.sortBy",
-                      "isLoading": "@config.isLoading",
+                      "entity": "@entity",
                       "initialPage": "@config.initialPage",
                       "sortDirection": "@config.sortDirection",
-                      "error": "@config.error",
-                      "entity": "@entity",
-                      "page": "@config.pageProp",
-                      "totalCount": "@config.totalCount",
+                      "sortBy": "@config.sortBy",
                       "activeFilters": "@config.activeFilters",
-                      "className": "@config.className"
+                      "isLoading": "@config.isLoading",
+                      "error": "@config.error",
+                      "searchValue": "@config.searchValue",
+                      "className": "@config.className",
+                      "totalCount": "@config.totalCount",
+                      "type": "book-viewer",
+                      "pageSize": "@config.pageSize",
+                      "selectedIds": "@config.selectedIds"
                     }
                   ]
                 ]
@@ -76,40 +76,18 @@
             ]
           },
           "config": {
-            "sortBy": {
-              "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
               "tier": "presentation"
             },
-            "error": {
-              "type": "BookViewerError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                }
-              }
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
             },
             "className": {
               "type": "string",
@@ -118,40 +96,15 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "initialPage": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Initial Page",
-              "description": "Initial page index (default: 0 = cover)",
-              "tier": "presentation"
-            },
-            "searchValue": {
-              "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
             },
             "pageSize": {
               "type": "number",
@@ -171,53 +124,63 @@
                 "desc"
               ]
             },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
+            "initialPage": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Initial Page",
+              "description": "Initial page index (default: 0 = cover)",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "BookViewerError",
+              "label": "Error",
+              "description": "Error state (UiError)",
               "tier": "presentation",
-              "items": {
-                "type": "string"
+              "properties": {
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                }
               }
             },
             "fieldMap": {
               "type": "BookViewerFieldMap",
               "default": {
-                "title": "Title",
-                "author": "Author",
-                "partTitle": "Part Title",
-                "chapterTitle": "Chapter Title",
-                "chapterContent": "Chapter Content",
-                "chapterId": "Chapter Id",
-                "parts": "Parts",
-                "direction": "Direction",
-                "chapterOrbitalSchema": "Chapter Orbital Schema",
                 "subtitle": "Subtitle",
                 "coverImageUrl": "Cover Image Url",
-                "chapters": "Chapters"
+                "partTitle": "Part Title",
+                "author": "Author",
+                "chapterContent": "Chapter Content",
+                "chapterTitle": "Chapter Title",
+                "title": "Title",
+                "direction": "Direction",
+                "parts": "Parts",
+                "chapterOrbitalSchema": "Chapter Orbital Schema",
+                "chapters": "Chapters",
+                "chapterId": "Chapter Id"
               },
               "label": "Field Map",
               "description": "Field name translation map — a BookFieldMap object or locale key ('ar')",
               "tier": "presentation",
               "properties": {
-                "author": {
-                  "name": "author",
-                  "type": "string",
-                  "required": true
-                },
-                "coverImageUrl": {
-                  "name": "coverImageUrl",
-                  "type": "string",
-                  "required": true
-                },
-                "chapterOrbitalSchema": {
-                  "name": "chapterOrbitalSchema",
-                  "type": "string",
-                  "required": true
-                },
-                "title": {
-                  "name": "title",
+                "chapterTitle": {
+                  "name": "chapterTitle",
                   "type": "string",
                   "required": true
                 },
@@ -226,28 +189,13 @@
                   "type": "string",
                   "required": true
                 },
-                "subtitle": {
-                  "name": "subtitle",
-                  "type": "string",
-                  "required": true
-                },
-                "chapterTitle": {
-                  "name": "chapterTitle",
-                  "type": "string",
-                  "required": true
-                },
                 "chapterContent": {
                   "name": "chapterContent",
                   "type": "string",
                   "required": true
                 },
-                "chapters": {
-                  "name": "chapters",
-                  "type": "string",
-                  "required": true
-                },
-                "parts": {
-                  "name": "parts",
+                "chapterOrbitalSchema": {
+                  "name": "chapterOrbitalSchema",
                   "type": "string",
                   "required": true
                 },
@@ -256,18 +204,70 @@
                   "type": "string",
                   "required": true
                 },
+                "subtitle": {
+                  "name": "subtitle",
+                  "type": "string",
+                  "required": true
+                },
+                "parts": {
+                  "name": "parts",
+                  "type": "string",
+                  "required": true
+                },
                 "partTitle": {
                   "name": "partTitle",
+                  "type": "string",
+                  "required": true
+                },
+                "author": {
+                  "name": "author",
+                  "type": "string",
+                  "required": true
+                },
+                "title": {
+                  "name": "title",
+                  "type": "string",
+                  "required": true
+                },
+                "chapters": {
+                  "name": "chapters",
+                  "type": "string",
+                  "required": true
+                },
+                "coverImageUrl": {
+                  "name": "coverImageUrl",
                   "type": "string",
                   "required": true
                 }
               }
             },
-            "totalCount": {
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "pageProp": {
               "type": "number",
               "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
               "tier": "presentation"
             }
           },

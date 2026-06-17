@@ -47,29 +47,29 @@ export interface StdUiGraphCanvasNodeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGraphCanvasConfig {
-  error?: EntityRow;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `true` */
-  showLabels?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `true` */
-  interactive?: boolean;
   /** Default: `"force"` */
   layout?: 'force' | 'circular' | 'grid';
   /** Default: `"Title"` */
   title?: string;
-  /** Default: `[{"id":"Id","x":1,"label":"Label","color":"Color","y":1,"group":"Group","size":1}]` */
+  /** Default: `[{"x":1,"y":1,"group":"Group","size":1,"id":"Id","label":"Label","color":"Color"}]` */
   nodes?: EntityRow[];
-  /** Default: `true` */
-  draggable?: boolean;
-  /** Default: `[{"navigatesTo":"Navigates To","variant":"primary","label":"Label"}]` */
-  actions?: EntityRow[];
-  /** Default: `[{"source":"Source","target":"Target","label":"Label","weight":1,"color":"Color"}]` */
+  error?: EntityRow;
+  /** Default: `[{"target":"Target","source":"Source","color":"Color","weight":1,"label":"Label"}]` */
   edges?: EntityRow[];
+  /** Default: `true` */
+  showLabels?: boolean;
+  /** Default: `true` */
+  interactive?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `true` */
+  draggable?: boolean;
+  /** Default: `400` */
+  height?: number;
+  /** Default: `[{"navigatesTo":"Navigates To","label":"Label","variant":"primary"}]` */
+  actions?: EntityRow[];
 }
 
 /**

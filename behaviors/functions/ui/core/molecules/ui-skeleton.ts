@@ -41,14 +41,14 @@ export type StdUiSkeletonEventKey = 'INIT';
 export interface StdUiSkeletonConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"text"` */
-  variant?: 'header' | 'table' | 'form' | 'card' | 'text';
-  /** Default: `5` */
-  rows?: number;
   /** Default: `4` */
   columns?: number;
   /** Default: `4` */
   fields?: number;
+  /** Default: `5` */
+  rows?: number;
+  /** Default: `"text"` */
+  variant?: 'header' | 'table' | 'form' | 'card' | 'text';
 }
 
 /**

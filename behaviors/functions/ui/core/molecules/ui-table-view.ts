@@ -62,49 +62,49 @@ export interface StdUiTableViewViewPayload {
 export interface StdUiTableViewConfig {
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
-  /** Default: `[{"className":"Class Name","icon":"circle","key":"Key","sortable":false,"weight":"normal","format":"badge","align":"left","field":"Field","header":"Header","width":"Width","label":"Label"}]` */
-  columns?: EntityRow[];
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
-  /** Default: `"Accepts"` */
-  accepts?: string;
-  /** Default: `[{"format":"badge","label":"Label","align":"left","className":"Class Name","icon":"circle","field":"Field","key":"Key","header":"Header","weight":"normal","width":"Width","sortable":false}]` */
-  fields?: EntityRow[];
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `"Empty Message"` */
-  emptyMessage?: string;
   /** Default: `false` */
   sortable?: boolean;
+  /** Default: `"Group By"` */
+  groupBy?: string;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
+  /** Default: `[{"field":"Field","width":"Width","header":"Header","format":"badge","icon":"circle","sortable":false,"key":"Key","weight":"normal","align":"left","className":"Class Name","label":"Label"}]` */
+  fields?: EntityRow[];
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
   /** Default: `"Reorder Event"` */
   reorderEvent?: string;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
   /** Default: `0` */
   maxInlineActions?: number;
   /** Default: `false` */
   dndRoot?: boolean;
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
   /** Default: `"Sort Column"` */
   sortColumn?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
-  /** Default: `"Group By"` */
-  groupBy?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `""` */
   className?: string;
+  /** Default: `"Empty Message"` */
+  emptyMessage?: string;
+  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `[{"icon":"circle","width":"Width","className":"Class Name","label":"Label","align":"left","weight":"normal","header":"Header","key":"Key","format":"badge","sortable":false,"field":"Field"}]` */
+  columns?: EntityRow[];
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `false` */
+  selectable?: boolean;
 }
 
 /**

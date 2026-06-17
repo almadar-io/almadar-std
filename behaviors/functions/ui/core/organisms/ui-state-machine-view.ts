@@ -39,11 +39,11 @@ export type StdUiStateMachineViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
+  error?: EntityRow;
   /** Default: `""` */
   className?: string;
-  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 /**
@@ -148,9 +148,9 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'main',
                   {
                     'className': '@config.className',
+                    'type': 'state-machine-view',
                     'isLoading': '@config.isLoading',
                     'error': '@config.error',
-                    'type': 'state-machine-view',
                   },
                 ],
               ],
@@ -158,20 +158,6 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
           ],
         },
         'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'StateMachineViewError',
             'label': 'Error',
@@ -183,8 +169,8 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                 'type': 'string',
                 'required': true,
               },
-              'stack': {
-                'name': 'stack',
+              'name': {
+                'name': 'name',
                 'type': 'string',
                 'required': false,
               },
@@ -193,12 +179,26 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                 'type': 'string',
                 'required': false,
               },
-              'name': {
-                'name': 'name',
+              'stack': {
+                'name': 'stack',
                 'type': 'string',
                 'required': false,
               },
             },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',
