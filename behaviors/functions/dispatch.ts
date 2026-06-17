@@ -259,11 +259,6 @@ import {
   isStdUiFeatureGridOrganismFeatureGridOrganismOrbitalParams,
 } from './ui/marketing/organisms/ui-feature-grid-organism.js';
 import {
-  stdUiFeatureRendererFeatureRendererOrbital,
-  StdUiFeatureRendererFeatureRendererOrbitalManifest,
-  isStdUiFeatureRendererFeatureRendererOrbitalParams,
-} from './ui/game/organisms/ui-feature-renderer.js';
-import {
   stdUiFormFormOrbital,
   StdUiFormFormOrbitalManifest,
   isStdUiFormFormOrbitalParams,
@@ -1031,15 +1026,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiFeatureGridOrganismFeatureGridOrganismOrbital(p);
     },
     manifest: StdUiFeatureGridOrganismFeatureGridOrganismOrbitalManifest,
-  }],
-  ['ui-feature-renderer::FeatureRendererOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiFeatureRendererFeatureRendererOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-feature-renderer::FeatureRendererOrbital');
-      }
-      return stdUiFeatureRendererFeatureRendererOrbital(p);
-    },
-    manifest: StdUiFeatureRendererFeatureRendererOrbitalManifest,
   }],
   ['ui-form::FormOrbital', {
     factory: (p: object): OrbitalDefinition => {
