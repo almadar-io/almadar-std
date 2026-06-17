@@ -378,7 +378,6 @@ export * from './ui/core/organisms/ui-entity-table.js';
 export * from './ui/game/organisms/ui-event-handler-board.js';
 export * from './ui/game/organisms/ui-event-log.js';
 export * from './ui/marketing/organisms/ui-feature-grid-organism.js';
-export * from './ui/game/organisms/ui-feature-renderer.js';
 export * from './ui/core/organisms/ui-form.js';
 export * from './ui/core/organisms/ui-form-section.js';
 export * from './ui/game/organisms/ui-game-audio-provider.js';
