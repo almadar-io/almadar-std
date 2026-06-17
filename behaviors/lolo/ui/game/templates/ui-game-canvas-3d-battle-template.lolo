@@ -1,0 +1,109 @@
+app ui-game-canvas-3d-battle-template "1.0.0"
+"GameCanvas3dBattleTemplate — UI factory (1:1 with the @almadar/ui game-canvas-3d-battle-template pattern)."
+orbital GameCanvas3dBattleTemplateOrbital {
+  type GameCanvas3dBattleTemplateValidMovesItem = {
+    x : number!
+    z : number!
+  }
+  type GameCanvas3dBattleTemplateAttackTargetsItem = {
+    x : number!
+    z : number!
+  }
+
+  entity GameCanvas3dBattleTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait GameCanvas3dBattleTemplateRender -> @rebindable GameCanvas3dBattleTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch GameCanvas3dBattleTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          cameraMode: @config.cameraMode
+          showGrid: @config.showGrid
+          shadows: @config.shadows
+          backgroundColor: @config.backgroundColor
+          tileClickEvent: @config.tileClickEvent
+          unitClickEvent: @config.unitClickEvent
+          unitAttackEvent: @config.unitAttackEvent
+          unitMoveEvent: @config.unitMoveEvent
+          endTurnEvent: @config.endTurnEvent
+          exitEvent: @config.exitEvent
+          selectedUnitId: @config.selectedUnitId
+          validMoves: @config.validMoves
+          attackTargets: @config.attackTargets
+          showTurnIndicator: @config.showTurnIndicator
+          type: game-canvas-3d-battle-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "External styling override"
+        @tier "presentation"
+      cameraMode : "isometric" | "perspective" | "top-down" = perspective
+        @label "Camera Mode"
+        @description "3D camera mode - defaults to perspective for dramatic effect"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @description "Show grid helper"
+        @tier "presentation"
+      shadows : boolean = true
+        @label "Shadows"
+        @description "Enable shadows"
+        @tier "presentation"
+      backgroundColor : string = "#2a1a1a"
+        @label "Background Color"
+        @description "Background color - darker for battle atmosphere"
+        @tier "presentation"
+      tileClickEvent : string = "Tile Click Event"
+        @label "Tile Click Event"
+        @description "Event name for tile clicks"
+        @tier "presentation"
+      unitClickEvent : string = "Unit Click Event"
+        @label "Unit Click Event"
+        @description "Event name for unit clicks"
+        @tier "presentation"
+      unitAttackEvent : string = "Unit Attack Event"
+        @label "Unit Attack Event"
+        @description "Event name for unit attack"
+        @tier "presentation"
+      unitMoveEvent : string = "Unit Move Event"
+        @label "Unit Move Event"
+        @description "Event name for unit move"
+        @tier "presentation"
+      endTurnEvent : string = "End Turn Event"
+        @label "End Turn Event"
+        @description "Event name for ending turn"
+        @tier "presentation"
+      exitEvent : string = "Exit Event"
+        @label "Exit Event"
+        @description "Event name for exiting battle"
+        @tier "presentation"
+      selectedUnitId : string = "Selected Unit Id"
+        @label "Selected Unit Id"
+        @description "Currently selected unit ID"
+        @tier "presentation"
+      validMoves : [GameCanvas3dBattleTemplateValidMovesItem] = [{ x: 1, z: 1 }]
+        @label "Valid Moves"
+        @description "Valid move positions"
+        @tier "presentation"
+      attackTargets : [GameCanvas3dBattleTemplateAttackTargetsItem] = [{ x: 1, z: 1 }]
+        @label "Attack Targets"
+        @description "Valid attack targets"
+        @tier "presentation"
+      showTurnIndicator : boolean = false
+        @label "Show Turn Indicator"
+        @description "Show turn indicator overlay"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-canvas-3d-battle-template" as GameCanvas3dBattleTemplatePage -> GameCanvas3dBattleTemplateRender
+}
