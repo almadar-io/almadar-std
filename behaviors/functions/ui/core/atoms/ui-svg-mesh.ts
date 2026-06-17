@@ -40,27 +40,27 @@ export type StdUiSvgMeshEventKey = 'INIT';
  */
 export interface StdUiSvgMeshConfig {
   /** Default: `120` */
-  width?: number;
-  /** Default: `50` */
-  radius?: number;
-  /** Default: `60` */
-  cy?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `60` */
-  cx?: number;
+  height?: number;
   /** Default: `true` */
   asRoot?: boolean;
-  /** Default: `120` */
-  height?: number;
-  /** Default: `1` */
-  opacity?: number;
-  /** Default: `6` */
-  nodes?: number;
   /** Default: `0.5` */
   connectionDensity?: number;
+  /** Default: `6` */
+  nodes?: number;
+  /** Default: `60` */
+  cx?: number;
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `50` */
+  radius?: number;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `120` */
+  width?: number;
+  /** Default: `60` */
+  cy?: number;
 }
 
 /**

@@ -267,17 +267,17 @@
                     "render-ui",
                     "main",
                     {
-                      "slotFeedback": "@config.slotFeedback",
+                      "currentStep": "@config.currentStep",
+                      "categoryColors": "@config.categoryColors",
+                      "className": "@config.className",
                       "onSlotDrop": "SLOT_DROP",
+                      "slotFeedback": "@config.slotFeedback",
+                      "size": "@config.size",
                       "slots": "@config.slots",
                       "maxSlots": "@config.maxSlots",
                       "playing": "@config.playing",
-                      "onSlotRemove": "SLOT_REMOVE",
-                      "size": "@config.size",
-                      "className": "@config.className",
-                      "currentStep": "@config.currentStep",
                       "type": "sequence-bar",
-                      "categoryColors": "@config.categoryColors"
+                      "onSlotRemove": "SLOT_REMOVE"
                     }
                   ]
                 ]
@@ -285,6 +285,139 @@
             ]
           },
           "config": {
+            "slots": {
+              "type": "[SequenceBarSlotsItem]",
+              "default": [
+                {
+                  "iconEmoji": "Icon Emoji",
+                  "stateMachine": {
+                    "states": [
+                      "Item"
+                    ],
+                    "name": "Name",
+                    "transitions": [
+                      {
+                        "event": "Event",
+                        "to": "To",
+                        "from": "From",
+                        "guardHint": "Guard Hint"
+                      }
+                    ],
+                    "description": "Description",
+                    "currentState": "Current State"
+                  },
+                  "id": "Id",
+                  "name": "Name",
+                  "description": "Description",
+                  "category": "Category"
+                }
+              ],
+              "label": "Slots",
+              "description": "The current sequence (sparse — undefined means empty slot)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": true
+                  },
+                  "stateMachine": {
+                    "name": "stateMachine",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "description": {
+                        "name": "description",
+                        "type": "string",
+                        "required": false
+                      },
+                      "currentState": {
+                        "name": "currentState",
+                        "type": "string",
+                        "required": true
+                      },
+                      "states": {
+                        "name": "states",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "transitions": {
+                        "name": "transitions",
+                        "type": "array",
+                        "required": true,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "guardHint": {
+                              "name": "guardHint",
+                              "type": "string",
+                              "required": false
+                            },
+                            "to": {
+                              "name": "to",
+                              "type": "string",
+                              "required": true
+                            },
+                            "event": {
+                              "name": "event",
+                              "type": "string",
+                              "required": true
+                            },
+                            "from": {
+                              "name": "from",
+                              "type": "string",
+                              "required": true
+                            }
+                          }
+                        }
+                      },
+                      "name": {
+                        "name": "name",
+                        "type": "string",
+                        "required": true
+                      }
+                    }
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "category": {
+                    "name": "category",
+                    "type": "string",
+                    "required": true
+                  },
+                  "iconEmoji": {
+                    "name": "iconEmoji",
+                    "type": "string",
+                    "required": false
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "iconUrl": {
+                    "name": "iconUrl",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "currentStep": {
+              "type": "number",
+              "default": -1.0,
+              "label": "Current Step",
+              "description": "Current step index during playback (-1 = not playing)",
+              "tier": "presentation"
+            },
             "playing": {
               "type": "boolean",
               "default": false,
@@ -304,13 +437,6 @@
                 "lg"
               ]
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
             "slotFeedback": {
               "type": "[string]",
               "default": [],
@@ -324,13 +450,6 @@
                   "wrong"
                 ]
               }
-            },
-            "maxSlots": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max Slots",
-              "description": "Max number of slots",
-              "tier": "presentation"
             },
             "categoryColors": {
               "type": "Map<string,SequenceBarCategoryColorsValue>",
@@ -354,138 +473,19 @@
                 }
               }
             },
-            "currentStep": {
+            "maxSlots": {
               "type": "number",
-              "default": -1.0,
-              "label": "Current Step",
-              "description": "Current step index during playback (-1 = not playing)",
+              "default": 0.0,
+              "label": "Max Slots",
+              "description": "Max number of slots",
               "tier": "presentation"
             },
-            "slots": {
-              "type": "[SequenceBarSlotsItem]",
-              "default": [
-                {
-                  "name": "Name",
-                  "category": "Category",
-                  "description": "Description",
-                  "iconEmoji": "Icon Emoji",
-                  "id": "Id",
-                  "stateMachine": {
-                    "states": [
-                      "Item"
-                    ],
-                    "currentState": "Current State",
-                    "transitions": [
-                      {
-                        "from": "From",
-                        "to": "To",
-                        "guardHint": "Guard Hint",
-                        "event": "Event"
-                      }
-                    ],
-                    "description": "Description",
-                    "name": "Name"
-                  }
-                }
-              ],
-              "label": "Slots",
-              "description": "The current sequence (sparse — undefined means empty slot)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "iconUrl": {
-                    "name": "iconUrl",
-                    "type": "string",
-                    "required": false
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "category": {
-                    "name": "category",
-                    "type": "string",
-                    "required": true
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "iconEmoji": {
-                    "name": "iconEmoji",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "stateMachine": {
-                    "name": "stateMachine",
-                    "type": "object",
-                    "required": false,
-                    "properties": {
-                      "currentState": {
-                        "name": "currentState",
-                        "type": "string",
-                        "required": true
-                      },
-                      "description": {
-                        "name": "description",
-                        "type": "string",
-                        "required": false
-                      },
-                      "name": {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
-                      },
-                      "transitions": {
-                        "name": "transitions",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "object",
-                          "properties": {
-                            "guardHint": {
-                              "name": "guardHint",
-                              "type": "string",
-                              "required": false
-                            },
-                            "from": {
-                              "name": "from",
-                              "type": "string",
-                              "required": true
-                            },
-                            "to": {
-                              "name": "to",
-                              "type": "string",
-                              "required": true
-                            },
-                            "event": {
-                              "name": "event",
-                              "type": "string",
-                              "required": true
-                            }
-                          }
-                        }
-                      },
-                      "states": {
-                        "name": "states",
-                        "type": "array",
-                        "required": true,
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

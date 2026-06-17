@@ -47,26 +47,26 @@ export interface StdUiSimulatorBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulatorBoardConfig {
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
+  /** Default: `0` */
+  totalCount?: number;
   activeFilters?: unknown;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `0` */
-  pageProp?: number;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  /** Default: `0` */
-  totalCount?: number;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `[]` */
+  selectedIds?: string[];
 }
 
 /**
@@ -213,19 +213,19 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'render-ui',
                   'main',
                   {
-                    'page': '@config.pageProp',
-                    'selectedIds': '@config.selectedIds',
-                    'className': '@config.className',
-                    'error': '@config.error',
                     'pageSize': '@config.pageSize',
-                    'isLoading': '@config.isLoading',
-                    'entity': '@entity',
-                    'sortDirection': '@config.sortDirection',
-                    'sortBy': '@config.sortBy',
-                    'searchValue': '@config.searchValue',
                     'totalCount': '@config.totalCount',
+                    'sortDirection': '@config.sortDirection',
+                    'page': '@config.pageProp',
+                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
+                    'selectedIds': '@config.selectedIds',
+                    'searchValue': '@config.searchValue',
                     'completeEvent': 'COMPLETE',
                     'type': 'simulator-board',
+                    'sortBy': '@config.sortBy',
+                    'entity': '@entity',
+                    'className': '@config.className',
                     'activeFilters': '@config.activeFilters',
                   },
                 ],
@@ -234,19 +234,6 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           ],
         },
         'config': {
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
           'pageProp': {
             'type': 'number',
             'default': 0,
@@ -255,46 +242,11 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'synonyms': 'page',
             'tier': 'presentation',
           },
-          'searchValue': {
+          'sortBy': {
             'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'SimulatorBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
           },
           'sortDirection': {
@@ -308,6 +260,75 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               'desc',
             ],
           },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'SimulatorBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
+            'tier': 'presentation',
+          },
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
           'selectedIds': {
             'type': '[string]',
             'default': [],
@@ -317,27 +338,6 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'items': {
               'type': 'string',
             },
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

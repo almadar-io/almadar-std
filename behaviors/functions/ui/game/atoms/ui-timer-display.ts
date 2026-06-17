@@ -41,14 +41,14 @@ export type StdUiTimerDisplayEventKey = 'INIT';
 export interface StdUiTimerDisplayConfig {
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `false` */
-  running?: boolean;
   /** Default: `"mm:ss"` */
   format?: 'mm:ss' | 'ss' | 'countdown';
-  /** Default: `""` */
-  className?: string;
+  /** Default: `false` */
+  running?: boolean;
   /** Default: `0` */
   lowThreshold?: number;
+  /** Default: `""` */
+  className?: string;
   /** Default: `0` */
   seconds?: number;
 }

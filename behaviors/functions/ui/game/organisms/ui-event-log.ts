@@ -39,14 +39,14 @@ export type StdUiEventLogEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiEventLogConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"timestamp":1,"icon":"circle","message":"Message","status":"pending","id":"Id"}]` */
+  /** Default: `200` */
+  maxHeight?: number;
+  /** Default: `[{"timestamp":1,"id":"Id","message":"Message","icon":"circle","status":"pending"}]` */
   entries?: EntityRow[];
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `200` */
-  maxHeight?: number;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -150,11 +150,11 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'render-ui',
                   'main',
                   {
+                    'type': 'event-log',
                     'entries': '@config.entries',
                     'label': '@config.label',
-                    'maxHeight': '@config.maxHeight',
                     'className': '@config.className',
-                    'type': 'event-log',
+                    'maxHeight': '@config.maxHeight',
                   },
                 ],
               ],
@@ -162,11 +162,11 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'maxHeight': {
+            'type': 'number',
+            'default': 200,
+            'label': 'Max Height',
+            'description': 'Max visible height before scroll',
             'tier': 'presentation',
           },
           'entries': {
@@ -174,10 +174,10 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'default': [
               {
                 'timestamp': 1,
-                'icon': 'circle',
-                'message': 'Message',
-                'status': 'pending',
                 'id': 'Id',
+                'message': 'Message',
+                'icon': 'circle',
+                'status': 'pending',
               },
             ],
             'label': 'Entries',
@@ -186,14 +186,19 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'items': {
               'type': 'object',
               'properties': {
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
                 'timestamp': {
                   'name': 'timestamp',
                   'type': 'number',
+                  'required': true,
+                },
+                'icon': {
+                  'name': 'icon',
+                  'type': 'string',
+                  'required': true,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
                   'required': true,
                 },
                 'status': {
@@ -212,11 +217,6 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'type': 'string',
                   'required': true,
                 },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': true,
-                },
               },
             },
           },
@@ -227,11 +227,11 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'description': 'Title label',
             'tier': 'presentation',
           },
-          'maxHeight': {
-            'type': 'number',
-            'default': 200,
-            'label': 'Max Height',
-            'description': 'Max visible height before scroll',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
         },

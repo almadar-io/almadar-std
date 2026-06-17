@@ -39,10 +39,10 @@ export type StdUiBattleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBattleTemplateConfig {
-  /** Default: `0.45` */
-  scale?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `0.45` */
+  scale?: number;
   /** Default: `1` */
   unitScale?: number;
 }

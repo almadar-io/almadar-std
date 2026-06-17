@@ -40,19 +40,19 @@ export type StdUiCtaBannerEventKey = 'INIT';
  */
 export interface StdUiCtaBannerConfig {
   /** Default: `{"label":"Label","href":"Href"}` */
+  secondaryAction?: EntityRow;
+  /** Default: `{"href":"Href","label":"Label"}` */
   primaryAction?: EntityRow;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"alt"` */
   background?: 'default' | 'alt' | 'dark' | 'gradient' | 'primary';
   /** Default: `"center"` */
   align?: 'center' | 'left';
   /** Default: `"Title"` */
   title?: string;
-  /** Default: `{"label":"Label","href":"Href"}` */
-  secondaryAction?: EntityRow;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
 }
 
 /**

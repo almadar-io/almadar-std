@@ -43,12 +43,12 @@ export interface StdUiPatternTileConfig {
   variant?: 'star8' | 'star6' | 'khatam' | 'star10' | 'star12' | 'rosette-double' | 'rosette-filled' | 'seigaiha' | 'greek-key' | 'celtic-knot' | 'kolam' | 'arch' | 'arabesque-vine' | 'arabesque-net';
   /** Default: `0.5` */
   strokeWidth?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `60` */
   size?: number;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
 }
 
 /**

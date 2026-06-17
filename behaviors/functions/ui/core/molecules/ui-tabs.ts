@@ -46,20 +46,20 @@ export interface StdUiTabsTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTabsConfig {
+  /** Default: `"default"` */
+  variant?: 'default' | 'pills' | 'underline';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"label":"Label","value":"Value","badge":"Badge","active":false,"content":"Content","id":"Id","disabled":false,"icon":"circle"}]` */
+  tabs?: EntityRow[];
   /** Default: `"Default Active Tab"` */
   defaultActiveTab?: string;
-  /** Default: `[{"disabled":false,"value":"Value","active":false,"id":"Id","badge":"Badge","label":"Label","content":"Content","icon":"circle"}]` */
+  /** Default: `[{"value":"Value","active":false,"content":"Content","label":"Label","icon":"circle","badge":"Badge","disabled":false,"id":"Id"}]` */
   items?: EntityRow[];
-  /** Default: `[{"badge":"Badge","label":"Label","content":"Content","value":"Value","id":"Id","icon":"circle","active":false,"disabled":false}]` */
-  tabs?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
   /** Default: `"Active Tab"` */
   activeTab?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'pills' | 'underline';
 }
 
 /**

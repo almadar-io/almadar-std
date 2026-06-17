@@ -57,18 +57,18 @@ export interface StdUiNotificationConfig {
   message?: string;
   /** Default: `5000` */
   duration?: number;
-  /** Default: `"Badge"` */
-  badge?: string;
-  /** Default: `"Action Label"` */
-  actionLabel?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"info"` */
-  variant?: 'success' | 'error' | 'info' | 'warning';
   /** Default: `"Title"` */
   title?: string;
   /** Default: `true` */
   dismissible?: boolean;
+  /** Default: `"info"` */
+  variant?: 'success' | 'error' | 'info' | 'warning';
+  /** Default: `"Badge"` */
+  badge?: string;
+  /** Default: `"Action Label"` */
+  actionLabel?: string;
 }
 
 /**

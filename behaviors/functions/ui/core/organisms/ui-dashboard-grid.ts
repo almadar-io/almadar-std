@@ -39,32 +39,32 @@ export type StdUiDashboardGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardGridConfig {
-  /** Default: `[{"content":"Content","colSpan":1,"rowSpan":1,"id":"Id"}]` */
-  cells?: EntityRow[];
-  /** Default: `0` */
-  pageProp?: number;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  pageSize?: number;
   /** Default: `0` */
   totalCount?: number;
-  error?: EntityRow;
+  /** Default: `0` */
+  pageProp?: number;
   /** Default: `3` */
   columns?: number;
-  activeFilters?: unknown;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
-  /** Default: `"Sort By"` */
-  sortBy?: string;
+  activeFilters?: unknown;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `[{"id":"Id","colSpan":1,"rowSpan":1,"content":"Content"}]` */
+  cells?: EntityRow[];
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
 }
 
 /**
@@ -168,21 +168,21 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
                   'render-ui',
                   'main',
                   {
-                    'cells': '@config.cells',
-                    'page': '@config.pageProp',
-                    'activeFilters': '@config.activeFilters',
                     'type': 'dashboard-grid',
-                    'searchValue': '@config.searchValue',
-                    'gap': '@config.gap',
+                    'selectedIds': '@config.selectedIds',
+                    'page': '@config.pageProp',
+                    'sortBy': '@config.sortBy',
                     'sortDirection': '@config.sortDirection',
                     'totalCount': '@config.totalCount',
-                    'columns': '@config.columns',
-                    'sortBy': '@config.sortBy',
-                    'pageSize': '@config.pageSize',
                     'error': '@config.error',
-                    'selectedIds': '@config.selectedIds',
+                    'columns': '@config.columns',
+                    'searchValue': '@config.searchValue',
                     'isLoading': '@config.isLoading',
                     'className': '@config.className',
+                    'cells': '@config.cells',
+                    'activeFilters': '@config.activeFilters',
+                    'gap': '@config.gap',
+                    'pageSize': '@config.pageSize',
                   },
                 ],
               ],
@@ -190,44 +190,12 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
           ],
         },
         'config': {
-          'cells': {
-            'type': '[DashboardGridCellsItem]',
-            'default': [
-              {
-                'content': 'Content',
-                'colSpan': 1,
-                'rowSpan': 1,
-                'id': 'Id',
-              },
-            ],
-            'label': 'Cells',
-            'description': 'Cell definitions',
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': false,
-                },
-                'content': {
-                  'name': 'content',
-                  'type': 'string',
-                  'required': false,
-                },
-                'colSpan': {
-                  'name': 'colSpan',
-                  'type': 'number',
-                  'required': false,
-                },
-                'rowSpan': {
-                  'name': 'rowSpan',
-                  'type': 'number',
-                  'required': false,
-                },
-              },
-            },
           },
           'pageProp': {
             'type': 'number',
@@ -237,80 +205,11 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
             'synonyms': 'page',
             'tier': 'presentation',
           },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'DashboardGridError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
           'columns': {
             'type': 'number',
             'default': 3,
             'label': 'Columns',
             'description': 'Number of columns',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'gap': {
@@ -325,11 +224,10 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
               'lg',
             ],
           },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
           },
           'sortDirection': {
@@ -351,6 +249,108 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
             'tier': 'presentation',
             'items': {
               'type': 'string',
+            },
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'cells': {
+            'type': '[DashboardGridCellsItem]',
+            'default': [
+              {
+                'id': 'Id',
+                'colSpan': 1,
+                'rowSpan': 1,
+                'content': 'Content',
+              },
+            ],
+            'label': 'Cells',
+            'description': 'Cell definitions',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'content': {
+                  'name': 'content',
+                  'type': 'string',
+                  'required': false,
+                },
+                'rowSpan': {
+                  'name': 'rowSpan',
+                  'type': 'number',
+                  'required': false,
+                },
+                'colSpan': {
+                  'name': 'colSpan',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'DashboardGridError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
             },
           },
         },

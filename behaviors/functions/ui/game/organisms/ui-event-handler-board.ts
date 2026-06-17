@@ -53,28 +53,28 @@ export interface StdUiEventHandlerBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiEventHandlerBoardConfig {
-  /** Default: `""` */
-  className?: string;
+  error?: EntityRow;
   /** Default: `0` */
   totalCount?: number;
   /** Default: `800` */
   stepDurationMs?: number;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  activeFilters?: unknown;
-  /** Default: `0` */
-  pageSize?: number;
-  error?: EntityRow;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `0` */
-  pageProp?: number;
-  /** Default: `[]` */
-  selectedIds?: string[];
   /** Default: `"Search Value"` */
   searchValue?: string;
+  activeFilters?: unknown;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"Sort By"` */
+  sortBy?: string;
 }
 
 /**
@@ -235,22 +235,22 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                   'render-ui',
                   'main',
                   {
-                    'error': '@config.error',
-                    'entity': '@entity',
-                    'playEvent': 'PLAY',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'totalCount': '@config.totalCount',
-                    'activeFilters': '@config.activeFilters',
                     'page': '@config.pageProp',
+                    'isLoading': '@config.isLoading',
                     'pageSize': '@config.pageSize',
-                    'completeEvent': 'COMPLETE',
-                    'sortBy': '@config.sortBy',
                     'className': '@config.className',
+                    'stepDurationMs': '@config.stepDurationMs',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'entity': '@entity',
+                    'activeFilters': '@config.activeFilters',
+                    'error': '@config.error',
+                    'playEvent': 'PLAY',
                     'selectedIds': '@config.selectedIds',
                     'type': 'event-handler-board',
+                    'completeEvent': 'COMPLETE',
+                    'totalCount': '@config.totalCount',
                     'searchValue': '@config.searchValue',
-                    'sortDirection': '@config.sortDirection',
-                    'isLoading': '@config.isLoading',
                   },
                 ],
               ],
@@ -258,12 +258,33 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'error': {
+            'type': 'EventHandlerBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
             'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+            },
           },
           'totalCount': {
             'type': 'number',
@@ -279,17 +300,32 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
             'description': 'Playback speed in ms per event',
             'tier': 'presentation',
           },
-          'sortBy': {
+          'searchValue': {
             'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
           },
           'activeFilters': {
             'type': 'json',
             'label': 'Active Filters',
             'description': 'Active filters',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
           'pageSize': {
@@ -299,39 +335,21 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
             'description': 'Number of items per page',
             'tier': 'presentation',
           },
-          'error': {
-            'type': 'EventHandlerBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
             'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
+            'items': {
+              'type': 'string',
             },
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'sortDirection': {
@@ -345,29 +363,11 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
               'desc',
             ],
           },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'searchValue': {
+          'sortBy': {
             'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
             'tier': 'presentation',
           },
         },

@@ -41,12 +41,12 @@ export type StdUiConfettiEffectEventKey = 'INIT';
 export interface StdUiConfettiEffectConfig {
   /** Default: `false` */
   trigger?: boolean;
-  /** Default: `2000` */
-  duration?: number;
   /** Default: `30` */
   particleCount?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `2000` */
+  duration?: number;
 }
 
 /**

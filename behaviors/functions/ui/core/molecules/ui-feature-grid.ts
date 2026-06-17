@@ -41,12 +41,12 @@ export type StdUiFeatureGridEventKey = 'INIT';
 export interface StdUiFeatureGridConfig {
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
-  /** Default: `[{"href":"Href","title":"Title","linkLabel":"Link Label","className":"Class Name","icon":"circle","size":"sm","variant":"default","description":"Description"}]` */
-  items?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
   /** Default: `3` */
   columns?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"size":"sm","title":"Title","icon":"circle","href":"Href","description":"Description","linkLabel":"Link Label","variant":"default","className":"Class Name"}]` */
+  items?: EntityRow[];
 }
 
 /**

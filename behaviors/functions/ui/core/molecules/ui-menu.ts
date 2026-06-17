@@ -39,12 +39,12 @@ export type StdUiMenuEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMenuConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"variant":"default","subMenu":[],"label":"Label","id":"Id","icon":"circle","badge":"Badge","disabled":false}]` */
-  items?: EntityRow[];
   /** Default: `"bottom-left"` */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
+  /** Default: `[{"icon":"circle","variant":"default","id":"Id","label":"Label","disabled":false,"badge":"Badge","subMenu":[]}]` */
+  items?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

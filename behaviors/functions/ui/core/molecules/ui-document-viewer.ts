@@ -39,35 +39,35 @@ export type StdUiDocumentViewerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocumentViewerConfig {
-  /** Default: `false` */
-  showDownload?: boolean;
-  error?: EntityRow;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `[{"src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","content":"Content","documentType":"pdf","label":"Label"}]` */
-  documents?: EntityRow[];
   /** Default: `0` */
   totalPages?: number;
-  /** Default: `true` */
-  showToolbar?: boolean;
-  /** Default: `0` */
-  currentPage?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  src?: unknown;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[{"navigatesTo":"Navigates To","variant":"primary","label":"Label"}]` */
-  actions?: EntityRow[];
-  /** Default: `"Height"` */
-  height?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"pdf"` */
-  documentType?: 'pdf' | 'text' | 'html' | 'markdown';
-  /** Default: `"Content"` */
-  content?: string;
   /** Default: `false` */
   showPrint?: boolean;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `[{"variant":"primary","label":"Label","navigatesTo":"Navigates To"}]` */
+  actions?: EntityRow[];
+  /** Default: `true` */
+  showToolbar?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Height"` */
+  height?: string;
+  /** Default: `false` */
+  showDownload?: boolean;
+  /** Default: `"Content"` */
+  content?: string;
+  /** Default: `[{"label":"Label","content":"Content","documentType":"pdf","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}]` */
+  documents?: EntityRow[];
+  /** Default: `0` */
+  currentPage?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  src?: unknown;
+  /** Default: `"pdf"` */
+  documentType?: 'pdf' | 'text' | 'html' | 'markdown';
+  error?: EntityRow;
 }
 
 /**

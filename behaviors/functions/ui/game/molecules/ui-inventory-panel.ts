@@ -60,20 +60,20 @@ export interface StdUiInventoryPanelDropItemPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiInventoryPanelConfig {
-  /** Default: `true` */
-  showTooltips?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"type":"Type","quantity":1,"sprite":"Sprite","name":"Name","description":"Description","id":"Id"}]` */
+  /** Default: `[{"sprite":"Sprite","name":"Name","id":"Id","type":"Type","quantity":1,"description":"Description"}]` */
   items?: EntityRow[];
   /** Default: `0` */
-  columns?: number;
-  /** Default: `0` */
   selectedSlot?: number;
+  /** Default: `true` */
+  showTooltips?: boolean;
   /** Default: `0` */
   slots?: number;
   /** Default: `48` */
   slotSize?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  columns?: number;
 }
 
 /**

@@ -39,11 +39,11 @@ export type StdUiStateMachineViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
-  /** Default: `""` */
-  className?: string;
+  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  error?: EntityRow;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -147,10 +147,10 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                   'render-ui',
                   'main',
                   {
-                    'type': 'state-machine-view',
                     'error': '@config.error',
-                    'className': '@config.className',
                     'isLoading': '@config.isLoading',
+                    'type': 'state-machine-view',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -158,31 +158,12 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'error': {
             'type': 'StateMachineViewError',
             'label': 'Error',
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
               'stack': {
                 'name': 'stack',
                 'type': 'string',
@@ -198,7 +179,26 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
                 'type': 'string',
                 'required': false,
               },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
             },
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

@@ -39,12 +39,12 @@ export type StdUiModalSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiModalSlotConfig {
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `"Title"` */
+  title?: string;
   error?: EntityRow;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
@@ -156,19 +156,19 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
                   'render-ui',
                   'main',
                   {
-                    'title': '@config.title',
-                    'error': '@config.error',
-                    'className': '@config.className',
-                    'type': 'modal-slot',
-                    'entity': 'ModalSlotItem',
-                    'isLoading': '@config.isLoading',
                     'children': [
                       {
-                        'content': 'Sample content',
                         'type': 'typography',
+                        'content': 'Sample content',
                       },
                     ],
+                    'title': '@config.title',
+                    'entity': 'ModalSlotItem',
+                    'type': 'modal-slot',
                     'size': '@config.size',
+                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -176,13 +176,6 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
           ],
         },
         'config': {
-          'title': {
-            'type': 'string',
-            'default': 'Title',
-            'label': 'Title',
-            'description': 'Override modal title (extracted from children if not provided)',
-            'tier': 'presentation',
-          },
           'className': {
             'type': 'string',
             'default': '',
@@ -197,6 +190,13 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
+          'title': {
+            'type': 'string',
+            'default': 'Title',
+            'label': 'Title',
+            'description': 'Override modal title (extracted from children if not provided)',
+            'tier': 'presentation',
+          },
           'error': {
             'type': 'ModalSlotError',
             'label': 'Error',
@@ -208,11 +208,6 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
                 'type': 'string',
                 'required': false,
               },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
               'message': {
                 'name': 'message',
                 'type': 'string',
@@ -220,6 +215,11 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
               },
               'name': {
                 'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
                 'type': 'string',
                 'required': false,
               },

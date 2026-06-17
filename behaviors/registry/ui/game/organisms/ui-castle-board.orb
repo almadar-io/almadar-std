@@ -494,16 +494,20 @@
                     "render-ui",
                     "main",
                     {
-                      "featureClickEvent": "FEATURE_CLICK",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "entity": "@entity",
-                      "onTileClick": "TILE_CLICK",
-                      "onFeatureClick": "FEATURE_CLICK",
+                      "tiles": "@config.tiles",
                       "tileClickEvent": "TILE_CLICK",
-                      "type": "castle-board",
-                      "className": "@config.className",
+                      "entity": "@entity",
+                      "assetManifest": "@config.assetManifest",
+                      "onFeatureClick": "FEATURE_CLICK",
                       "onUnitClick": "UNIT_CLICK",
-                      "scale": "@config.scale"
+                      "onTileClick": "TILE_CLICK",
+                      "units": "@config.units",
+                      "features": "@config.features",
+                      "featureClickEvent": "FEATURE_CLICK",
+                      "scale": "@config.scale",
+                      "unitClickEvent": "UNIT_CLICK",
+                      "className": "@config.className",
+                      "type": "castle-board"
                     }
                   ]
                 ]
@@ -517,6 +521,523 @@
               "label": "Class Name",
               "description": "className prop",
               "tier": "presentation"
+            },
+            "assetManifest": {
+              "type": "CastleBoardAssetManifest",
+              "default": {
+                "terrains": {
+                  "grass": "isometric-blocks/PNG/Abstract tiles/abstractTile_01.png",
+                  "stone": "isometric-blocks/PNG/Abstract tiles/abstractTile_06.png",
+                  "dirt": "isometric-blocks/PNG/Abstract tiles/abstractTile_08.png",
+                  "water": "isometric-blocks/PNG/Abstract tiles/abstractTile_03.png"
+                },
+                "features": {
+                  "castle": "world-map/battle_marker.png",
+                  "portal": "world-map/portal_open.png"
+                },
+                "units": {
+                  "hero": "characters/archetypes/01_innocent.png"
+                }
+              },
+              "label": "Asset Manifest",
+              "description": "Direct asset manifest — takes priority over entity-derived manifest.",
+              "tier": "presentation",
+              "properties": {
+                "features": {
+                  "name": "features",
+                  "type": "object",
+                  "required": false,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "type": "string",
+                  "required": false
+                },
+                "units": {
+                  "name": "units",
+                  "type": "object",
+                  "required": false,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "terrains": {
+                  "name": "terrains",
+                  "type": "object",
+                  "required": false,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "units": {
+              "type": "[CastleBoardUnitsItem]",
+              "default": [
+                {
+                  "position": {
+                    "x": 1.0,
+                    "y": 1.0
+                  },
+                  "name": "Hero",
+                  "team": "player",
+                  "health": 10.0,
+                  "maxHealth": 10.0,
+                  "id": "unit-1",
+                  "unitType": "hero"
+                },
+                {
+                  "name": "Guard",
+                  "team": "enemy",
+                  "maxHealth": 10.0,
+                  "id": "unit-2",
+                  "unitType": "hero",
+                  "health": 8.0,
+                  "position": {
+                    "x": 3.0,
+                    "y": 2.0
+                  }
+                }
+              ],
+              "label": "Units",
+              "description": "Direct unit data — takes priority over entity-derived units.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "faction": {
+                    "name": "faction",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "player",
+                      "enemy",
+                      "neutral"
+                    ]
+                  },
+                  "traits": {
+                    "name": "traits",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "states": {
+                          "name": "states",
+                          "type": "array",
+                          "required": true,
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "cooldown": {
+                          "name": "cooldown",
+                          "type": "number",
+                          "required": true
+                        },
+                        "currentState": {
+                          "name": "currentState",
+                          "type": "string",
+                          "required": true
+                        },
+                        "name": {
+                          "name": "name",
+                          "type": "string",
+                          "required": true
+                        }
+                      }
+                    }
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": false
+                  },
+                  "heroId": {
+                    "name": "heroId",
+                    "type": "string",
+                    "required": false
+                  },
+                  "position": {
+                    "name": "position",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "y": {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
+                      },
+                      "x": {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
+                      }
+                    }
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": false
+                  },
+                  "elevation": {
+                    "name": "elevation",
+                    "type": "number",
+                    "required": false
+                  },
+                  "maxHealth": {
+                    "name": "maxHealth",
+                    "type": "number",
+                    "required": false
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "previousPosition": {
+                    "name": "previousPosition",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "y": {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
+                      },
+                      "x": {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
+                      }
+                    }
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "type": "string",
+                    "required": false
+                  },
+                  "team": {
+                    "name": "team",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "player",
+                      "enemy",
+                      "neutral"
+                    ]
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "unitType": {
+                    "name": "unitType",
+                    "type": "string",
+                    "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": false
+                  },
+                  "health": {
+                    "name": "health",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "tiles": {
+              "type": "[CastleBoardTilesItem]",
+              "default": [
+                {
+                  "x": 0.0,
+                  "y": 0.0,
+                  "passable": false,
+                  "terrain": "stone"
+                },
+                {
+                  "terrain": "water",
+                  "x": 1.0,
+                  "passable": false,
+                  "y": 0.0
+                },
+                {
+                  "passable": false,
+                  "y": 0.0,
+                  "x": 2.0,
+                  "terrain": "water"
+                },
+                {
+                  "y": 0.0,
+                  "passable": false,
+                  "x": 3.0,
+                  "terrain": "water"
+                },
+                {
+                  "x": 4.0,
+                  "y": 0.0,
+                  "passable": false,
+                  "terrain": "stone"
+                },
+                {
+                  "y": 1.0,
+                  "passable": false,
+                  "terrain": "water",
+                  "x": 0.0
+                },
+                {
+                  "y": 1.0,
+                  "x": 1.0,
+                  "passable": true,
+                  "terrain": "grass"
+                },
+                {
+                  "y": 1.0,
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 2.0
+                },
+                {
+                  "passable": true,
+                  "y": 1.0,
+                  "x": 3.0,
+                  "terrain": "grass"
+                },
+                {
+                  "passable": false,
+                  "x": 4.0,
+                  "y": 1.0,
+                  "terrain": "water"
+                },
+                {
+                  "terrain": "water",
+                  "x": 0.0,
+                  "passable": false,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "x": 1.0,
+                  "terrain": "grass",
+                  "y": 2.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 2.0,
+                  "passable": true,
+                  "terrain": "grass"
+                },
+                {
+                  "terrain": "grass",
+                  "y": 2.0,
+                  "x": 3.0,
+                  "passable": true
+                },
+                {
+                  "x": 4.0,
+                  "y": 2.0,
+                  "passable": false,
+                  "terrain": "water"
+                },
+                {
+                  "x": 0.0,
+                  "terrain": "water",
+                  "passable": false,
+                  "y": 3.0
+                },
+                {
+                  "y": 3.0,
+                  "passable": true,
+                  "x": 1.0,
+                  "terrain": "grass"
+                },
+                {
+                  "y": 3.0,
+                  "x": 2.0,
+                  "terrain": "grass",
+                  "passable": true
+                },
+                {
+                  "x": 3.0,
+                  "y": 3.0,
+                  "terrain": "grass",
+                  "passable": true
+                },
+                {
+                  "passable": false,
+                  "x": 4.0,
+                  "y": 3.0,
+                  "terrain": "water"
+                },
+                {
+                  "y": 4.0,
+                  "terrain": "stone",
+                  "passable": false,
+                  "x": 0.0
+                },
+                {
+                  "terrain": "water",
+                  "x": 1.0,
+                  "y": 4.0,
+                  "passable": false
+                },
+                {
+                  "y": 4.0,
+                  "x": 2.0,
+                  "terrain": "water",
+                  "passable": false
+                },
+                {
+                  "terrain": "water",
+                  "x": 3.0,
+                  "y": 4.0,
+                  "passable": false
+                },
+                {
+                  "y": 4.0,
+                  "x": 4.0,
+                  "terrain": "stone",
+                  "passable": false
+                }
+              ],
+              "label": "Tiles",
+              "description": "Direct tile data — takes priority over entity-derived tiles.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "elevation": {
+                    "name": "elevation",
+                    "type": "number",
+                    "required": false
+                  },
+                  "passable": {
+                    "name": "passable",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "tileType": {
+                    "name": "tileType",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "terrainSprite": {
+                    "name": "terrainSprite",
+                    "type": "string",
+                    "required": false
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "terrain": {
+                    "name": "terrain",
+                    "type": "string",
+                    "required": false
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "movementCost": {
+                    "name": "movementCost",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "features": {
+              "type": "[CastleBoardFeaturesItem]",
+              "default": [
+                {
+                  "type": "castle",
+                  "y": 0.0,
+                  "x": 2.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 4.0,
+                  "type": "portal"
+                }
+              ],
+              "label": "Features",
+              "description": "Direct feature data — takes priority over entity-derived features.",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "elevation": {
+                    "name": "elevation",
+                    "type": "number",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "assetUrl": {
+                    "name": "assetUrl",
+                    "type": "string",
+                    "required": false
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "scale": {
               "type": "number",

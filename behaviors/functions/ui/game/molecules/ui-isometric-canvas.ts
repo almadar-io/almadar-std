@@ -69,50 +69,51 @@ export interface StdUiIsometricCanvasTileLeavePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiIsometricCanvasConfig {
+  /** Default: `0.4` */
+  scale?: number;
+  /** Default: `[{"y":1,"x":1}]` */
+  attackTargets?: EntityRow[];
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
+  assetBaseUrl?: unknown;
+  /** Default: `true` */
+  showMinimap?: boolean;
+  /** Default: `true` */
+  enableCamera?: boolean;
+  /** Default: `[{"x":2,"y":0,"type":"castle"},{"y":4,"type":"portal","x":4}]` */
+  features?: EntityRow[];
+  /** Default: `[{"y":0,"x":0,"terrain":"stone","passable":false},{"x":1,"terrain":"water","y":0,"passable":false},{"passable":false,"y":0,"terrain":"water","x":2},{"x":3,"y":0,"terrain":"water","passable":false},{"passable":false,"y":0,"x":4,"terrain":"stone"},{"x":0,"passable":false,"y":1,"terrain":"water"},{"x":1,"terrain":"grass","y":1,"passable":true},{"terrain":"grass","x":2,"passable":true,"y":1},{"x":3,"y":1,"terrain":"grass","passable":true},{"passable":false,"x":4,"y":1,"terrain":"water"},{"x":0,"terrain":"water","y":2,"passable":false},{"y":2,"terrain":"grass","x":1,"passable":true},{"passable":true,"y":2,"terrain":"grass","x":2},{"x":3,"y":2,"passable":true,"terrain":"grass"},{"terrain":"water","x":4,"passable":false,"y":2},{"x":0,"y":3,"terrain":"water","passable":false},{"y":3,"x":1,"passable":true,"terrain":"grass"},{"x":2,"terrain":"grass","passable":true,"y":3},{"terrain":"grass","y":3,"passable":true,"x":3},{"terrain":"water","x":4,"passable":false,"y":3},{"x":0,"y":4,"terrain":"stone","passable":false},{"terrain":"water","x":1,"y":4,"passable":false},{"x":2,"passable":false,"y":4,"terrain":"water"},{"x":3,"terrain":"water","passable":false,"y":4},{"passable":false,"terrain":"stone","y":4,"x":4}]` */
+  tiles?: EntityRow[];
+  /** Default: `[{"x":1,"y":1}]` */
+  validMoves?: EntityRow[];
+  /** Default: `false` */
+  debug?: boolean;
+  /** Default: `0` */
+  boardHeight?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `1` */
+  unitScale?: number;
+  /** Default: `0` */
+  diamondTopY?: number;
+  /** Default: `[]` */
+  effectSpriteUrls?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `{"terrains":{"stone":"isometric-blocks/PNG/Abstract tiles/abstractTile_06.png","dirt":"isometric-blocks/PNG/Abstract tiles/abstractTile_08.png","water":"isometric-blocks/PNG/Abstract tiles/abstractTile_03.png","grass":"isometric-blocks/PNG/Abstract tiles/abstractTile_01.png"},"units":{"hero":"characters/archetypes/01_innocent.png"},"features":{"portal":"world-map/portal_open.png","castle":"world-map/battle_marker.png"},"effects":{}}` */
+  assetManifest?: EntityRow;
+  /** Default: `"Selected Unit Id"` */
+  selectedUnitId?: string;
+  /** Default: `0` */
+  boardWidth?: number;
   /** Default: `{"y":1,"x":1}` */
   hoveredTile?: EntityRow;
   error?: EntityRow;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  assetBaseUrl?: unknown;
-  /** Default: `0` */
-  boardHeight?: number;
-  assetManifest?: EntityRow;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/scenes/court.png"` */
+  backgroundImage?: unknown;
   /** Default: `false` */
   hasActiveEffects?: boolean;
-  /** Default: `[{"x":1,"y":1}]` */
-  attackTargets?: EntityRow[];
-  /** Default: `0` */
-  diamondTopY?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `true` */
-  enableCamera?: boolean;
-  /** Default: `0` */
-  boardWidth?: number;
-  /** Default: `[{"passable":false,"y":1,"z":1,"movementCost":1,"type":"Type","tileType":"Tile Type","x":1,"terrainSprite":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","terrain":"Terrain","elevation":1}]` */
-  tiles?: EntityRow[];
-  /** Default: `"Selected Unit Id"` */
-  selectedUnitId?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"x":1,"y":1}]` */
-  validMoves?: EntityRow[];
-  /** Default: `true` */
-  showMinimap?: boolean;
-  /** Default: `[{"name":"Name","x":1,"elevation":1,"previousPosition":{"x":1,"y":1},"id":"Id","sprite":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","unitType":"Unit Type","team":"player","traits":[{"states":["Item"],"currentState":"Current State","cooldown":1,"name":"Name"}],"y":1,"heroId":"Hero Id","health":1,"maxHealth":1,"z":1,"position":{"y":1,"x":1},"faction":"player"}]` */
+  /** Default: `[{"id":"unit-1","position":{"y":1,"x":1},"unitType":"hero","name":"Hero","health":10,"team":"player","maxHealth":10},{"health":8,"maxHealth":10,"team":"enemy","id":"unit-2","unitType":"hero","position":{"x":3,"y":2},"name":"Guard"}]` */
   units?: EntityRow[];
-  /** Default: `[]` */
-  effectSpriteUrls?: EntityRow[];
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  backgroundImage?: unknown;
-  /** Default: `0.4` */
-  scale?: number;
-  /** Default: `[{"type":"Type","sprite":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","assetUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","y":1,"x":1,"elevation":1,"z":1,"color":"Color"}]` */
-  features?: EntityRow[];
-  /** Default: `1` */
-  unitScale?: number;
-  /** Default: `false` */
-  debug?: boolean;
 }
 
 /**

@@ -39,28 +39,28 @@ export type StdUiStatsOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatsOrganismConfig {
+  activeFilters?: unknown;
+  error?: EntityRow;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
   /** Default: `0` */
   pageSize?: number;
   /** Default: `0` */
   pageProp?: number;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `3` */
-  columns?: number;
-  error?: EntityRow;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  activeFilters?: unknown;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
   /** Default: `"Sort By"` */
   sortBy?: string;
-  /** Default: `0` */
-  totalCount?: number;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `3` */
+  columns?: number;
+  /** Default: `[]` */
+  selectedIds?: string[];
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `0` */
+  totalCount?: number;
 }
 
 /**
@@ -179,19 +179,19 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
                   'render-ui',
                   'main',
                   {
+                    'totalCount': '@config.totalCount',
                     'className': '@config.className',
+                    'isLoading': '@config.isLoading',
+                    'searchValue': '@config.searchValue',
                     'error': '@config.error',
                     'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'searchValue': '@config.searchValue',
                     'pageSize': '@config.pageSize',
-                    'totalCount': '@config.totalCount',
+                    'selectedIds': '@config.selectedIds',
                     'activeFilters': '@config.activeFilters',
                     'entity': '@entity',
                     'columns': '@config.columns',
                     'page': '@config.pageProp',
-                    'selectedIds': '@config.selectedIds',
-                    'isLoading': '@config.isLoading',
+                    'sortDirection': '@config.sortDirection',
                     'type': 'stats-organism',
                   },
                 ],
@@ -200,36 +200,10 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
           ],
         },
         'config': {
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'columns': {
-            'type': 'number',
-            'default': 3,
-            'label': 'Columns',
-            'description': 'columns prop',
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
           },
           'error': {
@@ -238,23 +212,23 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
             'description': 'Error state (UiError)',
             'tier': 'presentation',
             'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
               'message': {
                 'name': 'message',
                 'type': 'string',
                 'required': true,
               },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
               'code': {
                 'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'stack': {
+                'name': 'stack',
                 'type': 'string',
                 'required': false,
               },
@@ -271,17 +245,19 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
               'desc',
             ],
           },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
             'tier': 'presentation',
           },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
             'tier': 'presentation',
           },
           'sortBy': {
@@ -291,12 +267,29 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
             'description': 'Current sort field',
             'tier': 'presentation',
           },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
+          },
+          'columns': {
+            'type': 'number',
+            'default': 3,
+            'label': 'Columns',
+            'description': 'columns prop',
+            'tier': 'presentation',
+          },
+          'selectedIds': {
+            'type': '[string]',
+            'default': [],
+            'label': 'Selected Ids',
+            'description': 'Currently selected item IDs',
+            'tier': 'presentation',
+            'items': {
+              'type': 'string',
+            },
           },
           'isLoading': {
             'type': 'boolean',
@@ -310,6 +303,13 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
           },
         },

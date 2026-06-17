@@ -60,51 +60,51 @@ export interface StdUiTableViewViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  /** Default: `"Accepts"` */
-  accepts?: string;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
-  /** Default: `"Sort Column"` */
-  sortColumn?: string;
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `"Group By"` */
-  groupBy?: string;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
+  /** Default: `"Sort Column"` */
+  sortColumn?: string;
   /** Default: `"Drag Group"` */
   dragGroup?: string;
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `[]` */
-  selectedIds?: string[];
+  /** Default: `"Group By"` */
+  groupBy?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
-  /** Default: `0` */
-  pageSize?: number;
   /** Default: `"Drop Event"` */
   dropEvent?: string;
+  /** Default: `false` */
+  dndRoot?: boolean;
   /** Default: `0` */
   maxInlineActions?: number;
-  /** Default: `"Empty Message"` */
-  emptyMessage?: string;
-  /** Default: `[{"field":"Field","weight":"normal","label":"Label","header":"Header","icon":"circle","key":"Key","format":"badge","className":"Class Name","width":"Width","align":"left","sortable":false}]` */
-  fields?: EntityRow[];
-  /** Default: `"Reorder Event"` */
-  reorderEvent?: string;
-  /** Default: `[{"header":"Header","format":"badge","width":"Width","weight":"normal","field":"Field","icon":"circle","label":"Label","key":"Key","sortable":false,"className":"Class Name","align":"left"}]` */
-  columns?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
+  /** Default: `[{"width":"Width","align":"left","sortable":false,"header":"Header","label":"Label","className":"Class Name","key":"Key","format":"badge","weight":"normal","field":"Field","icon":"circle"}]` */
+  columns?: EntityRow[];
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `[{"field":"Field","weight":"normal","format":"badge","icon":"circle","align":"left","sortable":false,"className":"Class Name","key":"Key","label":"Label","width":"Width","header":"Header"}]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `"Empty Message"` */
+  emptyMessage?: string;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 /**

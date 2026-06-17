@@ -64,30 +64,30 @@ export interface StdUiRepeatableFormSectionReorderPayload {
 export interface StdUiRepeatableFormSectionConfig {
   /** Default: `0` */
   maxItems?: number;
-  /** Default: `"Add Label"` */
-  addLabel?: string;
-  /** Default: `0` */
-  minItems?: number;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  readOnly?: boolean;
   /** Default: `false` */
   trackAddedInState?: boolean;
-  /** Default: `"Empty Message"` */
-  emptyMessage?: string;
   /** Default: `false` */
   showAuditInfo?: boolean;
-  /** Default: `false` */
-  allowReorder?: boolean;
-  /** Default: `[{"addedInState":"Added In State","addedAt":"Added At","id":"Id"}]` */
-  items?: EntityRow[];
   /** Default: `"Current State"` */
   currentState?: string;
+  /** Default: `[{"addedInState":"Added In State","id":"Id","addedAt":"Added At"}]` */
+  items?: EntityRow[];
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"Empty Message"` */
+  emptyMessage?: string;
+  /** Default: `0` */
+  minItems?: number;
+  /** Default: `false` */
+  allowReorder?: boolean;
+  /** Default: `false` */
+  readOnly?: boolean;
   /** Default: `"Section Type"` */
   sectionType?: string;
+  /** Default: `"Add Label"` */
+  addLabel?: string;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

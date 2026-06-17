@@ -55,15 +55,15 @@ export interface StdUiAlertClosePayload {
 export interface StdUiAlertConfig {
   /** Default: `"Message"` */
   message?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `false` */
-  dismissible?: boolean;
-  actions?: unknown;
   /** Default: `"info"` */
   variant?: 'info' | 'success' | 'warning' | 'error';
+  actions?: unknown;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  dismissible?: boolean;
 }
 
 /**

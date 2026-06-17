@@ -57,14 +57,14 @@ export interface StdUiSidePanelConfig {
   title?: string;
   /** Default: `false` */
   isOpen?: boolean;
+  /** Default: `"w-full sm:w-96"` */
+  width?: string;
   /** Default: `"right"` */
   position?: 'left' | 'right';
   /** Default: `true` */
   showOverlay?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `"w-full sm:w-96"` */
-  width?: string;
 }
 
 /**

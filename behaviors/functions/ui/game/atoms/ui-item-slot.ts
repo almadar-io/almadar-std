@@ -48,20 +48,20 @@ export interface StdUiItemSlotClickPayload {
 export interface StdUiItemSlotConfig {
   /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `false` */
-  empty?: boolean;
-  /** Default: `"common"` */
-  rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `"Label"` */
-  label?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  selected?: boolean;
+  /** Default: `"common"` */
+  rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+  /** Default: `"Label"` */
+  label?: string;
   /** Default: `0` */
   quantity?: number;
+  /** Default: `false` */
+  selected?: boolean;
+  /** Default: `false` */
+  empty?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

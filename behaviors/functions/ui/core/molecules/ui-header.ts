@@ -68,35 +68,35 @@ export interface StdUiHeaderLogoClickPayload {
  */
 export interface StdUiHeaderConfig {
   /** Default: `false` */
-  isMenuOpen?: boolean;
-  /** Default: `true` */
-  sticky?: boolean;
-  /** Default: `"User Name"` */
-  userName?: string;
-  /** Default: `"KFlow"` */
-  brandName?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  logoSrc?: unknown;
-  /** Default: `true` */
-  showMenuToggle?: boolean;
-  actions?: unknown;
-  /** Default: `false` */
   showSearch?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
-  /** Default: `"compact-bar"` */
-  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
-  /** Default: `[{"href":"Href","icon":"circle","badge":"Badge","active":false,"label":"Label"}]` */
-  navigationItems?: EntityRow[];
   /** Default: `"Search Placeholder"` */
   searchPlaceholder?: string;
+  /** Default: `"compact-bar"` */
+  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
   /** Default: `"mobile"` */
   variant?: 'mobile' | 'desktop';
-  /** Default: `{"initials":"Initials","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","alt":"Alt"}` */
+  /** Default: `[{"active":false,"icon":"circle","label":"Label","badge":"Badge","href":"Href"}]` */
+  navigationItems?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  logoSrc?: unknown;
+  /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","initials":"Initials"}` */
   userAvatar?: EntityRow;
+  /** Default: `true` */
+  showMenuToggle?: boolean;
+  /** Default: `true` */
+  sticky?: boolean;
+  /** Default: `"KFlow"` */
+  brandName?: string;
+  /** Default: `false` */
+  isMenuOpen?: boolean;
+  /** Default: `"User Name"` */
+  userName?: string;
+  actions?: unknown;
 }
 
 /**

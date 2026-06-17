@@ -48,14 +48,14 @@ export interface StdUiWizardProgressStepClickPayload {
 export interface StdUiWizardProgressConfig {
   /** Default: `0` */
   currentStep?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"id":"Id","description":"Description","title":"Title"}]` */
+  /** Default: `false` */
+  compact?: boolean;
+  /** Default: `[{"description":"Description","id":"Id","title":"Title"}]` */
   steps?: EntityRow[];
   /** Default: `true` */
   allowNavigation?: boolean;
-  /** Default: `false` */
-  compact?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

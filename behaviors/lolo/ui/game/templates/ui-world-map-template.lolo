@@ -1,6 +1,63 @@
 app ui-world-map-template "1.0.0"
 "WorldMapTemplate — UI factory (1:1 with the @almadar/ui world-map-template pattern)."
 orbital WorldMapTemplateOrbital {
+  type WorldMapTemplateTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+  }
+  type WorldMapTemplateUnitsItem = {
+    id : string!
+    position : WorldMapTemplateUnitsItemPosition
+    x : number
+    y : number
+    z : number
+    sprite : json
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [WorldMapTemplateUnitsItemTraitsItem]
+    previousPosition : WorldMapTemplateUnitsItemPreviousPosition
+    elevation : number
+  }
+  type WorldMapTemplateUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type WorldMapTemplateUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type WorldMapTemplateUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type WorldMapTemplateFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : json
+    assetUrl : json
+    color : string
+    elevation : number
+  }
+
   entity WorldMapTemplateItem [runtime] {
     id : string!
   }
@@ -18,6 +75,10 @@ orbital WorldMapTemplateOrbital {
           unitScale: @config.unitScale
           diamondTopY: @config.diamondTopY
           allowMoveAllHeroes: @config.allowMoveAllHeroes
+          tiles: @config.tiles
+          units: @config.units
+          features: @config.features
+          assetManifest: @config.assetManifest
           type: world-map-template
         })
     }
@@ -42,6 +103,22 @@ orbital WorldMapTemplateOrbital {
       allowMoveAllHeroes : boolean = false
         @label "Allow Move All Heroes"
         @description "Allow selecting / moving ALL heroes (including enemy). For testing."
+        @tier "presentation"
+      tiles : [WorldMapTemplateTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false }, { x: 1, y: 0, terrain: "water", passable: false }, { x: 2, y: 0, terrain: "water", passable: false }, { x: 3, y: 0, terrain: "water", passable: false }, { x: 4, y: 0, terrain: "stone", passable: false }, { x: 0, y: 1, terrain: "water", passable: false }, { x: 1, y: 1, terrain: "grass", passable: true }, { x: 2, y: 1, terrain: "grass", passable: true }, { x: 3, y: 1, terrain: "grass", passable: true }, { x: 4, y: 1, terrain: "water", passable: false }, { x: 0, y: 2, terrain: "water", passable: false }, { x: 1, y: 2, terrain: "grass", passable: true }, { x: 2, y: 2, terrain: "grass", passable: true }, { x: 3, y: 2, terrain: "grass", passable: true }, { x: 4, y: 2, terrain: "water", passable: false }, { x: 0, y: 3, terrain: "water", passable: false }, { x: 1, y: 3, terrain: "grass", passable: true }, { x: 2, y: 3, terrain: "grass", passable: true }, { x: 3, y: 3, terrain: "grass", passable: true }, { x: 4, y: 3, terrain: "water", passable: false }, { x: 0, y: 4, terrain: "stone", passable: false }, { x: 1, y: 4, terrain: "water", passable: false }, { x: 2, y: 4, terrain: "water", passable: false }, { x: 3, y: 4, terrain: "water", passable: false }, { x: 4, y: 4, terrain: "stone", passable: false }]
+        @label "Tiles"
+        @description "Direct tile data — forwarded to WorldMapBoard; takes priority over entity."
+        @tier "presentation"
+      units : [WorldMapTemplateUnitsItem] = [{ id: "unit-1", position: { x: 1, y: 1 }, unitType: "hero", name: "Hero", team: player, health: 10, maxHealth: 10 }, { id: "unit-2", position: { x: 3, y: 2 }, unitType: "hero", name: "Guard", team: enemy, health: 8, maxHealth: 10 }]
+        @label "Units"
+        @description "Direct unit data — forwarded to WorldMapBoard; takes priority over entity."
+        @tier "presentation"
+      features : [WorldMapTemplateFeaturesItem] = [{ x: 2, y: 0, type: "castle" }, { x: 4, y: 4, type: "portal" }]
+        @label "Features"
+        @description "Direct feature data — forwarded to WorldMapBoard; takes priority over entity."
+        @tier "presentation"
+      assetManifest : string = ""
+        @label "Asset Manifest"
+        @description "Direct asset manifest — forwarded to WorldMapBoard; takes priority over entity."
         @tier "presentation"
     }
   }

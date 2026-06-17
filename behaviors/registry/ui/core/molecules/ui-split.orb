@@ -54,14 +54,8 @@
                     "render-ui",
                     "main",
                     {
-                      "align": "@config.align",
-                      "entity": "SplitItem",
-                      "stackBreakpoint": "@config.stackBreakpoint",
-                      "reverse": "@config.reverse",
-                      "leftClassName": "@config.leftClassName",
-                      "rightClassName": "@config.rightClassName",
                       "ratio": "@config.ratio",
-                      "type": "split",
+                      "leftClassName": "@config.leftClassName",
                       "children": [
                         {
                           "content": "Panel A",
@@ -72,11 +66,17 @@
                           "content": "Panel B"
                         }
                       ],
-                      "className": "@config.className",
-                      "gap": "@config.gap",
+                      "stackBreakpoint": "@config.stackBreakpoint",
+                      "rightClassName": "@config.rightClassName",
                       "isLoading": "@config.isLoading",
+                      "align": "@config.align",
+                      "className": "@config.className",
+                      "reverse": "@config.reverse",
+                      "entity": "SplitItem",
                       "error": "@config.error",
-                      "stackOnMobile": "@config.stackOnMobile"
+                      "type": "split",
+                      "stackOnMobile": "@config.stackOnMobile",
+                      "gap": "@config.gap"
                     }
                   ]
                 ]
@@ -84,20 +84,6 @@
             ]
           },
           "config": {
-            "rightClassName": {
-              "type": "string",
-              "default": "Right Class Name",
-              "label": "Right Class Name",
-              "description": "Right/second panel class name",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Custom class name",
-              "tier": "presentation"
-            },
             "stackOnMobile": {
               "type": "boolean",
               "default": true,
@@ -105,12 +91,67 @@
               "description": "Stack vertically on mobile",
               "tier": "presentation"
             },
-            "reverse": {
-              "type": "boolean",
-              "default": false,
-              "label": "Reverse",
-              "description": "Reverse the order (right first)",
+            "error": {
+              "type": "SplitError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "stackBreakpoint": {
+              "type": "string",
+              "default": "md",
+              "label": "Stack Breakpoint",
+              "description": "Breakpoint to switch from stacked to side-by-side",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "rightClassName": {
+              "type": "string",
+              "default": "Right Class Name",
+              "label": "Right Class Name",
+              "description": "Right/second panel class name",
               "tier": "presentation"
+            },
+            "gap": {
+              "type": "string",
+              "default": "md",
+              "label": "Gap",
+              "description": "Gap between panels",
+              "tier": "presentation",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
             },
             "isLoading": {
               "type": "boolean",
@@ -118,26 +159,6 @@
               "label": "Is Loading",
               "description": "Loading state indicator",
               "tier": "presentation"
-            },
-            "leftClassName": {
-              "type": "string",
-              "default": "Left Class Name",
-              "label": "Left Class Name",
-              "description": "Left/first panel class name",
-              "tier": "presentation"
-            },
-            "align": {
-              "type": "string",
-              "default": "stretch",
-              "label": "Align",
-              "description": "Align items vertically",
-              "tier": "presentation",
-              "values": [
-                "start",
-                "center",
-                "end",
-                "stretch"
-              ]
             },
             "ratio": {
               "type": "string",
@@ -157,60 +178,39 @@
                 "3:2"
               ]
             },
-            "stackBreakpoint": {
+            "align": {
               "type": "string",
-              "default": "md",
-              "label": "Stack Breakpoint",
-              "description": "Breakpoint to switch from stacked to side-by-side",
+              "default": "stretch",
+              "label": "Align",
+              "description": "Align items vertically",
               "tier": "presentation",
               "values": [
-                "sm",
-                "md",
-                "lg",
-                "xl"
+                "start",
+                "center",
+                "end",
+                "stretch"
               ]
             },
-            "gap": {
+            "reverse": {
+              "type": "boolean",
+              "default": false,
+              "label": "Reverse",
+              "description": "Reverse the order (right first)",
+              "tier": "presentation"
+            },
+            "className": {
               "type": "string",
-              "default": "md",
-              "label": "Gap",
-              "description": "Gap between panels",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "sm",
-                "md",
-                "lg",
-                "xl"
-              ]
+              "default": "",
+              "label": "Class Name",
+              "description": "Custom class name",
+              "tier": "presentation"
             },
-            "error": {
-              "type": "SplitError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
+            "leftClassName": {
+              "type": "string",
+              "default": "Left Class Name",
+              "label": "Left Class Name",
+              "description": "Left/first panel class name",
+              "tier": "presentation"
             }
           },
           "scope": "instance"

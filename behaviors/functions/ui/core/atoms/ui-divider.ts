@@ -41,10 +41,10 @@ export type StdUiDividerEventKey = 'INIT';
 export interface StdUiDividerConfig {
   /** Default: `"solid"` */
   variant?: 'solid' | 'dashed' | 'dotted';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
+  /** Default: `""` */
+  className?: string;
   /** Default: `"Label"` */
   label?: string;
 }

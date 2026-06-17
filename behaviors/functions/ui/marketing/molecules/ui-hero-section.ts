@@ -39,33 +39,33 @@ export type StdUiHeroSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeroSectionConfig {
-  /** Default: `"below"` */
-  imagePosition?: 'below' | 'right' | 'background';
-  /** Default: `"center"` */
-  align?: 'center' | 'left';
-  /** Default: `"Tag"` */
-  tag?: string;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `""` */
-  className?: string;
-  backgroundElement?: unknown;
   /** Default: `"Title Accent"` */
   titleAccent?: string;
+  /** Default: `"Tag"` */
+  tag?: string;
   /** Default: `"primary"` */
   tagVariant?: 'primary' | 'secondary' | 'accent';
-  /** Default: `{"label":"Label","href":"Href"}` */
-  secondaryAction?: EntityRow;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `{"alt":"Alt","src":{}}` */
-  image?: EntityRow;
   /** Default: `"Install Command"` */
   installCommand?: string;
+  backgroundElement?: unknown;
+  /** Default: `""` */
+  className?: string;
   /** Default: `{"href":"Href","label":"Label"}` */
   primaryAction?: EntityRow;
+  /** Default: `{"src":{},"alt":"Alt"}` */
+  image?: EntityRow;
+  /** Default: `"center"` */
+  align?: 'center' | 'left';
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `{"href":"Href","label":"Label"}` */
+  secondaryAction?: EntityRow;
+  /** Default: `"below"` */
+  imagePosition?: 'below' | 'right' | 'background';
   /** Default: `"subtle"` */
   background?: 'dark' | 'gradient' | 'subtle';
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**

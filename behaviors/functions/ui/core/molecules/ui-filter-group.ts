@@ -56,16 +56,16 @@ export interface StdUiFilterGroupClearAllPayload {
 export interface StdUiFilterGroupConfig {
   /** Default: `true` */
   showIcon?: boolean;
+  /** Default: `"Query"` */
+  query?: string;
+  /** Default: `"toolbar"` */
+  look?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `"toolbar"` */
-  look?: 'toolbar' | 'chips' | 'pills' | 'popover-trigger' | 'inline-column-header';
-  /** Default: `[{"options":["Item"],"type":"checkbox","label":"Label","field":"Field"}]` */
+  /** Default: `[{"type":"checkbox","options":["Item"],"field":"Field","label":"Label"}]` */
   filters?: EntityRow[];
-  /** Default: `"Query"` */
-  query?: string;
   /** Default: `"default"` */
   variant?: 'default' | 'compact' | 'pills' | 'vertical';
 }

@@ -49,14 +49,14 @@
                     "render-ui",
                     "main",
                     {
+                      "stats": "@config.stats",
+                      "transparent": "@config.transparent",
+                      "size": "@config.size",
+                      "className": "@config.className",
+                      "type": "game-hud",
                       "position": "@config.position",
                       "items": "@config.items",
-                      "stats": "@config.stats",
-                      "className": "@config.className",
-                      "transparent": "@config.transparent",
-                      "elements": "@config.elements",
-                      "size": "@config.size",
-                      "type": "game-hud"
+                      "elements": "@config.elements"
                     }
                   ]
                 ]
@@ -71,6 +71,45 @@
               "description": "Whether to use a semi-transparent background",
               "tier": "presentation"
             },
+            "size": {
+              "type": "string",
+              "default": "md",
+              "label": "Size",
+              "description": "Size variant",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "items": {
+              "type": "[GameHudItemsItem]",
+              "default": [
+                {
+                  "source": "Source",
+                  "field": "Field"
+                }
+              ],
+              "label": "Items",
+              "description": "Alias for stats (schema compatibility)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "field": {
+                    "name": "field",
+                    "type": "string",
+                    "required": false
+                  },
+                  "source": {
+                    "name": "source",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
             "position": {
               "type": "string",
               "default": "top",
@@ -82,96 +121,6 @@
                 "bottom",
                 "corners"
               ]
-            },
-            "elements": {
-              "type": "[GameHudElementsItem]",
-              "default": [
-                {
-                  "icon": "circle",
-                  "position": "Position",
-                  "max": 1.0,
-                  "format": "Format",
-                  "bind": "Bind",
-                  "label": "Label",
-                  "type": "Type",
-                  "value": "Value"
-                }
-              ],
-              "label": "Elements",
-              "description": "Schema-style elements array (alternative to stats). Converted to stats internally for backwards compatibility.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": false
-                  },
-                  "position": {
-                    "name": "position",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": false
-                  },
-                  "bind": {
-                    "name": "bind",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "max": {
-                    "name": "max",
-                    "type": "number",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "items": {
-              "type": "[GameHudItemsItem]",
-              "default": [
-                {
-                  "field": "Field",
-                  "source": "Source"
-                }
-              ],
-              "label": "Items",
-              "description": "Alias for stats (schema compatibility)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "source": {
-                    "name": "source",
-                    "type": "string",
-                    "required": false
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
             },
             "stats": {
               "type": "[GameHudStatsItem]",
@@ -187,30 +136,81 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "field": {
-                    "name": "field",
+                  "source": {
+                    "name": "source",
                     "type": "string",
                     "required": false
                   },
-                  "source": {
-                    "name": "source",
+                  "field": {
+                    "name": "field",
                     "type": "string",
                     "required": false
                   }
                 }
               }
             },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
+            "elements": {
+              "type": "[GameHudElementsItem]",
+              "default": [
+                {
+                  "label": "Label",
+                  "bind": "Bind",
+                  "value": "Value",
+                  "format": "Format",
+                  "position": "Position",
+                  "max": 1.0,
+                  "icon": "circle",
+                  "type": "Type"
+                }
+              ],
+              "label": "Elements",
+              "description": "Schema-style elements array (alternative to stats). Converted to stats internally for backwards compatibility.",
               "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
+              "items": {
+                "type": "object",
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "type": "string",
+                    "required": false
+                  },
+                  "position": {
+                    "name": "position",
+                    "type": "string",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": false
+                  },
+                  "max": {
+                    "name": "max",
+                    "type": "number",
+                    "required": false
+                  },
+                  "bind": {
+                    "name": "bind",
+                    "type": "string",
+                    "required": false
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
             },
             "className": {
               "type": "string",

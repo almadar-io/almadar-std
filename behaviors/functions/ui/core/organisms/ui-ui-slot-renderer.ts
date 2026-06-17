@@ -40,18 +40,18 @@ export type StdUiUiSlotRendererEventKey = 'INIT';
  */
 export interface StdUiUiSlotRendererConfig {
   /** Default: `false` */
-  isLoading?: boolean;
+  includeHud?: boolean;
   error?: EntityRow;
+  /** Default: `""` */
+  className?: string;
   /** Default: `false` */
-  includeFloating?: boolean;
+  isLoading?: boolean;
   /** Default: `{"enabled":false}` */
   suspense?: EntityRow;
   /** Default: `"fixed"` */
   hudMode?: 'fixed' | 'inline';
   /** Default: `false` */
-  includeHud?: boolean;
-  /** Default: `""` */
-  className?: string;
+  includeFloating?: boolean;
 }
 
 /**
@@ -160,15 +160,15 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                   'render-ui',
                   'main',
                   {
+                    'hudMode': '@config.hudMode',
                     'isLoading': '@config.isLoading',
-                    'suspense': '@config.suspense',
+                    'type': 'ui-slot-renderer',
                     'includeHud': '@config.includeHud',
-                    'className': '@config.className',
+                    'suspense': '@config.suspense',
                     'entity': 'UiSlotRendererItem',
                     'includeFloating': '@config.includeFloating',
-                    'hudMode': '@config.hudMode',
+                    'className': '@config.className',
                     'error': '@config.error',
-                    'type': 'ui-slot-renderer',
                   },
                 ],
               ],
@@ -176,11 +176,11 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
           ],
         },
         'config': {
-          'isLoading': {
+          'includeHud': {
             'type': 'boolean',
             'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+            'label': 'Include Hud',
+            'description': 'Include HUD slots',
             'tier': 'presentation',
           },
           'error': {
@@ -211,11 +211,18 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
               },
             },
           },
-          'includeFloating': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional class name for the container',
+            'tier': 'presentation',
+          },
+          'isLoading': {
             'type': 'boolean',
             'default': false,
-            'label': 'Include Floating',
-            'description': 'Include floating slot',
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
             'tier': 'presentation',
           },
           'suspense': {
@@ -253,18 +260,11 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
               'inline',
             ],
           },
-          'includeHud': {
+          'includeFloating': {
             'type': 'boolean',
             'default': false,
-            'label': 'Include Hud',
-            'description': 'Include HUD slots',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional class name for the container',
+            'label': 'Include Floating',
+            'description': 'Include floating slot',
             'tier': 'presentation',
           },
         },

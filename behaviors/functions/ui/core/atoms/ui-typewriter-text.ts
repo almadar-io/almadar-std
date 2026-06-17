@@ -48,10 +48,10 @@ export interface StdUiTypewriterTextCompletePayload {
 export interface StdUiTypewriterTextConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  startDelay?: number;
   /** Default: `"Text"` */
   text?: string;
+  /** Default: `0` */
+  startDelay?: number;
   /** Default: `40` */
   speed?: number;
 }

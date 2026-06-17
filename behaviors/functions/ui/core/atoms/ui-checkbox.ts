@@ -48,12 +48,12 @@ export interface StdUiCheckboxChangePayload {
 export interface StdUiCheckboxConfig {
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   checked?: boolean;
   /** Default: `false` */
   defaultChecked?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
