@@ -53,20 +53,20 @@ export interface StdUiWizardContainerCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardContainerConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[{"phase":"Phase","title":"Title","id":"Id","tabId":"Tab Id","content":"Content","globalVariablesRequired":["Item"],"description":"Description","validationRules":[{"condition":[],"message":"Message"}],"lawReferences":[{"description":"Description","law":"Law","article":"Article"}],"sections":[{"title":"Title","subsections":[],"id":"Id","fields":[{"minLength":1,"type":"Type","items":[],"placeholder":"Placeholder","contextMenu":[],"entityField":"Entity Field","id":"Id","required":false,"repeatable":false,"readOnly":false,"maxLength":1,"condition":[],"hiddenCalculations":[],"displayFields":[],"options":[],"label":"Label","stats":[]}],"minItems":1,"addButtonLabel":"Add Button Label","hiddenCalculations":[{"scope":"Scope","variable":"Variable","expression":"Expression"}],"description":"Description","readOnly":false,"repeatable":false,"condition":[]}],"contextMenu":["Item"],"entityMapping":{"mode":"search_or_create","parentField":"Parent Field","idField":"Id Field","entity":"Entity"},"globalVariablesSet":["Item"],"optional":false,"name":"Name","localVariables":["Item"]}]` */
-  steps?: EntityRow[];
-  error?: EntityRow;
-  /** Default: `false` */
-  compact?: boolean;
   /** Default: `true` */
   showProgress?: boolean;
+  /** Default: `[{"validationRules":[{"condition":[],"message":"Message"}],"entityMapping":{"parentField":"Parent Field","idField":"Id Field","mode":"search_or_create","entity":"Entity"},"sections":[{"title":"Title","subsections":[],"readOnly":false,"repeatable":false,"hiddenCalculations":[{"variable":"Variable","expression":"Expression","scope":"Scope"}],"id":"Id","fields":[{"repeatable":false,"minLength":1,"maxLength":1,"contextMenu":[],"label":"Label","options":[],"stats":[],"hiddenCalculations":[],"required":false,"readOnly":false,"entityField":"Entity Field","condition":[],"displayFields":[],"placeholder":"Placeholder","id":"Id","type":"Type","items":[]}],"condition":[],"description":"Description","minItems":1,"addButtonLabel":"Add Button Label"}],"id":"Id","name":"Name","optional":false,"localVariables":["Item"],"phase":"Phase","globalVariablesSet":["Item"],"contextMenu":["Item"],"lawReferences":[{"article":"Article","description":"Description","law":"Law"}],"globalVariablesRequired":["Item"],"title":"Title","content":"Content","description":"Description","tabId":"Tab Id"}]` */
+  steps?: EntityRow[];
+  /** Default: `false` */
+  compact?: boolean;
+  error?: EntityRow;
   currentStep?: unknown;
-  /** Default: `true` */
-  allowBack?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `true` */
+  allowBack?: boolean;
 }
 
 /**

@@ -39,14 +39,14 @@ export type StdUiDividerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDividerConfig {
-  /** Default: `"solid"` */
-  variant?: 'solid' | 'dashed' | 'dotted';
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `"solid"` */
+  variant?: 'solid' | 'dashed' | 'dotted';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
 }
 
 /**

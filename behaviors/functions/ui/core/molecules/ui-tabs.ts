@@ -48,16 +48,16 @@ export interface StdUiTabsTabChangePayload {
 export interface StdUiTabsConfig {
   /** Default: `"default"` */
   variant?: 'default' | 'pills' | 'underline';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"label":"Label","value":"Value","badge":"Badge","active":false,"content":"Content","id":"Id","disabled":false,"icon":"circle"}]` */
-  tabs?: EntityRow[];
-  /** Default: `"Default Active Tab"` */
-  defaultActiveTab?: string;
-  /** Default: `[{"value":"Value","active":false,"content":"Content","label":"Label","icon":"circle","badge":"Badge","disabled":false,"id":"Id"}]` */
-  items?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"icon":"circle","value":"Value","active":false,"badge":"Badge","id":"Id","disabled":false,"label":"Label","content":"Content"}]` */
+  tabs?: EntityRow[];
+  /** Default: `[{"id":"Id","icon":"circle","value":"Value","label":"Label","disabled":false,"badge":"Badge","active":false,"content":"Content"}]` */
+  items?: EntityRow[];
+  /** Default: `"Default Active Tab"` */
+  defaultActiveTab?: string;
   /** Default: `"Active Tab"` */
   activeTab?: string;
 }

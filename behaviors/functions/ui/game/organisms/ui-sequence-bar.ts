@@ -54,22 +54,22 @@ export interface StdUiSequenceBarSlotRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSequenceBarConfig {
-  /** Default: `[{"iconEmoji":"Icon Emoji","stateMachine":{"states":["Item"],"name":"Name","transitions":[{"event":"Event","to":"To","from":"From","guardHint":"Guard Hint"}],"description":"Description","currentState":"Current State"},"id":"Id","name":"Name","description":"Description","category":"Category"}]` */
+  /** Default: `[{"id":"Id","name":"Name","description":"Description","stateMachine":{"name":"Name","states":["Item"],"transitions":[{"guardHint":"Guard Hint","from":"From","to":"To","event":"Event"}],"currentState":"Current State","description":"Description"},"iconEmoji":"Icon Emoji","category":"Category"}]` */
   slots?: EntityRow[];
-  /** Default: `-1` */
-  currentStep?: number;
-  /** Default: `false` */
-  playing?: boolean;
-  /** Default: `"lg"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `[]` */
   slotFeedback?: string[];
+  /** Default: `"lg"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `{}` */
   categoryColors?: unknown;
-  /** Default: `0` */
-  maxSlots?: number;
+  /** Default: `-1` */
+  currentStep?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `0` */
+  maxSlots?: number;
+  /** Default: `false` */
+  playing?: boolean;
 }
 
 /**
@@ -391,17 +391,17 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                   'render-ui',
                   'main',
                   {
-                    'currentStep': '@config.currentStep',
-                    'categoryColors': '@config.categoryColors',
-                    'className': '@config.className',
-                    'onSlotDrop': 'SLOT_DROP',
-                    'slotFeedback': '@config.slotFeedback',
-                    'size': '@config.size',
-                    'slots': '@config.slots',
                     'maxSlots': '@config.maxSlots',
                     'playing': '@config.playing',
+                    'currentStep': '@config.currentStep',
                     'type': 'sequence-bar',
+                    'slots': '@config.slots',
+                    'slotFeedback': '@config.slotFeedback',
                     'onSlotRemove': 'SLOT_REMOVE',
+                    'size': '@config.size',
+                    'onSlotDrop': 'SLOT_DROP',
+                    'categoryColors': '@config.categoryColors',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -413,26 +413,26 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
             'type': '[SequenceBarSlotsItem]',
             'default': [
               {
-                'iconEmoji': 'Icon Emoji',
-                'stateMachine': {
-                  'states': [
-                    'Item',
-                  ],
-                  'name': 'Name',
-                  'transitions': [
-                    {
-                      'event': 'Event',
-                      'to': 'To',
-                      'from': 'From',
-                      'guardHint': 'Guard Hint',
-                    },
-                  ],
-                  'description': 'Description',
-                  'currentState': 'Current State',
-                },
                 'id': 'Id',
                 'name': 'Name',
                 'description': 'Description',
+                'stateMachine': {
+                  'name': 'Name',
+                  'states': [
+                    'Item',
+                  ],
+                  'transitions': [
+                    {
+                      'guardHint': 'Guard Hint',
+                      'from': 'From',
+                      'to': 'To',
+                      'event': 'Event',
+                    },
+                  ],
+                  'currentState': 'Current State',
+                  'description': 'Description',
+                },
+                'iconEmoji': 'Icon Emoji',
                 'category': 'Category',
               },
             ],
@@ -447,21 +447,21 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                   'type': 'string',
                   'required': true,
                 },
+                'description': {
+                  'name': 'description',
+                  'type': 'string',
+                  'required': false,
+                },
+                'iconEmoji': {
+                  'name': 'iconEmoji',
+                  'type': 'string',
+                  'required': false,
+                },
                 'stateMachine': {
                   'name': 'stateMachine',
                   'type': 'object',
                   'required': false,
                   'properties': {
-                    'description': {
-                      'name': 'description',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'currentState': {
-                      'name': 'currentState',
-                      'type': 'string',
-                      'required': true,
-                    },
                     'states': {
                       'name': 'states',
                       'type': 'array',
@@ -477,11 +477,6 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                       'items': {
                         'type': 'object',
                         'properties': {
-                          'guardHint': {
-                            'name': 'guardHint',
-                            'type': 'string',
-                            'required': false,
-                          },
                           'to': {
                             'name': 'to',
                             'type': 'string',
@@ -497,6 +492,11 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                             'type': 'string',
                             'required': true,
                           },
+                          'guardHint': {
+                            'name': 'guardHint',
+                            'type': 'string',
+                            'required': false,
+                          },
                         },
                       },
                     },
@@ -505,6 +505,16 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                       'type': 'string',
                       'required': true,
                     },
+                    'currentState': {
+                      'name': 'currentState',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'description': {
+                      'name': 'description',
+                      'type': 'string',
+                      'required': false,
+                    },
                   },
                 },
                 'id': {
@@ -512,54 +522,18 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                   'type': 'string',
                   'required': true,
                 },
-                'category': {
-                  'name': 'category',
-                  'type': 'string',
-                  'required': true,
-                },
-                'iconEmoji': {
-                  'name': 'iconEmoji',
-                  'type': 'string',
-                  'required': false,
-                },
-                'description': {
-                  'name': 'description',
-                  'type': 'string',
-                  'required': false,
-                },
                 'iconUrl': {
                   'name': 'iconUrl',
                   'type': 'string',
                   'required': false,
                 },
+                'category': {
+                  'name': 'category',
+                  'type': 'string',
+                  'required': true,
+                },
               },
             },
-          },
-          'currentStep': {
-            'type': 'number',
-            'default': -1,
-            'label': 'Current Step',
-            'description': 'Current step index during playback (-1 = not playing)',
-            'tier': 'presentation',
-          },
-          'playing': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Playing',
-            'description': 'Whether the sequence is currently playing (disable interaction)',
-            'tier': 'presentation',
-          },
-          'size': {
-            'type': 'string',
-            'default': 'lg',
-            'label': 'Size',
-            'description': 'Size variant',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
           },
           'slotFeedback': {
             'type': '[string]',
@@ -574,6 +548,18 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                 'wrong',
               ],
             },
+          },
+          'size': {
+            'type': 'string',
+            'default': 'lg',
+            'label': 'Size',
+            'description': 'Size variant',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
           },
           'categoryColors': {
             'type': 'Map<string,SequenceBarCategoryColorsValue>',
@@ -597,11 +583,11 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
               },
             },
           },
-          'maxSlots': {
+          'currentStep': {
             'type': 'number',
-            'default': 0,
-            'label': 'Max Slots',
-            'description': 'Max number of slots',
+            'default': -1,
+            'label': 'Current Step',
+            'description': 'Current step index during playback (-1 = not playing)',
             'tier': 'presentation',
           },
           'className': {
@@ -609,6 +595,20 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'maxSlots': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Max Slots',
+            'description': 'Max number of slots',
+            'tier': 'presentation',
+          },
+          'playing': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Playing',
+            'description': 'Whether the sequence is currently playing (disable interaction)',
             'tier': 'presentation',
           },
         },

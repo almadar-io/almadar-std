@@ -60,51 +60,51 @@ export interface StdUiTableViewViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTableViewConfig {
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `"Sort Column"` */
-  sortColumn?: string;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `"Group By"` */
-  groupBy?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
-  /** Default: `false` */
-  dndRoot?: boolean;
-  /** Default: `0` */
-  maxInlineActions?: number;
-  error?: EntityRow;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
-  /** Default: `[{"width":"Width","align":"left","sortable":false,"header":"Header","label":"Label","className":"Class Name","key":"Key","format":"badge","weight":"normal","field":"Field","icon":"circle"}]` */
+  /** Default: `[{"className":"Class Name","icon":"circle","key":"Key","sortable":false,"weight":"normal","format":"badge","align":"left","field":"Field","header":"Header","width":"Width","label":"Label"}]` */
   columns?: EntityRow[];
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
   /** Default: `"Accepts"` */
   accepts?: string;
-  /** Default: `[{"field":"Field","weight":"normal","format":"badge","icon":"circle","align":"left","sortable":false,"className":"Class Name","key":"Key","label":"Label","width":"Width","header":"Header"}]` */
+  /** Default: `[{"format":"badge","label":"Label","align":"left","className":"Class Name","icon":"circle","field":"Field","key":"Key","header":"Header","weight":"normal","width":"Width","sortable":false}]` */
   fields?: EntityRow[];
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `"Reorder Event"` */
-  reorderEvent?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `"Empty Message"` */
-  emptyMessage?: string;
   /** Default: `0` */
   pageSize?: number;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'bordered';
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `"Empty Message"` */
+  emptyMessage?: string;
   /** Default: `false` */
   sortable?: boolean;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
+  /** Default: `"Sort Column"` */
+  sortColumn?: string;
   /** Default: `false` */
   isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `"Group By"` */
+  groupBy?: string;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

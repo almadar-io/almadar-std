@@ -41,7 +41,7 @@ export type StdUiMenuEventKey = 'INIT';
 export interface StdUiMenuConfig {
   /** Default: `"bottom-left"` */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
-  /** Default: `[{"icon":"circle","variant":"default","id":"Id","label":"Label","disabled":false,"badge":"Badge","subMenu":[]}]` */
+  /** Default: `[{"label":"Label","disabled":false,"icon":"circle","variant":"default","subMenu":[],"id":"Id","badge":"Badge"}]` */
   items?: EntityRow[];
   /** Default: `""` */
   className?: string;

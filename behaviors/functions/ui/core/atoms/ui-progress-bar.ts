@@ -39,28 +39,28 @@ export type StdUiProgressBarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiProgressBarConfig {
-  /** Default: `"linear"` */
-  progressType?: 'linear' | 'circular' | 'stepped';
-  /** Default: `5` */
-  steps?: number;
-  /** Default: `false` */
-  showPercentage?: boolean;
-  /** Default: `"primary"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'danger';
-  /** Default: `"default"` */
-  color?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'danger';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `false` */
-  showLabel?: boolean;
   /** Default: `100` */
   max?: number;
+  /** Default: `false` */
+  showPercentage?: boolean;
+  /** Default: `false` */
+  showLabel?: boolean;
   /** Default: `0` */
   value?: number;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `5` */
+  steps?: number;
+  /** Default: `"default"` */
+  color?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'danger';
+  /** Default: `"linear"` */
+  progressType?: 'linear' | 'circular' | 'stepped';
+  /** Default: `"primary"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'danger';
 }
 
 /**

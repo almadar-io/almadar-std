@@ -104,27 +104,27 @@
                     "render-ui",
                     "main",
                     {
-                      "breadcrumbs": "@config.breadcrumbs",
-                      "className": "@config.className",
-                      "type": "page-header",
-                      "title": "@config.title",
-                      "subtitle": "@config.subtitle",
+                      "tabs": "@config.tabs",
                       "backEvent": "BACK",
-                      "actions": "@config.actions",
+                      "isLoading": "@config.isLoading",
                       "status": "@config.status",
+                      "showBack": "@config.showBack",
+                      "entity": "PageHeaderItem",
+                      "breadcrumbs": "@config.breadcrumbs",
+                      "actions": "@config.actions",
+                      "subtitle": "@config.subtitle",
+                      "title": "@config.title",
+                      "activeTab": "@config.activeTab",
+                      "type": "page-header",
+                      "error": "@config.error",
+                      "onTabChange": "TAB_CHANGE",
                       "children": [
                         {
                           "content": "Sample content",
                           "type": "typography"
                         }
                       ],
-                      "onTabChange": "TAB_CHANGE",
-                      "tabs": "@config.tabs",
-                      "entity": "PageHeaderItem",
-                      "activeTab": "@config.activeTab",
-                      "isLoading": "@config.isLoading",
-                      "error": "@config.error",
-                      "showBack": "@config.showBack"
+                      "className": "@config.className"
                     }
                   ]
                 ]
@@ -132,6 +132,18 @@
             ]
           },
           "config": {
+            "title": {
+              "type": "json",
+              "label": "Title",
+              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
+              "tier": "presentation"
+            },
+            "subtitle": {
+              "type": "json",
+              "label": "Subtitle",
+              "description": "Optional subtitle/description",
+              "tier": "presentation"
+            },
             "breadcrumbs": {
               "type": "[PageHeaderBreadcrumbsItem]",
               "default": [
@@ -146,36 +158,29 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  },
                   "label": {
                     "name": "label",
                     "type": "string",
                     "required": true
+                  },
+                  "href": {
+                    "name": "href",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
             },
             "actions": {
               "type": "[PageHeaderActionsItem]",
               "default": [
                 {
-                  "variant": "primary",
-                  "loading": false,
-                  "label": "Label",
                   "icon": "circle",
-                  "navigatesTo": "Navigates To",
-                  "disabled": false
+                  "loading": false,
+                  "disabled": false,
+                  "label": "Label",
+                  "variant": "primary",
+                  "navigatesTo": "Navigates To"
                 }
               ],
               "label": "Actions",
@@ -184,11 +189,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
@@ -199,6 +199,16 @@
                       "ghost",
                       "danger"
                     ]
+                  },
+                  "event": {
+                    "name": "event",
+                    "type": "string",
+                    "required": false
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
                   },
                   "loading": {
                     "name": "loading",
@@ -215,11 +225,6 @@
                     "type": "string",
                     "required": false
                   },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
                   "disabled": {
                     "name": "disabled",
                     "type": "boolean",
@@ -228,12 +233,6 @@
                 }
               }
             },
-            "subtitle": {
-              "type": "json",
-              "label": "Subtitle",
-              "description": "Optional subtitle/description",
-              "tier": "presentation"
-            },
             "showBack": {
               "type": "boolean",
               "default": false,
@@ -241,10 +240,11 @@
               "description": "Show back button",
               "tier": "presentation"
             },
-            "title": {
-              "type": "json",
-              "label": "Title",
-              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             },
             "status": {
@@ -253,6 +253,11 @@
               "description": "Status badge",
               "tier": "presentation",
               "properties": {
+                "label": {
+                  "name": "label",
+                  "type": "string",
+                  "required": true
+                },
                 "variant": {
                   "name": "variant",
                   "type": "string",
@@ -264,11 +269,39 @@
                     "danger",
                     "info"
                   ]
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
+                }
+              }
+            },
+            "tabs": {
+              "type": "[PageHeaderTabsItem]",
+              "default": [
+                {
+                  "count": 1.0,
+                  "value": "Value",
+                  "label": "Label"
+                }
+              ],
+              "label": "Tabs",
+              "description": "Tabs for sub-navigation",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "count": {
+                    "name": "count",
+                    "type": "number",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
                 }
               }
             },
@@ -283,13 +316,13 @@
                   "type": "string",
                   "required": true
                 },
-                "stack": {
-                  "name": "stack",
+                "code": {
+                  "name": "code",
                   "type": "string",
                   "required": false
                 },
-                "code": {
-                  "name": "code",
+                "stack": {
+                  "name": "stack",
                   "type": "string",
                   "required": false
                 },
@@ -300,51 +333,18 @@
                 }
               }
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "tabs": {
-              "type": "[PageHeaderTabsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "count": 1.0,
-                  "value": "Value"
-                }
-              ],
-              "label": "Tabs",
-              "description": "Tabs for sub-navigation",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "count": {
-                    "name": "count",
-                    "type": "number",
-                    "required": false
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
             "activeTab": {
               "type": "string",
               "default": "Active Tab",
               "label": "Active Tab",
               "description": "activeTab prop",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "className prop",
               "tier": "presentation"
             }
           },

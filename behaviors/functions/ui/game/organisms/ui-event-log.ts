@@ -41,10 +41,10 @@ export type StdUiEventLogEventKey = 'INIT';
 export interface StdUiEventLogConfig {
   /** Default: `200` */
   maxHeight?: number;
-  /** Default: `[{"timestamp":1,"id":"Id","message":"Message","icon":"circle","status":"pending"}]` */
-  entries?: EntityRow[];
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `[{"id":"Id","message":"Message","icon":"circle","status":"pending","timestamp":1}]` */
+  entries?: EntityRow[];
   /** Default: `""` */
   className?: string;
 }
@@ -153,8 +153,8 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                     'type': 'event-log',
                     'entries': '@config.entries',
                     'label': '@config.label',
-                    'className': '@config.className',
                     'maxHeight': '@config.maxHeight',
+                    'className': '@config.className',
                   },
                 ],
               ],
@@ -169,15 +169,22 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'description': 'Max visible height before scroll',
             'tier': 'presentation',
           },
+          'label': {
+            'type': 'string',
+            'default': 'Label',
+            'label': 'Label',
+            'description': 'Title label',
+            'tier': 'presentation',
+          },
           'entries': {
             'type': '[EventLogEntriesItem]',
             'default': [
               {
-                'timestamp': 1,
                 'id': 'Id',
                 'message': 'Message',
                 'icon': 'circle',
                 'status': 'pending',
+                'timestamp': 1,
               },
             ],
             'label': 'Entries',
@@ -186,9 +193,9 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
             'items': {
               'type': 'object',
               'properties': {
-                'timestamp': {
-                  'name': 'timestamp',
-                  'type': 'number',
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
                   'required': true,
                 },
                 'icon': {
@@ -196,9 +203,9 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                   'type': 'string',
                   'required': true,
                 },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
+                'timestamp': {
+                  'name': 'timestamp',
+                  'type': 'number',
                   'required': true,
                 },
                 'status': {
@@ -219,13 +226,6 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                 },
               },
             },
-          },
-          'label': {
-            'type': 'string',
-            'default': 'Label',
-            'label': 'Label',
-            'description': 'Title label',
-            'tier': 'presentation',
           },
           'className': {
             'type': 'string',

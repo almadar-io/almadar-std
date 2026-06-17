@@ -131,9 +131,9 @@
                     "render-ui",
                     "main",
                     {
-                      "label": "Open Confirm-dialog",
                       "action": "OPEN",
-                      "type": "button"
+                      "type": "button",
+                      "label": "Open Confirm-dialog"
                     }
                   ]
                 ]
@@ -147,23 +147,23 @@
                     "render-ui",
                     "modal",
                     {
-                      "onConfirm": "CONFIRM",
-                      "error": "@config.error",
-                      "variant": "@config.variant",
-                      "message": "@config.message",
                       "size": "@config.size",
                       "title": "@config.title",
-                      "description": "@config.description",
                       "cancelText": "@config.cancelText",
-                      "confirmText": "@config.confirmText",
-                      "isLoading": "@config.isLoading",
+                      "description": "@config.description",
+                      "error": "@config.error",
                       "confirmLabel": "@config.confirmLabel",
-                      "isOpen": "@config.isOpen",
-                      "cancelLabel": "@config.cancelLabel",
-                      "entity": "ConfirmDialogItem",
+                      "variant": "@config.variant",
+                      "isLoading": "@config.isLoading",
+                      "message": "@config.message",
+                      "type": "confirm-dialog",
                       "className": "@config.className",
+                      "confirmText": "@config.confirmText",
                       "onClose": "CLOSE",
-                      "type": "confirm-dialog"
+                      "entity": "ConfirmDialogItem",
+                      "onConfirm": "CONFIRM",
+                      "isOpen": "@config.isOpen",
+                      "cancelLabel": "@config.cancelLabel"
                     }
                   ]
                 ]
@@ -183,8 +183,8 @@
                     "main",
                     {
                       "action": "OPEN",
-                      "label": "Open Confirm-dialog",
-                      "type": "button"
+                      "type": "button",
+                      "label": "Open Confirm-dialog"
                     }
                   ]
                 ]
@@ -199,18 +199,39 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "cancelLabel": {
+            "cancelText": {
               "type": "string",
-              "default": "Cancel Label",
-              "label": "Cancel Label",
-              "description": "Alias for cancelText (schema compatibility)",
+              "default": "Cancel Text",
+              "label": "Cancel Text",
+              "description": "Cancel button text",
               "tier": "presentation"
             },
-            "message": {
-              "type": "node",
-              "label": "Message",
-              "description": "Dialog message/description",
+            "confirmLabel": {
+              "type": "string",
+              "default": "Confirm Label",
+              "label": "Confirm Label",
+              "description": "Alias for confirmText (schema compatibility)",
               "tier": "presentation"
+            },
+            "description": {
+              "type": "node",
+              "label": "Description",
+              "description": "Alias for message (schema compatibility)",
+              "tier": "presentation"
+            },
+            "size": {
+              "type": "string",
+              "default": "sm",
+              "label": "Size",
+              "description": "Dialog size",
+              "tier": "presentation",
+              "values": [
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "full"
+              ]
             },
             "title": {
               "type": "string",
@@ -219,11 +240,52 @@
               "description": "Dialog title",
               "tier": "presentation"
             },
-            "cancelText": {
+            "error": {
+              "type": "ConfirmDialogError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "cancelLabel": {
               "type": "string",
-              "default": "Cancel Text",
-              "label": "Cancel Text",
-              "description": "Cancel button text",
+              "default": "Cancel Label",
+              "label": "Cancel Label",
+              "description": "Alias for cancelText (schema compatibility)",
+              "tier": "presentation"
+            },
+            "isOpen": {
+              "type": "boolean",
+              "default": true,
+              "label": "Is Open",
+              "description": "Whether the dialog is open (defaults to true when rendered by slot wrapper)",
+              "tier": "presentation"
+            },
+            "message": {
+              "type": "node",
+              "label": "Message",
+              "description": "Dialog message/description",
               "tier": "presentation"
             },
             "confirmText": {
@@ -246,74 +308,12 @@
                 "default"
               ]
             },
-            "description": {
-              "type": "node",
-              "label": "Description",
-              "description": "Alias for message (schema compatibility)",
-              "tier": "presentation"
-            },
-            "confirmLabel": {
-              "type": "string",
-              "default": "Confirm Label",
-              "label": "Confirm Label",
-              "description": "Alias for confirmText (schema compatibility)",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "sm",
-              "label": "Size",
-              "description": "Dialog size",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "full"
-              ]
-            },
-            "isOpen": {
-              "type": "boolean",
-              "default": true,
-              "label": "Is Open",
-              "description": "Whether the dialog is open (defaults to true when rendered by slot wrapper)",
-              "tier": "presentation"
-            },
             "isLoading": {
               "type": "boolean",
               "default": false,
               "label": "Is Loading",
               "description": "Loading state for confirm button",
               "tier": "presentation"
-            },
-            "error": {
-              "type": "ConfirmDialogError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                }
-              }
             }
           },
           "scope": "instance"

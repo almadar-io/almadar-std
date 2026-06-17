@@ -60,27 +60,27 @@ export interface StdUiSidebarLogoClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSidebarConfig {
-  error?: EntityRow;
-  /** Default: `false` */
-  defaultCollapsed?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  hideCollapseButton?: boolean;
-  /** Default: `false` */
-  showCloseButton?: boolean;
   userSection?: unknown;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
   logoSrc?: unknown;
+  /** Default: `[{"badge":"Badge","subItems":[],"icon":"circle","isActive":false,"href":"Href","label":"Label","id":"Id","active":false}]` */
+  items?: EntityRow[];
   /** Default: `"KFlow"` */
   brandName?: string;
   footerContent?: unknown;
   /** Default: `false` */
-  collapsed?: boolean;
-  /** Default: `[{"href":"Href","icon":"circle","badge":"Badge","active":false,"subItems":[],"label":"Label","isActive":false,"id":"Id"}]` */
-  items?: EntityRow[];
+  showCloseButton?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `false` */
+  collapsed?: boolean;
+  /** Default: `false` */
+  hideCollapseButton?: boolean;
+  error?: EntityRow;
+  /** Default: `false` */
+  defaultCollapsed?: boolean;
 }
 
 /**

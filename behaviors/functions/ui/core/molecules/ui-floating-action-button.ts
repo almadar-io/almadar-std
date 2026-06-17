@@ -57,16 +57,16 @@ export interface StdUiFloatingActionButtonConfig {
   variant?: 'primary' | 'secondary' | 'success' | 'danger' | 'warning';
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `"bottom-right"` */
+  position?: 'bottom-right' | 'bottom-left' | 'bottom-center' | 'top-right' | 'top-left' | 'top-center';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"label":"Label","icon":"circle","id":"Id","variant":"primary"}]` */
+  actions?: EntityRow[];
   /** Default: `"circle"` */
   icon?: unknown;
   /** Default: `{}` */
   actionPayload?: unknown;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"bottom-right"` */
-  position?: 'bottom-right' | 'bottom-left' | 'bottom-center' | 'top-right' | 'top-left' | 'top-center';
-  /** Default: `[{"id":"Id","label":"Label","icon":"circle","variant":"primary"}]` */
-  actions?: EntityRow[];
 }
 
 /**

@@ -39,10 +39,10 @@ export type StdUiBookChapterViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookChapterViewConfig {
-  /** Default: `""` */
-  className?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
+  /** Default: `""` */
+  className?: string;
 }
 
 /**
@@ -151,9 +151,9 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                   'render-ui',
                   'main',
                   {
-                    'chapter': '@entity',
                     'type': 'book-chapter-view',
                     'className': '@config.className',
+                    'chapter': '@entity',
                     'direction': '@config.direction',
                   },
                 ],
@@ -162,13 +162,6 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'direction': {
             'type': 'string',
             'default': 'rtl',
@@ -179,6 +172,13 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
               'rtl',
               'ltr',
             ],
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

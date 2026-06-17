@@ -1,6 +1,63 @@
 app ui-battle-template "1.0.0"
 "BattleTemplate — UI factory (1:1 with the @almadar/ui battle-template pattern)."
 orbital BattleTemplateOrbital {
+  type BattleTemplateTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+  }
+  type BattleTemplateUnitsItem = {
+    id : string!
+    position : BattleTemplateUnitsItemPosition
+    x : number
+    y : number
+    z : number
+    sprite : json
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [BattleTemplateUnitsItemTraitsItem]
+    previousPosition : BattleTemplateUnitsItemPreviousPosition
+    elevation : number
+  }
+  type BattleTemplateUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleTemplateUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type BattleTemplateUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type BattleTemplateFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : json
+    assetUrl : json
+    color : string
+    elevation : number
+  }
+
   entity BattleTemplateItem [runtime] {
     id : string!
   }
@@ -16,6 +73,10 @@ orbital BattleTemplateOrbital {
           className: @config.className
           scale: @config.scale
           unitScale: @config.unitScale
+          tiles: @config.tiles
+          units: @config.units
+          features: @config.features
+          assetManifest: @config.assetManifest
           type: battle-template
         })
     }
@@ -32,6 +93,22 @@ orbital BattleTemplateOrbital {
       unitScale : number = 1
         @label "Unit Scale"
         @description "Unit draw-size multiplier"
+        @tier "presentation"
+      tiles : [BattleTemplateTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false }, { x: 1, y: 0, terrain: "stone", passable: false }, { x: 2, y: 0, terrain: "stone", passable: false }, { x: 3, y: 0, terrain: "stone", passable: false }, { x: 4, y: 0, terrain: "stone", passable: false }, { x: 0, y: 1, terrain: "stone", passable: false }, { x: 1, y: 1, terrain: "dirt", passable: true }, { x: 2, y: 1, terrain: "grass", passable: true }, { x: 3, y: 1, terrain: "grass", passable: true }, { x: 4, y: 1, terrain: "stone", passable: false }, { x: 0, y: 2, terrain: "stone", passable: false }, { x: 1, y: 2, terrain: "grass", passable: true }, { x: 2, y: 2, terrain: "dirt", passable: true }, { x: 3, y: 2, terrain: "grass", passable: true }, { x: 4, y: 2, terrain: "stone", passable: false }, { x: 0, y: 3, terrain: "stone", passable: false }, { x: 1, y: 3, terrain: "grass", passable: true }, { x: 2, y: 3, terrain: "grass", passable: true }, { x: 3, y: 3, terrain: "dirt", passable: true }, { x: 4, y: 3, terrain: "stone", passable: false }, { x: 0, y: 4, terrain: "stone", passable: false }, { x: 1, y: 4, terrain: "stone", passable: false }, { x: 2, y: 4, terrain: "stone", passable: false }, { x: 3, y: 4, terrain: "stone", passable: false }, { x: 4, y: 4, terrain: "stone", passable: false }]
+        @label "Tiles"
+        @description "Direct tile data — forwarded to BattleBoard; takes priority over entity."
+        @tier "presentation"
+      units : [BattleTemplateUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "worker", name: "Worker", team: player, health: 10, maxHealth: 10 }, { id: "u2", position: { x: 3, y: 3 }, unitType: "guardian", name: "Guardian", team: enemy, health: 8, maxHealth: 10 }]
+        @label "Units"
+        @description "Direct unit data — forwarded to BattleBoard; takes priority over entity."
+        @tier "presentation"
+      features : [BattleTemplateFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine" }, { id: "f2", x: 3, y: 1, type: "portal" }]
+        @label "Features"
+        @description "Direct feature data — forwarded to BattleBoard; takes priority over entity."
+        @tier "presentation"
+      assetManifest : string = ""
+        @label "Asset Manifest"
+        @description "Direct asset manifest — forwarded to BattleBoard; takes priority over entity."
         @tier "presentation"
     }
   }

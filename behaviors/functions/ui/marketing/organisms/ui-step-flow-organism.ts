@@ -39,34 +39,34 @@ export type StdUiStepFlowOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStepFlowOrganismConfig {
-  activeFilters?: unknown;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `0` */
+  pageProp?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
+  /** Default: `"Heading"` */
+  heading?: string;
+  /** Default: `0` */
+  totalCount?: number;
+  /** Default: `"horizontal"` */
+  orientation?: 'horizontal' | 'vertical';
   /** Default: `"Sort By"` */
   sortBy?: string;
+  /** Default: `true` */
+  showConnectors?: boolean;
+  error?: EntityRow;
   /** Default: `0` */
   pageSize?: number;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `true` */
-  showConnectors?: boolean;
-  /** Default: `"Heading"` */
-  heading?: string;
-  /** Default: `0` */
-  pageProp?: number;
-  error?: EntityRow;
-  /** Default: `0` */
-  totalCount?: number;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  activeFilters?: unknown;
 }
 
 /**
@@ -180,22 +180,22 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
                   'render-ui',
                   'main',
                   {
-                    'sortDirection': '@config.sortDirection',
-                    'showConnectors': '@config.showConnectors',
-                    'subtitle': '@config.subtitle',
+                    'error': '@config.error',
+                    'className': '@config.className',
                     'page': '@config.pageProp',
+                    'sortDirection': '@config.sortDirection',
+                    'entity': '@entity',
+                    'subtitle': '@config.subtitle',
+                    'searchValue': '@config.searchValue',
+                    'totalCount': '@config.totalCount',
+                    'type': 'step-flow-organism',
                     'activeFilters': '@config.activeFilters',
-                    'orientation': '@config.orientation',
                     'heading': '@config.heading',
                     'isLoading': '@config.isLoading',
-                    'totalCount': '@config.totalCount',
-                    'error': '@config.error',
-                    'type': 'step-flow-organism',
-                    'className': '@config.className',
-                    'selectedIds': '@config.selectedIds',
+                    'showConnectors': '@config.showConnectors',
                     'sortBy': '@config.sortBy',
-                    'searchValue': '@config.searchValue',
-                    'entity': '@entity',
+                    'orientation': '@config.orientation',
+                    'selectedIds': '@config.selectedIds',
                     'pageSize': '@config.pageSize',
                   },
                 ],
@@ -204,22 +204,20 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
           ],
         },
         'config': {
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
           },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
             'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
           },
           'className': {
             'type': 'string',
@@ -228,19 +226,30 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'subtitle': {
+          'heading': {
             'type': 'string',
-            'default': 'Subtitle',
-            'label': 'Subtitle',
-            'description': 'subtitle prop',
+            'default': 'Heading',
+            'label': 'Heading',
+            'description': 'heading prop',
             'tier': 'presentation',
           },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
+          },
+          'orientation': {
+            'type': 'string',
+            'default': 'horizontal',
+            'label': 'Orientation',
+            'description': 'orientation prop',
+            'tier': 'presentation',
+            'values': [
+              'horizontal',
+              'vertical',
+            ],
           },
           'sortBy': {
             'type': 'string',
@@ -248,6 +257,41 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'label': 'Sort By',
             'description': 'Current sort field',
             'tier': 'presentation',
+          },
+          'showConnectors': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Connectors',
+            'description': 'showConnectors prop',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'StepFlowOrganismError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
           },
           'pageSize': {
             'type': 'number',
@@ -266,79 +310,35 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
               'type': 'string',
             },
           },
-          'orientation': {
+          'subtitle': {
             'type': 'string',
-            'default': 'horizontal',
-            'label': 'Orientation',
-            'description': 'orientation prop',
+            'default': 'Subtitle',
+            'label': 'Subtitle',
+            'description': 'subtitle prop',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
             'tier': 'presentation',
             'values': [
-              'horizontal',
-              'vertical',
+              'asc',
+              'desc',
             ],
           },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'showConnectors': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Show Connectors',
-            'description': 'showConnectors prop',
-            'tier': 'presentation',
-          },
-          'heading': {
-            'type': 'string',
-            'default': 'Heading',
-            'label': 'Heading',
-            'description': 'heading prop',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'StepFlowOrganismError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
           },
         },

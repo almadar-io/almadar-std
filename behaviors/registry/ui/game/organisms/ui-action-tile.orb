@@ -49,22 +49,22 @@
                     "render-ui",
                     "main",
                     {
-                      "sortDirection": "@config.sortDirection",
-                      "activeFilters": "@config.activeFilters",
                       "pageSize": "@config.pageSize",
-                      "error": "@config.error",
                       "action": "@config.action",
                       "sortBy": "@config.sortBy",
-                      "isLoading": "@config.isLoading",
-                      "selectedIds": "@config.selectedIds",
-                      "disabled": "@config.disabled",
-                      "type": "action-tile",
+                      "error": "@config.error",
+                      "size": "@config.size",
                       "className": "@config.className",
-                      "searchValue": "@config.searchValue",
+                      "sortDirection": "@config.sortDirection",
+                      "disabled": "@config.disabled",
                       "page": "@config.pageProp",
+                      "selectedIds": "@config.selectedIds",
+                      "searchValue": "@config.searchValue",
                       "totalCount": "@config.totalCount",
-                      "categoryColors": "@config.categoryColors",
-                      "size": "@config.size"
+                      "type": "action-tile",
+                      "isLoading": "@config.isLoading",
+                      "activeFilters": "@config.activeFilters",
+                      "categoryColors": "@config.categoryColors"
                     }
                   ]
                 ]
@@ -79,26 +79,11 @@
               "description": "Number of items per page",
               "tier": "presentation"
             },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "searchValue": {
+            "sortBy": {
               "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
               "tier": "presentation"
             },
             "selectedIds": {
@@ -109,41 +94,6 @@
               "tier": "presentation",
               "items": {
                 "type": "string"
-              }
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "ActionTileError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                }
               }
             },
             "size": {
@@ -158,6 +108,110 @@
                 "lg"
               ]
             },
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "categoryColors": {
+              "type": "Map<string,ActionTileCategoryColorsValue>",
+              "default": {},
+              "label": "Category Colors",
+              "description": "Category → color mapping",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "bg": {
+                    "name": "bg",
+                    "type": "string",
+                    "required": true
+                  },
+                  "border": {
+                    "name": "border",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "error": {
+              "type": "ActionTileError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether the tile is disabled / already used",
+              "tier": "presentation"
+            },
+            "totalCount": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Total Count",
+              "description": "Total number of items",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
             "activeFilters": {
               "type": "json",
               "label": "Active Filters",
@@ -167,47 +221,42 @@
             "action": {
               "type": "ActionTileAction",
               "default": {
+                "id": "Id",
+                "iconEmoji": "Icon Emoji",
+                "description": "Description",
                 "name": "Name",
                 "stateMachine": {
                   "transitions": [
                     {
+                      "guardHint": "Guard Hint",
                       "from": "From",
-                      "event": "Event",
                       "to": "To",
-                      "guardHint": "Guard Hint"
+                      "event": "Event"
                     }
                   ],
                   "description": "Description",
-                  "currentState": "Current State",
+                  "name": "Name",
                   "states": [
                     "Item"
                   ],
-                  "name": "Name"
+                  "currentState": "Current State"
                 },
-                "description": "Description",
-                "iconEmoji": "Icon Emoji",
-                "category": "Category",
-                "id": "Id"
+                "category": "Category"
               },
               "label": "Action",
               "description": "The action data",
               "tier": "presentation",
               "properties": {
+                "iconUrl": {
+                  "name": "iconUrl",
+                  "type": "string",
+                  "required": false
+                },
                 "stateMachine": {
                   "name": "stateMachine",
                   "type": "object",
                   "required": false,
                   "properties": {
-                    "currentState": {
-                      "name": "currentState",
-                      "type": "string",
-                      "required": true
-                    },
-                    "name": {
-                      "name": "name",
-                      "type": "string",
-                      "required": true
-                    },
                     "transitions": {
                       "name": "transitions",
                       "type": "array",
@@ -215,11 +264,6 @@
                       "items": {
                         "type": "object",
                         "properties": {
-                          "event": {
-                            "name": "event",
-                            "type": "string",
-                            "required": true
-                          },
                           "from": {
                             "name": "from",
                             "type": "string",
@@ -234,6 +278,11 @@
                             "name": "to",
                             "type": "string",
                             "required": true
+                          },
+                          "event": {
+                            "name": "event",
+                            "type": "string",
+                            "required": true
                           }
                         }
                       }
@@ -243,6 +292,11 @@
                       "type": "string",
                       "required": false
                     },
+                    "name": {
+                      "name": "name",
+                      "type": "string",
+                      "required": true
+                    },
                     "states": {
                       "name": "states",
                       "type": "array",
@@ -250,21 +304,16 @@
                       "items": {
                         "type": "string"
                       }
+                    },
+                    "currentState": {
+                      "name": "currentState",
+                      "type": "string",
+                      "required": true
                     }
                   }
                 },
-                "iconUrl": {
-                  "name": "iconUrl",
-                  "type": "string",
-                  "required": false
-                },
                 "name": {
                   "name": "name",
-                  "type": "string",
-                  "required": true
-                },
-                "category": {
-                  "name": "category",
                   "type": "string",
                   "required": true
                 },
@@ -278,64 +327,15 @@
                   "type": "string",
                   "required": false
                 },
+                "category": {
+                  "name": "category",
+                  "type": "string",
+                  "required": true
+                },
                 "iconEmoji": {
                   "name": "iconEmoji",
                   "type": "string",
                   "required": false
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Whether the tile is disabled / already used",
-              "tier": "presentation"
-            },
-            "categoryColors": {
-              "type": "Map<string,ActionTileCategoryColorsValue>",
-              "default": {},
-              "label": "Category Colors",
-              "description": "Category → color mapping",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "border": {
-                    "name": "border",
-                    "type": "string",
-                    "required": true
-                  },
-                  "bg": {
-                    "name": "bg",
-                    "type": "string",
-                    "required": true
-                  }
                 }
               }
             }

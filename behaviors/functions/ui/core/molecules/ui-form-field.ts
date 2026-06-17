@@ -43,10 +43,10 @@ export interface StdUiFormFieldConfig {
   label?: string;
   /** Default: `"Hint"` */
   hint?: string;
-  /** Default: `false` */
-  required?: boolean;
   /** Default: `""` */
   error?: string;
+  /** Default: `false` */
+  required?: boolean;
   /** Default: `""` */
   className?: string;
 }

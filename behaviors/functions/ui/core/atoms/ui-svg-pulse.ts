@@ -40,27 +40,27 @@ export type StdUiSvgPulseEventKey = 'INIT';
  */
 export interface StdUiSvgPulseConfig {
   /** Default: `140` */
-  width?: number;
-  /** Default: `60` */
-  maxRadius?: number;
-  /** Default: `140` */
   height?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `true` */
-  asRoot?: boolean;
-  /** Default: `70` */
-  cx?: number;
-  /** Default: `1` */
-  opacity?: number;
+  /** Default: `140` */
+  width?: number;
+  /** Default: `3` */
+  rings?: number;
   /** Default: `""` */
   className?: string;
   /** Default: `70` */
+  cx?: number;
+  /** Default: `70` */
   cy?: number;
-  /** Default: `3` */
-  rings?: number;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `60` */
+  maxRadius?: number;
   /** Default: `true` */
   animated?: boolean;
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `true` */
+  asRoot?: boolean;
 }
 
 /**

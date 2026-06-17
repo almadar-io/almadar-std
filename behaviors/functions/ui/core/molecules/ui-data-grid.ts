@@ -60,55 +60,55 @@ export interface StdUiDataGridViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  /** Default: `[{"label":"Label","format":"date","variant":"h3","name":"Name","icon":"circle"}]` */
-  columns?: EntityRow[];
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `false` */
-  scrollX?: boolean;
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
-  /** Default: `false` */
-  hasMore?: boolean;
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
-  /** Default: `"Dnd Item Id Field"` */
-  dndItemIdField?: string;
-  /** Default: `[{"name":"Name","icon":"circle","label":"Label","variant":"h3","format":"date"}]` */
-  fields?: EntityRow[];
-  /** Default: `false` */
-  dndRoot?: boolean;
   /** Default: `1` */
   cols?: number;
-  /** Default: `"Image Field"` */
-  imageField?: string;
+  /** Default: `[{"format":"date","name":"Name","icon":"circle","variant":"h3","label":"Label"}]` */
+  fields?: EntityRow[];
   /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `0` */
-  maxInlineActions?: number;
+  isLoading?: boolean;
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"md"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `"Accepts"` */
-  accepts?: string;
   /** Default: `"Reorder Event"` */
   reorderEvent?: string;
   /** Default: `false` */
-  isLoading?: boolean;
+  selectable?: boolean;
+  /** Default: `false` */
+  hasMore?: boolean;
   error?: EntityRow;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
+  /** Default: `[{"name":"Name","label":"Label","icon":"circle","variant":"h3","format":"date"}]` */
+  columns?: EntityRow[];
+  /** Default: `false` */
+  infiniteScroll?: boolean;
   /** Default: `280` */
   minCardWidth?: number;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `false` */
+  scrollX?: boolean;
+  /** Default: `"Image Field"` */
+  imageField?: string;
+  /** Default: `"md"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
 }
 
 /**

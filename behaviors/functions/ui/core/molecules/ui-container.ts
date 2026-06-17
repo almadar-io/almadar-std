@@ -40,15 +40,15 @@ export type StdUiContainerEventKey = 'INIT';
  */
 export interface StdUiContainerConfig {
   /** Default: `"xs"` */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  /** Default: `"md"` */
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `true` */
+  center?: boolean;
+  /** Default: `"xs"` */
   maxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   /** Default: `""` */
   className?: string;
-  /** Default: `true` */
-  center?: boolean;
-  /** Default: `"md"` */
-  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `"xs"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
 }
 
 /**

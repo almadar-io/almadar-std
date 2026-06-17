@@ -69,51 +69,51 @@ export interface StdUiIsometricCanvasTileLeavePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiIsometricCanvasConfig {
-  /** Default: `0.4` */
-  scale?: number;
-  /** Default: `[{"y":1,"x":1}]` */
-  attackTargets?: EntityRow[];
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
-  assetBaseUrl?: unknown;
-  /** Default: `true` */
-  showMinimap?: boolean;
-  /** Default: `true` */
-  enableCamera?: boolean;
-  /** Default: `[{"x":2,"y":0,"type":"castle"},{"y":4,"type":"portal","x":4}]` */
-  features?: EntityRow[];
-  /** Default: `[{"y":0,"x":0,"terrain":"stone","passable":false},{"x":1,"terrain":"water","y":0,"passable":false},{"passable":false,"y":0,"terrain":"water","x":2},{"x":3,"y":0,"terrain":"water","passable":false},{"passable":false,"y":0,"x":4,"terrain":"stone"},{"x":0,"passable":false,"y":1,"terrain":"water"},{"x":1,"terrain":"grass","y":1,"passable":true},{"terrain":"grass","x":2,"passable":true,"y":1},{"x":3,"y":1,"terrain":"grass","passable":true},{"passable":false,"x":4,"y":1,"terrain":"water"},{"x":0,"terrain":"water","y":2,"passable":false},{"y":2,"terrain":"grass","x":1,"passable":true},{"passable":true,"y":2,"terrain":"grass","x":2},{"x":3,"y":2,"passable":true,"terrain":"grass"},{"terrain":"water","x":4,"passable":false,"y":2},{"x":0,"y":3,"terrain":"water","passable":false},{"y":3,"x":1,"passable":true,"terrain":"grass"},{"x":2,"terrain":"grass","passable":true,"y":3},{"terrain":"grass","y":3,"passable":true,"x":3},{"terrain":"water","x":4,"passable":false,"y":3},{"x":0,"y":4,"terrain":"stone","passable":false},{"terrain":"water","x":1,"y":4,"passable":false},{"x":2,"passable":false,"y":4,"terrain":"water"},{"x":3,"terrain":"water","passable":false,"y":4},{"passable":false,"terrain":"stone","y":4,"x":4}]` */
-  tiles?: EntityRow[];
-  /** Default: `[{"x":1,"y":1}]` */
-  validMoves?: EntityRow[];
-  /** Default: `false` */
-  debug?: boolean;
-  /** Default: `0` */
-  boardHeight?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `1` */
-  unitScale?: number;
   /** Default: `0` */
   diamondTopY?: number;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `true` */
+  showMinimap?: boolean;
   /** Default: `[]` */
   effectSpriteUrls?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
-  /** Default: `{"terrains":{"stone":"isometric-blocks/PNG/Abstract tiles/abstractTile_06.png","dirt":"isometric-blocks/PNG/Abstract tiles/abstractTile_08.png","water":"isometric-blocks/PNG/Abstract tiles/abstractTile_03.png","grass":"isometric-blocks/PNG/Abstract tiles/abstractTile_01.png"},"units":{"hero":"characters/archetypes/01_innocent.png"},"features":{"portal":"world-map/portal_open.png","castle":"world-map/battle_marker.png"},"effects":{}}` */
-  assetManifest?: EntityRow;
+  /** Default: `1` */
+  unitScale?: number;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/scenes/court.png"` */
+  backgroundImage?: unknown;
+  /** Default: `0.4` */
+  scale?: number;
+  /** Default: `{"x":1,"y":1}` */
+  hoveredTile?: EntityRow;
   /** Default: `"Selected Unit Id"` */
   selectedUnitId?: string;
   /** Default: `0` */
   boardWidth?: number;
-  /** Default: `{"y":1,"x":1}` */
-  hoveredTile?: EntityRow;
-  error?: EntityRow;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/scenes/court.png"` */
-  backgroundImage?: unknown;
+  /** Default: `[{"passable":false,"terrain":"stone","y":0,"x":0},{"x":1,"y":0,"passable":false,"terrain":"stone"},{"x":2,"terrain":"stone","y":0,"passable":false},{"y":0,"x":3,"terrain":"stone","passable":false},{"y":0,"passable":false,"x":4,"terrain":"stone"},{"y":1,"terrain":"stone","passable":false,"x":0},{"y":1,"terrain":"dirt","passable":true,"x":1},{"x":2,"y":1,"passable":true,"terrain":"grass"},{"passable":true,"x":3,"terrain":"grass","y":1},{"terrain":"stone","y":1,"x":4,"passable":false},{"x":0,"y":2,"passable":false,"terrain":"stone"},{"y":2,"passable":true,"x":1,"terrain":"grass"},{"x":2,"passable":true,"y":2,"terrain":"dirt"},{"passable":true,"terrain":"grass","x":3,"y":2},{"y":2,"x":4,"passable":false,"terrain":"stone"},{"y":3,"x":0,"terrain":"stone","passable":false},{"x":1,"y":3,"passable":true,"terrain":"grass"},{"x":2,"passable":true,"y":3,"terrain":"grass"},{"y":3,"x":3,"passable":true,"terrain":"dirt"},{"x":4,"y":3,"terrain":"stone","passable":false},{"terrain":"stone","x":0,"y":4,"passable":false},{"x":1,"passable":false,"y":4,"terrain":"stone"},{"y":4,"x":2,"passable":false,"terrain":"stone"},{"terrain":"stone","passable":false,"y":4,"x":3},{"x":4,"y":4,"passable":false,"terrain":"stone"}]` */
+  tiles?: EntityRow[];
+  /** Default: `{"effects":{},"terrains":{"stone":"isometric-dungeon/Isometric/stoneInset_E.png","castle":"isometric-dungeon/Isometric/stoneTile_E.png","grass":"isometric-dungeon/Isometric/dirt_E.png","forest":"isometric-dungeon/Isometric/planks_E.png","dirt":"isometric-dungeon/Isometric/dirtTiles_E.png"},"units":{"worker":"units/worker.png","guardian":"units/guardian.png","mender":"units/mender.png","scrapper":"units/scrapper.png"},"features":{"gold_mine":"world-map/gold_mine.png","portal":"world-map/portal_open.png","castle":"castle/resonator_citadel.png"}}` */
+  assetManifest?: EntityRow;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"x":1,"y":1}]` */
+  attackTargets?: EntityRow[];
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
+  assetBaseUrl?: unknown;
   /** Default: `false` */
   hasActiveEffects?: boolean;
-  /** Default: `[{"id":"unit-1","position":{"y":1,"x":1},"unitType":"hero","name":"Hero","health":10,"team":"player","maxHealth":10},{"health":8,"maxHealth":10,"team":"enemy","id":"unit-2","unitType":"hero","position":{"x":3,"y":2},"name":"Guard"}]` */
+  /** Default: `[{"position":{"y":1,"x":1},"unitType":"worker","name":"Worker","health":10,"team":"player","id":"u1","maxHealth":10},{"name":"Guardian","maxHealth":10,"position":{"x":3,"y":3},"health":8,"team":"enemy","unitType":"guardian","id":"u2"}]` */
   units?: EntityRow[];
+  /** Default: `false` */
+  debug?: boolean;
+  /** Default: `true` */
+  enableCamera?: boolean;
+  error?: EntityRow;
+  /** Default: `[{"y":1,"x":1}]` */
+  validMoves?: EntityRow[];
+  /** Default: `0` */
+  boardHeight?: number;
+  /** Default: `[{"id":"f1","type":"gold_mine","y":2,"x":2},{"x":3,"y":1,"type":"portal","id":"f2"}]` */
+  features?: EntityRow[];
 }
 
 /**
