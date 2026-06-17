@@ -1,0 +1,1250 @@
+{
+  "name": "ui-game-canvas-3d",
+  "version": "1.0.0",
+  "description": "GameCanvas3d — UI factory (1:1 with the @almadar/ui game-canvas-3d pattern).",
+  "orbitals": [
+    {
+      "name": "GameCanvas3dOrbital",
+      "entity": {
+        "name": "GameCanvas3dItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GameCanvas3dRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "GameCanvas3dItem",
+          "emits": [
+            {
+              "event": "UNIT_ANIMATION",
+              "description": "Callback for unit animation state change",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "type": "string"
+                },
+                {
+                  "name": "state",
+                  "type": "string"
+                },
+                {
+                  "name": "timestamp",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "TILE_CLICK",
+              "description": "Declarative event: tile click",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "tileId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "z",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "terrain",
+                  "type": "string"
+                },
+                {
+                  "name": "elevation",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "UNIT_CLICK",
+              "description": "Declarative event: unit click",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "z",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "unitType",
+                  "type": "string"
+                },
+                {
+                  "name": "name",
+                  "type": "string"
+                },
+                {
+                  "name": "team",
+                  "type": "string"
+                },
+                {
+                  "name": "faction",
+                  "type": "string"
+                },
+                {
+                  "name": "health",
+                  "type": "number"
+                },
+                {
+                  "name": "maxHealth",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "FEATURE_CLICK",
+              "description": "Declarative event: feature click",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "featureId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "z",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "elevation",
+                  "type": "number"
+                }
+              ]
+            },
+            {
+              "event": "CANVAS_CLICK",
+              "description": "Declarative event: canvas click",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "clientX",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "clientY",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "button",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "TILE_HOVER",
+              "description": "Declarative event: tile hover",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "tileId",
+                  "type": "string",
+                  "required": true
+                },
+                {
+                  "name": "x",
+                  "type": "number",
+                  "required": true
+                },
+                {
+                  "name": "z",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            },
+            {
+              "event": "TILE_LEAVE",
+              "description": "Declarative event: tile leave",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ]
+            },
+            {
+              "event": "CAMERA_CHANGE",
+              "description": "Declarative event: camera change",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "position",
+                  "type": "object",
+                  "required": true
+                },
+                {
+                  "name": "timestamp",
+                  "type": "number",
+                  "required": true
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "UNIT_ANIMATION",
+                "name": "Unit Animation",
+                "description": "Callback for unit animation state change",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "state",
+                    "type": "string"
+                  },
+                  {
+                    "name": "timestamp",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "description": "Declarative event: tile click",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "tileId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "z",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "terrain",
+                    "type": "string"
+                  },
+                  {
+                    "name": "elevation",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "description": "Declarative event: unit click",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "z",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "unitType",
+                    "type": "string"
+                  },
+                  {
+                    "name": "name",
+                    "type": "string"
+                  },
+                  {
+                    "name": "team",
+                    "type": "string"
+                  },
+                  {
+                    "name": "faction",
+                    "type": "string"
+                  },
+                  {
+                    "name": "health",
+                    "type": "number"
+                  },
+                  {
+                    "name": "maxHealth",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "FEATURE_CLICK",
+                "name": "Feature Click",
+                "description": "Declarative event: feature click",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "featureId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "z",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "elevation",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "CANVAS_CLICK",
+                "name": "Canvas Click",
+                "description": "Declarative event: canvas click",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "clientX",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "clientY",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "button",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TILE_HOVER",
+                "name": "Tile Hover",
+                "description": "Declarative event: tile hover",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "tileId",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  {
+                    "name": "z",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              },
+              {
+                "key": "TILE_LEAVE",
+                "name": "Tile Leave",
+                "description": "Declarative event: tile leave",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "CAMERA_CHANGE",
+                "name": "Camera Change",
+                "description": "Declarative event: camera change",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "position",
+                    "type": "object",
+                    "required": true
+                  },
+                  {
+                    "name": "timestamp",
+                    "type": "number",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "GameCanvas3dItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "game-canvas-3d",
+                      "error": "@config.error",
+                      "cameraMode": "@config.cameraMode",
+                      "unitAnimationEvent": "UNIT_ANIMATION",
+                      "isLoading": "@config.isLoading",
+                      "selectedTileIds": "@config.selectedTileIds",
+                      "selectedUnitId": "@config.selectedUnitId",
+                      "tileClickEvent": "TILE_CLICK",
+                      "entity": "GameCanvas3dItem",
+                      "tileLeaveEvent": "TILE_LEAVE",
+                      "attackTargets": "@config.attackTargets",
+                      "cameraChangeEvent": "CAMERA_CHANGE",
+                      "className": "@config.className",
+                      "featureClickEvent": "FEATURE_CLICK",
+                      "overlay": "@config.overlay",
+                      "tileHoverEvent": "TILE_HOVER",
+                      "onUnitAnimation": "UNIT_ANIMATION",
+                      "canvasClickEvent": "CANVAS_CLICK",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "units": "@config.units",
+                      "backgroundColor": "@config.backgroundColor",
+                      "shadows": "@config.shadows",
+                      "unitClickEvent": "UNIT_CLICK",
+                      "useInstancing": "@config.useInstancing",
+                      "showTileInfo": "@config.showTileInfo",
+                      "showGrid": "@config.showGrid",
+                      "loadingMessage": "@config.loadingMessage",
+                      "showCoordinates": "@config.showCoordinates",
+                      "events": "@config.events",
+                      "preloadAssets": "@config.preloadAssets",
+                      "features": "@config.features",
+                      "tiles": "@config.tiles",
+                      "fogOfWar": "@config.fogOfWar",
+                      "orientation": "@config.orientation",
+                      "validMoves": "@config.validMoves"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "loadingMessage": {
+              "type": "string",
+              "default": "Loading 3D Scene...",
+              "label": "Loading Message",
+              "description": "Loading message",
+              "tier": "presentation"
+            },
+            "useInstancing": {
+              "type": "boolean",
+              "default": true,
+              "label": "Use Instancing",
+              "description": "Whether to use instancing for tiles",
+              "tier": "presentation"
+            },
+            "selectedTileIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Tile Ids",
+              "description": "Selected tile IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "error": {
+              "type": "string",
+              "default": "",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation"
+            },
+            "features": {
+              "type": "[GameCanvas3dFeaturesItem]",
+              "default": [
+                {
+                  "x": 2.0,
+                  "type": "gold_mine",
+                  "id": "f1",
+                  "y": 2.0
+                },
+                {
+                  "y": 1.0,
+                  "id": "f2",
+                  "x": 3.0,
+                  "type": "portal"
+                }
+              ],
+              "label": "Features",
+              "description": "Array of features to render",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "assetUrl": {
+                    "name": "assetUrl",
+                    "type": "string",
+                    "required": false
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true
+                  },
+                  "elevation": {
+                    "name": "elevation",
+                    "type": "number",
+                    "required": false
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
+            "events": {
+              "type": "[GameCanvas3dEventsItem]",
+              "default": [
+                {
+                  "y": 2.0,
+                  "id": "e1",
+                  "x": 2.0,
+                  "message": "Unit spawned",
+                  "type": "spawn"
+                },
+                {
+                  "id": "e2",
+                  "x": 3.0,
+                  "type": "effect",
+                  "y": 1.0,
+                  "message": "Attack landed"
+                }
+              ],
+              "label": "Events",
+              "description": "Array of events to display",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": false
+                  },
+                  "message": {
+                    "name": "message",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "preloadAssets": {
+              "type": "[string]",
+              "default": [],
+              "label": "Preload Assets",
+              "description": "URLs to preload",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "validMoves": {
+              "type": "[GameCanvas3dValidMovesItem]",
+              "default": [
+                {
+                  "x": 1.0,
+                  "z": 1.0
+                }
+              ],
+              "label": "Valid Moves",
+              "description": "Valid move positions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "--- Closed-circuit props (MANDATORY) ---",
+              "tier": "presentation"
+            },
+            "selectedUnitId": {
+              "type": "string",
+              "default": "",
+              "label": "Selected Unit Id",
+              "description": "Selected unit ID",
+              "tier": "presentation"
+            },
+            "backgroundColor": {
+              "type": "string",
+              "default": "#1a1a2e",
+              "label": "Background Color",
+              "description": "Background color",
+              "tier": "presentation"
+            },
+            "cameraMode": {
+              "type": "string",
+              "default": "isometric",
+              "label": "Camera Mode",
+              "description": "Camera mode",
+              "tier": "presentation",
+              "values": [
+                "isometric",
+                "perspective",
+                "top-down"
+              ]
+            },
+            "overlay": {
+              "type": "string",
+              "default": "default",
+              "label": "Overlay",
+              "description": "Overlay control mode",
+              "tier": "presentation",
+              "values": [
+                "default",
+                "hidden",
+                "minimap"
+              ]
+            },
+            "fogOfWar": {
+              "type": "[[boolean]]",
+              "default": [],
+              "label": "Fog Of War",
+              "description": "Fog of war data",
+              "tier": "presentation",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Grid",
+              "description": "Show grid",
+              "tier": "presentation"
+            },
+            "units": {
+              "type": "[GameCanvas3dUnitsItem]",
+              "default": [
+                {
+                  "id": "u1",
+                  "health": 10.0,
+                  "position": {
+                    "y": 1.0,
+                    "x": 1.0
+                  },
+                  "unitType": "worker",
+                  "name": "Worker",
+                  "team": "player",
+                  "maxHealth": 10.0
+                },
+                {
+                  "maxHealth": 10.0,
+                  "id": "u2",
+                  "position": {
+                    "x": 3.0,
+                    "y": 3.0
+                  },
+                  "name": "Guardian",
+                  "unitType": "guardian",
+                  "team": "enemy",
+                  "health": 8.0
+                }
+              ],
+              "label": "Units",
+              "description": "Array of units to render",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "position": {
+                    "name": "position",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
+                      },
+                      "y": {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
+                      }
+                    }
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": false
+                  },
+                  "name": {
+                    "name": "name",
+                    "type": "string",
+                    "required": false
+                  },
+                  "faction": {
+                    "name": "faction",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "player",
+                      "enemy",
+                      "neutral"
+                    ]
+                  },
+                  "heroId": {
+                    "name": "heroId",
+                    "type": "string",
+                    "required": false
+                  },
+                  "traits": {
+                    "name": "traits",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "currentState": {
+                          "name": "currentState",
+                          "type": "string",
+                          "required": true
+                        },
+                        "cooldown": {
+                          "name": "cooldown",
+                          "type": "number",
+                          "required": true
+                        },
+                        "name": {
+                          "name": "name",
+                          "type": "string",
+                          "required": true
+                        },
+                        "states": {
+                          "name": "states",
+                          "type": "array",
+                          "required": true,
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "health": {
+                    "name": "health",
+                    "type": "number",
+                    "required": false
+                  },
+                  "unitType": {
+                    "name": "unitType",
+                    "type": "string",
+                    "required": false
+                  },
+                  "previousPosition": {
+                    "name": "previousPosition",
+                    "type": "object",
+                    "required": false,
+                    "properties": {
+                      "y": {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
+                      },
+                      "x": {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
+                      }
+                    }
+                  },
+                  "elevation": {
+                    "name": "elevation",
+                    "type": "number",
+                    "required": false
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "type": "string",
+                    "required": false
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": false
+                  },
+                  "team": {
+                    "name": "team",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "player",
+                      "enemy",
+                      "neutral"
+                    ]
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "maxHealth": {
+                    "name": "maxHealth",
+                    "type": "number",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "orientation": {
+              "type": "string",
+              "default": "standard",
+              "label": "Orientation",
+              "description": "Map orientation",
+              "tier": "presentation",
+              "values": [
+                "standard",
+                "rotated"
+              ]
+            },
+            "showTileInfo": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Tile Info",
+              "description": "Show tile information",
+              "tier": "presentation"
+            },
+            "tiles": {
+              "type": "[GameCanvas3dTilesItem]",
+              "default": [
+                {
+                  "x": 0.0,
+                  "passable": false,
+                  "terrain": "stone",
+                  "y": 0.0
+                },
+                {
+                  "passable": false,
+                  "y": 0.0,
+                  "terrain": "stone",
+                  "x": 1.0
+                },
+                {
+                  "x": 2.0,
+                  "terrain": "stone",
+                  "y": 0.0,
+                  "passable": false
+                },
+                {
+                  "x": 3.0,
+                  "passable": false,
+                  "y": 0.0,
+                  "terrain": "stone"
+                },
+                {
+                  "terrain": "stone",
+                  "y": 0.0,
+                  "passable": false,
+                  "x": 4.0
+                },
+                {
+                  "passable": false,
+                  "y": 1.0,
+                  "terrain": "stone",
+                  "x": 0.0
+                },
+                {
+                  "y": 1.0,
+                  "x": 1.0,
+                  "terrain": "dirt",
+                  "passable": true
+                },
+                {
+                  "passable": true,
+                  "x": 2.0,
+                  "y": 1.0,
+                  "terrain": "grass"
+                },
+                {
+                  "x": 3.0,
+                  "terrain": "grass",
+                  "passable": true,
+                  "y": 1.0
+                },
+                {
+                  "x": 4.0,
+                  "terrain": "stone",
+                  "passable": false,
+                  "y": 1.0
+                },
+                {
+                  "y": 2.0,
+                  "terrain": "stone",
+                  "passable": false,
+                  "x": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "x": 1.0,
+                  "y": 2.0
+                },
+                {
+                  "x": 2.0,
+                  "passable": true,
+                  "y": 2.0,
+                  "terrain": "dirt"
+                },
+                {
+                  "x": 3.0,
+                  "terrain": "grass",
+                  "y": 2.0,
+                  "passable": true
+                },
+                {
+                  "y": 2.0,
+                  "passable": false,
+                  "x": 4.0,
+                  "terrain": "stone"
+                },
+                {
+                  "terrain": "stone",
+                  "x": 0.0,
+                  "passable": false,
+                  "y": 3.0
+                },
+                {
+                  "x": 1.0,
+                  "y": 3.0,
+                  "passable": true,
+                  "terrain": "grass"
+                },
+                {
+                  "passable": true,
+                  "x": 2.0,
+                  "y": 3.0,
+                  "terrain": "grass"
+                },
+                {
+                  "terrain": "dirt",
+                  "x": 3.0,
+                  "passable": true,
+                  "y": 3.0
+                },
+                {
+                  "y": 3.0,
+                  "terrain": "stone",
+                  "x": 4.0,
+                  "passable": false
+                },
+                {
+                  "passable": false,
+                  "y": 4.0,
+                  "x": 0.0,
+                  "terrain": "stone"
+                },
+                {
+                  "terrain": "stone",
+                  "y": 4.0,
+                  "x": 1.0,
+                  "passable": false
+                },
+                {
+                  "terrain": "stone",
+                  "y": 4.0,
+                  "x": 2.0,
+                  "passable": false
+                },
+                {
+                  "passable": false,
+                  "terrain": "stone",
+                  "y": 4.0,
+                  "x": 3.0
+                },
+                {
+                  "terrain": "stone",
+                  "passable": false,
+                  "y": 4.0,
+                  "x": 4.0
+                }
+              ],
+              "label": "Tiles",
+              "description": "Array of tiles to render",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "movementCost": {
+                    "name": "movementCost",
+                    "type": "number",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": false
+                  },
+                  "elevation": {
+                    "name": "elevation",
+                    "type": "number",
+                    "required": false
+                  },
+                  "terrain": {
+                    "name": "terrain",
+                    "type": "string",
+                    "required": false
+                  },
+                  "passable": {
+                    "name": "passable",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "terrainSprite": {
+                    "name": "terrainSprite",
+                    "type": "string",
+                    "required": false
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "tileType": {
+                    "name": "tileType",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "attackTargets": {
+              "type": "[GameCanvas3dAttackTargetsItem]",
+              "default": [
+                {
+                  "x": 1.0,
+                  "z": 1.0
+                }
+              ],
+              "label": "Attack Targets",
+              "description": "Attack target positions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": true
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "shadows": {
+              "type": "boolean",
+              "default": true,
+              "label": "Shadows",
+              "description": "Enable shadows",
+              "tier": "presentation"
+            },
+            "showCoordinates": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Coordinates",
+              "description": "Show coordinates overlay",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GameCanvas3dPage",
+          "path": "/game-canvas-3d",
+          "traits": [
+            {
+              "ref": "GameCanvas3dRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
