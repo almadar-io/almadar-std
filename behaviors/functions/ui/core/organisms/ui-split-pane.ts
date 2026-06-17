@@ -39,22 +39,22 @@ export type StdUiSplitPaneEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSplitPaneConfig {
-  /** Default: `100` */
-  minSize?: number;
+  left?: unknown;
   /** Default: `"horizontal"` */
   direction?: 'horizontal' | 'vertical';
-  /** Default: `0` */
-  ratio?: number;
-  right?: unknown;
-  left?: unknown;
-  /** Default: `"Left Class Name"` */
-  leftClassName?: string;
-  /** Default: `true` */
-  resizable?: boolean;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Right Class Name"` */
   rightClassName?: string;
+  right?: unknown;
+  /** Default: `"Left Class Name"` */
+  leftClassName?: string;
+  /** Default: `0` */
+  ratio?: number;
+  /** Default: `100` */
+  minSize?: number;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `true` */
+  resizable?: boolean;
 }
 
 /**
@@ -158,16 +158,16 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
                   'render-ui',
                   'main',
                   {
-                    'ratio': '@config.ratio',
-                    'left': '@config.left',
-                    'resizable': '@config.resizable',
-                    'type': 'split-pane',
                     'direction': '@config.direction',
-                    'right': '@config.right',
-                    'minSize': '@config.minSize',
-                    'rightClassName': '@config.rightClassName',
-                    'className': '@config.className',
                     'leftClassName': '@config.leftClassName',
+                    'ratio': '@config.ratio',
+                    'className': '@config.className',
+                    'left': '@config.left',
+                    'right': '@config.right',
+                    'rightClassName': '@config.rightClassName',
+                    'resizable': '@config.resizable',
+                    'minSize': '@config.minSize',
+                    'type': 'split-pane',
                   },
                 ],
               ],
@@ -175,11 +175,10 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
           ],
         },
         'config': {
-          'minSize': {
-            'type': 'number',
-            'default': 100,
-            'label': 'Min Size',
-            'description': 'Minimum size of either pane in pixels',
+          'left': {
+            'type': 'node',
+            'label': 'Left',
+            'description': 'Content for the left/top pane',
             'tier': 'presentation',
           },
           'direction': {
@@ -193,23 +192,17 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
               'vertical',
             ],
           },
-          'ratio': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Ratio',
-            'description': 'Initial ratio (0-100, percentage of first pane)',
+          'rightClassName': {
+            'type': 'string',
+            'default': 'Right Class Name',
+            'label': 'Right Class Name',
+            'description': 'Class for right/bottom pane',
             'tier': 'presentation',
           },
           'right': {
             'type': 'node',
             'label': 'Right',
             'description': 'Content for the right/bottom pane',
-            'tier': 'presentation',
-          },
-          'left': {
-            'type': 'node',
-            'label': 'Left',
-            'description': 'Content for the left/top pane',
             'tier': 'presentation',
           },
           'leftClassName': {
@@ -219,11 +212,18 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'description': 'Class for left/top pane',
             'tier': 'presentation',
           },
-          'resizable': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Resizable',
-            'description': 'Allow user resizing',
+          'ratio': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Ratio',
+            'description': 'Initial ratio (0-100, percentage of first pane)',
+            'tier': 'presentation',
+          },
+          'minSize': {
+            'type': 'number',
+            'default': 100,
+            'label': 'Min Size',
+            'description': 'Minimum size of either pane in pixels',
             'tier': 'presentation',
           },
           'className': {
@@ -233,11 +233,11 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'rightClassName': {
-            'type': 'string',
-            'default': 'Right Class Name',
-            'label': 'Right Class Name',
-            'description': 'Class for right/bottom pane',
+          'resizable': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Resizable',
+            'description': 'Allow user resizing',
             'tier': 'presentation',
           },
         },

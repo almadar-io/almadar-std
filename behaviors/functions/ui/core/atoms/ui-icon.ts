@@ -39,21 +39,21 @@ export type StdUiIconEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiIconConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Name"` */
-  name?: string;
-  style?: unknown;
-  /** Default: `"md"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `"circle"` */
-  icon?: unknown;
   /** Default: `"primary"` */
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'muted';
-  /** Default: `"none"` */
-  animation?: 'spin' | 'pulse' | 'none';
+  /** Default: `""` */
+  className?: string;
   /** Default: `0` */
   strokeWidth?: number;
+  /** Default: `"Name"` */
+  name?: string;
+  /** Default: `"circle"` */
+  icon?: unknown;
+  /** Default: `"md"` */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  style?: unknown;
+  /** Default: `"none"` */
+  animation?: 'spin' | 'pulse' | 'none';
 }
 
 /**

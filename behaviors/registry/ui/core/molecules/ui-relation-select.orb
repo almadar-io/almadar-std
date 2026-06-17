@@ -89,17 +89,17 @@
                     {
                       "type": "relation-select",
                       "placeholder": "@config.placeholder",
-                      "disabled": "@config.disabled",
-                      "clearable": "@config.clearable",
-                      "emptyMessage": "@config.emptyMessage",
-                      "onChange": "CHANGE",
-                      "error": "@config.error",
-                      "required": "@config.required",
-                      "name": "@config.name",
-                      "options": "@config.options",
-                      "searchPlaceholder": "@config.searchPlaceholder",
-                      "value": "@entity.value",
                       "isLoading": "@config.isLoading",
+                      "onChange": "CHANGE",
+                      "options": "@config.options",
+                      "error": "@config.error",
+                      "name": "@config.name",
+                      "searchPlaceholder": "@config.searchPlaceholder",
+                      "emptyMessage": "@config.emptyMessage",
+                      "disabled": "@config.disabled",
+                      "required": "@config.required",
+                      "value": "@entity.value",
+                      "clearable": "@config.clearable",
                       "className": "@config.className"
                     }
                   ]
@@ -119,20 +119,20 @@
                     "render-ui",
                     "main",
                     {
+                      "disabled": "@config.disabled",
                       "options": "@config.options",
-                      "className": "@config.className",
+                      "placeholder": "@config.placeholder",
                       "name": "@config.name",
-                      "onChange": "CHANGE",
-                      "isLoading": "@config.isLoading",
-                      "error": "@config.error",
+                      "searchPlaceholder": "@config.searchPlaceholder",
+                      "emptyMessage": "@config.emptyMessage",
+                      "required": "@config.required",
                       "value": "@entity.value",
                       "type": "relation-select",
-                      "disabled": "@config.disabled",
+                      "className": "@config.className",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
                       "clearable": "@config.clearable",
-                      "placeholder": "@config.placeholder",
-                      "required": "@config.required",
-                      "searchPlaceholder": "@config.searchPlaceholder",
-                      "emptyMessage": "@config.emptyMessage"
+                      "onChange": "CHANGE"
                     }
                   ]
                 ]
@@ -140,6 +140,27 @@
             ]
           },
           "config": {
+            "searchPlaceholder": {
+              "type": "string",
+              "default": "Search Placeholder",
+              "label": "Search Placeholder",
+              "description": "Search placeholder",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "string",
+              "default": "",
+              "label": "Error",
+              "description": "Error message",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
             "clearable": {
               "type": "boolean",
               "default": true,
@@ -147,18 +168,50 @@
               "description": "Allow clearing the selection",
               "tier": "presentation"
             },
-            "name": {
-              "type": "string",
-              "default": "Name",
-              "label": "Name",
-              "description": "Name attribute for forms",
-              "tier": "presentation"
+            "options": {
+              "type": "[RelationSelectOptionsItem]",
+              "default": [
+                {
+                  "label": "Label",
+                  "disabled": false,
+                  "value": "Value",
+                  "description": "Description"
+                }
+              ],
+              "label": "Options",
+              "description": "Available options - accepts readonly for compatibility with generated const arrays",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "type": "boolean",
+                    "required": false
+                  }
+                }
+              }
             },
-            "searchPlaceholder": {
-              "type": "string",
-              "default": "Search Placeholder",
-              "label": "Search Placeholder",
-              "description": "Search placeholder",
+            "disabled": {
+              "type": "boolean",
+              "default": false,
+              "label": "Disabled",
+              "description": "Whether the field is disabled",
               "tier": "presentation"
             },
             "emptyMessage": {
@@ -168,11 +221,11 @@
               "description": "Empty state message",
               "tier": "presentation"
             },
-            "className": {
+            "placeholder": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+              "default": "Placeholder",
+              "label": "Placeholder",
+              "description": "Placeholder text",
               "tier": "presentation"
             },
             "required": {
@@ -189,13 +242,6 @@
               "description": "Whether data is loading",
               "tier": "presentation"
             },
-            "error": {
-              "type": "string",
-              "default": "",
-              "label": "Error",
-              "description": "Error message",
-              "tier": "presentation"
-            },
             "value": {
               "type": "string",
               "default": "Value",
@@ -203,57 +249,11 @@
               "description": "Current value (ID)",
               "tier": "presentation"
             },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Whether the field is disabled",
-              "tier": "presentation"
-            },
-            "options": {
-              "type": "[RelationSelectOptionsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "description": "Description",
-                  "value": "Value",
-                  "disabled": false
-                }
-              ],
-              "label": "Options",
-              "description": "Available options - accepts readonly for compatibility with generated const arrays",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "placeholder": {
+            "name": {
               "type": "string",
-              "default": "Placeholder",
-              "label": "Placeholder",
-              "description": "Placeholder text",
+              "default": "Name",
+              "label": "Name",
+              "description": "Name attribute for forms",
               "tier": "presentation"
             }
           },

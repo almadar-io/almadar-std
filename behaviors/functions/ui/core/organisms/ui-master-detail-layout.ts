@@ -39,15 +39,15 @@ export type StdUiMasterDetailLayoutEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMasterDetailLayoutConfig {
+  emptyDetail?: unknown;
   /** Default: `"Detail Class Name"` */
   detailClassName?: string;
+  /** Default: `"350px"` */
+  masterWidth?: string;
   /** Default: `false` */
   hasSelection?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `"350px"` */
-  masterWidth?: string;
-  emptyDetail?: unknown;
   /** Default: `"Master Class Name"` */
   masterClassName?: string;
 }
@@ -154,7 +154,7 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
                   'main',
                   {
                     'className': '@config.className',
-                    'masterWidth': '@config.masterWidth',
+                    'masterClassName': '@config.masterClassName',
                     'type': 'master-detail-layout',
                     'master': [
                       {
@@ -162,16 +162,16 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
                         'type': 'typography',
                       },
                     ],
-                    'emptyDetail': '@config.emptyDetail',
+                    'masterWidth': '@config.masterWidth',
                     'hasSelection': '@config.hasSelection',
-                    'masterClassName': '@config.masterClassName',
+                    'detailClassName': '@config.detailClassName',
+                    'emptyDetail': '@config.emptyDetail',
                     'detail': [
                       {
-                        'type': 'typography',
                         'content': 'Detail',
+                        'type': 'typography',
                       },
                     ],
-                    'detailClassName': '@config.detailClassName',
                   },
                 ],
               ],
@@ -179,11 +179,24 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
           ],
         },
         'config': {
+          'emptyDetail': {
+            'type': 'node',
+            'label': 'Empty Detail',
+            'description': 'Content shown when nothing is selected',
+            'tier': 'presentation',
+          },
           'detailClassName': {
             'type': 'string',
             'default': 'Detail Class Name',
             'label': 'Detail Class Name',
             'description': 'Class for detail pane',
+            'tier': 'presentation',
+          },
+          'masterWidth': {
+            'type': 'string',
+            'default': '350px',
+            'label': 'Master Width',
+            'description': 'Width of master panel (e.g., \'350px\', \'30%\')',
             'tier': 'presentation',
           },
           'hasSelection': {
@@ -198,19 +211,6 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'masterWidth': {
-            'type': 'string',
-            'default': '350px',
-            'label': 'Master Width',
-            'description': 'Width of master panel (e.g., \'350px\', \'30%\')',
-            'tier': 'presentation',
-          },
-          'emptyDetail': {
-            'type': 'node',
-            'label': 'Empty Detail',
-            'description': 'Content shown when nothing is selected',
             'tier': 'presentation',
           },
           'masterClassName': {

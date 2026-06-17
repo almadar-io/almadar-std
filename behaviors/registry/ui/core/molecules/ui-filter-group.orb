@@ -112,17 +112,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "filter-group",
-                      "showIcon": "@config.showIcon",
-                      "onClearAll": "CLEAR_ALL",
-                      "filters": "@config.filters",
+                      "look": "@config.look",
                       "onFilterChange": "FILTER_CHANGE",
-                      "variant": "@config.variant",
-                      "entity": "FilterGroupItem",
+                      "filters": "@config.filters",
+                      "type": "filter-group",
                       "query": "@config.query",
                       "className": "@config.className",
+                      "showIcon": "@config.showIcon",
+                      "onClearAll": "CLEAR_ALL",
+                      "entity": "FilterGroupItem",
                       "isLoading": "@config.isLoading",
-                      "look": "@config.look"
+                      "variant": "@config.variant"
                     }
                   ]
                 ]
@@ -130,6 +130,13 @@
             ]
           },
           "config": {
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
             "look": {
               "type": "string",
               "default": "toolbar",
@@ -157,30 +164,16 @@
                 "vertical"
               ]
             },
-            "query": {
-              "type": "string",
-              "default": "Query",
-              "label": "Query",
-              "description": "Query singleton binding for state management. When provided, syncs filter state with the query singleton. Example: '@TaskQuery'",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
             "filters": {
               "type": "[FilterGroupFiltersItem]",
               "default": [
                 {
-                  "type": "checkbox",
-                  "field": "Field",
-                  "label": "Label",
                   "options": [
                     "Item"
-                  ]
+                  ],
+                  "field": "Field",
+                  "label": "Label",
+                  "type": "checkbox"
                 }
               ],
               "label": "Filters",
@@ -189,21 +182,13 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "options": {
-                    "name": "options",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "label": {
-                    "name": "label",
+                  "field": {
+                    "name": "field",
                     "type": "string",
                     "required": true
                   },
-                  "field": {
-                    "name": "field",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": true
                   },
@@ -216,9 +201,24 @@
                       "select",
                       "toggle"
                     ]
+                  },
+                  "options": {
+                    "name": "options",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 }
               }
+            },
+            "query": {
+              "type": "string",
+              "default": "Query",
+              "label": "Query",
+              "description": "Query singleton binding for state management. When provided, syncs filter state with the query singleton. Example: '@TaskQuery'",
+              "tier": "presentation"
             },
             "className": {
               "type": "string",

@@ -40,18 +40,18 @@ export type StdUiCenterEventKey = 'INIT';
  */
 export interface StdUiCenterConfig {
   style?: unknown;
-  /** Default: `true` */
-  vertical?: boolean;
+  /** Default: `false` */
+  fullWidth?: boolean;
   /** Default: `"Min Height"` */
   minHeight?: string;
   /** Default: `true` */
   horizontal?: boolean;
-  /** Default: `false` */
-  fullHeight?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
-  fullWidth?: boolean;
+  fullHeight?: boolean;
+  /** Default: `true` */
+  vertical?: boolean;
   /** Default: `false` */
   inline?: boolean;
 }

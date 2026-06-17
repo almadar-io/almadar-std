@@ -39,13 +39,13 @@ export type StdUiGameAudioToggleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameAudioToggleConfig {
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"sm"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `""` */
+  className?: string;
   error?: EntityRow;
+  /** Default: `"sm"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**
@@ -154,12 +154,12 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
                   'render-ui',
                   'main',
                   {
-                    'size': '@config.size',
-                    'error': '@config.error',
-                    'entity': 'GameAudioToggleItem',
-                    'className': '@config.className',
-                    'type': 'game-audio-toggle',
                     'isLoading': '@config.isLoading',
+                    'entity': 'GameAudioToggleItem',
+                    'size': '@config.size',
+                    'className': '@config.className',
+                    'error': '@config.error',
+                    'type': 'game-audio-toggle',
                   },
                 ],
               ],
@@ -167,30 +167,18 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
           ],
         },
         'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'size': {
-            'type': 'string',
-            'default': 'sm',
-            'label': 'Size',
-            'description': 'Button size',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
-          },
           'isLoading': {
             'type': 'boolean',
             'default': false,
             'label': 'Is Loading',
             'description': 'Loading state (passed through)',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'error': {
@@ -204,13 +192,13 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
                 'type': 'string',
                 'required': true,
               },
-              'code': {
-                'name': 'code',
+              'name': {
+                'name': 'name',
                 'type': 'string',
                 'required': false,
               },
-              'name': {
-                'name': 'name',
+              'code': {
+                'name': 'code',
                 'type': 'string',
                 'required': false,
               },
@@ -220,6 +208,18 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
                 'required': false,
               },
             },
+          },
+          'size': {
+            'type': 'string',
+            'default': 'sm',
+            'label': 'Size',
+            'description': 'Button size',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
           },
         },
         'scope': 'instance',

@@ -41,12 +41,12 @@ export type StdUiGenericAppTemplateEventKey = 'INIT';
 export interface StdUiGenericAppTemplateConfig {
   /** Default: `"Title"` */
   title?: string;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
+  footer?: unknown;
   headerActions?: unknown;
   /** Default: `""` */
   className?: string;
-  footer?: unknown;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
 }
 
 /**

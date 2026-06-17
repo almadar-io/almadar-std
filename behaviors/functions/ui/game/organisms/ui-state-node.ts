@@ -46,16 +46,16 @@ export interface StdUiStateNodeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStateNodeConfig {
-  /** Default: `false` */
-  isInitial?: boolean;
-  /** Default: `"Name"` */
-  name?: string;
-  /** Default: `{"y":1,"x":1}` */
+  /** Default: `{"x":1,"y":1}` */
   position?: EntityRow;
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   isCurrent?: boolean;
+  /** Default: `false` */
+  isInitial?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Name"` */
+  name?: string;
   /** Default: `false` */
   isSelected?: boolean;
 }
@@ -187,14 +187,14 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
                   'render-ui',
                   'main',
                   {
-                    'onClick': 'CLICK',
                     'name': '@config.name',
-                    'type': 'state-node',
                     'isInitial': '@config.isInitial',
-                    'className': '@config.className',
                     'isSelected': '@config.isSelected',
                     'position': '@config.position',
                     'isCurrent': '@config.isCurrent',
+                    'className': '@config.className',
+                    'onClick': 'CLICK',
+                    'type': 'state-node',
                   },
                 ],
               ],
@@ -202,25 +202,11 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
           ],
         },
         'config': {
-          'isInitial': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Initial',
-            'description': 'Whether this is the initial state',
-            'tier': 'presentation',
-          },
-          'name': {
-            'type': 'string',
-            'default': 'Name',
-            'label': 'Name',
-            'description': 'State name',
-            'tier': 'presentation',
-          },
           'position': {
             'type': 'StateNodePosition',
             'default': {
-              'y': 1,
               'x': 1,
+              'y': 1,
             },
             'label': 'Position',
             'description': 'Position on the graph canvas',
@@ -238,6 +224,20 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
               },
             },
           },
+          'isCurrent': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Current',
+            'description': 'Whether this is the current active state',
+            'tier': 'presentation',
+          },
+          'isInitial': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Initial',
+            'description': 'Whether this is the initial state',
+            'tier': 'presentation',
+          },
           'className': {
             'type': 'string',
             'default': '',
@@ -245,11 +245,11 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
-          'isCurrent': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Current',
-            'description': 'Whether this is the current active state',
+          'name': {
+            'type': 'string',
+            'default': 'Name',
+            'label': 'Name',
+            'description': 'State name',
             'tier': 'presentation',
           },
           'isSelected': {

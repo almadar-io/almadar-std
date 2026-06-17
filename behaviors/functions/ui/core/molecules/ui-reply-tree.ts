@@ -69,10 +69,10 @@ export interface StdUiReplyTreeContinueThreadPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiReplyTreeConfig {
-  /** Default: `true` */
-  showActions?: boolean;
   /** Default: `6` */
   maxDepth?: number;
+  /** Default: `true` */
+  showActions?: boolean;
   /** Default: `""` */
   className?: string;
 }

@@ -50,12 +50,12 @@ export interface StdUiRichBlockEditorConfig {
   placeholder?: string;
   /** Default: `false` */
   enableBlocks?: boolean;
+  /** Default: `true` */
+  showToolbar?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   readOnly?: boolean;
-  /** Default: `true` */
-  showToolbar?: boolean;
 }
 
 /**

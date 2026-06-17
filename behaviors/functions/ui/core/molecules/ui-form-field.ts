@@ -41,10 +41,10 @@ export type StdUiFormFieldEventKey = 'INIT';
 export interface StdUiFormFieldConfig {
   /** Default: `"Label"` */
   label?: string;
-  /** Default: `"Hint"` */
-  hint?: string;
   /** Default: `""` */
   error?: string;
+  /** Default: `"Hint"` */
+  hint?: string;
   /** Default: `false` */
   required?: boolean;
   /** Default: `""` */

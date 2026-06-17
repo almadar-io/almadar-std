@@ -247,6 +247,7 @@ export * from './ui/core/molecules/ui-error-boundary.js';
 export * from './ui/core/molecules/ui-error-state.js';
 export * from './ui/marketing/molecules/ui-feature-card.js';
 export * from './ui/core/molecules/ui-feature-grid.js';
+export * from './ui/game/molecules/ui-feature-renderer.js';
 export * from './ui/core/molecules/ui-file-tree.js';
 export * from './ui/core/molecules/ui-filter-group.js';
 export * from './ui/core/molecules/ui-flex.js';

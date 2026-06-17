@@ -53,20 +53,20 @@ export interface StdUiWizardContainerCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardContainerConfig {
-  /** Default: `true` */
-  showProgress?: boolean;
-  /** Default: `[{"validationRules":[{"condition":[],"message":"Message"}],"entityMapping":{"parentField":"Parent Field","idField":"Id Field","mode":"search_or_create","entity":"Entity"},"sections":[{"title":"Title","subsections":[],"readOnly":false,"repeatable":false,"hiddenCalculations":[{"variable":"Variable","expression":"Expression","scope":"Scope"}],"id":"Id","fields":[{"repeatable":false,"minLength":1,"maxLength":1,"contextMenu":[],"label":"Label","options":[],"stats":[],"hiddenCalculations":[],"required":false,"readOnly":false,"entityField":"Entity Field","condition":[],"displayFields":[],"placeholder":"Placeholder","id":"Id","type":"Type","items":[]}],"condition":[],"description":"Description","minItems":1,"addButtonLabel":"Add Button Label"}],"id":"Id","name":"Name","optional":false,"localVariables":["Item"],"phase":"Phase","globalVariablesSet":["Item"],"contextMenu":["Item"],"lawReferences":[{"article":"Article","description":"Description","law":"Law"}],"globalVariablesRequired":["Item"],"title":"Title","content":"Content","description":"Description","tabId":"Tab Id"}]` */
-  steps?: EntityRow[];
-  /** Default: `false` */
-  compact?: boolean;
-  error?: EntityRow;
-  currentStep?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   isLoading?: boolean;
+  currentStep?: unknown;
   /** Default: `true` */
   allowBack?: boolean;
+  /** Default: `[{"optional":false,"entityMapping":{"idField":"Id Field","parentField":"Parent Field","mode":"search_or_create","entity":"Entity"},"title":"Title","tabId":"Tab Id","id":"Id","description":"Description","localVariables":["Item"],"validationRules":[{"message":"Message","condition":[]}],"name":"Name","lawReferences":[{"description":"Description","article":"Article","law":"Law"}],"sections":[{"addButtonLabel":"Add Button Label","subsections":[],"title":"Title","description":"Description","condition":[],"id":"Id","minItems":1,"hiddenCalculations":[{"scope":"Scope","variable":"Variable","expression":"Expression"}],"repeatable":false,"fields":[{"label":"Label","items":[],"placeholder":"Placeholder","entityField":"Entity Field","hiddenCalculations":[],"type":"Type","stats":[],"options":[],"maxLength":1,"contextMenu":[],"condition":[],"displayFields":[],"id":"Id","required":false,"readOnly":false,"minLength":1,"repeatable":false}],"readOnly":false}],"globalVariablesSet":["Item"],"globalVariablesRequired":["Item"],"phase":"Phase","content":"Content","contextMenu":["Item"]}]` */
+  steps?: EntityRow[];
+  /** Default: `true` */
+  showProgress?: boolean;
+  /** Default: `false` */
+  compact?: boolean;
+  error?: EntityRow;
 }
 
 /**

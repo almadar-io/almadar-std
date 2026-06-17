@@ -39,35 +39,35 @@ export type StdUiDocumentViewerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocumentViewerConfig {
-  /** Default: `false` */
-  showPrint?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
-  /** Default: `false` */
-  showDownload?: boolean;
+  /** Default: `[{"documentType":"pdf","content":"Content","label":"Label","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}]` */
+  documents?: EntityRow[];
   /** Default: `0` */
   currentPage?: number;
-  /** Default: `[{"label":"Label","content":"Content","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","documentType":"pdf"}]` */
-  documents?: EntityRow[];
-  /** Default: `"Content"` */
-  content?: string;
-  /** Default: `true` */
-  showToolbar?: boolean;
-  /** Default: `[{"label":"Label","variant":"primary","navigatesTo":"Navigates To"}]` */
-  actions?: EntityRow[];
-  /** Default: `0` */
-  totalPages?: number;
-  /** Default: `"Height"` */
-  height?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  src?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `0` */
+  totalPages?: number;
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `true` */
+  showToolbar?: boolean;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  src?: unknown;
+  /** Default: `[{"variant":"primary","navigatesTo":"Navigates To","label":"Label"}]` */
+  actions?: EntityRow[];
+  /** Default: `"Content"` */
+  content?: string;
+  /** Default: `false` */
+  showPrint?: boolean;
+  /** Default: `"Height"` */
+  height?: string;
+  /** Default: `false` */
+  showDownload?: boolean;
+  error?: EntityRow;
   /** Default: `"pdf"` */
   documentType?: 'pdf' | 'text' | 'html' | 'markdown';
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 /**

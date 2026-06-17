@@ -49,21 +49,21 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "@config.direction",
-                      "activeFilters": "@config.activeFilters",
-                      "content": "@config.content",
-                      "pageSize": "@config.pageSize",
-                      "segments": "@config.segments",
-                      "type": "content-renderer",
-                      "page": "@config.pageProp",
-                      "className": "@config.className",
-                      "searchValue": "@config.searchValue",
-                      "totalCount": "@config.totalCount",
-                      "error": "@config.error",
                       "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
+                      "page": "@config.pageProp",
                       "selectedIds": "@config.selectedIds",
-                      "isLoading": "@config.isLoading"
+                      "error": "@config.error",
+                      "content": "@config.content",
+                      "totalCount": "@config.totalCount",
+                      "sortDirection": "@config.sortDirection",
+                      "direction": "@config.direction",
+                      "type": "content-renderer",
+                      "activeFilters": "@config.activeFilters",
+                      "className": "@config.className",
+                      "isLoading": "@config.isLoading",
+                      "pageSize": "@config.pageSize",
+                      "searchValue": "@config.searchValue",
+                      "segments": "@config.segments"
                     }
                   ]
                 ]
@@ -71,56 +71,86 @@
             ]
           },
           "config": {
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "sortDirection": {
+              "type": "string",
+              "default": "asc",
+              "label": "Sort Direction",
+              "description": "Current sort direction",
+              "tier": "presentation",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "ContentRendererError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "sortBy": {
+              "type": "string",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
+              "tier": "presentation"
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
+            },
             "pageSize": {
               "type": "number",
               "default": 0.0,
               "label": "Page Size",
               "description": "Number of items per page",
               "tier": "presentation"
-            },
-            "segments": {
-              "type": "[ContentRendererSegmentsItem]",
-              "default": [
-                {
-                  "content": "Content",
-                  "type": "markdown"
-                }
-              ],
-              "label": "Segments",
-              "description": "Pre-parsed segments (overrides content)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": true,
-                    "values": [
-                      "markdown",
-                      "code",
-                      "orbital",
-                      "quiz"
-                    ]
-                  },
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "direction": {
-              "type": "string",
-              "default": "rtl",
-              "label": "Direction",
-              "description": "Text direction for markdown",
-              "tier": "presentation",
-              "values": [
-                "rtl",
-                "ltr"
-              ]
             },
             "totalCount": {
               "type": "number",
@@ -139,56 +169,11 @@
                 "type": "string"
               }
             },
-            "sortDirection": {
+            "searchValue": {
               "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "ContentRendererError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
               "tier": "presentation"
             },
             "content": {
@@ -198,34 +183,49 @@
               "description": "Raw content string — auto-parsed into segments",
               "tier": "presentation"
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
+            "segments": {
+              "type": "[ContentRendererSegmentsItem]",
+              "default": [
+                {
+                  "content": "Content",
+                  "type": "markdown"
+                }
+              ],
+              "label": "Segments",
+              "description": "Pre-parsed segments (overrides content)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true,
+                    "values": [
+                      "markdown",
+                      "code",
+                      "orbital",
+                      "quiz"
+                    ]
+                  }
+                }
+              }
             },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "searchValue": {
+            "direction": {
               "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
+              "default": "rtl",
+              "label": "Direction",
+              "description": "Text direction for markdown",
+              "tier": "presentation",
+              "values": [
+                "rtl",
+                "ltr"
+              ]
             }
           },
           "scope": "instance"

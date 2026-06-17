@@ -41,18 +41,18 @@ export type StdUiGeometricPatternEventKey = 'INIT';
 export interface StdUiGeometricPatternConfig {
   /** Default: `"background"` */
   mode?: 'background' | 'left' | 'right' | 'dual' | 'around' | 'frame';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0.06` */
-  opacity?: number;
-  /** Default: `"star8"` */
-  variant?: 'star8' | 'star6' | 'khatam' | 'star10' | 'star12' | 'rosette-double' | 'rosette-filled' | 'seigaiha' | 'greek-key' | 'celtic-knot' | 'kolam' | 'arch' | 'arabesque-vine' | 'arabesque-net';
   /** Default: `"var(--color-primary)"` */
   color?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `0.5` */
   strokeWidth?: number;
+  /** Default: `"star8"` */
+  variant?: 'star8' | 'star6' | 'khatam' | 'star10' | 'star12' | 'rosette-double' | 'rosette-filled' | 'seigaiha' | 'greek-key' | 'celtic-knot' | 'kolam' | 'arch' | 'arabesque-vine' | 'arabesque-net';
   /** Default: `1` */
   scale?: number;
+  /** Default: `0.06` */
+  opacity?: number;
 }
 
 /**

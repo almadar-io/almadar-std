@@ -1,0 +1,412 @@
+{
+  "name": "ui-feature-renderer",
+  "version": "1.0.0",
+  "description": "FeatureRenderer — UI factory (1:1 with the @almadar/ui feature-renderer pattern).",
+  "orbitals": [
+    {
+      "name": "FeatureRendererOrbital",
+      "entity": {
+        "name": "FeatureRendererItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "FeatureRendererRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "FeatureRendererItem",
+          "emits": [
+            {
+              "event": "FEATURE_CLICK",
+              "description": "Called when feature is clicked",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "feature",
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string"
+                    },
+                    {
+                      "name": "x",
+                      "type": "number",
+                      "required": true
+                    },
+                    {
+                      "name": "y",
+                      "type": "number",
+                      "required": true
+                    },
+                    {
+                      "name": "z",
+                      "type": "number"
+                    },
+                    {
+                      "name": "type",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "sprite",
+                      "type": "json"
+                    },
+                    {
+                      "name": "assetUrl",
+                      "type": "json"
+                    },
+                    {
+                      "name": "color",
+                      "type": "string"
+                    },
+                    {
+                      "name": "elevation",
+                      "type": "number"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "event": "FEATURE_HOVER",
+              "description": "Called when feature is hovered",
+              "tier": "essential",
+              "scope": "external",
+              "payloadSchema": [
+                {
+                  "name": "feature",
+                  "type": "object",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "type": "string"
+                    },
+                    {
+                      "name": "x",
+                      "type": "number",
+                      "required": true
+                    },
+                    {
+                      "name": "y",
+                      "type": "number",
+                      "required": true
+                    },
+                    {
+                      "name": "z",
+                      "type": "number"
+                    },
+                    {
+                      "name": "type",
+                      "type": "string",
+                      "required": true
+                    },
+                    {
+                      "name": "sprite",
+                      "type": "json"
+                    },
+                    {
+                      "name": "assetUrl",
+                      "type": "json"
+                    },
+                    {
+                      "name": "color",
+                      "type": "string"
+                    },
+                    {
+                      "name": "elevation",
+                      "type": "number"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FEATURE_CLICK",
+                "name": "Feature Click",
+                "description": "Called when feature is clicked",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "feature",
+                    "type": "object",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
+                      },
+                      {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
+                      },
+                      {
+                        "name": "z",
+                        "type": "number"
+                      },
+                      {
+                        "name": "type",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "sprite",
+                        "type": "json"
+                      },
+                      {
+                        "name": "assetUrl",
+                        "type": "json"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "elevation",
+                        "type": "number"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "key": "FEATURE_HOVER",
+                "name": "Feature Hover",
+                "description": "Called when feature is hovered",
+                "tier": "essential",
+                "payloadSchema": [
+                  {
+                    "name": "feature",
+                    "type": "object",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "type": "string"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number",
+                        "required": true
+                      },
+                      {
+                        "name": "y",
+                        "type": "number",
+                        "required": true
+                      },
+                      {
+                        "name": "z",
+                        "type": "number"
+                      },
+                      {
+                        "name": "type",
+                        "type": "string",
+                        "required": true
+                      },
+                      {
+                        "name": "sprite",
+                        "type": "json"
+                      },
+                      {
+                        "name": "assetUrl",
+                        "type": "json"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "elevation",
+                        "type": "number"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "cellSize": "@config.cellSize",
+                      "onFeatureClick": "FEATURE_CLICK",
+                      "features": "@config.features",
+                      "featureColors": "@config.featureColors",
+                      "offsetX": "@config.offsetX",
+                      "offsetZ": "@config.offsetZ",
+                      "onFeatureHover": "FEATURE_HOVER",
+                      "selectedFeatureIds": "@config.selectedFeatureIds",
+                      "type": "feature-renderer"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "features": {
+              "type": "[FeatureRendererFeaturesItem]",
+              "default": [
+                {
+                  "assetUrl": "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb",
+                  "y": 2.0,
+                  "x": 2.0,
+                  "id": "f1",
+                  "type": "gold_mine"
+                },
+                {
+                  "id": "f2",
+                  "y": 1.0,
+                  "assetUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb",
+                  "type": "portal",
+                  "x": 3.0
+                }
+              ],
+              "label": "Features",
+              "description": "Array of features to render",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": false
+                  },
+                  "color": {
+                    "name": "color",
+                    "type": "string",
+                    "required": false
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "type": "string",
+                    "required": false
+                  },
+                  "elevation": {
+                    "name": "elevation",
+                    "type": "number",
+                    "required": false
+                  },
+                  "assetUrl": {
+                    "name": "assetUrl",
+                    "type": "string",
+                    "required": false
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true
+                  },
+                  "y": {
+                    "name": "y",
+                    "type": "number",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "offsetX": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Offset X",
+              "description": "Grid offset X",
+              "tier": "presentation"
+            },
+            "offsetZ": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Offset Z",
+              "description": "Grid offset Z",
+              "tier": "presentation"
+            },
+            "cellSize": {
+              "type": "number",
+              "default": 1.0,
+              "label": "Cell Size",
+              "description": "Grid cell size",
+              "tier": "presentation"
+            },
+            "selectedFeatureIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Feature Ids",
+              "description": "Selected feature IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "featureColors": {
+              "type": "Map<string,string>",
+              "default": {},
+              "label": "Feature Colors",
+              "description": "Feature color overrides",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "FeatureRendererPage",
+          "path": "/feature-renderer",
+          "traits": [
+            {
+              "ref": "FeatureRendererRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

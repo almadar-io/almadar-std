@@ -60,20 +60,20 @@ export interface StdUiTagInputRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTagInputConfig {
-  /** Default: `"Placeholder"` */
-  placeholder?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'error' | 'info' | 'neutral';
   /** Default: `true` */
   unique?: boolean;
   /** Default: `["Item"]` */
   value?: string[];
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'error' | 'info' | 'neutral';
-  /** Default: `false` */
-  disabled?: boolean;
   /** Default: `"Helper Text"` */
   helperText?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Placeholder"` */
+  placeholder?: string;
+  /** Default: `false` */
+  disabled?: boolean;
 }
 
 /**

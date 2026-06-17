@@ -48,14 +48,14 @@ export interface StdUiTabbedContainerTabChangePayload {
 export interface StdUiTabbedContainerConfig {
   /** Default: `"top"` */
   position?: 'top' | 'left';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"badge":"Badge","disabled":false,"id":"Id","sectionId":"Section Id","content":"Content","label":"Label"}]` */
-  tabs?: EntityRow[];
-  /** Default: `"Active Tab"` */
-  activeTab?: string;
   /** Default: `"Default Tab"` */
   defaultTab?: string;
+  /** Default: `"Active Tab"` */
+  activeTab?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"content":"Content","sectionId":"Section Id","disabled":false,"label":"Label","id":"Id","badge":"Badge"}]` */
+  tabs?: EntityRow[];
 }
 
 /**
@@ -185,13 +185,13 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
                   'render-ui',
                   'main',
                   {
+                    'type': 'tabbed-container',
                     'onTabChange': 'TAB_CHANGE',
-                    'className': '@config.className',
+                    'activeTab': '@config.activeTab',
                     'defaultTab': '@config.defaultTab',
                     'tabs': '@config.tabs',
+                    'className': '@config.className',
                     'position': '@config.position',
-                    'type': 'tabbed-container',
-                    'activeTab': '@config.activeTab',
                   },
                 ],
               ],
@@ -210,6 +210,20 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
               'left',
             ],
           },
+          'defaultTab': {
+            'type': 'string',
+            'default': 'Default Tab',
+            'label': 'Default Tab',
+            'description': 'Default active tab ID',
+            'tier': 'presentation',
+          },
+          'activeTab': {
+            'type': 'string',
+            'default': 'Active Tab',
+            'label': 'Active Tab',
+            'description': 'Controlled active tab',
+            'tier': 'presentation',
+          },
           'className': {
             'type': 'string',
             'default': '',
@@ -221,12 +235,12 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
             'type': '[TabbedContainerTabsItem]',
             'default': [
               {
-                'badge': 'Badge',
-                'disabled': false,
-                'id': 'Id',
-                'sectionId': 'Section Id',
                 'content': 'Content',
+                'sectionId': 'Section Id',
+                'disabled': false,
                 'label': 'Label',
+                'id': 'Id',
+                'badge': 'Badge',
               },
             ],
             'label': 'Tabs',
@@ -240,15 +254,15 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
                   'type': 'string',
                   'required': false,
                 },
-                'disabled': {
-                  'name': 'disabled',
-                  'type': 'boolean',
-                  'required': false,
-                },
                 'content': {
                   'name': 'content',
                   'type': 'string',
                   'required': false,
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': true,
                 },
                 'sectionId': {
                   'name': 'sectionId',
@@ -260,27 +274,13 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
                   'type': 'string',
                   'required': true,
                 },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
+                'disabled': {
+                  'name': 'disabled',
+                  'type': 'boolean',
+                  'required': false,
                 },
               },
             },
-          },
-          'activeTab': {
-            'type': 'string',
-            'default': 'Active Tab',
-            'label': 'Active Tab',
-            'description': 'Controlled active tab',
-            'tier': 'presentation',
-          },
-          'defaultTab': {
-            'type': 'string',
-            'default': 'Default Tab',
-            'label': 'Default Tab',
-            'description': 'Default active tab ID',
-            'tier': 'presentation',
           },
         },
         'scope': 'instance',

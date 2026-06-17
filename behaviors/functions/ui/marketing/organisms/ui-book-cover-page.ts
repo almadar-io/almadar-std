@@ -39,18 +39,18 @@ export type StdUiBookCoverPageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookCoverPageConfig {
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  coverImageUrl?: unknown;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
   /** Default: `"Subtitle"` */
   subtitle?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `"Author"` */
   author?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  coverImageUrl?: unknown;
 }
 
 /**
@@ -154,12 +154,12 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
                   'render-ui',
                   'main',
                   {
+                    'type': 'book-cover-page',
                     'title': '@config.title',
-                    'direction': '@config.direction',
-                    'coverImageUrl': '@config.coverImageUrl',
                     'className': '@config.className',
                     'author': '@config.author',
-                    'type': 'book-cover-page',
+                    'coverImageUrl': '@config.coverImageUrl',
+                    'direction': '@config.direction',
                     'subtitle': '@config.subtitle',
                   },
                 ],
@@ -168,13 +168,6 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
           ],
         },
         'config': {
-          'coverImageUrl': {
-            'type': 'asset',
-            'default': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
-            'label': 'Cover Image Url',
-            'description': 'coverImageUrl prop',
-            'tier': 'presentation',
-          },
           'direction': {
             'type': 'string',
             'default': 'rtl',
@@ -200,6 +193,13 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
             'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
+          'author': {
+            'type': 'string',
+            'default': 'Author',
+            'label': 'Author',
+            'description': 'author prop',
+            'tier': 'presentation',
+          },
           'title': {
             'type': 'string',
             'default': 'Title',
@@ -207,11 +207,11 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
             'description': 'title prop',
             'tier': 'presentation',
           },
-          'author': {
-            'type': 'string',
-            'default': 'Author',
-            'label': 'Author',
-            'description': 'author prop',
+          'coverImageUrl': {
+            'type': 'asset',
+            'default': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
+            'label': 'Cover Image Url',
+            'description': 'coverImageUrl prop',
             'tier': 'presentation',
           },
         },

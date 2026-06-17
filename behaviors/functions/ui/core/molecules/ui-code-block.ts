@@ -48,43 +48,43 @@ export interface StdUiCodeBlockChangePayload {
 export interface StdUiCodeBlockConfig {
   /** Default: `"Code"` */
   code?: string;
-  /** Default: `"60vh"` */
-  maxHeight?: string;
-  /** Default: `true` */
-  showLanguageBadge?: boolean;
   /** Default: `"text"` */
   language?: 'text' | 'json' | 'javascript' | 'js' | 'typescript' | 'ts' | 'jsx' | 'tsx' | 'css' | 'markdown' | 'md' | 'bash' | 'shell' | 'sh' | 'yaml' | 'yml' | 'rust' | 'python' | 'py' | 'sql' | 'diff' | 'toml' | 'go' | 'graphql' | 'html' | 'xml' | 'orb' | 'lolo';
-  /** Default: `"Old Value"` */
-  oldValue?: string;
-  error?: EntityRow;
+  /** Default: `false` */
+  showLineNumbers?: boolean;
+  /** Default: `false` */
+  editable?: boolean;
+  /** Default: `"code"` */
+  mode?: 'code' | 'diff';
+  /** Default: `true` */
+  showCopyButton?: boolean;
+  /** Default: `"New Value"` */
+  newValue?: string;
   /** Default: `false` */
   wordWrap?: boolean;
   /** Default: `false` */
-  foldable?: boolean;
-  /** Default: `"New Value"` */
-  newValue?: string;
-  /** Default: `[{"label":"Label","code":"Code","language":"text"}]` */
-  files?: EntityRow[];
-  /** Default: `true` */
-  showCopyButton?: boolean;
-  /** Default: `false` */
-  showLineNumbers?: boolean;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `[{"type":"added","content":"Content","beforeLineNumber":1,"afterLineNumber":1}]` */
-  diff?: EntityRow[];
-  /** Default: `"code"` */
-  mode?: 'code' | 'diff';
-  /** Default: `[{"navigatesTo":"Navigates To","variant":"primary","label":"Label"}]` */
-  actions?: EntityRow[];
-  /** Default: `false` */
-  editable?: boolean;
-  /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `false` */
-  showCopy?: boolean;
+  error?: EntityRow;
+  /** Default: `[{"type":"added","afterLineNumber":1,"beforeLineNumber":1,"content":"Content"}]` */
+  diff?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"variant":"primary","label":"Label","navigatesTo":"Navigates To"}]` */
+  actions?: EntityRow[];
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `[{"code":"Code","label":"Label","language":"text"}]` */
+  files?: EntityRow[];
+  /** Default: `true` */
+  showLanguageBadge?: boolean;
+  /** Default: `false` */
+  showCopy?: boolean;
+  /** Default: `"60vh"` */
+  maxHeight?: string;
+  /** Default: `"Old Value"` */
+  oldValue?: string;
+  /** Default: `false` */
+  foldable?: boolean;
 }
 
 /**

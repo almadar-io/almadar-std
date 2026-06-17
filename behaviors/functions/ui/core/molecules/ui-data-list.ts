@@ -88,57 +88,57 @@ export interface StdUiDataListViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataListConfig {
-  /** Default: `"Accepts"` */
-  accepts?: string;
-  /** Default: `[{"label":"Label","icon":"circle","variant":"primary"}]` */
-  swipeRightActions?: EntityRow[];
-  /** Default: `5` */
-  pageSize?: number;
+  /** Default: `"Current User"` */
+  currentUser?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"icon":"circle","variant":"primary","label":"Label"}]` */
+  swipeLeftActions?: EntityRow[];
   /** Default: `false` */
   hasMore?: boolean;
-  /** Default: `"Group By"` */
-  groupBy?: string;
   /** Default: `0` */
   maxInlineActions?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
-  /** Default: `false` */
-  sortable?: boolean;
+  /** Default: `"Group By"` */
+  groupBy?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'card' | 'compact' | 'message';
   /** Default: `false` */
   dndRoot?: boolean;
   /** Default: `false` */
-  reorderable?: boolean;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `"Sender Field"` */
-  senderField?: string;
-  /** Default: `"none"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg';
-  /** Default: `[{"name":"Name","label":"Label","format":"date","icon":"circle","variant":"h3"}]` */
-  columns?: EntityRow[];
-  /** Default: `"Current User"` */
-  currentUser?: string;
-  error?: EntityRow;
-  /** Default: `"default"` */
-  variant?: 'default' | 'card' | 'compact' | 'message';
-  /** Default: `[{"variant":"primary","label":"Label","icon":"circle"}]` */
-  swipeLeftActions?: EntityRow[];
+  sortable?: boolean;
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"name":"Name","label":"Label","format":"date","variant":"h3","icon":"circle"}]` */
-  fields?: EntityRow[];
-  /** Default: `false` */
-  infiniteScroll?: boolean;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `5` */
+  pageSize?: number;
+  /** Default: `"Sender Field"` */
+  senderField?: string;
+  error?: EntityRow;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `[{"icon":"circle","label":"Label","format":"date","name":"Name","variant":"h3"}]` */
+  columns?: EntityRow[];
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `false` */
+  reorderable?: boolean;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `"none"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `[{"format":"date","icon":"circle","name":"Name","variant":"h3","label":"Label"}]` */
+  fields?: EntityRow[];
+  /** Default: `[{"label":"Label","icon":"circle","variant":"primary"}]` */
+  swipeRightActions?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
 }
 
 /**

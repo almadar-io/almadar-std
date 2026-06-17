@@ -39,26 +39,26 @@ export type StdUiSvgShieldEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgShieldConfig {
-  /** Default: `1` */
-  opacity?: number;
-  /** Default: `100` */
-  height?: number;
-  /** Default: `1` */
-  size?: number;
-  /** Default: `true` */
-  asRoot?: boolean;
-  /** Default: `100` */
-  width?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
   /** Default: `"outline"` */
   variant?: 'outline' | 'filled' | 'check';
-  /** Default: `50` */
-  y?: number;
-  /** Default: `50` */
-  x?: number;
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `true` */
+  asRoot?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `100` */
+  height?: number;
+  /** Default: `50` */
+  x?: number;
+  /** Default: `1` */
+  size?: number;
+  /** Default: `50` */
+  y?: number;
+  /** Default: `100` */
+  width?: number;
 }
 
 /**

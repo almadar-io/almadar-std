@@ -46,14 +46,14 @@ export interface StdUiFlipCardFlipPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFlipCardConfig {
-  back?: unknown;
   front?: unknown;
+  back?: unknown;
+  /** Default: `""` */
+  className?: string;
   /** Default: `false` */
   flipped?: boolean;
   /** Default: `"h-64"` */
   height?: string;
-  /** Default: `""` */
-  className?: string;
 }
 
 /**

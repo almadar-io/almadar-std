@@ -39,49 +39,49 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
-  /** Default: `"Click Event"` */
-  clickEvent?: string;
-  /** Default: `"circle"` */
-  icon?: unknown;
-  /** Default: `"Prefix"` */
-  prefix?: string;
-  /** Default: `""` */
-  className?: string;
-  error?: EntityRow;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `[]` */
-  sparklineData?: number[];
-  /** Default: `"higher-is-better"` */
-  trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `0` */
-  trend?: number;
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `"absolute"` */
-  trendFormat?: 'absolute' | 'percent';
-  /** Default: `"Suffix"` */
-  suffix?: string;
   /** Default: `"Format"` */
   format?: string;
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
+  /** Default: `"Prefix"` */
+  prefix?: string;
+  /** Default: `[]` */
+  sparklineData?: number[];
   /** Default: `0` */
-  max?: number;
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `false` */
-  compact?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
+  trend?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  error?: EntityRow;
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
+  /** Default: `false` */
+  compact?: boolean;
   /** Default: `"text-foreground"` */
   iconColor?: string;
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `"Click Event"` */
+  clickEvent?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Suffix"` */
+  suffix?: string;
+  /** Default: `"circle"` */
+  icon?: unknown;
+  /** Default: `"absolute"` */
+  trendFormat?: 'absolute' | 'percent';
   /** Default: `0` */
   target?: number;
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
+  /** Default: `0` */
+  max?: number;
+  /** Default: `"higher-is-better"` */
+  trendPolarity?: 'higher-is-better' | 'lower-is-better';
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
 }
 
 /**

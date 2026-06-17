@@ -39,7 +39,7 @@ export type StdUiModuleCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiModuleCardConfig {
-  /** Default: `{"externalLinks":[{"eventName":"Event Name","direction":"out","traitName":"Trait Name","targetOrbital":"Target Orbital"}],"pages":[{"name":"Name","route":"Route"}],"persistence":"Persistence","entityName":"Entity Name","traits":[{"emits":["Item"],"name":"Name","transitionCount":1,"listens":["Item"],"eventCount":1,"stateCount":1}],"traitDetails":{},"orbitalName":"Orbital Name","fields":[{"hasDefault":false,"required":false,"name":"Name","type":"Type"}]}` */
+  /** Default: `{"externalLinks":[{"direction":"out","targetOrbital":"Target Orbital","eventName":"Event Name","traitName":"Trait Name"}],"traitDetails":{},"fields":[{"type":"Type","hasDefault":false,"name":"Name","required":false}],"traits":[{"name":"Name","listens":["Item"],"eventCount":1,"stateCount":1,"transitionCount":1,"emits":["Item"]}],"entityName":"Entity Name","persistence":"Persistence","orbitalName":"Orbital Name","pages":[{"route":"Route","name":"Name"}]}` */
   data?: EntityRow;
 }
 

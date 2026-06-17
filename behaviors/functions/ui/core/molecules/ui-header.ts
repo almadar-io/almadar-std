@@ -69,34 +69,34 @@ export interface StdUiHeaderLogoClickPayload {
 export interface StdUiHeaderConfig {
   /** Default: `false` */
   showSearch?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"KFlow"` */
-  brandName?: string;
-  actions?: unknown;
-  /** Default: `"User Name"` */
-  userName?: string;
-  /** Default: `true` */
-  sticky?: boolean;
-  /** Default: `"compact-bar"` */
-  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
-  /** Default: `[{"badge":"Badge","active":false,"icon":"circle","href":"Href","label":"Label"}]` */
-  navigationItems?: EntityRow[];
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  logoSrc?: unknown;
-  /** Default: `"Search Placeholder"` */
-  searchPlaceholder?: string;
-  /** Default: `true` */
-  showMenuToggle?: boolean;
-  /** Default: `false` */
-  isMenuOpen?: boolean;
-  error?: EntityRow;
   /** Default: `"mobile"` */
   variant?: 'mobile' | 'desktop';
-  /** Default: `false` */
-  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `""` */
+  className?: string;
   /** Default: `{"src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","alt":"Alt","initials":"Initials"}` */
   userAvatar?: EntityRow;
+  /** Default: `[{"label":"Label","href":"Href","active":false,"badge":"Badge","icon":"circle"}]` */
+  navigationItems?: EntityRow[];
+  /** Default: `"KFlow"` */
+  brandName?: string;
+  /** Default: `true` */
+  sticky?: boolean;
+  actions?: unknown;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `true` */
+  showMenuToggle?: boolean;
+  /** Default: `"Search Placeholder"` */
+  searchPlaceholder?: string;
+  /** Default: `"compact-bar"` */
+  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  logoSrc?: unknown;
+  /** Default: `false` */
+  isMenuOpen?: boolean;
+  /** Default: `"User Name"` */
+  userName?: string;
 }
 
 /**
