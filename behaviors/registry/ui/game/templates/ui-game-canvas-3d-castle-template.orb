@@ -1,0 +1,223 @@
+{
+  "name": "ui-game-canvas-3d-castle-template",
+  "version": "1.0.0",
+  "description": "GameCanvas3dCastleTemplate — UI factory (1:1 with the @almadar/ui game-canvas-3d-castle-template pattern).",
+  "orbitals": [
+    {
+      "name": "GameCanvas3dCastleTemplateOrbital",
+      "entity": {
+        "name": "GameCanvas3dCastleTemplateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GameCanvas3dCastleTemplateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "GameCanvas3dCastleTemplateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "GameCanvas3dCastleTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "unitClickEvent": "@config.unitClickEvent",
+                      "backgroundColor": "@config.backgroundColor",
+                      "shadows": "@config.shadows",
+                      "entity": "@entity",
+                      "selectedBuildingId": "@config.selectedBuildingId",
+                      "availableBuildSites": "@config.availableBuildSites",
+                      "type": "game-canvas-3d-castle-template",
+                      "showGrid": "@config.showGrid",
+                      "showHeader": "@config.showHeader",
+                      "cameraMode": "@config.cameraMode",
+                      "recruitEvent": "@config.recruitEvent",
+                      "buildEvent": "@config.buildEvent",
+                      "selectedTileIds": "@config.selectedTileIds",
+                      "buildingClickEvent": "@config.buildingClickEvent",
+                      "exitEvent": "@config.exitEvent"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "showHeader": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Header",
+              "description": "Show castle name header",
+              "tier": "presentation"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Grid",
+              "description": "Show grid helper",
+              "tier": "presentation"
+            },
+            "buildEvent": {
+              "type": "string",
+              "default": "Build Event",
+              "label": "Build Event",
+              "description": "Event name for build action",
+              "tier": "presentation"
+            },
+            "selectedTileIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Tile Ids",
+              "description": "Pre-computed selected tile IDs array",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "External styling override",
+              "tier": "presentation"
+            },
+            "exitEvent": {
+              "type": "string",
+              "default": "Exit Event",
+              "label": "Exit Event",
+              "description": "Event name for exit",
+              "tier": "presentation"
+            },
+            "selectedBuildingId": {
+              "type": "string",
+              "default": "Selected Building Id",
+              "label": "Selected Building Id",
+              "description": "Currently selected building ID",
+              "tier": "presentation"
+            },
+            "shadows": {
+              "type": "boolean",
+              "default": true,
+              "label": "Shadows",
+              "description": "Enable shadows",
+              "tier": "presentation"
+            },
+            "recruitEvent": {
+              "type": "string",
+              "default": "Recruit Event",
+              "label": "Recruit Event",
+              "description": "Event name for recruit action",
+              "tier": "presentation"
+            },
+            "cameraMode": {
+              "type": "string",
+              "default": "isometric",
+              "label": "Camera Mode",
+              "description": "3D camera mode",
+              "tier": "presentation",
+              "values": [
+                "isometric",
+                "perspective",
+                "top-down"
+              ]
+            },
+            "buildingClickEvent": {
+              "type": "string",
+              "default": "Building Click Event",
+              "label": "Building Click Event",
+              "description": "Event name for building clicks",
+              "tier": "presentation"
+            },
+            "backgroundColor": {
+              "type": "string",
+              "default": "#1e1e2e",
+              "label": "Background Color",
+              "description": "Background color",
+              "tier": "presentation"
+            },
+            "unitClickEvent": {
+              "type": "string",
+              "default": "Unit Click Event",
+              "label": "Unit Click Event",
+              "description": "Event name for unit clicks",
+              "tier": "presentation"
+            },
+            "availableBuildSites": {
+              "type": "[GameCanvas3dCastleTemplateAvailableBuildSitesItem]",
+              "default": [
+                {
+                  "x": 1.0,
+                  "z": 1.0
+                }
+              ],
+              "label": "Available Build Sites",
+              "description": "Available build positions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  },
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GameCanvas3dCastleTemplatePage",
+          "path": "/game-canvas-3d-castle-template",
+          "traits": [
+            {
+              "ref": "GameCanvas3dCastleTemplateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

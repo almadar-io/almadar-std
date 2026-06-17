@@ -43,43 +43,97 @@
             "key": "preset",
             "type": "SimulationCanvasPreset",
             "default": {
-              "domain": "Domain",
-              "showVelocity": false,
-              "description": "Description",
-              "backgroundColor": "Background Color",
-              "parameters": {},
               "constraints": [
                 {
-                  "bodyB": 1,
+                  "bodyB": 3,
                   "bodyA": 1,
-                  "length": 1,
-                  "stiffness": 1
+                  "length": 160,
+                  "stiffness": 0.4
                 }
               ],
-              "id": "Id",
+              "gravity": {
+                "x": 0,
+                "y": 9.81
+              },
+              "domain": "mechanics",
               "bodies": [
                 {
-                  "mass": 1,
-                  "color": "Color",
+                  "color": "#e94560",
+                  "vx": 120,
+                  "id": "b0",
+                  "x": 100,
+                  "vy": 0,
                   "fixed": false,
-                  "vx": 1,
-                  "vy": 1,
-                  "id": "Id",
-                  "y": 1,
-                  "x": 1,
-                  "radius": 1
+                  "y": 80,
+                  "mass": 1,
+                  "radius": 14
+                },
+                {
+                  "id": "b1",
+                  "radius": 20,
+                  "y": 150,
+                  "vx": -80,
+                  "vy": 60,
+                  "color": "#0f3460",
+                  "fixed": false,
+                  "mass": 2,
+                  "x": 300
+                },
+                {
+                  "vx": 50,
+                  "x": 480,
+                  "mass": 1,
+                  "fixed": false,
+                  "y": 90,
+                  "vy": 90,
+                  "radius": 12,
+                  "id": "b2",
+                  "color": "#533483"
+                },
+                {
+                  "x": 200,
+                  "y": 300,
+                  "color": "#16213e",
+                  "mass": 3,
+                  "vy": -70,
+                  "radius": 22,
+                  "fixed": false,
+                  "id": "b3",
+                  "vx": -40
+                },
+                {
+                  "vy": -50,
+                  "y": 280,
+                  "id": "b4",
+                  "fixed": false,
+                  "mass": 1,
+                  "vx": 70,
+                  "x": 400,
+                  "radius": 16,
+                  "color": "#e94560"
                 }
               ],
-              "name": "Name",
-              "gravity": {
-                "x": 1,
-                "y": 1
-              }
+              "description": "Bouncing bodies with a spring",
+              "showVelocity": true,
+              "backgroundColor": "#1a1a2e",
+              "name": "Demo Scene",
+              "id": "demo",
+              "parameters": {}
             },
             "label": "Preset",
             "description": "preset prop",
             "tier": "presentation",
             "properties": {
+              "parameters": {
+                "name": "parameters",
+                "required": true,
+                "type": "object"
+              },
+              "domain": {
+                "name": "domain",
+                "required": true,
+                "type": "string"
+              },
               "id": {
                 "name": "id",
                 "required": true,
@@ -112,19 +166,74 @@
                 },
                 "type": "object"
               },
+              "bodies": {
+                "name": "bodies",
+                "required": true,
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "id": {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "vy": {
+                      "name": "vy",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "color": {
+                      "name": "color",
+                      "required": true,
+                      "type": "string"
+                    },
+                    "mass": {
+                      "name": "mass",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "radius": {
+                      "name": "radius",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "vx": {
+                      "name": "vx",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "fixed": {
+                      "name": "fixed",
+                      "required": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
               "constraints": {
                 "name": "constraints",
                 "required": false,
                 "type": "array",
                 "items": {
                   "properties": {
-                    "bodyA": {
-                      "name": "bodyA",
+                    "bodyB": {
+                      "name": "bodyB",
                       "required": true,
                       "type": "number"
                     },
-                    "bodyB": {
-                      "name": "bodyB",
+                    "stiffness": {
+                      "name": "stiffness",
                       "required": true,
                       "type": "number"
                     },
@@ -133,8 +242,8 @@
                       "required": true,
                       "type": "number"
                     },
-                    "stiffness": {
-                      "name": "stiffness",
+                    "bodyA": {
+                      "name": "bodyA",
                       "required": true,
                       "type": "number"
                     }
@@ -151,78 +260,13 @@
                 "name": "showVelocity",
                 "required": false,
                 "type": "boolean"
-              },
-              "domain": {
-                "name": "domain",
-                "required": true,
-                "type": "string"
-              },
-              "parameters": {
-                "name": "parameters",
-                "required": true,
-                "type": "object"
-              },
-              "bodies": {
-                "name": "bodies",
-                "required": true,
-                "type": "array",
-                "items": {
-                  "properties": {
-                    "mass": {
-                      "name": "mass",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "fixed": {
-                      "name": "fixed",
-                      "required": true,
-                      "type": "boolean"
-                    },
-                    "vy": {
-                      "name": "vy",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "radius": {
-                      "name": "radius",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "id": {
-                      "name": "id",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "color": {
-                      "name": "color",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "vx": {
-                      "name": "vx",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                }
               }
             }
           },
           {
             "key": "running",
             "type": "boolean",
-            "default": false,
+            "default": true,
             "label": "Running",
             "description": "running prop",
             "tier": "presentation"

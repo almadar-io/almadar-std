@@ -256,6 +256,7 @@ export * from './ui/core/molecules/ui-form-actions.js';
 export * from './ui/core/molecules/ui-form-field.js';
 export * from './ui/core/molecules/ui-form-section-header.js';
 export * from './ui/game/molecules/ui-game-canvas-2d.js';
+export * from './ui/game/molecules/ui-game-canvas-3d.js';
 export * from './ui/game/molecules/ui-game-hud.js';
 export * from './ui/game/molecules/ui-game-menu.js';
 export * from './ui/game/molecules/ui-game-over-screen.js';

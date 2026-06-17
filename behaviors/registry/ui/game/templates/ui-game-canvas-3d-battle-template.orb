@@ -1,0 +1,248 @@
+{
+  "name": "ui-game-canvas-3d-battle-template",
+  "version": "1.0.0",
+  "description": "GameCanvas3dBattleTemplate — UI factory (1:1 with the @almadar/ui game-canvas-3d-battle-template pattern).",
+  "orbitals": [
+    {
+      "name": "GameCanvas3dBattleTemplateOrbital",
+      "entity": {
+        "name": "GameCanvas3dBattleTemplateItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "GameCanvas3dBattleTemplateRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "GameCanvas3dBattleTemplateItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "GameCanvas3dBattleTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "attackTargets": "@config.attackTargets",
+                      "cameraMode": "@config.cameraMode",
+                      "backgroundColor": "@config.backgroundColor",
+                      "unitMoveEvent": "@config.unitMoveEvent",
+                      "entity": "@entity",
+                      "unitAttackEvent": "@config.unitAttackEvent",
+                      "validMoves": "@config.validMoves",
+                      "shadows": "@config.shadows",
+                      "type": "game-canvas-3d-battle-template",
+                      "tileClickEvent": "@config.tileClickEvent",
+                      "showGrid": "@config.showGrid",
+                      "endTurnEvent": "@config.endTurnEvent",
+                      "unitClickEvent": "@config.unitClickEvent",
+                      "exitEvent": "@config.exitEvent",
+                      "showTurnIndicator": "@config.showTurnIndicator",
+                      "className": "@config.className",
+                      "selectedUnitId": "@config.selectedUnitId"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "validMoves": {
+              "type": "[GameCanvas3dBattleTemplateValidMovesItem]",
+              "default": [
+                {
+                  "z": 1.0,
+                  "x": 1.0
+                }
+              ],
+              "label": "Valid Moves",
+              "description": "Valid move positions",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": true
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "attackTargets": {
+              "type": "[GameCanvas3dBattleTemplateAttackTargetsItem]",
+              "default": [
+                {
+                  "z": 1.0,
+                  "x": 1.0
+                }
+              ],
+              "label": "Attack Targets",
+              "description": "Valid attack targets",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "z": {
+                    "name": "z",
+                    "type": "number",
+                    "required": true
+                  },
+                  "x": {
+                    "name": "x",
+                    "type": "number",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "cameraMode": {
+              "type": "string",
+              "default": "perspective",
+              "label": "Camera Mode",
+              "description": "3D camera mode - defaults to perspective for dramatic effect",
+              "tier": "presentation",
+              "values": [
+                "isometric",
+                "perspective",
+                "top-down"
+              ]
+            },
+            "tileClickEvent": {
+              "type": "string",
+              "default": "Tile Click Event",
+              "label": "Tile Click Event",
+              "description": "Event name for tile clicks",
+              "tier": "presentation"
+            },
+            "endTurnEvent": {
+              "type": "string",
+              "default": "End Turn Event",
+              "label": "End Turn Event",
+              "description": "Event name for ending turn",
+              "tier": "presentation"
+            },
+            "showGrid": {
+              "type": "boolean",
+              "default": true,
+              "label": "Show Grid",
+              "description": "Show grid helper",
+              "tier": "presentation"
+            },
+            "unitAttackEvent": {
+              "type": "string",
+              "default": "Unit Attack Event",
+              "label": "Unit Attack Event",
+              "description": "Event name for unit attack",
+              "tier": "presentation"
+            },
+            "backgroundColor": {
+              "type": "string",
+              "default": "#2a1a1a",
+              "label": "Background Color",
+              "description": "Background color - darker for battle atmosphere",
+              "tier": "presentation"
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "External styling override",
+              "tier": "presentation"
+            },
+            "shadows": {
+              "type": "boolean",
+              "default": true,
+              "label": "Shadows",
+              "description": "Enable shadows",
+              "tier": "presentation"
+            },
+            "unitClickEvent": {
+              "type": "string",
+              "default": "Unit Click Event",
+              "label": "Unit Click Event",
+              "description": "Event name for unit clicks",
+              "tier": "presentation"
+            },
+            "selectedUnitId": {
+              "type": "string",
+              "default": "Selected Unit Id",
+              "label": "Selected Unit Id",
+              "description": "Currently selected unit ID",
+              "tier": "presentation"
+            },
+            "unitMoveEvent": {
+              "type": "string",
+              "default": "Unit Move Event",
+              "label": "Unit Move Event",
+              "description": "Event name for unit move",
+              "tier": "presentation"
+            },
+            "exitEvent": {
+              "type": "string",
+              "default": "Exit Event",
+              "label": "Exit Event",
+              "description": "Event name for exiting battle",
+              "tier": "presentation"
+            },
+            "showTurnIndicator": {
+              "type": "boolean",
+              "default": false,
+              "label": "Show Turn Indicator",
+              "description": "Show turn indicator overlay",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "GameCanvas3dBattleTemplatePage",
+          "path": "/game-canvas-3d-battle-template",
+          "traits": [
+            {
+              "ref": "GameCanvas3dBattleTemplateRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
