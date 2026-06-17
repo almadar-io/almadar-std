@@ -53,14 +53,14 @@ export interface StdUiRuleEditorRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRuleEditorConfig {
-  /** Default: `[{"label":"Label","value":"Value"}]` */
-  availableEvents?: EntityRow[];
-  /** Default: `{"thenAction":"Then Action","whenEvent":"When Event","id":"Id"}` */
-  rule?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `{"whenEvent":"When Event","thenAction":"Then Action","id":"Id"}` */
+  rule?: EntityRow;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `[{"label":"Label","value":"Value"}]` */
+  availableEvents?: EntityRow[];
   /** Default: `[{"value":"Value","label":"Label"}]` */
   availableActions?: EntityRow[];
 }
@@ -250,14 +250,14 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
                   'render-ui',
                   'main',
                   {
-                    'rule': '@config.rule',
-                    'availableActions': '@config.availableActions',
                     'disabled': '@config.disabled',
                     'className': '@config.className',
-                    'availableEvents': '@config.availableEvents',
-                    'onRemove': 'REMOVE',
-                    'type': 'rule-editor',
                     'onChange': 'CHANGE',
+                    'onRemove': 'REMOVE',
+                    'availableEvents': '@config.availableEvents',
+                    'availableActions': '@config.availableActions',
+                    'type': 'rule-editor',
+                    'rule': '@config.rule',
                   },
                 ],
               ],
@@ -265,6 +265,48 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
           ],
         },
         'config': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'rule': {
+            'type': 'RuleEditorRule',
+            'default': {
+              'whenEvent': 'When Event',
+              'thenAction': 'Then Action',
+              'id': 'Id',
+            },
+            'label': 'Rule',
+            'description': 'The current rule',
+            'tier': 'presentation',
+            'properties': {
+              'whenEvent': {
+                'name': 'whenEvent',
+                'type': 'string',
+                'required': true,
+              },
+              'id': {
+                'name': 'id',
+                'type': 'string',
+                'required': true,
+              },
+              'thenAction': {
+                'name': 'thenAction',
+                'type': 'string',
+                'required': true,
+              },
+            },
+          },
+          'disabled': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Disabled',
+            'description': 'Whether editing is disabled (during playback)',
+            'tier': 'presentation',
+          },
           'availableEvents': {
             'type': '[RuleEditorAvailableEventsItem]',
             'default': [
@@ -279,60 +321,18 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
             'items': {
               'type': 'object',
               'properties': {
-                'value': {
-                  'name': 'value',
-                  'type': 'string',
-                  'required': true,
-                },
                 'label': {
                   'name': 'label',
                   'type': 'string',
                   'required': true,
                 },
+                'value': {
+                  'name': 'value',
+                  'type': 'string',
+                  'required': true,
+                },
               },
             },
-          },
-          'rule': {
-            'type': 'RuleEditorRule',
-            'default': {
-              'thenAction': 'Then Action',
-              'whenEvent': 'When Event',
-              'id': 'Id',
-            },
-            'label': 'Rule',
-            'description': 'The current rule',
-            'tier': 'presentation',
-            'properties': {
-              'whenEvent': {
-                'name': 'whenEvent',
-                'type': 'string',
-                'required': true,
-              },
-              'thenAction': {
-                'name': 'thenAction',
-                'type': 'string',
-                'required': true,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'disabled': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Disabled',
-            'description': 'Whether editing is disabled (during playback)',
-            'tier': 'presentation',
           },
           'availableActions': {
             'type': '[RuleEditorAvailableActionsItem]',
@@ -348,13 +348,13 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
             'items': {
               'type': 'object',
               'properties': {
-                'value': {
-                  'name': 'value',
+                'label': {
+                  'name': 'label',
                   'type': 'string',
                   'required': true,
                 },
-                'label': {
-                  'name': 'label',
+                'value': {
+                  'name': 'value',
                   'type': 'string',
                   'required': true,
                 },

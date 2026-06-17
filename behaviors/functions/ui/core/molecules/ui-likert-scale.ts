@@ -48,13 +48,13 @@ export interface StdUiLikertScaleChangePayload {
 export interface StdUiLikertScaleConfig {
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Value"` */
-  value?: string;
   /** Default: `"Question"` */
   question?: string;
-  /** Default: `[{"value":"Value","label":"Label"}]` */
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `[{"label":"Label","value":"Value"}]` */
   options?: EntityRow[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';

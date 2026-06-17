@@ -39,37 +39,37 @@ export type StdUiChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartConfig {
-  error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"data":[{"color":"Color","value":1,"label":"Label"}],"name":"Name","color":"Color","dashed":false}]` */
-  series?: EntityRow[];
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"Drill Event"` */
-  drillEvent?: string;
-  /** Default: `false` */
-  showValues?: boolean;
-  /** Default: `[{"navigatesTo":"Navigates To","variant":"primary","label":"Label"}]` */
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
   actions?: EntityRow[];
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `[{"label":"Label","color":"Color","x":1,"size":1,"y":1}]` */
-  scatterData?: EntityRow[];
   /** Default: `200` */
   height?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `true` */
-  showLegend?: boolean;
-  /** Default: `false` */
-  timeAxis?: boolean;
   /** Default: `"bar"` */
   chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `true` */
+  showLegend?: boolean;
+  /** Default: `[{"value":1,"color":"Color","label":"Label"}]` */
+  data?: EntityRow[];
+  /** Default: `false` */
+  timeAxis?: boolean;
+  /** Default: `"Drill Event"` */
+  drillEvent?: string;
+  /** Default: `[{"name":"Name","color":"Color","dashed":false,"data":[{"value":1,"color":"Color","label":"Label"}]}]` */
+  series?: EntityRow[];
   /** Default: `"bar-vertical"` */
   look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `[{"value":1,"label":"Label","color":"Color"}]` */
-  data?: EntityRow[];
+  /** Default: `false` */
+  showValues?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `[{"x":1,"size":1,"label":"Label","color":"Color","y":1}]` */
+  scatterData?: EntityRow[];
   /** Default: `"none"` */
   stack?: 'none' | 'stack' | 'normalize';
 }

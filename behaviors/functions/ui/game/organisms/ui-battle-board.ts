@@ -101,34 +101,42 @@ export interface StdUiBattleBoardPlayAgainPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBattleBoardConfig {
-  error?: EntityRow;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `0` */
-  pageProp?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  activeFilters?: unknown;
-  /** Default: `1` */
-  unitScale?: number;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
   /** Default: `[]` */
   selectedIds?: string[];
   /** Default: `false` */
   hasActiveEffects?: boolean;
-  /** Default: `0.45` */
-  scale?: number;
+  /** Default: `[{"type":"castle","y":0,"x":2},{"x":4,"y":4,"type":"portal"}]` */
+  features?: EntityRow[];
+  /** Default: `"Search Value"` */
+  searchValue?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[]` */
-  effectSpriteUrls?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `{"effects":{},"units":{"hero":"characters/archetypes/01_innocent.png"},"terrains":{"stone":"isometric-blocks/PNG/Abstract tiles/abstractTile_06.png","grass":"isometric-blocks/PNG/Abstract tiles/abstractTile_01.png","water":"isometric-blocks/PNG/Abstract tiles/abstractTile_03.png","dirt":"isometric-blocks/PNG/Abstract tiles/abstractTile_08.png"},"features":{"portal":"world-map/portal_open.png","castle":"world-map/battle_marker.png"}}` */
+  assetManifest?: EntityRow;
+  /** Default: `1` */
+  unitScale?: number;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `0.45` */
+  scale?: number;
+  error?: EntityRow;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `0` */
+  pageSize?: number;
   /** Default: `0` */
   totalCount?: number;
+  /** Default: `[]` */
+  effectSpriteUrls?: EntityRow[];
+  activeFilters?: unknown;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `[{"health":10,"name":"Hero","position":{"y":1,"x":1},"unitType":"hero","team":"player","maxHealth":10,"id":"unit-1"},{"id":"unit-2","unitType":"hero","maxHealth":10,"name":"Guard","team":"enemy","position":{"y":2,"x":3},"health":8}]` */
+  units?: EntityRow[];
+  /** Default: `[{"y":0,"x":0,"terrain":"stone","passable":false},{"passable":false,"y":0,"terrain":"water","x":1},{"y":0,"terrain":"water","x":2,"passable":false},{"terrain":"water","x":3,"passable":false,"y":0},{"y":0,"x":4,"terrain":"stone","passable":false},{"y":1,"x":0,"passable":false,"terrain":"water"},{"x":1,"y":1,"terrain":"grass","passable":true},{"x":2,"passable":true,"terrain":"grass","y":1},{"y":1,"terrain":"grass","passable":true,"x":3},{"y":1,"terrain":"water","passable":false,"x":4},{"y":2,"terrain":"water","passable":false,"x":0},{"passable":true,"x":1,"y":2,"terrain":"grass"},{"passable":true,"terrain":"grass","x":2,"y":2},{"terrain":"grass","passable":true,"y":2,"x":3},{"y":2,"passable":false,"terrain":"water","x":4},{"x":0,"y":3,"terrain":"water","passable":false},{"x":1,"terrain":"grass","y":3,"passable":true},{"terrain":"grass","x":2,"passable":true,"y":3},{"passable":true,"x":3,"y":3,"terrain":"grass"},{"y":3,"terrain":"water","x":4,"passable":false},{"passable":false,"terrain":"stone","x":0,"y":4},{"passable":false,"terrain":"water","y":4,"x":1},{"terrain":"water","passable":false,"x":2,"y":4},{"passable":false,"terrain":"water","y":4,"x":3},{"terrain":"stone","y":4,"passable":false,"x":4}]` */
+  tiles?: EntityRow[];
 }
 
 /**
@@ -513,33 +521,37 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'render-ui',
                   'main',
                   {
-                    'hasActiveEffects': '@config.hasActiveEffects',
-                    'tileClickEvent': 'TILE_CLICK',
-                    'endTurnEvent': 'END_TURN',
-                    'sortBy': '@config.sortBy',
-                    'type': 'battle-board',
-                    'className': '@config.className',
-                    'pageSize': '@config.pageSize',
-                    'isLoading': '@config.isLoading',
-                    'unitScale': '@config.unitScale',
-                    'selectedIds': '@config.selectedIds',
-                    'totalCount': '@config.totalCount',
-                    'searchValue': '@config.searchValue',
-                    'entity': '@entity',
-                    'cancelEvent': 'CANCEL',
-                    'unitClickEvent': 'UNIT_CLICK',
-                    'sortDirection': '@config.sortDirection',
-                    'gameEndEvent': 'GAME_END',
                     'page': '@config.pageProp',
                     'activeFilters': '@config.activeFilters',
-                    'onAttack': 'ATTACK',
-                    'onGameEnd': 'GAME_END',
+                    'features': '@config.features',
+                    'pageSize': '@config.pageSize',
+                    'unitScale': '@config.unitScale',
+                    'cancelEvent': 'CANCEL',
+                    'sortBy': '@config.sortBy',
+                    'totalCount': '@config.totalCount',
+                    'unitClickEvent': 'UNIT_CLICK',
+                    'entity': '@entity',
                     'attackEvent': 'ATTACK',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'scale': '@config.scale',
+                    'hasActiveEffects': '@config.hasActiveEffects',
+                    'type': 'battle-board',
+                    'tiles': '@config.tiles',
                     'effectSpriteUrls': '@config.effectSpriteUrls',
-                    'error': '@config.error',
+                    'gameEndEvent': 'GAME_END',
+                    'sortDirection': '@config.sortDirection',
                     'onUnitMove': 'UNIT_MOVE',
+                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
+                    'error': '@config.error',
+                    'assetManifest': '@config.assetManifest',
+                    'onGameEnd': 'GAME_END',
+                    'endTurnEvent': 'END_TURN',
+                    'onAttack': 'ATTACK',
+                    'tileClickEvent': 'TILE_CLICK',
+                    'selectedIds': '@config.selectedIds',
+                    'searchValue': '@config.searchValue',
+                    'scale': '@config.scale',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'units': '@config.units',
                   },
                 ],
               ],
@@ -547,94 +559,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
           ],
         },
         'config': {
-          'error': {
-            'type': 'BattleBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'unitScale': {
-            'type': 'number',
-            'default': 1,
-            'label': 'Unit Scale',
-            'description': 'Unit draw-size multiplier',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
           'selectedIds': {
             'type': '[string]',
             'default': [],
@@ -652,11 +576,79 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'description': 'hasActiveEffects prop',
             'tier': 'presentation',
           },
-          'scale': {
-            'type': 'number',
-            'default': 0.45,
-            'label': 'Scale',
-            'description': 'Canvas render scale',
+          'features': {
+            'type': '[BattleBoardFeaturesItem]',
+            'default': [
+              {
+                'type': 'castle',
+                'y': 0,
+                'x': 2,
+              },
+              {
+                'x': 4,
+                'y': 4,
+                'type': 'portal',
+              },
+            ],
+            'label': 'Features',
+            'description': 'Direct feature data — takes priority over entity-derived features.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': true,
+                },
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'searchValue': {
+            'type': 'string',
+            'default': 'Search Value',
+            'label': 'Search Value',
+            'description': 'Current search query value',
             'tier': 'presentation',
           },
           'isLoading': {
@@ -664,6 +656,145 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'default': false,
             'label': 'Is Loading',
             'description': 'Loading state indicator',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'className prop',
+            'tier': 'presentation',
+          },
+          'assetManifest': {
+            'type': 'BattleBoardAssetManifest',
+            'default': {
+              'effects': {},
+              'units': {
+                'hero': 'characters/archetypes/01_innocent.png',
+              },
+              'terrains': {
+                'stone': 'isometric-blocks/PNG/Abstract tiles/abstractTile_06.png',
+                'grass': 'isometric-blocks/PNG/Abstract tiles/abstractTile_01.png',
+                'water': 'isometric-blocks/PNG/Abstract tiles/abstractTile_03.png',
+                'dirt': 'isometric-blocks/PNG/Abstract tiles/abstractTile_08.png',
+              },
+              'features': {
+                'portal': 'world-map/portal_open.png',
+                'castle': 'world-map/battle_marker.png',
+              },
+            },
+            'label': 'Asset Manifest',
+            'description': 'Direct asset manifest — takes priority over entity-derived manifest.',
+            'tier': 'presentation',
+            'properties': {
+              'effects': {
+                'name': 'effects',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'features': {
+                'name': 'features',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'units': {
+                'name': 'units',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'baseUrl': {
+                'name': 'baseUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'terrains': {
+                'name': 'terrains',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+            },
+          },
+          'unitScale': {
+            'type': 'number',
+            'default': 1,
+            'label': 'Unit Scale',
+            'description': 'Unit draw-size multiplier',
+            'tier': 'presentation',
+          },
+          'pageProp': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page',
+            'description': 'Current page number',
+            'synonyms': 'page',
+            'tier': 'presentation',
+          },
+          'scale': {
+            'type': 'number',
+            'default': 0.45,
+            'label': 'Scale',
+            'description': 'Canvas render scale',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'BattleBoardError',
+            'label': 'Error',
+            'description': 'Error state (UiError)',
+            'tier': 'presentation',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+            },
+          },
+          'sortBy': {
+            'type': 'string',
+            'default': 'Sort By',
+            'label': 'Sort By',
+            'description': 'Current sort field',
+            'tier': 'presentation',
+          },
+          'pageSize': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Page Size',
+            'description': 'Number of items per page',
+            'tier': 'presentation',
+          },
+          'totalCount': {
+            'type': 'number',
+            'default': 0,
+            'label': 'Total Count',
+            'description': 'Total number of items',
             'tier': 'presentation',
           },
           'effectSpriteUrls': {
@@ -676,12 +807,419 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               'type': 'string',
             },
           },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
+          'activeFilters': {
+            'type': 'json',
+            'label': 'Active Filters',
+            'description': 'Active filters',
             'tier': 'presentation',
+          },
+          'sortDirection': {
+            'type': 'string',
+            'default': 'asc',
+            'label': 'Sort Direction',
+            'description': 'Current sort direction',
+            'tier': 'presentation',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'units': {
+            'type': '[BattleBoardUnitsItem]',
+            'default': [
+              {
+                'health': 10,
+                'name': 'Hero',
+                'position': {
+                  'y': 1,
+                  'x': 1,
+                },
+                'unitType': 'hero',
+                'team': 'player',
+                'maxHealth': 10,
+                'id': 'unit-1',
+              },
+              {
+                'id': 'unit-2',
+                'unitType': 'hero',
+                'maxHealth': 10,
+                'name': 'Guard',
+                'team': 'enemy',
+                'position': {
+                  'y': 2,
+                  'x': 3,
+                },
+                'health': 8,
+              },
+            ],
+            'label': 'Units',
+            'description': 'Direct unit data — takes priority over entity-derived units.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
+                },
+                'heroId': {
+                  'name': 'heroId',
+                  'type': 'string',
+                  'required': false,
+                },
+                'previousPosition': {
+                  'name': 'previousPosition',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'position': {
+                  'name': 'position',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'health': {
+                  'name': 'health',
+                  'type': 'number',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': false,
+                },
+                'unitType': {
+                  'name': 'unitType',
+                  'type': 'string',
+                  'required': false,
+                },
+                'team': {
+                  'name': 'team',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'player',
+                    'enemy',
+                    'neutral',
+                  ],
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
+                'faction': {
+                  'name': 'faction',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'player',
+                    'enemy',
+                    'neutral',
+                  ],
+                },
+                'maxHealth': {
+                  'name': 'maxHealth',
+                  'type': 'number',
+                  'required': false,
+                },
+                'traits': {
+                  'name': 'traits',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'name': {
+                        'name': 'name',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'states': {
+                        'name': 'states',
+                        'type': 'array',
+                        'required': true,
+                        'items': {
+                          'type': 'string',
+                        },
+                      },
+                      'cooldown': {
+                        'name': 'cooldown',
+                        'type': 'number',
+                        'required': true,
+                      },
+                      'currentState': {
+                        'name': 'currentState',
+                        'type': 'string',
+                        'required': true,
+                      },
+                    },
+                  },
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'tiles': {
+            'type': '[BattleBoardTilesItem]',
+            'default': [
+              {
+                'y': 0,
+                'x': 0,
+                'terrain': 'stone',
+                'passable': false,
+              },
+              {
+                'passable': false,
+                'y': 0,
+                'terrain': 'water',
+                'x': 1,
+              },
+              {
+                'y': 0,
+                'terrain': 'water',
+                'x': 2,
+                'passable': false,
+              },
+              {
+                'terrain': 'water',
+                'x': 3,
+                'passable': false,
+                'y': 0,
+              },
+              {
+                'y': 0,
+                'x': 4,
+                'terrain': 'stone',
+                'passable': false,
+              },
+              {
+                'y': 1,
+                'x': 0,
+                'passable': false,
+                'terrain': 'water',
+              },
+              {
+                'x': 1,
+                'y': 1,
+                'terrain': 'grass',
+                'passable': true,
+              },
+              {
+                'x': 2,
+                'passable': true,
+                'terrain': 'grass',
+                'y': 1,
+              },
+              {
+                'y': 1,
+                'terrain': 'grass',
+                'passable': true,
+                'x': 3,
+              },
+              {
+                'y': 1,
+                'terrain': 'water',
+                'passable': false,
+                'x': 4,
+              },
+              {
+                'y': 2,
+                'terrain': 'water',
+                'passable': false,
+                'x': 0,
+              },
+              {
+                'passable': true,
+                'x': 1,
+                'y': 2,
+                'terrain': 'grass',
+              },
+              {
+                'passable': true,
+                'terrain': 'grass',
+                'x': 2,
+                'y': 2,
+              },
+              {
+                'terrain': 'grass',
+                'passable': true,
+                'y': 2,
+                'x': 3,
+              },
+              {
+                'y': 2,
+                'passable': false,
+                'terrain': 'water',
+                'x': 4,
+              },
+              {
+                'x': 0,
+                'y': 3,
+                'terrain': 'water',
+                'passable': false,
+              },
+              {
+                'x': 1,
+                'terrain': 'grass',
+                'y': 3,
+                'passable': true,
+              },
+              {
+                'terrain': 'grass',
+                'x': 2,
+                'passable': true,
+                'y': 3,
+              },
+              {
+                'passable': true,
+                'x': 3,
+                'y': 3,
+                'terrain': 'grass',
+              },
+              {
+                'y': 3,
+                'terrain': 'water',
+                'x': 4,
+                'passable': false,
+              },
+              {
+                'passable': false,
+                'terrain': 'stone',
+                'x': 0,
+                'y': 4,
+              },
+              {
+                'passable': false,
+                'terrain': 'water',
+                'y': 4,
+                'x': 1,
+              },
+              {
+                'terrain': 'water',
+                'passable': false,
+                'x': 2,
+                'y': 4,
+              },
+              {
+                'passable': false,
+                'terrain': 'water',
+                'y': 4,
+                'x': 3,
+              },
+              {
+                'terrain': 'stone',
+                'y': 4,
+                'passable': false,
+                'x': 4,
+              },
+            ],
+            'label': 'Tiles',
+            'description': 'Direct tile data — takes priority over entity-derived tiles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': false,
+                },
+                'terrainSprite': {
+                  'name': 'terrainSprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'movementCost': {
+                  'name': 'movementCost',
+                  'type': 'number',
+                  'required': false,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'terrain': {
+                  'name': 'terrain',
+                  'type': 'string',
+                  'required': false,
+                },
+                'passable': {
+                  'name': 'passable',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'tileType': {
+                  'name': 'tileType',
+                  'type': 'string',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+              },
+            },
           },
         },
         'scope': 'instance',

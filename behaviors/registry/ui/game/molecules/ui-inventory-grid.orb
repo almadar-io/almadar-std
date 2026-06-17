@@ -75,15 +75,15 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "inventory-grid",
-                      "selectEvent": "SELECT",
+                      "className": "@config.className",
                       "totalSlots": "@config.totalSlots",
+                      "onSelect": "SELECT",
+                      "items": "@config.items",
                       "selectedId": "@config.selectedId",
                       "columns": "@config.columns",
-                      "onSelect": "SELECT",
+                      "selectEvent": "SELECT",
                       "size": "@config.size",
-                      "items": "@config.items",
-                      "className": "@config.className"
+                      "type": "inventory-grid"
                     }
                   ]
                 ]
@@ -98,22 +98,29 @@
               "description": "Additional CSS classes",
               "tier": "presentation"
             },
-            "columns": {
+            "totalSlots": {
               "type": "number",
-              "default": 4.0,
-              "label": "Columns",
-              "description": "Number of columns in the grid",
+              "default": 0.0,
+              "label": "Total Slots",
+              "description": "Total number of slots (empty slots fill remaining space)",
+              "tier": "presentation"
+            },
+            "selectedId": {
+              "type": "string",
+              "default": "Selected Id",
+              "label": "Selected Id",
+              "description": "Currently selected item ID",
               "tier": "presentation"
             },
             "items": {
               "type": "[InventoryGridItemsItem]",
               "default": [
                 {
-                  "rarity": "common",
                   "quantity": 1.0,
                   "id": "Id",
-                  "icon": "circle",
-                  "label": "Label"
+                  "rarity": "common",
+                  "label": "Label",
+                  "icon": "circle"
                 }
               ],
               "label": "Items",
@@ -122,13 +129,23 @@
               "items": {
                 "type": "object",
                 "properties": {
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
+                    "required": false
+                  },
                   "quantity": {
                     "name": "quantity",
                     "type": "number",
                     "required": false
                   },
-                  "icon": {
-                    "name": "icon",
+                  "label": {
+                    "name": "label",
                     "type": "string",
                     "required": false
                   },
@@ -143,25 +160,15 @@
                       "epic",
                       "legendary"
                     ]
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
                   }
                 }
               }
             },
-            "selectedId": {
-              "type": "string",
-              "default": "Selected Id",
-              "label": "Selected Id",
-              "description": "Currently selected item ID",
+            "columns": {
+              "type": "number",
+              "default": 4.0,
+              "label": "Columns",
+              "description": "Number of columns in the grid",
               "tier": "presentation"
             },
             "size": {
@@ -175,13 +182,6 @@
                 "md",
                 "lg"
               ]
-            },
-            "totalSlots": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Slots",
-              "description": "Total number of slots (empty slots fill remaining space)",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

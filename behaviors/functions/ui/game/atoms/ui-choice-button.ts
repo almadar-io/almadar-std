@@ -50,12 +50,12 @@ export interface StdUiChoiceButtonConfig {
   index?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  disabled?: boolean;
   /** Default: `"Text"` */
   text?: string;
   /** Default: `false` */
   selected?: boolean;
-  /** Default: `false` */
-  disabled?: boolean;
 }
 
 /**

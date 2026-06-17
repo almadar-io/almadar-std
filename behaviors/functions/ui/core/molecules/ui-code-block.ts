@@ -46,45 +46,45 @@ export interface StdUiCodeBlockChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeBlockConfig {
-  /** Default: `"60vh"` */
-  maxHeight?: string;
+  /** Default: `true` */
+  showLanguageBadge?: boolean;
+  /** Default: `"text"` */
+  language?: 'text' | 'json' | 'javascript' | 'js' | 'typescript' | 'ts' | 'jsx' | 'tsx' | 'css' | 'markdown' | 'md' | 'bash' | 'shell' | 'sh' | 'yaml' | 'yml' | 'rust' | 'python' | 'py' | 'sql' | 'diff' | 'toml' | 'go' | 'graphql' | 'html' | 'xml' | 'orb' | 'lolo';
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  editable?: boolean;
+  /** Default: `[{"afterLineNumber":1,"beforeLineNumber":1,"content":"Content","type":"added"}]` */
+  diff?: EntityRow[];
   /** Default: `false` */
   foldable?: boolean;
   /** Default: `false` */
   showLineNumbers?: boolean;
-  /** Default: `true` */
-  showLanguageBadge?: boolean;
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
-  actions?: EntityRow[];
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `[{"content":"Content","beforeLineNumber":1,"afterLineNumber":1,"type":"added"}]` */
-  diff?: EntityRow[];
-  /** Default: `"text"` */
-  language?: 'text' | 'json' | 'javascript' | 'js' | 'typescript' | 'ts' | 'jsx' | 'tsx' | 'css' | 'markdown' | 'md' | 'bash' | 'shell' | 'sh' | 'yaml' | 'yml' | 'rust' | 'python' | 'py' | 'sql' | 'diff' | 'toml' | 'go' | 'graphql' | 'html' | 'xml' | 'orb' | 'lolo';
-  /** Default: `[{"label":"Label","language":"text","code":"Code"}]` */
-  files?: EntityRow[];
-  error?: EntityRow;
-  /** Default: `"New Value"` */
-  newValue?: string;
-  /** Default: `true` */
-  showCopyButton?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  editable?: boolean;
-  /** Default: `"Code"` */
-  code?: string;
-  /** Default: `"Old Value"` */
-  oldValue?: string;
-  /** Default: `false` */
-  wordWrap?: boolean;
-  /** Default: `false` */
-  showCopy?: boolean;
   /** Default: `"code"` */
   mode?: 'code' | 'diff';
+  /** Default: `"Old Value"` */
+  oldValue?: string;
+  /** Default: `true` */
+  showCopyButton?: boolean;
+  /** Default: `"60vh"` */
+  maxHeight?: string;
+  /** Default: `false` */
+  showCopy?: boolean;
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  actions?: EntityRow[];
+  /** Default: `"New Value"` */
+  newValue?: string;
+  /** Default: `"Code"` */
+  code?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `[{"code":"Code","language":"text","label":"Label"}]` */
+  files?: EntityRow[];
+  /** Default: `false` */
+  wordWrap?: boolean;
+  error?: EntityRow;
 }
 
 /**

@@ -137,28 +137,28 @@
                     "render-ui",
                     "main",
                     {
+                      "logoSrc": "@config.logoSrc",
+                      "userSection": "@config.userSection",
                       "logoClickEvent": "LOGO_CLICK",
-                      "type": "sidebar",
-                      "collapsed": "@entity.collapsed",
-                      "items": "@config.items",
+                      "isLoading": "@config.isLoading",
+                      "collapseChangeEvent": "COLLAPSE_CHANGE",
+                      "closeEvent": "CLOSE",
                       "className": "@config.className",
+                      "hideCollapseButton": "@config.hideCollapseButton",
+                      "showCloseButton": "@config.showCloseButton",
+                      "items": "@config.items",
                       "logo": [
                         {
-                          "type": "typography",
-                          "content": "Logo"
+                          "content": "Logo",
+                          "type": "typography"
                         }
                       ],
-                      "collapseChangeEvent": "COLLAPSE_CHANGE",
-                      "userSection": "@config.userSection",
-                      "showCloseButton": "@config.showCloseButton",
-                      "hideCollapseButton": "@config.hideCollapseButton",
-                      "brandName": "@config.brandName",
-                      "closeEvent": "CLOSE",
                       "footerContent": "@config.footerContent",
-                      "isLoading": "@config.isLoading",
                       "defaultCollapsed": "@config.defaultCollapsed",
-                      "logoSrc": "@config.logoSrc",
-                      "error": "@config.error"
+                      "error": "@config.error",
+                      "type": "sidebar",
+                      "collapsed": "@entity.collapsed",
+                      "brandName": "@config.brandName"
                     }
                   ]
                 ]
@@ -177,28 +177,28 @@
                     "render-ui",
                     "main",
                     {
-                      "items": "@config.items",
-                      "closeEvent": "CLOSE",
-                      "className": "@config.className",
-                      "collapsed": "@entity.collapsed",
-                      "hideCollapseButton": "@config.hideCollapseButton",
-                      "logoSrc": "@config.logoSrc",
-                      "userSection": "@config.userSection",
-                      "showCloseButton": "@config.showCloseButton",
-                      "logoClickEvent": "LOGO_CLICK",
-                      "type": "sidebar",
-                      "error": "@config.error",
-                      "isLoading": "@config.isLoading",
                       "collapseChangeEvent": "COLLAPSE_CHANGE",
+                      "userSection": "@config.userSection",
+                      "logoSrc": "@config.logoSrc",
+                      "className": "@config.className",
                       "logo": [
                         {
-                          "type": "typography",
-                          "content": "Logo"
+                          "content": "Logo",
+                          "type": "typography"
                         }
                       ],
+                      "type": "sidebar",
+                      "footerContent": "@config.footerContent",
+                      "isLoading": "@config.isLoading",
+                      "showCloseButton": "@config.showCloseButton",
+                      "items": "@config.items",
                       "brandName": "@config.brandName",
+                      "logoClickEvent": "LOGO_CLICK",
                       "defaultCollapsed": "@config.defaultCollapsed",
-                      "footerContent": "@config.footerContent"
+                      "collapsed": "@entity.collapsed",
+                      "hideCollapseButton": "@config.hideCollapseButton",
+                      "closeEvent": "CLOSE",
+                      "error": "@config.error"
                     }
                   ]
                 ]
@@ -206,18 +206,33 @@
             ]
           },
           "config": {
-            "logoSrc": {
-              "type": "asset",
-              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
-              "label": "Logo Src",
-              "description": "Logo image source",
-              "tier": "presentation"
-            },
-            "footerContent": {
-              "type": "node",
-              "label": "Footer Content",
-              "description": "Footer content (e.g., theme toggle)",
-              "tier": "presentation"
+            "error": {
+              "type": "SidebarError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                }
+              }
             },
             "defaultCollapsed": {
               "type": "boolean",
@@ -226,10 +241,18 @@
               "description": "Default collapsed state",
               "tier": "presentation"
             },
-            "userSection": {
-              "type": "node",
-              "label": "User Section",
-              "description": "User section content",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "hideCollapseButton": {
+              "type": "boolean",
+              "default": false,
+              "label": "Hide Collapse Button",
+              "description": "Hide the collapse/expand button",
               "tier": "presentation"
             },
             "showCloseButton": {
@@ -239,46 +262,51 @@
               "description": "Show a close button (for mobile)",
               "tier": "presentation"
             },
-            "error": {
-              "type": "SidebarError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
+            "userSection": {
+              "type": "node",
+              "label": "User Section",
+              "description": "User section content",
+              "tier": "presentation"
+            },
+            "logoSrc": {
+              "type": "asset",
+              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+              "label": "Logo Src",
+              "description": "Logo image source",
+              "tier": "presentation"
+            },
+            "brandName": {
+              "type": "string",
+              "default": "KFlow",
+              "label": "Brand Name",
+              "description": "Brand/App name",
+              "tier": "presentation"
+            },
+            "footerContent": {
+              "type": "node",
+              "label": "Footer Content",
+              "description": "Footer content (e.g., theme toggle)",
+              "tier": "presentation"
+            },
+            "collapsed": {
+              "type": "boolean",
+              "default": false,
+              "label": "Collapsed",
+              "description": "Collapsed state (controlled)",
+              "tier": "presentation"
             },
             "items": {
               "type": "[SidebarItemsItem]",
               "default": [
                 {
-                  "badge": "Badge",
-                  "subItems": [],
-                  "id": "Id",
-                  "label": "Label",
-                  "active": false,
+                  "href": "Href",
                   "icon": "circle",
+                  "badge": "Badge",
+                  "active": false,
+                  "subItems": [],
+                  "label": "Label",
                   "isActive": false,
-                  "href": "Href"
+                  "id": "Id"
                 }
               ],
               "label": "Items",
@@ -287,10 +315,10 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "icon": {
-                    "name": "icon",
+                  "id": {
+                    "name": "id",
                     "type": "string",
-                    "required": false
+                    "required": true
                   },
                   "href": {
                     "name": "href",
@@ -302,10 +330,18 @@
                     "type": "boolean",
                     "required": false
                   },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
+                  "isActive": {
+                    "name": "isActive",
+                    "type": "boolean",
+                    "required": false
+                  },
+                  "subItems": {
+                    "name": "subItems",
+                    "type": "array",
+                    "required": false,
+                    "items": {
+                      "type": "string"
+                    }
                   },
                   "label": {
                     "name": "label",
@@ -317,17 +353,9 @@
                     "type": "string",
                     "required": false
                   },
-                  "subItems": {
-                    "name": "subItems",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "isActive": {
-                    "name": "isActive",
-                    "type": "boolean",
+                  "icon": {
+                    "name": "icon",
+                    "type": "string",
                     "required": false
                   }
                 }
@@ -338,34 +366,6 @@
               "default": false,
               "label": "Is Loading",
               "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "hideCollapseButton": {
-              "type": "boolean",
-              "default": false,
-              "label": "Hide Collapse Button",
-              "description": "Hide the collapse/expand button",
-              "tier": "presentation"
-            },
-            "collapsed": {
-              "type": "boolean",
-              "default": false,
-              "label": "Collapsed",
-              "description": "Collapsed state (controlled)",
-              "tier": "presentation"
-            },
-            "brandName": {
-              "type": "string",
-              "default": "KFlow",
-              "label": "Brand Name",
-              "description": "Brand/App name",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
               "tier": "presentation"
             }
           },

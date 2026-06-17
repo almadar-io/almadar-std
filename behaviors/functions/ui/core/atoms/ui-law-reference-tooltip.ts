@@ -43,7 +43,7 @@ export interface StdUiLawReferenceTooltipConfig {
   position?: 'top' | 'bottom' | 'left' | 'right';
   /** Default: `""` */
   className?: string;
-  /** Default: `{"link":"Link","article":"Article","law":"Law","lawName":"Law Name","clause":"Clause"}` */
+  /** Default: `{"lawName":"Law Name","link":"Link","law":"Law","clause":"Clause","article":"Article"}` */
   reference?: EntityRow;
 }
 

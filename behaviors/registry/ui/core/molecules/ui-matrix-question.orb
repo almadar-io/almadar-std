@@ -83,16 +83,16 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "@config.title",
-                      "type": "matrix-question",
-                      "values": "@config.values",
-                      "disabled": "@config.disabled",
+                      "columns": "@config.columns",
                       "changeEvent": "CHANGE",
+                      "disabled": "@config.disabled",
+                      "className": "@config.className",
+                      "values": "@config.values",
                       "onChange": "CHANGE",
                       "size": "@config.size",
-                      "columns": "@config.columns",
-                      "className": "@config.className",
-                      "rows": "@config.rows"
+                      "title": "@config.title",
+                      "rows": "@config.rows",
+                      "type": "matrix-question"
                     }
                   ]
                 ]
@@ -100,6 +100,13 @@
             ]
           },
           "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
             "disabled": {
               "type": "boolean",
               "default": false,
@@ -107,12 +114,59 @@
               "description": "Disable all inputs",
               "tier": "presentation"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
+            "rows": {
+              "type": "[MatrixQuestionRowsItem]",
+              "default": [
+                {
+                  "label": "Label",
+                  "id": "Id"
+                }
+              ],
+              "label": "Rows",
+              "description": "Question rows",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "columns": {
+              "type": "[MatrixQuestionColumnsItem]",
+              "default": [
+                {
+                  "label": "Label",
+                  "value": "Value"
+                }
+              ],
+              "label": "Columns",
+              "description": "Column definitions; defaults to 5-point Likert",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
             },
             "title": {
               "type": "string",
@@ -131,33 +185,6 @@
                 "type": "string"
               }
             },
-            "rows": {
-              "type": "[MatrixQuestionRowsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "id": "Id"
-                }
-              ],
-              "label": "Rows",
-              "description": "Question rows",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
             "size": {
               "type": "string",
               "default": "md",
@@ -168,33 +195,6 @@
                 "sm",
                 "md"
               ]
-            },
-            "columns": {
-              "type": "[MatrixQuestionColumnsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "value": "Value"
-                }
-              ],
-              "label": "Columns",
-              "description": "Column definitions; defaults to 5-point Likert",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
             }
           },
           "scope": "instance"

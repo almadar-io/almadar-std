@@ -7,6 +7,68 @@ orbital WorldMapBoardOrbital {
     code : string
     stack : string
   }
+  type WorldMapBoardTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+  }
+  type WorldMapBoardUnitsItem = {
+    id : string!
+    position : WorldMapBoardUnitsItemPosition
+    x : number
+    y : number
+    z : number
+    sprite : asset
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [WorldMapBoardUnitsItemTraitsItem]
+    previousPosition : WorldMapBoardUnitsItemPreviousPosition
+    elevation : number
+  }
+  type WorldMapBoardUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type WorldMapBoardUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type WorldMapBoardUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type WorldMapBoardFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : asset
+    assetUrl : asset
+    color : string
+    elevation : number
+  }
+  type WorldMapBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+  }
 
   entity WorldMapBoardItem [runtime] {
     id : string!
@@ -23,6 +85,10 @@ orbital WorldMapBoardOrbital {
           isLoading: @config.isLoading
           error: @config.error
           entity: @entity
+          tiles: @config.tiles
+          units: @config.units
+          features: @config.features
+          assetManifest: @config.assetManifest
           scale: @config.scale
           unitScale: @config.unitScale
           allowMoveAllHeroes: @config.allowMoveAllHeroes
@@ -88,6 +154,22 @@ orbital WorldMapBoardOrbital {
       error : WorldMapBoardError
         @label "Error"
         @description "Error state"
+        @tier "presentation"
+      tiles : [WorldMapBoardTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false }, { x: 1, y: 0, terrain: "water", passable: false }, { x: 2, y: 0, terrain: "water", passable: false }, { x: 3, y: 0, terrain: "water", passable: false }, { x: 4, y: 0, terrain: "stone", passable: false }, { x: 0, y: 1, terrain: "water", passable: false }, { x: 1, y: 1, terrain: "grass", passable: true }, { x: 2, y: 1, terrain: "grass", passable: true }, { x: 3, y: 1, terrain: "grass", passable: true }, { x: 4, y: 1, terrain: "water", passable: false }, { x: 0, y: 2, terrain: "water", passable: false }, { x: 1, y: 2, terrain: "grass", passable: true }, { x: 2, y: 2, terrain: "grass", passable: true }, { x: 3, y: 2, terrain: "grass", passable: true }, { x: 4, y: 2, terrain: "water", passable: false }, { x: 0, y: 3, terrain: "water", passable: false }, { x: 1, y: 3, terrain: "grass", passable: true }, { x: 2, y: 3, terrain: "grass", passable: true }, { x: 3, y: 3, terrain: "grass", passable: true }, { x: 4, y: 3, terrain: "water", passable: false }, { x: 0, y: 4, terrain: "stone", passable: false }, { x: 1, y: 4, terrain: "water", passable: false }, { x: 2, y: 4, terrain: "water", passable: false }, { x: 3, y: 4, terrain: "water", passable: false }, { x: 4, y: 4, terrain: "stone", passable: false }]
+        @label "Tiles"
+        @description "Direct tile data — takes priority over entity-derived tiles."
+        @tier "presentation"
+      units : [WorldMapBoardUnitsItem] = [{ id: "unit-1", position: { x: 1, y: 1 }, unitType: "hero", name: "Hero", team: player, health: 10, maxHealth: 10 }, { id: "unit-2", position: { x: 3, y: 2 }, unitType: "hero", name: "Guard", team: enemy, health: 8, maxHealth: 10 }]
+        @label "Units"
+        @description "Direct unit data — takes priority over entity-derived units."
+        @tier "presentation"
+      features : [WorldMapBoardFeaturesItem] = [{ x: 2, y: 0, type: "castle" }, { x: 4, y: 4, type: "portal" }]
+        @label "Features"
+        @description "Direct feature data — takes priority over entity-derived features."
+        @tier "presentation"
+      assetManifest : WorldMapBoardAssetManifest = { terrains: { grass: "isometric-blocks/PNG/Abstract tiles/abstractTile_01.png", stone: "isometric-blocks/PNG/Abstract tiles/abstractTile_06.png", water: "isometric-blocks/PNG/Abstract tiles/abstractTile_03.png", dirt: "isometric-blocks/PNG/Abstract tiles/abstractTile_08.png" }, units: { hero: "characters/archetypes/01_innocent.png" }, features: { castle: "world-map/battle_marker.png", portal: "world-map/portal_open.png" } }
+        @label "Asset Manifest"
+        @description "Direct asset manifest — takes priority over entity-derived manifest."
         @tier "presentation"
       scale : number = 0.4
         @label "Scale"

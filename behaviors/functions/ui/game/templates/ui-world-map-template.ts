@@ -39,16 +39,24 @@ export type StdUiWorldMapTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiWorldMapTemplateConfig {
-  /** Default: `2.5` */
-  unitScale?: number;
-  /** Default: `0` */
-  diamondTopY?: number;
+  /** Default: `[{"x":0,"y":0,"terrain":"stone","passable":false},{"y":0,"terrain":"water","passable":false,"x":1},{"x":2,"passable":false,"terrain":"water","y":0},{"y":0,"passable":false,"x":3,"terrain":"water"},{"terrain":"stone","y":0,"passable":false,"x":4},{"passable":false,"y":1,"x":0,"terrain":"water"},{"y":1,"passable":true,"terrain":"grass","x":1},{"y":1,"x":2,"terrain":"grass","passable":true},{"y":1,"passable":true,"x":3,"terrain":"grass"},{"terrain":"water","passable":false,"y":1,"x":4},{"passable":false,"y":2,"x":0,"terrain":"water"},{"terrain":"grass","y":2,"passable":true,"x":1},{"passable":true,"y":2,"x":2,"terrain":"grass"},{"y":2,"x":3,"terrain":"grass","passable":true},{"terrain":"water","passable":false,"y":2,"x":4},{"y":3,"passable":false,"x":0,"terrain":"water"},{"x":1,"passable":true,"y":3,"terrain":"grass"},{"x":2,"y":3,"terrain":"grass","passable":true},{"y":3,"terrain":"grass","passable":true,"x":3},{"terrain":"water","x":4,"y":3,"passable":false},{"x":0,"terrain":"stone","y":4,"passable":false},{"y":4,"terrain":"water","x":1,"passable":false},{"x":2,"y":4,"terrain":"water","passable":false},{"x":3,"passable":false,"terrain":"water","y":4},{"y":4,"passable":false,"x":4,"terrain":"stone"}]` */
+  tiles?: EntityRow[];
   /** Default: `false` */
   allowMoveAllHeroes?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"y":0,"x":2,"type":"castle"},{"type":"portal","y":4,"x":4}]` */
+  features?: EntityRow[];
+  /** Default: `""` */
+  assetManifest?: string;
+  /** Default: `0` */
+  diamondTopY?: number;
+  /** Default: `[{"name":"Hero","unitType":"hero","team":"player","id":"unit-1","health":10,"maxHealth":10,"position":{"x":1,"y":1}},{"maxHealth":10,"team":"enemy","position":{"x":3,"y":2},"unitType":"hero","id":"unit-2","name":"Guard","health":8}]` */
+  units?: EntityRow[];
   /** Default: `0.4` */
   scale?: number;
+  /** Default: `2.5` */
+  unitScale?: number;
 }
 
 /**

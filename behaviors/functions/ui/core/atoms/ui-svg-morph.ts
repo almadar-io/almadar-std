@@ -39,26 +39,26 @@ export type StdUiSvgMorphEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgMorphConfig {
-  /** Default: `"generic"` */
-  variant?: 'text-to-code' | 'code-to-app' | 'generic';
-  /** Default: `1` */
-  size?: number;
-  /** Default: `1` */
-  opacity?: number;
-  /** Default: `10` */
-  y?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `true` */
-  asRoot?: boolean;
-  /** Default: `130` */
-  width?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `5` */
-  x?: number;
   /** Default: `50` */
   height?: number;
+  /** Default: `130` */
+  width?: number;
+  /** Default: `10` */
+  y?: number;
+  /** Default: `"generic"` */
+  variant?: 'text-to-code' | 'code-to-app' | 'generic';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `1` */
+  opacity?: number;
+  /** Default: `5` */
+  x?: number;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `true` */
+  asRoot?: boolean;
+  /** Default: `1` */
+  size?: number;
 }
 
 /**

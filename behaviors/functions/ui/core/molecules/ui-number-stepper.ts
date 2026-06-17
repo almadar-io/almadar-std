@@ -54,23 +54,23 @@ export interface StdUiNumberStepperActionPayload {
  */
 export interface StdUiNumberStepperConfig {
   /** Default: `0` */
-  min?: number;
-  /** Default: `1` */
-  step?: number;
-  /** Default: `{}` */
-  actionPayload?: unknown;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `0` */
   max?: number;
   /** Default: `0` */
   value?: number;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  min?: number;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `{}` */
+  actionPayload?: unknown;
+  /** Default: `1` */
+  step?: number;
 }
 
 /**

@@ -47,11 +47,11 @@ export interface StdUiProgressDotsDotClickPayload {
  */
 export interface StdUiProgressDotsConfig {
   /** Default: `0` */
-  count?: number;
-  /** Default: `0` */
   currentIndex?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `0` */
+  count?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
 }

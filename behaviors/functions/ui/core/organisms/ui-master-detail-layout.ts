@@ -39,17 +39,17 @@ export type StdUiMasterDetailLayoutEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMasterDetailLayoutConfig {
-  /** Default: `"Detail Class Name"` */
-  detailClassName?: string;
   emptyDetail?: unknown;
-  /** Default: `false` */
-  hasSelection?: boolean;
   /** Default: `"350px"` */
   masterWidth?: string;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"Detail Class Name"` */
+  detailClassName?: string;
   /** Default: `"Master Class Name"` */
   masterClassName?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  hasSelection?: boolean;
 }
 
 /**
@@ -153,7 +153,6 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
                   'render-ui',
                   'main',
                   {
-                    'masterClassName': '@config.masterClassName',
                     'master': [
                       {
                         'content': 'Master',
@@ -161,17 +160,18 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
                       },
                     ],
                     'hasSelection': '@config.hasSelection',
+                    'type': 'master-detail-layout',
                     'masterWidth': '@config.masterWidth',
-                    'emptyDetail': '@config.emptyDetail',
+                    'className': '@config.className',
+                    'masterClassName': '@config.masterClassName',
                     'detail': [
                       {
-                        'type': 'typography',
                         'content': 'Detail',
+                        'type': 'typography',
                       },
                     ],
+                    'emptyDetail': '@config.emptyDetail',
                     'detailClassName': '@config.detailClassName',
-                    'className': '@config.className',
-                    'type': 'master-detail-layout',
                   },
                 ],
               ],
@@ -179,24 +179,10 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
           ],
         },
         'config': {
-          'detailClassName': {
-            'type': 'string',
-            'default': 'Detail Class Name',
-            'label': 'Detail Class Name',
-            'description': 'Class for detail pane',
-            'tier': 'presentation',
-          },
           'emptyDetail': {
             'type': 'node',
             'label': 'Empty Detail',
             'description': 'Content shown when nothing is selected',
-            'tier': 'presentation',
-          },
-          'hasSelection': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Has Selection',
-            'description': 'Whether an item is currently selected',
             'tier': 'presentation',
           },
           'masterWidth': {
@@ -206,11 +192,11 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'description': 'Width of master panel (e.g., \'350px\', \'30%\')',
             'tier': 'presentation',
           },
-          'className': {
+          'detailClassName': {
             'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'default': 'Detail Class Name',
+            'label': 'Detail Class Name',
+            'description': 'Class for detail pane',
             'tier': 'presentation',
           },
           'masterClassName': {
@@ -218,6 +204,20 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
             'default': 'Master Class Name',
             'label': 'Master Class Name',
             'description': 'Class for master pane',
+            'tier': 'presentation',
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'hasSelection': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Has Selection',
+            'description': 'Whether an item is currently selected',
             'tier': 'presentation',
           },
         },

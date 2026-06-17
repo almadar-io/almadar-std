@@ -41,15 +41,15 @@ export type StdUiToastSlotEventKey = 'INIT';
 export interface StdUiToastSlotConfig {
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `5000` */
-  duration?: number;
-  /** Default: `"success"` */
-  variant?: 'success' | 'error' | 'info' | 'warning';
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `"success"` */
+  variant?: 'success' | 'error' | 'info' | 'warning';
+  /** Default: `5000` */
+  duration?: number;
+  error?: EntityRow;
   /** Default: `""` */
   className?: string;
-  error?: EntityRow;
 }
 
 /**
@@ -158,20 +158,20 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
                   'render-ui',
                   'main',
                   {
-                    'isLoading': '@config.isLoading',
-                    'type': 'toast-slot',
-                    'entity': 'ToastSlotItem',
                     'duration': '@config.duration',
+                    'entity': 'ToastSlotItem',
+                    'type': 'toast-slot',
                     'variant': '@config.variant',
-                    'title': '@config.title',
+                    'isLoading': '@config.isLoading',
+                    'className': '@config.className',
+                    'error': '@config.error',
                     'children': [
                       {
                         'type': 'typography',
                         'content': 'Sample content',
                       },
                     ],
-                    'error': '@config.error',
-                    'className': '@config.className',
+                    'title': '@config.title',
                   },
                 ],
               ],
@@ -186,11 +186,11 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             'description': 'Loading state indicator',
             'tier': 'presentation',
           },
-          'duration': {
-            'type': 'number',
-            'default': 5000,
-            'label': 'Duration',
-            'description': 'Auto-dismiss duration in ms (0 = no auto-dismiss)',
+          'title': {
+            'type': 'string',
+            'default': 'Title',
+            'label': 'Title',
+            'description': 'Toast title',
             'tier': 'presentation',
           },
           'variant': {
@@ -206,18 +206,11 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
               'warning',
             ],
           },
-          'title': {
-            'type': 'string',
-            'default': 'Title',
-            'label': 'Title',
-            'description': 'Toast title',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Custom class name',
+          'duration': {
+            'type': 'number',
+            'default': 5000,
+            'label': 'Duration',
+            'description': 'Auto-dismiss duration in ms (0 = no auto-dismiss)',
             'tier': 'presentation',
           },
           'error': {
@@ -226,6 +219,11 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
             'description': 'Error state',
             'tier': 'presentation',
             'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
               'name': {
                 'name': 'name',
                 'type': 'string',
@@ -236,17 +234,19 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
                 'type': 'string',
                 'required': false,
               },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
               'stack': {
                 'name': 'stack',
                 'type': 'string',
                 'required': false,
               },
             },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Custom class name',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

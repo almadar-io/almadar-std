@@ -53,20 +53,20 @@ export interface StdUiWizardContainerCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardContainerConfig {
-  /** Default: `true` */
-  allowBack?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[{"phase":"Phase","title":"Title","id":"Id","tabId":"Tab Id","content":"Content","globalVariablesRequired":["Item"],"description":"Description","validationRules":[{"condition":[],"message":"Message"}],"lawReferences":[{"description":"Description","law":"Law","article":"Article"}],"sections":[{"title":"Title","subsections":[],"id":"Id","fields":[{"minLength":1,"type":"Type","items":[],"placeholder":"Placeholder","contextMenu":[],"entityField":"Entity Field","id":"Id","required":false,"repeatable":false,"readOnly":false,"maxLength":1,"condition":[],"hiddenCalculations":[],"displayFields":[],"options":[],"label":"Label","stats":[]}],"minItems":1,"addButtonLabel":"Add Button Label","hiddenCalculations":[{"scope":"Scope","variable":"Variable","expression":"Expression"}],"description":"Description","readOnly":false,"repeatable":false,"condition":[]}],"contextMenu":["Item"],"entityMapping":{"mode":"search_or_create","parentField":"Parent Field","idField":"Id Field","entity":"Entity"},"globalVariablesSet":["Item"],"optional":false,"name":"Name","localVariables":["Item"]}]` */
+  steps?: EntityRow[];
   error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  currentStep?: unknown;
   /** Default: `false` */
   compact?: boolean;
   /** Default: `true` */
   showProgress?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[{"title":"Title","phase":"Phase","content":"Content","id":"Id","validationRules":[{"message":"Message","condition":[]}],"localVariables":["Item"],"contextMenu":["Item"],"optional":false,"sections":[{"description":"Description","repeatable":false,"condition":[],"fields":[{"options":[],"condition":[],"placeholder":"Placeholder","maxLength":1,"minLength":1,"displayFields":[],"entityField":"Entity Field","contextMenu":[],"readOnly":false,"repeatable":false,"hiddenCalculations":[],"label":"Label","id":"Id","required":false,"type":"Type","stats":[],"items":[]}],"id":"Id","minItems":1,"hiddenCalculations":[{"expression":"Expression","variable":"Variable","scope":"Scope"}],"subsections":[],"addButtonLabel":"Add Button Label","readOnly":false,"title":"Title"}],"description":"Description","globalVariablesRequired":["Item"],"globalVariablesSet":["Item"],"entityMapping":{"mode":"search_or_create","entity":"Entity","idField":"Id Field","parentField":"Parent Field"},"tabId":"Tab Id","name":"Name","lawReferences":[{"article":"Article","description":"Description","law":"Law"}]}]` */
-  steps?: EntityRow[];
+  currentStep?: unknown;
+  /** Default: `true` */
+  allowBack?: boolean;
+  /** Default: `""` */
+  className?: string;
 }
 
 /**

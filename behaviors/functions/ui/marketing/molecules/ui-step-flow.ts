@@ -39,10 +39,10 @@ export type StdUiStepFlowEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStepFlowConfig {
-  /** Default: `[{"description":"Description","number":1,"title":"Title","icon":"circle"}]` */
-  steps?: EntityRow[];
   /** Default: `true` */
   showConnectors?: boolean;
+  /** Default: `[{"number":1,"title":"Title","icon":"circle","description":"Description"}]` */
+  steps?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
   /** Default: `""` */

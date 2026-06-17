@@ -39,24 +39,24 @@ export type StdUiLineChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiLineChartConfig {
+  /** Default: `false` */
+  showValues?: boolean;
+  /** Default: `""` */
+  className?: string;
   /** Default: `400` */
   width?: number;
-  /** Default: `"var(--color-primary)"` */
-  lineColor?: string;
   /** Default: `true` */
   showArea?: boolean;
   /** Default: `"var(--color-primary)"` */
+  lineColor?: string;
+  /** Default: `"var(--color-primary)"` */
   areaColor?: string;
+  /** Default: `[{"label":"Label","value":1,"color":"Color"}]` */
+  data?: EntityRow[];
   /** Default: `true` */
   showGrid?: boolean;
-  /** Default: `[{"color":"Color","label":"Label","value":1}]` */
-  data?: EntityRow[];
-  /** Default: `""` */
-  className?: string;
   /** Default: `200` */
   height?: number;
-  /** Default: `false` */
-  showValues?: boolean;
 }
 
 /**

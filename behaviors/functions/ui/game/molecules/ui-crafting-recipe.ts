@@ -46,14 +46,14 @@ export interface StdUiCraftingRecipeCraftPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCraftingRecipeConfig {
-  /** Default: `[{"icon":"circle","required":1,"label":"Label","available":1}]` */
-  inputs?: EntityRow[];
-  /** Default: `{"icon":"circle","label":"Label","rarity":"Rarity"}` */
-  output?: EntityRow;
-  /** Default: `""` */
-  className?: string;
   /** Default: `false` */
   canCraft?: boolean;
+  /** Default: `[{"icon":"circle","required":1,"label":"Label","available":1}]` */
+  inputs?: EntityRow[];
+  /** Default: `""` */
+  className?: string;
+  /** Default: `{"icon":"circle","label":"Label","rarity":"Rarity"}` */
+  output?: EntityRow;
 }
 
 /**

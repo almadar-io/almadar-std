@@ -60,51 +60,51 @@ export interface StdUiFormSectionFieldChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFormSectionConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `[]` */
-  violationTriggers?: EntityRow[];
-  /** Default: `[{"values":["Item"],"inputType":"Input Type","options":[{"label":"Label","value":"Value"}],"max":1,"name":"Name","relation":{"cardinality":"one","entity":"Entity","displayField":"Display Field"},"readonly":false,"label":"Label","min":1,"type":"Type","disabled":false,"field":"Field","required":false,"pattern":"Pattern","placeholder":"Placeholder"}]` */
-  fields?: EntityRow[];
-  /** Default: `"Submit Label"` */
-  submitLabel?: string;
-  /** Default: `{}` */
-  relationsData?: unknown;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `{}` */
-  relationsLoading?: unknown;
-  /** Default: `"vertical"` */
-  layout?: 'vertical' | 'horizontal' | 'inline';
-  /** Default: `"Config Path"` */
-  configPath?: string;
-  /** Default: `false` */
-  showCancel?: boolean;
   /** Default: `"On Cancel"` */
   onCancel?: string;
-  initialData?: unknown;
-  /** Default: `"On Submit"` */
-  onSubmit?: string;
-  /** Default: `"Cancel Label"` */
-  cancelLabel?: string;
-  error?: EntityRow;
-  /** Default: `[]` */
-  hiddenCalculations?: EntityRow[];
-  /** Default: `"create"` */
-  mode?: 'create' | 'edit';
-  /** Default: `{}` */
-  conditionalFields?: unknown;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `false` */
-  repeatable?: boolean;
-  /** Default: `[{"id":"Id","collapsible":false,"fields":[{"pattern":"Pattern","inputType":"Input Type","relation":{"displayField":"Display Field","entity":"Entity","cardinality":"one"},"min":1,"options":[{"label":"Label","value":"Value"}],"label":"Label","values":["Item"],"required":false,"type":"Type","readonly":false,"max":1,"placeholder":"Placeholder","name":"Name","field":"Field","disabled":false}],"title":"Title"}]` */
-  sections?: EntityRow[];
+  /** Default: `"Submit Label"` */
+  submitLabel?: string;
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
+  evaluationContext?: EntityRow;
+  /** Default: `[]` */
+  violationTriggers?: EntityRow[];
+  /** Default: `false` */
+  repeatable?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `[{"values":["Item"],"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"type":"Type","field":"Field","pattern":"Pattern","name":"Name","required":false,"placeholder":"Placeholder","label":"Label","options":[{"label":"Label","value":"Value"}],"inputType":"Input Type","disabled":false,"max":1,"readonly":false,"min":1}]` */
+  fields?: EntityRow[];
+  /** Default: `"create"` */
+  mode?: 'create' | 'edit';
+  /** Default: `[]` */
+  hiddenCalculations?: EntityRow[];
   /** Default: `true` */
   showSubmit?: boolean;
-  evaluationContext?: EntityRow;
+  /** Default: `{}` */
+  relationsLoading?: unknown;
+  initialData?: unknown;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `{}` */
+  relationsData?: unknown;
+  /** Default: `[{"id":"Id","collapsible":false,"fields":[{"min":1,"type":"Type","placeholder":"Placeholder","inputType":"Input Type","relation":{"cardinality":"one","entity":"Entity","displayField":"Display Field"},"options":[{"value":"Value","label":"Label"}],"values":["Item"],"label":"Label","name":"Name","required":false,"field":"Field","readonly":false,"disabled":false,"pattern":"Pattern","max":1}],"title":"Title"}]` */
+  sections?: EntityRow[];
+  /** Default: `"vertical"` */
+  layout?: 'vertical' | 'horizontal' | 'inline';
+  /** Default: `{}` */
+  conditionalFields?: unknown;
+  /** Default: `false` */
+  showCancel?: boolean;
+  /** Default: `"Cancel Label"` */
+  cancelLabel?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"On Submit"` */
+  onSubmit?: string;
+  /** Default: `"Config Path"` */
+  configPath?: string;
 }
 
 /**
@@ -321,41 +321,41 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   'render-ui',
                   'main',
                   {
-                    'sections': '@config.sections',
-                    'isLoading': '@config.isLoading',
+                    'showSubmit': '@config.showSubmit',
+                    'gap': '@config.gap',
+                    'submitLabel': '@config.submitLabel',
+                    'showCancel': '@config.showCancel',
+                    'type': 'form-section',
                     'title': '@config.title',
-                    'conditionalFields': '@config.conditionalFields',
-                    'cancelLabel': '@config.cancelLabel',
-                    'evaluationContext': '@config.evaluationContext',
-                    'cancelEvent': 'CANCEL',
+                    'relationsLoading': '@config.relationsLoading',
+                    'error': '@config.error',
                     'onFieldChange': 'FIELD_CHANGE',
+                    'entity': '@entity',
+                    'sections': '@config.sections',
+                    'className': '@config.className',
+                    'isLoading': '@config.isLoading',
+                    'conditionalFields': '@config.conditionalFields',
+                    'fields': '@config.fields',
+                    'violationTriggers': '@config.violationTriggers',
+                    'cancelEvent': 'CANCEL',
+                    'repeatable': '@config.repeatable',
+                    'onSubmit': '@config.onSubmit',
+                    'evaluationContext': '@config.evaluationContext',
+                    'cancelLabel': '@config.cancelLabel',
+                    'mode': '@config.mode',
+                    'submitEvent': 'SUBMIT',
+                    'onCancel': '@config.onCancel',
+                    'hiddenCalculations': '@config.hiddenCalculations',
                     'children': [
                       {
                         'content': 'Sample content',
                         'type': 'typography',
                       },
                     ],
-                    'entity': '@entity',
-                    'error': '@config.error',
                     'initialData': '@config.initialData',
-                    'violationTriggers': '@config.violationTriggers',
-                    'onCancel': '@config.onCancel',
-                    'submitLabel': '@config.submitLabel',
-                    'className': '@config.className',
-                    'onSubmit': '@config.onSubmit',
+                    'configPath': '@config.configPath',
                     'layout': '@config.layout',
                     'relationsData': '@config.relationsData',
-                    'configPath': '@config.configPath',
-                    'gap': '@config.gap',
-                    'repeatable': '@config.repeatable',
-                    'type': 'form-section',
-                    'mode': '@config.mode',
-                    'fields': '@config.fields',
-                    'showCancel': '@config.showCancel',
-                    'showSubmit': '@config.showSubmit',
-                    'relationsLoading': '@config.relationsLoading',
-                    'hiddenCalculations': '@config.hiddenCalculations',
-                    'submitEvent': 'SUBMIT',
                   },
                 ],
               ],
@@ -363,12 +363,59 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
           ],
         },
         'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
+          'onCancel': {
+            'type': 'string',
+            'default': 'On Cancel',
+            'label': 'On Cancel',
+            'description': 'Cancel event name for trait dispatch (emitted via eventBus as UI:{onCancel})',
             'tier': 'presentation',
+          },
+          'submitLabel': {
+            'type': 'string',
+            'default': 'Submit Label',
+            'label': 'Submit Label',
+            'description': 'Submit button label',
+            'tier': 'presentation',
+          },
+          'gap': {
+            'type': 'string',
+            'default': 'md',
+            'label': 'Gap',
+            'description': 'Gap between fields',
+            'tier': 'presentation',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
+          },
+          'evaluationContext': {
+            'type': 'FormSectionEvaluationContext',
+            'label': 'Evaluation Context',
+            'description': 'Context for S-expression evaluation - accepts flexible types from generated code',
+            'tier': 'presentation',
+            'properties': {
+              'entity': {
+                'name': 'entity',
+                'type': 'string',
+                'required': false,
+              },
+              'localVariables': {
+                'name': 'localVariables',
+                'type': 'string',
+                'required': false,
+              },
+              'formValues': {
+                'name': 'formValues',
+                'type': 'string',
+                'required': true,
+              },
+              'globalVariables': {
+                'name': 'globalVariables',
+                'type': 'string',
+                'required': true,
+              },
+            },
           },
           'violationTriggers': {
             'type': '[FormSectionViolationTriggersItem]',
@@ -384,16 +431,26 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   'type': 'object',
                   'required': true,
                 },
-                'fieldId': {
-                  'name': 'fieldId',
-                  'type': 'string',
-                  'required': false,
-                },
                 'violation': {
                   'name': 'violation',
                   'type': 'object',
                   'required': true,
                   'properties': {
+                    'message': {
+                      'name': 'message',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'law': {
+                      'name': 'law',
+                      'type': 'string',
+                      'required': true,
+                    },
+                    'article': {
+                      'name': 'article',
+                      'type': 'string',
+                      'required': true,
+                    },
                     'actionType': {
                       'name': 'actionType',
                       'type': 'string',
@@ -404,23 +461,55 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                         'penalty',
                       ],
                     },
-                    'message': {
-                      'name': 'message',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'article': {
-                      'name': 'article',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'law': {
-                      'name': 'law',
-                      'type': 'string',
-                      'required': true,
-                    },
                   },
                 },
+                'fieldId': {
+                  'name': 'fieldId',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'repeatable': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Repeatable',
+            'description': 'Whether the form supports repeatable entries',
+            'tier': 'presentation',
+          },
+          'isLoading': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Is Loading',
+            'description': 'Loading state',
+            'tier': 'presentation',
+          },
+          'error': {
+            'type': 'FormSectionError',
+            'label': 'Error',
+            'description': 'Error state',
+            'tier': 'presentation',
+            'properties': {
+              'message': {
+                'name': 'message',
+                'type': 'string',
+                'required': true,
+              },
+              'stack': {
+                'name': 'stack',
+                'type': 'string',
+                'required': false,
+              },
+              'name': {
+                'name': 'name',
+                'type': 'string',
+                'required': false,
+              },
+              'code': {
+                'name': 'code',
+                'type': 'string',
+                'required': false,
               },
             },
           },
@@ -431,29 +520,29 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 'values': [
                   'Item',
                 ],
-                'inputType': 'Input Type',
+                'relation': {
+                  'cardinality': 'one',
+                  'displayField': 'Display Field',
+                  'entity': 'Entity',
+                },
+                'type': 'Type',
+                'field': 'Field',
+                'pattern': 'Pattern',
+                'name': 'Name',
+                'required': false,
+                'placeholder': 'Placeholder',
+                'label': 'Label',
                 'options': [
                   {
                     'label': 'Label',
                     'value': 'Value',
                   },
                 ],
-                'max': 1,
-                'name': 'Name',
-                'relation': {
-                  'cardinality': 'one',
-                  'entity': 'Entity',
-                  'displayField': 'Display Field',
-                },
-                'readonly': false,
-                'label': 'Label',
-                'min': 1,
-                'type': 'Type',
+                'inputType': 'Input Type',
                 'disabled': false,
-                'field': 'Field',
-                'required': false,
-                'pattern': 'Pattern',
-                'placeholder': 'Placeholder',
+                'max': 1,
+                'readonly': false,
+                'min': 1,
               },
             ],
             'label': 'Fields',
@@ -462,6 +551,11 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'items': {
               'type': 'object',
               'properties': {
+                'min': {
+                  'name': 'min',
+                  'type': 'number',
+                  'required': false,
+                },
                 'values': {
                   'name': 'values',
                   'type': 'array',
@@ -470,33 +564,13 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'type': 'string',
                   },
                 },
-                'options': {
-                  'name': 'options',
-                  'type': 'array',
-                  'required': false,
-                  'items': {
-                    'type': 'object',
-                    'properties': {
-                      'value': {
-                        'name': 'value',
-                        'type': 'string',
-                        'required': true,
-                      },
-                      'label': {
-                        'name': 'label',
-                        'type': 'string',
-                        'required': true,
-                      },
-                    },
-                  },
-                },
-                'field': {
-                  'name': 'field',
+                'placeholder': {
+                  'name': 'placeholder',
                   'type': 'string',
                   'required': false,
                 },
-                'name': {
-                  'name': 'name',
+                'defaultValue': {
+                  'name': 'defaultValue',
                   'type': 'string',
                   'required': false,
                 },
@@ -505,14 +579,24 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   'type': 'string',
                   'required': false,
                 },
-                'validation': {
-                  'name': 'validation',
-                  'type': 'string',
-                  'required': false,
-                },
                 'disabled': {
                   'name': 'disabled',
                   'type': 'boolean',
+                  'required': false,
+                },
+                'field': {
+                  'name': 'field',
+                  'type': 'string',
+                  'required': false,
+                },
+                'required': {
+                  'name': 'required',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
                   'required': false,
                 },
                 'relation': {
@@ -520,11 +604,6 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   'type': 'object',
                   'required': false,
                   'properties': {
-                    'displayField': {
-                      'name': 'displayField',
-                      'type': 'string',
-                      'required': false,
-                    },
                     'entity': {
                       'name': 'entity',
                       'type': 'string',
@@ -539,222 +618,62 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                         'many',
                       ],
                     },
+                    'displayField': {
+                      'name': 'displayField',
+                      'type': 'string',
+                      'required': false,
+                    },
                   },
-                },
-                'max': {
-                  'name': 'max',
-                  'type': 'number',
-                  'required': false,
-                },
-                'defaultValue': {
-                  'name': 'defaultValue',
-                  'type': 'string',
-                  'required': false,
-                },
-                'type': {
-                  'name': 'type',
-                  'type': 'string',
-                  'required': false,
-                },
-                'placeholder': {
-                  'name': 'placeholder',
-                  'type': 'string',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': false,
-                },
-                'required': {
-                  'name': 'required',
-                  'type': 'boolean',
-                  'required': false,
                 },
                 'inputType': {
                   'name': 'inputType',
                   'type': 'string',
                   'required': false,
                 },
-                'min': {
-                  'name': 'min',
+                'max': {
+                  'name': 'max',
                   'type': 'number',
+                  'required': false,
+                },
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
+                  'required': false,
+                },
+                'options': {
+                  'name': 'options',
+                  'type': 'array',
+                  'required': false,
+                  'items': {
+                    'type': 'object',
+                    'properties': {
+                      'label': {
+                        'name': 'label',
+                        'type': 'string',
+                        'required': true,
+                      },
+                      'value': {
+                        'name': 'value',
+                        'type': 'string',
+                        'required': true,
+                      },
+                    },
+                  },
+                },
+                'label': {
+                  'name': 'label',
+                  'type': 'string',
+                  'required': false,
+                },
+                'validation': {
+                  'name': 'validation',
+                  'type': 'string',
                   'required': false,
                 },
                 'readonly': {
                   'name': 'readonly',
                   'type': 'boolean',
                   'required': false,
-                },
-              },
-            },
-          },
-          'submitLabel': {
-            'type': 'string',
-            'default': 'Submit Label',
-            'label': 'Submit Label',
-            'description': 'Submit button label',
-            'tier': 'presentation',
-          },
-          'relationsData': {
-            'type': 'Map<string,[FormSectionRelationsDataValueItem]>',
-            'default': {},
-            'label': 'Relations Data',
-            'description': 'Relation data props',
-            'tier': 'presentation',
-            'items': {
-              'type': 'array',
-              'items': {
-                'type': 'object',
-                'properties': {
-                  'description': {
-                    'name': 'description',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'label': {
-                    'name': 'label',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'disabled': {
-                    'name': 'disabled',
-                    'type': 'boolean',
-                    'required': false,
-                  },
-                  'value': {
-                    'name': 'value',
-                    'type': 'string',
-                    'required': true,
-                  },
-                },
-              },
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'relationsLoading': {
-            'type': 'Map<string,boolean>',
-            'default': {},
-            'label': 'Relations Loading',
-            'description': 'Loading state for relation data: { fieldName: boolean }',
-            'tier': 'presentation',
-            'items': {
-              'type': 'boolean',
-            },
-          },
-          'layout': {
-            'type': 'string',
-            'default': 'vertical',
-            'label': 'Layout',
-            'description': 'Form layout',
-            'tier': 'presentation',
-            'values': [
-              'vertical',
-              'horizontal',
-              'inline',
-            ],
-          },
-          'configPath': {
-            'type': 'string',
-            'default': 'Config Path',
-            'label': 'Config Path',
-            'description': 'Config path for form configuration (schema-driven)',
-            'tier': 'presentation',
-          },
-          'showCancel': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Show Cancel',
-            'description': 'Show cancel button (defaults to true for schema forms)',
-            'tier': 'presentation',
-          },
-          'onCancel': {
-            'type': 'string',
-            'default': 'On Cancel',
-            'label': 'On Cancel',
-            'description': 'Cancel event name for trait dispatch (emitted via eventBus as UI:{onCancel})',
-            'tier': 'presentation',
-          },
-          'initialData': {
-            'type': 'json',
-            'label': 'Initial Data',
-            'description': 'Initial form data',
-            'tier': 'presentation',
-          },
-          'onSubmit': {
-            'type': 'string',
-            'default': 'On Submit',
-            'label': 'On Submit',
-            'description': 'Submit event name for trait dispatch (emitted via eventBus as UI:{onSubmit})',
-            'tier': 'presentation',
-          },
-          'cancelLabel': {
-            'type': 'string',
-            'default': 'Cancel Label',
-            'label': 'Cancel Label',
-            'description': 'Cancel button label (if provided, shows cancel button)',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'FormSectionError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'hiddenCalculations': {
-            'type': '[FormSectionHiddenCalculationsItem]',
-            'default': [],
-            'label': 'Hidden Calculations',
-            'description': 'Hidden calculations that emit GLOBAL_VARIABLE_SET on field change (boolean true means enabled but config loaded separately)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'variableName': {
-                  'name': 'variableName',
-                  'type': 'string',
-                  'required': true,
-                },
-                'expression': {
-                  'name': 'expression',
-                  'type': 'object',
-                  'required': true,
-                },
-                'triggerFields': {
-                  'name': 'triggerFields',
-                  'type': 'array',
-                  'required': true,
-                  'items': {
-                    'type': 'string',
-                  },
                 },
               },
             },
@@ -770,15 +689,58 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
               'edit',
             ],
           },
-          'conditionalFields': {
-            'type': 'Map<string,SExpr>',
-            'default': {},
-            'label': 'Conditional Fields',
-            'description': 'Inspection form extensions',
+          'hiddenCalculations': {
+            'type': '[FormSectionHiddenCalculationsItem]',
+            'default': [],
+            'label': 'Hidden Calculations',
+            'description': 'Hidden calculations that emit GLOBAL_VARIABLE_SET on field change (boolean true means enabled but config loaded separately)',
             'tier': 'presentation',
             'items': {
               'type': 'object',
+              'properties': {
+                'triggerFields': {
+                  'name': 'triggerFields',
+                  'type': 'array',
+                  'required': true,
+                  'items': {
+                    'type': 'string',
+                  },
+                },
+                'variableName': {
+                  'name': 'variableName',
+                  'type': 'string',
+                  'required': true,
+                },
+                'expression': {
+                  'name': 'expression',
+                  'type': 'object',
+                  'required': true,
+                },
+              },
             },
+          },
+          'showSubmit': {
+            'type': 'boolean',
+            'default': true,
+            'label': 'Show Submit',
+            'description': 'Show submit button (defaults to true for schema forms). Set false when a parent atom owns the submit action externally (e.g. wizard footers).',
+            'tier': 'presentation',
+          },
+          'relationsLoading': {
+            'type': 'Map<string,boolean>',
+            'default': {},
+            'label': 'Relations Loading',
+            'description': 'Loading state for relation data: { fieldName: boolean }',
+            'tier': 'presentation',
+            'items': {
+              'type': 'boolean',
+            },
+          },
+          'initialData': {
+            'type': 'json',
+            'label': 'Initial Data',
+            'description': 'Initial form data',
+            'tier': 'presentation',
           },
           'title': {
             'type': 'string',
@@ -787,12 +749,40 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'description': 'Form title (used by ModalSlot to extract title)',
             'tier': 'presentation',
           },
-          'repeatable': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Repeatable',
-            'description': 'Whether the form supports repeatable entries',
+          'relationsData': {
+            'type': 'Map<string,[FormSectionRelationsDataValueItem]>',
+            'default': {},
+            'label': 'Relations Data',
+            'description': 'Relation data props',
             'tier': 'presentation',
+            'items': {
+              'type': 'array',
+              'items': {
+                'type': 'object',
+                'properties': {
+                  'disabled': {
+                    'name': 'disabled',
+                    'type': 'boolean',
+                    'required': false,
+                  },
+                  'value': {
+                    'name': 'value',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'label': {
+                    'name': 'label',
+                    'type': 'string',
+                    'required': true,
+                  },
+                  'description': {
+                    'name': 'description',
+                    'type': 'string',
+                    'required': false,
+                  },
+                },
+              },
+            },
           },
           'sections': {
             'type': '[FormSectionSectionsItem]',
@@ -802,32 +792,32 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 'collapsible': false,
                 'fields': [
                   {
-                    'pattern': 'Pattern',
+                    'min': 1,
+                    'type': 'Type',
+                    'placeholder': 'Placeholder',
                     'inputType': 'Input Type',
                     'relation': {
-                      'displayField': 'Display Field',
-                      'entity': 'Entity',
                       'cardinality': 'one',
+                      'entity': 'Entity',
+                      'displayField': 'Display Field',
                     },
-                    'min': 1,
                     'options': [
                       {
-                        'label': 'Label',
                         'value': 'Value',
+                        'label': 'Label',
                       },
                     ],
-                    'label': 'Label',
                     'values': [
                       'Item',
                     ],
-                    'required': false,
-                    'type': 'Type',
-                    'readonly': false,
-                    'max': 1,
-                    'placeholder': 'Placeholder',
+                    'label': 'Label',
                     'name': 'Name',
+                    'required': false,
                     'field': 'Field',
+                    'readonly': false,
                     'disabled': false,
+                    'pattern': 'Pattern',
+                    'max': 1,
                   },
                 ],
                 'title': 'Title',
@@ -839,6 +829,21 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'items': {
               'type': 'object',
               'properties': {
+                'collapsible': {
+                  'name': 'collapsible',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'title': {
+                  'name': 'title',
+                  'type': 'string',
+                  'required': true,
+                },
+                'condition': {
+                  'name': 'condition',
+                  'type': 'object',
+                  'required': false,
+                },
                 'fields': {
                   'name': 'fields',
                   'type': 'array',
@@ -846,78 +851,13 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                   'items': {
                     'type': 'object',
                     'properties': {
-                      'pattern': {
-                        'name': 'pattern',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'label': {
-                        'name': 'label',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'inputType': {
-                        'name': 'inputType',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'min': {
-                        'name': 'min',
-                        'type': 'number',
-                        'required': false,
-                      },
-                      'options': {
-                        'name': 'options',
-                        'type': 'array',
-                        'required': false,
-                        'items': {
-                          'type': 'object',
-                          'properties': {
-                            'label': {
-                              'name': 'label',
-                              'type': 'string',
-                              'required': true,
-                            },
-                            'value': {
-                              'name': 'value',
-                              'type': 'string',
-                              'required': true,
-                            },
-                          },
-                        },
-                      },
-                      'type': {
-                        'name': 'type',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'max': {
-                        'name': 'max',
-                        'type': 'number',
-                        'required': false,
-                      },
-                      'validation': {
-                        'name': 'validation',
-                        'type': 'string',
-                        'required': false,
-                      },
                       'required': {
                         'name': 'required',
                         'type': 'boolean',
                         'required': false,
                       },
-                      'defaultValue': {
-                        'name': 'defaultValue',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'name': {
-                        'name': 'name',
-                        'type': 'string',
-                        'required': false,
-                      },
-                      'field': {
-                        'name': 'field',
+                      'type': {
+                        'name': 'type',
                         'type': 'string',
                         'required': false,
                       },
@@ -934,14 +874,74 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                         'type': 'string',
                         'required': false,
                       },
+                      'inputType': {
+                        'name': 'inputType',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'options': {
+                        'name': 'options',
+                        'type': 'array',
+                        'required': false,
+                        'items': {
+                          'type': 'object',
+                          'properties': {
+                            'value': {
+                              'name': 'value',
+                              'type': 'string',
+                              'required': true,
+                            },
+                            'label': {
+                              'name': 'label',
+                              'type': 'string',
+                              'required': true,
+                            },
+                          },
+                        },
+                      },
+                      'disabled': {
+                        'name': 'disabled',
+                        'type': 'boolean',
+                        'required': false,
+                      },
+                      'pattern': {
+                        'name': 'pattern',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'validation': {
+                        'name': 'validation',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'max': {
+                        'name': 'max',
+                        'type': 'number',
+                        'required': false,
+                      },
                       'readonly': {
                         'name': 'readonly',
                         'type': 'boolean',
                         'required': false,
                       },
-                      'disabled': {
-                        'name': 'disabled',
-                        'type': 'boolean',
+                      'field': {
+                        'name': 'field',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'label': {
+                        'name': 'label',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'defaultValue': {
+                        'name': 'defaultValue',
+                        'type': 'string',
+                        'required': false,
+                      },
+                      'min': {
+                        'name': 'min',
+                        'type': 'number',
                         'required': false,
                       },
                       'relation': {
@@ -954,11 +954,6 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                             'type': 'string',
                             'required': false,
                           },
-                          'entity': {
-                            'name': 'entity',
-                            'type': 'string',
-                            'required': true,
-                          },
                           'cardinality': {
                             'name': 'cardinality',
                             'type': 'string',
@@ -968,80 +963,85 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                               'many',
                             ],
                           },
+                          'entity': {
+                            'name': 'entity',
+                            'type': 'string',
+                            'required': true,
+                          },
                         },
+                      },
+                      'name': {
+                        'name': 'name',
+                        'type': 'string',
+                        'required': false,
                       },
                     },
                   },
-                },
-                'condition': {
-                  'name': 'condition',
-                  'type': 'object',
-                  'required': false,
                 },
                 'id': {
                   'name': 'id',
                   'type': 'string',
                   'required': true,
                 },
-                'collapsible': {
-                  'name': 'collapsible',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'title': {
-                  'name': 'title',
-                  'type': 'string',
-                  'required': true,
-                },
               },
             },
           },
-          'gap': {
+          'layout': {
             'type': 'string',
-            'default': 'md',
-            'label': 'Gap',
-            'description': 'Gap between fields',
+            'default': 'vertical',
+            'label': 'Layout',
+            'description': 'Form layout',
             'tier': 'presentation',
             'values': [
-              'sm',
-              'md',
-              'lg',
+              'vertical',
+              'horizontal',
+              'inline',
             ],
           },
-          'showSubmit': {
+          'conditionalFields': {
+            'type': 'Map<string,SExpr>',
+            'default': {},
+            'label': 'Conditional Fields',
+            'description': 'Inspection form extensions',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+            },
+          },
+          'showCancel': {
             'type': 'boolean',
-            'default': true,
-            'label': 'Show Submit',
-            'description': 'Show submit button (defaults to true for schema forms). Set false when a parent atom owns the submit action externally (e.g. wizard footers).',
+            'default': false,
+            'label': 'Show Cancel',
+            'description': 'Show cancel button (defaults to true for schema forms)',
             'tier': 'presentation',
           },
-          'evaluationContext': {
-            'type': 'FormSectionEvaluationContext',
-            'label': 'Evaluation Context',
-            'description': 'Context for S-expression evaluation - accepts flexible types from generated code',
+          'cancelLabel': {
+            'type': 'string',
+            'default': 'Cancel Label',
+            'label': 'Cancel Label',
+            'description': 'Cancel button label (if provided, shows cancel button)',
             'tier': 'presentation',
-            'properties': {
-              'globalVariables': {
-                'name': 'globalVariables',
-                'type': 'string',
-                'required': true,
-              },
-              'formValues': {
-                'name': 'formValues',
-                'type': 'string',
-                'required': true,
-              },
-              'entity': {
-                'name': 'entity',
-                'type': 'string',
-                'required': false,
-              },
-              'localVariables': {
-                'name': 'localVariables',
-                'type': 'string',
-                'required': false,
-              },
-            },
+          },
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
+          'onSubmit': {
+            'type': 'string',
+            'default': 'On Submit',
+            'label': 'On Submit',
+            'description': 'Submit event name for trait dispatch (emitted via eventBus as UI:{onSubmit})',
+            'tier': 'presentation',
+          },
+          'configPath': {
+            'type': 'string',
+            'default': 'Config Path',
+            'label': 'Config Path',
+            'description': 'Config path for form configuration (schema-driven)',
+            'tier': 'presentation',
           },
         },
         'scope': 'instance',

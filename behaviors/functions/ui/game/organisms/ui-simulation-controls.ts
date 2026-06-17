@@ -84,10 +84,10 @@ export interface StdUiSimulationControlsParameterChangePayload {
 export interface StdUiSimulationControlsConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
-  running?: boolean;
   /** Default: `0` */
   speed?: number;
+  /** Default: `false` */
+  running?: boolean;
   /** Default: `{}` */
   parameters?: unknown;
 }
@@ -359,17 +359,17 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'render-ui',
                   'main',
                   {
-                    'running': '@config.running',
-                    'onStep': 'STEP',
-                    'onReset': 'RESET',
-                    'type': 'simulation-controls',
-                    'onParameterChange': 'PARAMETER_CHANGE',
-                    'onPause': 'PAUSE',
-                    'parameters': '@config.parameters',
-                    'speed': '@entity.speed',
                     'onSpeedChange': 'SPEED_CHANGE',
-                    'className': '@config.className',
+                    'running': '@config.running',
                     'onPlay': 'PLAY',
+                    'parameters': '@config.parameters',
+                    'onStep': 'STEP',
+                    'onParameterChange': 'PARAMETER_CHANGE',
+                    'className': '@config.className',
+                    'type': 'simulation-controls',
+                    'onPause': 'PAUSE',
+                    'onReset': 'RESET',
+                    'speed': '@entity.speed',
                   },
                 ],
               ],
@@ -388,17 +388,17 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'render-ui',
                   'main',
                   {
-                    'onPause': 'PAUSE',
-                    'onReset': 'RESET',
-                    'onParameterChange': 'PARAMETER_CHANGE',
-                    'parameters': '@config.parameters',
-                    'onPlay': 'PLAY',
                     'running': '@config.running',
-                    'onStep': 'STEP',
                     'speed': '@entity.speed',
                     'onSpeedChange': 'SPEED_CHANGE',
+                    'onReset': 'RESET',
+                    'onStep': 'STEP',
+                    'onPause': 'PAUSE',
+                    'onParameterChange': 'PARAMETER_CHANGE',
+                    'onPlay': 'PLAY',
                     'type': 'simulation-controls',
                     'className': '@config.className',
+                    'parameters': '@config.parameters',
                   },
                 ],
               ],
@@ -413,18 +413,18 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
             'description': 'className prop',
             'tier': 'presentation',
           },
-          'running': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Running',
-            'description': 'running prop',
-            'tier': 'presentation',
-          },
           'speed': {
             'type': 'number',
             'default': 0,
             'label': 'Speed',
             'description': 'speed prop',
+            'tier': 'presentation',
+          },
+          'running': {
+            'type': 'boolean',
+            'default': false,
+            'label': 'Running',
+            'description': 'running prop',
             'tier': 'presentation',
           },
           'parameters': {
@@ -436,8 +436,8 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
             'items': {
               'type': 'object',
               'properties': {
-                'value': {
-                  'name': 'value',
+                'max': {
+                  'name': 'max',
                   'type': 'number',
                   'required': true,
                 },
@@ -451,13 +451,13 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'type': 'string',
                   'required': true,
                 },
-                'min': {
-                  'name': 'min',
+                'value': {
+                  'name': 'value',
                   'type': 'number',
                   'required': true,
                 },
-                'max': {
-                  'name': 'max',
+                'min': {
+                  'name': 'min',
                   'type': 'number',
                   'required': true,
                 },

@@ -41,16 +41,16 @@ export type StdUiGameHudEventKey = 'INIT';
 export interface StdUiGameHudConfig {
   /** Default: `true` */
   transparent?: boolean;
-  /** Default: `"top"` */
-  position?: 'top' | 'bottom' | 'corners';
-  /** Default: `[{"icon":"circle","position":"Position","max":1,"format":"Format","bind":"Bind","label":"Label","type":"Type","value":"Value"}]` */
-  elements?: EntityRow[];
-  /** Default: `[{"field":"Field","source":"Source"}]` */
-  items?: EntityRow[];
-  /** Default: `[{"field":"Field","source":"Source"}]` */
-  stats?: EntityRow[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `[{"source":"Source","field":"Field"}]` */
+  items?: EntityRow[];
+  /** Default: `"top"` */
+  position?: 'top' | 'bottom' | 'corners';
+  /** Default: `[{"field":"Field","source":"Source"}]` */
+  stats?: EntityRow[];
+  /** Default: `[{"label":"Label","bind":"Bind","value":"Value","format":"Format","position":"Position","max":1,"icon":"circle","type":"Type"}]` */
+  elements?: EntityRow[];
   /** Default: `""` */
   className?: string;
 }

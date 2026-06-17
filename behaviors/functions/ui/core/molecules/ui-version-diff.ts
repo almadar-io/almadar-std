@@ -60,18 +60,18 @@ export interface StdUiVersionDiffRevertPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiVersionDiffConfig {
-  /** Default: `[{"label":"Label","timestamp":"Timestamp","author":"Author","id":"Id","content":"Content"}]` */
-  revisions?: EntityRow[];
-  /** Default: `"side-by-side"` */
-  view?: 'side-by-side' | 'inline';
-  /** Default: `"After Id"` */
-  afterId?: string;
-  /** Default: `"Language"` */
-  language?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `"Before Id"` */
   beforeId?: string;
+  /** Default: `"Language"` */
+  language?: string;
+  /** Default: `"After Id"` */
+  afterId?: string;
+  /** Default: `[{"content":"Content","timestamp":"Timestamp","author":"Author","label":"Label","id":"Id"}]` */
+  revisions?: EntityRow[];
+  /** Default: `"side-by-side"` */
+  view?: 'side-by-side' | 'inline';
 }
 
 /**

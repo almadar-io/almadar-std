@@ -39,32 +39,32 @@ export type StdUiAnimatedGraphicEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAnimatedGraphicConfig {
-  /** Default: `"Width"` */
-  width?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `1200` */
+  duration?: number;
+  /** Default: `"Width"` */
+  width?: string;
+  /** Default: `"Fill Color"` */
+  fillColor?: string;
+  /** Default: `"Stroke Color"` */
+  strokeColor?: string;
+  /** Default: `"Alt"` */
+  alt?: string;
+  /** Default: `"Height"` */
+  height?: string;
+  /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
+  easing?: string;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  src?: unknown;
   /** Default: `"Svg Content"` */
   svgContent?: string;
   /** Default: `"draw"` */
   animation?: 'draw' | 'fill' | 'pulse' | 'morph';
-  /** Default: `false` */
-  animate?: boolean;
-  /** Default: `"Height"` */
-  height?: string;
-  /** Default: `"Stroke Color"` */
-  strokeColor?: string;
-  /** Default: `"Fill Color"` */
-  fillColor?: string;
-  /** Default: `"Alt"` */
-  alt?: string;
-  /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
-  easing?: string;
-  /** Default: `1200` */
-  duration?: number;
   /** Default: `0` */
   delay?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  src?: unknown;
+  /** Default: `false` */
+  animate?: boolean;
 }
 
 /**

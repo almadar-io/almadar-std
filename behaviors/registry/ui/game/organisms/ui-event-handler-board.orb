@@ -106,22 +106,22 @@
                     "render-ui",
                     "main",
                     {
-                      "error": "@config.error",
-                      "entity": "@entity",
-                      "playEvent": "PLAY",
-                      "stepDurationMs": "@config.stepDurationMs",
-                      "totalCount": "@config.totalCount",
-                      "activeFilters": "@config.activeFilters",
                       "page": "@config.pageProp",
+                      "isLoading": "@config.isLoading",
                       "pageSize": "@config.pageSize",
-                      "completeEvent": "COMPLETE",
-                      "sortBy": "@config.sortBy",
                       "className": "@config.className",
+                      "stepDurationMs": "@config.stepDurationMs",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "entity": "@entity",
+                      "activeFilters": "@config.activeFilters",
+                      "error": "@config.error",
+                      "playEvent": "PLAY",
                       "selectedIds": "@config.selectedIds",
                       "type": "event-handler-board",
-                      "searchValue": "@config.searchValue",
-                      "sortDirection": "@config.sortDirection",
-                      "isLoading": "@config.isLoading"
+                      "completeEvent": "COMPLETE",
+                      "totalCount": "@config.totalCount",
+                      "searchValue": "@config.searchValue"
                     }
                   ]
                 ]
@@ -129,12 +129,33 @@
             ]
           },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
+            "error": {
+              "type": "EventHandlerBoardError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                }
+              }
             },
             "totalCount": {
               "type": "number",
@@ -150,17 +171,32 @@
               "description": "Playback speed in ms per event",
               "tier": "presentation"
             },
-            "sortBy": {
+            "searchValue": {
               "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
               "tier": "presentation"
             },
             "activeFilters": {
               "type": "json",
               "label": "Active Filters",
               "description": "Active filters",
+              "tier": "presentation"
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
             },
             "pageSize": {
@@ -170,39 +206,21 @@
               "description": "Number of items per page",
               "tier": "presentation"
             },
-            "error": {
-              "type": "EventHandlerBoardError",
-              "label": "Error",
-              "description": "Error state (UiError)",
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
               "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                }
+              "items": {
+                "type": "string"
               }
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "sortDirection": {
@@ -216,29 +234,11 @@
                 "desc"
               ]
             },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "searchValue": {
+            "sortBy": {
               "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
+              "default": "Sort By",
+              "label": "Sort By",
+              "description": "Current sort field",
               "tier": "presentation"
             }
           },

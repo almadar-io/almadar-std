@@ -82,28 +82,28 @@
                     "render-ui",
                     "main",
                     {
-                      "selectedItems": "@config.selectedItems",
+                      "sortDirection": "@config.sortDirection",
+                      "selectable": "@config.selectable",
                       "showUpload": "@config.showUpload",
+                      "type": "media-gallery",
+                      "className": "@config.className",
+                      "columns": "@config.columns",
+                      "selectedIds": "@config.selectedIds",
+                      "activeFilters": "@config.activeFilters",
+                      "aspectRatio": "@config.aspectRatio",
+                      "isLoading": "@config.isLoading",
+                      "pageSize": "@config.pageSize",
+                      "error": "@config.error",
+                      "selectedItems": "@config.selectedItems",
+                      "page": "@config.pageProp",
+                      "totalCount": "@config.totalCount",
+                      "selectionEvent": "SELECTION",
+                      "items": "@config.items",
+                      "actions": "@config.actions",
+                      "sortBy": "@config.sortBy",
                       "title": "@config.title",
                       "entity": "@entity",
-                      "items": "@config.items",
-                      "pageSize": "@config.pageSize",
-                      "type": "media-gallery",
-                      "selectable": "@config.selectable",
-                      "totalCount": "@config.totalCount",
-                      "error": "@config.error",
-                      "searchValue": "@config.searchValue",
-                      "selectionEvent": "SELECTION",
-                      "actions": "@config.actions",
-                      "isLoading": "@config.isLoading",
-                      "page": "@config.pageProp",
-                      "sortDirection": "@config.sortDirection",
-                      "activeFilters": "@config.activeFilters",
-                      "className": "@config.className",
-                      "sortBy": "@config.sortBy",
-                      "selectedIds": "@config.selectedIds",
-                      "columns": "@config.columns",
-                      "aspectRatio": "@config.aspectRatio"
+                      "searchValue": "@config.searchValue"
                     }
                   ]
                 ]
@@ -111,66 +111,54 @@
             ]
           },
           "config": {
-            "items": {
-              "type": "[MediaGalleryItemsItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "alt": "Alt",
-                  "mediaType": "image",
-                  "thumbnail": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
-                  "caption": "Caption",
-                  "fileSize": "File Size",
-                  "src": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"
-                }
-              ],
-              "label": "Items",
-              "description": "Media items",
+            "pageSize": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page Size",
+              "description": "Number of items per page",
+              "tier": "presentation"
+            },
+            "selectedItems": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Items",
+              "description": "Selected item IDs",
               "tier": "presentation",
               "items": {
-                "type": "object",
-                "properties": {
-                  "alt": {
-                    "name": "alt",
-                    "type": "string",
-                    "required": false
-                  },
-                  "thumbnail": {
-                    "name": "thumbnail",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": false
-                  },
-                  "src": {
-                    "name": "src",
-                    "type": "string",
-                    "required": false
-                  },
-                  "caption": {
-                    "name": "caption",
-                    "type": "string",
-                    "required": false
-                  },
-                  "fileSize": {
-                    "name": "fileSize",
-                    "type": "string",
-                    "required": false
-                  },
-                  "mediaType": {
-                    "name": "mediaType",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "image",
-                      "video"
-                    ]
-                  }
-                }
+                "type": "string"
               }
+            },
+            "searchValue": {
+              "type": "string",
+              "default": "Search Value",
+              "label": "Search Value",
+              "description": "Current search query value",
+              "tier": "presentation"
+            },
+            "selectedIds": {
+              "type": "[string]",
+              "default": [],
+              "label": "Selected Ids",
+              "description": "Currently selected item IDs",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "pageProp": {
+              "type": "number",
+              "default": 0.0,
+              "label": "Page",
+              "description": "Current page number",
+              "synonyms": "page",
+              "tier": "presentation"
+            },
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
+              "tier": "presentation"
             },
             "sortBy": {
               "type": "string",
@@ -179,31 +167,39 @@
               "description": "Current sort field",
               "tier": "presentation"
             },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Gallery title",
-              "tier": "presentation"
+            "error": {
+              "type": "MediaGalleryError",
+              "label": "Error",
+              "description": "Error state (UiError)",
+              "tier": "presentation",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                }
+              }
             },
-            "columns": {
-              "type": "number",
-              "default": 3.0,
-              "label": "Columns",
-              "description": "Column count",
-              "tier": "presentation"
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+            "selectable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Selectable",
+              "description": "Enable item selection",
               "tier": "presentation"
             },
             "sortDirection": {
@@ -217,33 +213,92 @@
                 "desc"
               ]
             },
-            "pageSize": {
+            "totalCount": {
               "type": "number",
               "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
+              "label": "Total Count",
+              "description": "Total number of items",
               "tier": "presentation"
             },
-            "pageProp": {
+            "items": {
+              "type": "[MediaGalleryItemsItem]",
+              "default": [
+                {
+                  "src": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+                  "thumbnail": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+                  "caption": "Caption",
+                  "fileSize": "File Size",
+                  "id": "Id",
+                  "alt": "Alt",
+                  "mediaType": "image"
+                }
+              ],
+              "label": "Items",
+              "description": "Media items",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "fileSize": {
+                    "name": "fileSize",
+                    "type": "string",
+                    "required": false
+                  },
+                  "mediaType": {
+                    "name": "mediaType",
+                    "type": "string",
+                    "required": false,
+                    "values": [
+                      "image",
+                      "video"
+                    ]
+                  },
+                  "alt": {
+                    "name": "alt",
+                    "type": "string",
+                    "required": false
+                  },
+                  "id": {
+                    "name": "id",
+                    "type": "string",
+                    "required": false
+                  },
+                  "src": {
+                    "name": "src",
+                    "type": "string",
+                    "required": false
+                  },
+                  "thumbnail": {
+                    "name": "thumbnail",
+                    "type": "string",
+                    "required": false
+                  },
+                  "caption": {
+                    "name": "caption",
+                    "type": "string",
+                    "required": false
+                  }
+                }
+              }
+            },
+            "activeFilters": {
+              "type": "json",
+              "label": "Active Filters",
+              "description": "Active filters",
+              "tier": "presentation"
+            },
+            "columns": {
               "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
+              "default": 3.0,
+              "label": "Columns",
+              "description": "Column count",
               "tier": "presentation"
             },
-            "selectable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Selectable",
-              "description": "Enable item selection",
-              "tier": "presentation"
-            },
-            "searchValue": {
+            "className": {
               "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
               "tier": "presentation"
             },
             "showUpload": {
@@ -251,6 +306,25 @@
               "default": false,
               "label": "Show Upload",
               "description": "Show upload button",
+              "tier": "presentation"
+            },
+            "aspectRatio": {
+              "type": "string",
+              "default": "square",
+              "label": "Aspect Ratio",
+              "description": "Aspect ratio for thumbnails",
+              "tier": "presentation",
+              "values": [
+                "square",
+                "landscape",
+                "portrait"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "default": "Title",
+              "label": "Title",
+              "description": "Gallery title",
               "tier": "presentation"
             },
             "actions": {
@@ -268,18 +342,8 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
                   "event": {
                     "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
                     "type": "string",
                     "required": false
                   },
@@ -292,83 +356,19 @@
                       "secondary",
                       "ghost"
                     ]
+                  },
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
                   }
                 }
               }
-            },
-            "error": {
-              "type": "MediaGalleryError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "aspectRatio": {
-              "type": "string",
-              "default": "square",
-              "label": "Aspect Ratio",
-              "description": "Aspect ratio for thumbnails",
-              "tier": "presentation",
-              "values": [
-                "square",
-                "landscape",
-                "portrait"
-              ]
-            },
-            "selectedItems": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Items",
-              "description": "Selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
             }
           },
           "scope": "instance"

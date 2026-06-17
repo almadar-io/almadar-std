@@ -48,14 +48,14 @@ export interface StdUiTransitionArrowClickPayload {
 export interface StdUiTransitionArrowConfig {
   /** Default: `"Event Label"` */
   eventLabel?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `{"y":1,"x":1}` */
-  toProp?: EntityRow;
-  /** Default: `"Guard Hint"` */
-  guardHint?: string;
   /** Default: `{"x":1,"y":1}` */
   fromProp?: EntityRow;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Guard Hint"` */
+  guardHint?: string;
+  /** Default: `{"y":1,"x":1}` */
+  toProp?: EntityRow;
   /** Default: `false` */
   isActive?: boolean;
 }
@@ -187,14 +187,14 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
                   'render-ui',
                   'main',
                   {
-                    'to': '@config.toProp',
+                    'onClick': 'CLICK',
                     'eventLabel': '@config.eventLabel',
                     'isActive': '@config.isActive',
-                    'guardHint': '@config.guardHint',
-                    'onClick': 'CLICK',
                     'type': 'transition-arrow',
-                    'from': '@config.fromProp',
                     'className': '@config.className',
+                    'from': '@config.fromProp',
+                    'to': '@config.toProp',
+                    'guardHint': '@config.guardHint',
                   },
                 ],
               ],
@@ -209,11 +209,41 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
             'description': 'Event label shown on the arrow',
             'tier': 'presentation',
           },
+          'fromProp': {
+            'type': 'TransitionArrowFrom',
+            'default': {
+              'x': 1,
+              'y': 1,
+            },
+            'label': 'From',
+            'description': 'Start position (center of from-node)',
+            'synonyms': 'from',
+            'tier': 'presentation',
+            'properties': {
+              'y': {
+                'name': 'y',
+                'type': 'number',
+                'required': true,
+              },
+              'x': {
+                'name': 'x',
+                'type': 'number',
+                'required': true,
+              },
+            },
+          },
           'className': {
             'type': 'string',
             'default': '',
             'label': 'Class Name',
             'description': 'Additional CSS classes for the SVG group',
+            'tier': 'presentation',
+          },
+          'guardHint': {
+            'type': 'string',
+            'default': 'Guard Hint',
+            'label': 'Guard Hint',
+            'description': 'Guard hint shown below event',
             'tier': 'presentation',
           },
           'toProp': {
@@ -227,43 +257,13 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
             'synonyms': 'to',
             'tier': 'presentation',
             'properties': {
-              'x': {
-                'name': 'x',
-                'type': 'number',
-                'required': true,
-              },
               'y': {
                 'name': 'y',
                 'type': 'number',
                 'required': true,
               },
-            },
-          },
-          'guardHint': {
-            'type': 'string',
-            'default': 'Guard Hint',
-            'label': 'Guard Hint',
-            'description': 'Guard hint shown below event',
-            'tier': 'presentation',
-          },
-          'fromProp': {
-            'type': 'TransitionArrowFrom',
-            'default': {
-              'x': 1,
-              'y': 1,
-            },
-            'label': 'From',
-            'description': 'Start position (center of from-node)',
-            'synonyms': 'from',
-            'tier': 'presentation',
-            'properties': {
               'x': {
                 'name': 'x',
-                'type': 'number',
-                'required': true,
-              },
-              'y': {
-                'name': 'y',
                 'type': 'number',
                 'required': true,
               },

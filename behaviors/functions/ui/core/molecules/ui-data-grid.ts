@@ -60,55 +60,55 @@ export interface StdUiDataGridViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
+  /** Default: `[{"label":"Label","format":"date","variant":"h3","name":"Name","icon":"circle"}]` */
+  columns?: EntityRow[];
+  /** Default: `false` */
+  sortable?: boolean;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `false` */
+  scrollX?: boolean;
+  /** Default: `false` */
+  selectable?: boolean;
   /** Default: `"Position Event"` */
   positionEvent?: string;
   /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `false` */
-  sortable?: boolean;
-  /** Default: `"Dnd Item Id Field"` */
-  dndItemIdField?: string;
-  /** Default: `false` */
   hasMore?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Reorder Event"` */
-  reorderEvent?: string;
-  /** Default: `1` */
-  cols?: number;
-  /** Default: `0` */
-  pageSize?: number;
-  /** Default: `false` */
-  scrollX?: boolean;
-  error?: EntityRow;
-  /** Default: `false` */
-  infiniteScroll?: boolean;
-  /** Default: `"Accepts"` */
-  accepts?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `280` */
-  minCardWidth?: number;
-  /** Default: `[{"label":"Label","format":"date","name":"Name","icon":"circle","variant":"h3"}]` */
-  fields?: EntityRow[];
-  /** Default: `"Image Field"` */
-  imageField?: string;
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
-  /** Default: `[{"name":"Name","icon":"circle","format":"date","label":"Label","variant":"h3"}]` */
-  columns?: EntityRow[];
-  /** Default: `0` */
-  maxInlineActions?: number;
-  /** Default: `false` */
-  selectable?: boolean;
-  /** Default: `false` */
-  dndRoot?: boolean;
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
+  /** Default: `"Dnd Item Id Field"` */
+  dndItemIdField?: string;
+  /** Default: `[{"name":"Name","icon":"circle","label":"Label","variant":"h3","format":"date"}]` */
+  fields?: EntityRow[];
+  /** Default: `false` */
+  dndRoot?: boolean;
+  /** Default: `1` */
+  cols?: number;
+  /** Default: `"Image Field"` */
+  imageField?: string;
+  /** Default: `false` */
+  infiniteScroll?: boolean;
+  /** Default: `0` */
+  maxInlineActions?: number;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `"Accepts"` */
+  accepts?: string;
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  error?: EntityRow;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `280` */
+  minCardWidth?: number;
 }
 
 /**

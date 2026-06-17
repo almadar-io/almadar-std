@@ -1,6 +1,68 @@
 app ui-castle-board "1.0.0"
 "CastleBoard — UI factory (1:1 with the @almadar/ui castle-board pattern)."
 orbital CastleBoardOrbital {
+  type CastleBoardTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+  }
+  type CastleBoardUnitsItem = {
+    id : string!
+    position : CastleBoardUnitsItemPosition
+    x : number
+    y : number
+    z : number
+    sprite : asset
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [CastleBoardUnitsItemTraitsItem]
+    previousPosition : CastleBoardUnitsItemPreviousPosition
+    elevation : number
+  }
+  type CastleBoardUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type CastleBoardUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type CastleBoardUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type CastleBoardFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : asset
+    assetUrl : asset
+    color : string
+    elevation : number
+  }
+  type CastleBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+  }
   type CastleBoardFEATURECLICKFeature = {
     id : string
     x : number!
@@ -57,6 +119,10 @@ orbital CastleBoardOrbital {
         (fetch CastleBoardItem {})
         (render-ui main {
           entity: @entity
+          tiles: @config.tiles
+          units: @config.units
+          features: @config.features
+          assetManifest: @config.assetManifest
           scale: @config.scale
           onFeatureClick: FEATURE_CLICK
           onUnitClick: UNIT_CLICK
@@ -94,6 +160,22 @@ orbital CastleBoardOrbital {
     }
 
     config {
+      tiles : [CastleBoardTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false }, { x: 1, y: 0, terrain: "water", passable: false }, { x: 2, y: 0, terrain: "water", passable: false }, { x: 3, y: 0, terrain: "water", passable: false }, { x: 4, y: 0, terrain: "stone", passable: false }, { x: 0, y: 1, terrain: "water", passable: false }, { x: 1, y: 1, terrain: "grass", passable: true }, { x: 2, y: 1, terrain: "grass", passable: true }, { x: 3, y: 1, terrain: "grass", passable: true }, { x: 4, y: 1, terrain: "water", passable: false }, { x: 0, y: 2, terrain: "water", passable: false }, { x: 1, y: 2, terrain: "grass", passable: true }, { x: 2, y: 2, terrain: "grass", passable: true }, { x: 3, y: 2, terrain: "grass", passable: true }, { x: 4, y: 2, terrain: "water", passable: false }, { x: 0, y: 3, terrain: "water", passable: false }, { x: 1, y: 3, terrain: "grass", passable: true }, { x: 2, y: 3, terrain: "grass", passable: true }, { x: 3, y: 3, terrain: "grass", passable: true }, { x: 4, y: 3, terrain: "water", passable: false }, { x: 0, y: 4, terrain: "stone", passable: false }, { x: 1, y: 4, terrain: "water", passable: false }, { x: 2, y: 4, terrain: "water", passable: false }, { x: 3, y: 4, terrain: "water", passable: false }, { x: 4, y: 4, terrain: "stone", passable: false }]
+        @label "Tiles"
+        @description "Direct tile data — takes priority over entity-derived tiles."
+        @tier "presentation"
+      units : [CastleBoardUnitsItem] = [{ id: "unit-1", position: { x: 1, y: 1 }, unitType: "hero", name: "Hero", team: player, health: 10, maxHealth: 10 }, { id: "unit-2", position: { x: 3, y: 2 }, unitType: "hero", name: "Guard", team: enemy, health: 8, maxHealth: 10 }]
+        @label "Units"
+        @description "Direct unit data — takes priority over entity-derived units."
+        @tier "presentation"
+      features : [CastleBoardFeaturesItem] = [{ x: 2, y: 0, type: "castle" }, { x: 4, y: 4, type: "portal" }]
+        @label "Features"
+        @description "Direct feature data — takes priority over entity-derived features."
+        @tier "presentation"
+      assetManifest : CastleBoardAssetManifest = { terrains: { grass: "isometric-blocks/PNG/Abstract tiles/abstractTile_01.png", stone: "isometric-blocks/PNG/Abstract tiles/abstractTile_06.png", water: "isometric-blocks/PNG/Abstract tiles/abstractTile_03.png", dirt: "isometric-blocks/PNG/Abstract tiles/abstractTile_08.png" }, units: { hero: "characters/archetypes/01_innocent.png" }, features: { castle: "world-map/battle_marker.png", portal: "world-map/portal_open.png" } }
+        @label "Asset Manifest"
+        @description "Direct asset manifest — takes priority over entity-derived manifest."
+        @tier "presentation"
       scale : number = 0.45
         @label "Scale"
         @description "Canvas render scale"

@@ -57,18 +57,18 @@ export interface StdUiStarRatingConfig {
   readOnly?: boolean;
   /** Default: `"Label"` */
   label?: string;
+  /** Default: `{}` */
+  actionPayload?: unknown;
+  /** Default: `"full"` */
+  precision?: 'full' | 'half';
+  /** Default: `""` */
+  className?: string;
   /** Default: `5` */
   max?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `""` */
-  className?: string;
   /** Default: `0` */
   value?: number;
-  /** Default: `"full"` */
-  precision?: 'full' | 'half';
-  /** Default: `{}` */
-  actionPayload?: unknown;
 }
 
 /**

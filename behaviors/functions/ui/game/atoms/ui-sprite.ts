@@ -55,32 +55,32 @@ export interface StdUiSpriteActionPayload {
 export interface StdUiSpriteConfig {
   /** Default: `0` */
   frameWidth?: number;
-  /** Default: `16` */
-  columns?: number;
-  /** Default: `1` */
-  opacity?: number;
-  /** Default: `false` */
-  flipY?: boolean;
-  /** Default: `0` */
-  frameHeight?: number;
-  /** Default: `0` */
-  x?: number;
-  /** Default: `0` */
-  frame?: number;
   /** Default: `false` */
   flipX?: boolean;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Spritesheet/allTiles_sheet.png"` */
-  spritesheet?: unknown;
+  /** Default: `false` */
+  flipY?: boolean;
+  /** Default: `1` */
+  opacity?: number;
   /** Default: `0` */
-  y?: number;
+  zIndex?: number;
+  /** Default: `0` */
+  frame?: number;
+  /** Default: `16` */
+  columns?: number;
+  /** Default: `0` */
+  frameHeight?: number;
   /** Default: `1` */
   scale?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Spritesheet/allTiles_sheet.png"` */
+  spritesheet?: unknown;
   /** Default: `0` */
   rotation?: number;
   /** Default: `0` */
-  zIndex?: number;
+  y?: number;
+  /** Default: `0` */
+  x?: number;
 }
 
 /**

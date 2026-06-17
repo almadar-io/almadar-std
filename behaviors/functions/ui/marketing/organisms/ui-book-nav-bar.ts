@@ -39,12 +39,12 @@ export type StdUiBookNavBarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookNavBarConfig {
+  /** Default: `""` */
+  className?: string;
   /** Default: `0` */
   totalPages?: number;
   /** Default: `0` */
   currentPage?: number;
-  /** Default: `""` */
-  className?: string;
   /** Default: `"Chapter Title"` */
   chapterTitle?: string;
   /** Default: `"rtl"` */
@@ -152,12 +152,12 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
                   'render-ui',
                   'main',
                   {
-                    'currentPage': '@config.currentPage',
+                    'direction': '@config.direction',
                     'className': '@config.className',
                     'chapterTitle': '@config.chapterTitle',
                     'type': 'book-nav-bar',
-                    'direction': '@config.direction',
                     'totalPages': '@config.totalPages',
+                    'currentPage': '@config.currentPage',
                   },
                 ],
               ],
@@ -165,6 +165,13 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
           ],
         },
         'config': {
+          'className': {
+            'type': 'string',
+            'default': '',
+            'label': 'Class Name',
+            'description': 'Additional CSS classes',
+            'tier': 'presentation',
+          },
           'totalPages': {
             'type': 'number',
             'default': 0,
@@ -177,13 +184,6 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
             'default': 0,
             'label': 'Current Page',
             'description': 'currentPage prop',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
             'tier': 'presentation',
           },
           'chapterTitle': {

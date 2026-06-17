@@ -42,27 +42,27 @@ export interface StdUiSvgStackConfig {
   /** Default: `60` */
   width?: number;
   /** Default: `40` */
-  y?: number;
-  /** Default: `40` */
   height?: number;
-  /** Default: `[]` */
-  labels?: string[];
-  /** Default: `true` */
-  asRoot?: boolean;
+  /** Default: `1` */
+  opacity?: number;
   /** Default: `90` */
   svgWidth?: number;
-  /** Default: `80` */
-  svgHeight?: number;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `40` */
+  y?: number;
+  /** Default: `0` */
+  layers?: number;
   /** Default: `""` */
   className?: string;
   /** Default: `10` */
   x?: number;
-  /** Default: `0` */
-  layers?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `1` */
-  opacity?: number;
+  /** Default: `[]` */
+  labels?: string[];
+  /** Default: `true` */
+  asRoot?: boolean;
+  /** Default: `80` */
+  svgHeight?: number;
 }
 
 /**

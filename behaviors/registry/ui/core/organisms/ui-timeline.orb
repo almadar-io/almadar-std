@@ -81,20 +81,20 @@
                     "main",
                     {
                       "fields": "@config.fields",
-                      "error": "@config.error",
-                      "items": "@config.items",
-                      "type": "timeline",
-                      "look": "@config.look",
                       "isLoading": "@config.isLoading",
-                      "title": "@config.title",
+                      "error": "@config.error",
+                      "className": "@config.className",
                       "entity": "@entity",
+                      "look": "@config.look",
+                      "type": "timeline",
                       "itemActions": [
                         {
-                          "event": "VIEW",
-                          "label": "View"
+                          "label": "View",
+                          "event": "VIEW"
                         }
                       ],
-                      "className": "@config.className"
+                      "title": "@config.title",
+                      "items": "@config.items"
                     }
                   ]
                 ]
@@ -114,19 +114,67 @@
             ]
           },
           "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "TimelineError",
+              "label": "Error",
+              "description": "Error state",
+              "tier": "presentation",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "type": "string",
+                  "required": false
+                },
+                "message": {
+                  "name": "message",
+                  "type": "string",
+                  "required": true
+                },
+                "name": {
+                  "name": "name",
+                  "type": "string",
+                  "required": false
+                },
+                "stack": {
+                  "name": "stack",
+                  "type": "string",
+                  "required": false
+                }
+              }
+            },
+            "look": {
+              "type": "string",
+              "default": "vertical-spacious",
+              "label": "Look",
+              "description": "Layer 2 visual treatment.",
+              "tier": "presentation",
+              "values": [
+                "vertical-compact",
+                "vertical-spacious",
+                "horizontal",
+                "swimlane"
+              ]
+            },
             "items": {
               "type": "[TimelineItemsItem]",
               "default": [
                 {
                   "title": "Title",
-                  "id": "Id",
-                  "date": "Date",
                   "description": "Description",
                   "status": "complete",
                   "icon": "circle",
                   "tags": [
                     "Item"
-                  ]
+                  ],
+                  "id": "Id",
+                  "date": "Date"
                 }
               ],
               "label": "Items",
@@ -135,11 +183,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
                   "date": {
                     "name": "date",
                     "type": "string",
@@ -154,6 +197,11 @@
                     "name": "title",
                     "type": "string",
                     "required": true
+                  },
+                  "description": {
+                    "name": "description",
+                    "type": "string",
+                    "required": false
                   },
                   "icon": {
                     "name": "icon",
@@ -182,55 +230,32 @@
                 }
               }
             },
-            "className": {
+            "title": {
               "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
+              "default": "Title",
+              "label": "Title",
+              "description": "Timeline title",
               "tier": "presentation"
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "TimelineError",
-              "label": "Error",
-              "description": "Error state",
+            "fields": {
+              "type": "[string]",
+              "default": [
+                "Item"
+              ],
+              "label": "Fields",
+              "description": "Fields to display",
               "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                }
+              "items": {
+                "type": "string"
               }
             },
             "itemActions": {
               "type": "[TimelineItemActionsItem]",
               "default": [
                 {
-                  "label": "Label",
+                  "variant": "primary",
                   "navigatesTo": "Navigates To",
-                  "variant": "primary"
+                  "label": "Label"
                 }
               ],
               "label": "Item Actions",
@@ -239,11 +264,6 @@
               "items": {
                 "type": "object",
                 "properties": {
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
                   "variant": {
                     "name": "variant",
                     "type": "string",
@@ -259,6 +279,11 @@
                     "type": "string",
                     "required": true
                   },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "type": "string",
+                    "required": false
+                  },
                   "event": {
                     "name": "event",
                     "type": "string",
@@ -267,37 +292,12 @@
                 }
               }
             },
-            "fields": {
-              "type": "[string]",
-              "default": [
-                "Item"
-              ],
-              "label": "Fields",
-              "description": "Fields to display",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Timeline title",
+            "isLoading": {
+              "type": "boolean",
+              "default": false,
+              "label": "Is Loading",
+              "description": "Loading state indicator",
               "tier": "presentation"
-            },
-            "look": {
-              "type": "string",
-              "default": "vertical-spacious",
-              "label": "Look",
-              "description": "Layer 2 visual treatment.",
-              "tier": "presentation",
-              "values": [
-                "vertical-compact",
-                "vertical-spacious",
-                "horizontal",
-                "swimlane"
-              ]
             }
           },
           "scope": "instance"

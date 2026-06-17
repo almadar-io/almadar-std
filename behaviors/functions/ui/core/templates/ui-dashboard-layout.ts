@@ -67,26 +67,26 @@ export interface StdUiDashboardLayoutSignOutPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardLayoutConfig {
-  /** Default: `[{"children":[],"icon":"circle","label":"Label","href":"Href","badge":"Badge"}]` */
-  navItems?: EntityRow[];
-  /** Default: `false` */
-  showSearch?: boolean;
-  /** Default: `[]` */
-  topBarActions?: EntityRow[];
-  /** Default: `[{"read":false,"message":"Message","id":"Id","description":"Description","createdAt":"Created At"}]` */
-  notifications?: EntityRow[];
-  headerActions?: unknown;
-  /** Default: `"{{APP_TITLE}}"` */
-  appName?: string;
-  /** Default: `{"avatar":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","name":"Name","email":"Email"}` */
-  user?: EntityRow;
-  /** Default: `"Current Path"` */
-  currentPath?: string;
   /** Default: `true` */
   showThemeToggle?: boolean;
-  sidebarFooter?: unknown;
+  /** Default: `false` */
+  showSearch?: boolean;
+  /** Default: `"{{APP_TITLE}}"` */
+  appName?: string;
+  /** Default: `"Current Path"` */
+  currentPath?: string;
   /** Default: `"sidebar"` */
   layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
+  /** Default: `[{"description":"Description","message":"Message","id":"Id","createdAt":"Created At","read":false}]` */
+  notifications?: EntityRow[];
+  headerActions?: unknown;
+  /** Default: `[]` */
+  topBarActions?: EntityRow[];
+  sidebarFooter?: unknown;
+  /** Default: `{"avatar":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","name":"Name","email":"Email"}` */
+  user?: EntityRow;
+  /** Default: `[{"label":"Label","href":"Href","badge":"Badge","children":[],"icon":"circle"}]` */
+  navItems?: EntityRow[];
 }
 
 /**
