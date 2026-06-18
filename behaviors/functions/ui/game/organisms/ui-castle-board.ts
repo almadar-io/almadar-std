@@ -66,16 +66,16 @@ export interface StdUiCastleBoardTileClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCastleBoardConfig {
-  /** Default: `[{"maxHealth":10,"position":{"x":1,"y":1},"unitType":"worker","name":"Worker","modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","team":"player","health":10,"id":"u1"},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Guardian","health":8,"id":"u2","maxHealth":10,"position":{"x":3,"y":3},"team":"enemy","unitType":"guardian"}]` */
+  /** Default: `[{"id":"f1","type":"gold_mine","y":2,"x":2,"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb"},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","y":1,"x":3,"id":"f2","type":"portal"}]` */
+  features?: EntityRow[];
+  /** Default: `[{"y":0,"x":0,"terrain":"stone","passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb"},{"x":1,"y":0,"terrain":"stone","passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb"},{"passable":false,"y":0,"x":2,"terrain":"stone","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb"},{"y":0,"x":3,"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","terrain":"stone"},{"passable":false,"y":0,"x":4,"terrain":"stone","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb"},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","x":0,"passable":false,"y":1,"terrain":"stone"},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","terrain":"dirt","x":1,"y":1,"passable":true},{"passable":true,"terrain":"grass","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","x":2,"y":1},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","y":1,"x":3,"passable":true,"terrain":"grass"},{"x":4,"passable":false,"y":1,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","terrain":"stone"},{"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","y":2,"terrain":"stone","x":0},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","terrain":"grass","y":2,"x":1,"passable":true},{"y":2,"passable":true,"x":2,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","terrain":"dirt"},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","terrain":"grass","y":2,"x":3,"passable":true},{"terrain":"stone","y":2,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"x":4},{"x":0,"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","y":3,"terrain":"stone"},{"y":3,"terrain":"grass","x":1,"passable":true,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb"},{"passable":true,"x":2,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","y":3,"terrain":"grass"},{"y":3,"x":3,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","terrain":"dirt","passable":true},{"x":4,"terrain":"stone","y":3,"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb"},{"terrain":"stone","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","y":4,"x":0,"passable":false},{"passable":false,"y":4,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","x":1,"terrain":"stone"},{"x":2,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","y":4,"passable":false,"terrain":"stone"},{"x":3,"y":4,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","terrain":"stone","passable":false},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","x":4,"passable":false,"y":4,"terrain":"stone"}]` */
+  tiles?: EntityRow[];
+  /** Default: `{"features":{"castle":"castle/resonator_citadel.png","gold_mine":"world-map/gold_mine.png","portal":"world-map/portal_open.png"},"terrains":{"stone":"isometric-dungeon/Isometric/stoneInset_E.png","grass":"isometric-dungeon/Isometric/dirt_E.png","castle":"isometric-dungeon/Isometric/stoneTile_E.png","dirt":"isometric-dungeon/Isometric/dirtTiles_E.png","forest":"isometric-dungeon/Isometric/planks_E.png"},"units":{"mender":"units/mender.png","worker":"units/worker.png","scrapper":"units/scrapper.png","guardian":"units/guardian.png"}}` */
+  assetManifest?: EntityRow;
+  /** Default: `[{"name":"Worker","team":"player","unitType":"worker","id":"u1","modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","position":{"y":1,"x":1},"health":10,"maxHealth":10},{"id":"u2","position":{"y":3,"x":3},"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","unitType":"guardian","team":"enemy","name":"Guardian","health":8,"maxHealth":10}]` */
   units?: EntityRow[];
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `[{"x":2,"y":2,"id":"f1","type":"gold_mine","assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb"},{"x":3,"type":"portal","assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","y":1,"id":"f2"}]` */
-  features?: EntityRow[];
-  /** Default: `[{"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","y":0,"x":0,"terrain":"stone"},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","y":0,"x":1,"passable":false,"terrain":"stone"},{"terrain":"stone","y":0,"x":2,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","passable":false},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","passable":false,"terrain":"stone","x":3,"y":0},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone","y":0,"passable":false,"x":4},{"y":1,"x":0,"terrain":"stone","passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb"},{"y":1,"passable":true,"terrain":"dirt","x":1,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb"},{"terrain":"grass","y":1,"x":2,"passable":true,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb"},{"x":3,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","y":1,"passable":true,"terrain":"grass"},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","y":1,"terrain":"stone","x":4,"passable":false},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone","x":0,"y":2,"passable":false},{"x":1,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","terrain":"grass","passable":true,"y":2},{"passable":true,"x":2,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","terrain":"dirt","y":2},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","y":2,"terrain":"grass","passable":true,"x":3},{"terrain":"stone","y":2,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","passable":false,"x":4},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","y":3,"terrain":"stone","x":0,"passable":false},{"y":3,"terrain":"grass","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","x":1,"passable":true},{"passable":true,"x":2,"y":3,"terrain":"grass","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb"},{"x":3,"terrain":"dirt","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","y":3,"passable":true},{"passable":false,"x":4,"y":3,"terrain":"stone","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb"},{"x":0,"y":4,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone","passable":false},{"terrain":"stone","passable":false,"y":4,"x":1,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb"},{"y":4,"terrain":"stone","x":2,"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb"},{"y":4,"terrain":"stone","x":3,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","passable":false},{"y":4,"x":4,"passable":false,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb","terrain":"stone"}]` */
-  tiles?: EntityRow[];
-  /** Default: `{"features":{"gold_mine":"world-map/gold_mine.png","portal":"world-map/portal_open.png","castle":"castle/resonator_citadel.png"},"units":{"scrapper":"units/scrapper.png","worker":"units/worker.png","mender":"units/mender.png","guardian":"units/guardian.png"},"terrains":{"forest":"isometric-dungeon/Isometric/planks_E.png","dirt":"isometric-dungeon/Isometric/dirtTiles_E.png","grass":"isometric-dungeon/Isometric/dirt_E.png","castle":"isometric-dungeon/Isometric/stoneTile_E.png","stone":"isometric-dungeon/Isometric/stoneInset_E.png"}}` */
-  assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
 }
@@ -277,6 +277,10 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   },
                   {
                     'name': 'sprite',
+                    'type': 'asset',
+                  },
+                  {
+                    'name': 'modelUrl',
                     'type': 'asset',
                   },
                   {
@@ -512,6 +516,10 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                       'type': 'asset',
                     },
                     {
+                      'name': 'modelUrl',
+                      'type': 'asset',
+                    },
+                    {
                       'name': 'unitType',
                       'type': 'string',
                     },
@@ -626,19 +634,19 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'render-ui',
                   'main',
                   {
-                    'featureClickEvent': 'FEATURE_CLICK',
-                    'scale': '@config.scale',
-                    'className': '@config.className',
-                    'type': 'castle-board',
-                    'features': '@config.features',
-                    'unitClickEvent': 'UNIT_CLICK',
                     'assetManifest': '@config.assetManifest',
                     'entity': '@entity',
-                    'tiles': '@config.tiles',
-                    'units': '@config.units',
+                    'scale': '@config.scale',
                     'onFeatureClick': 'FEATURE_CLICK',
-                    'onUnitClick': 'UNIT_CLICK',
+                    'className': '@config.className',
+                    'tiles': '@config.tiles',
+                    'type': 'castle-board',
                     'onTileClick': 'TILE_CLICK',
+                    'onUnitClick': 'UNIT_CLICK',
+                    'units': '@config.units',
+                    'features': '@config.features',
+                    'featureClickEvent': 'FEATURE_CLICK',
+                    'unitClickEvent': 'UNIT_CLICK',
                     'tileClickEvent': 'TILE_CLICK',
                   },
                 ],
@@ -647,96 +655,37 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           ],
         },
         'config': {
-          'units': {
-            'type': '[CastleBoardUnitsItem]',
+          'features': {
+            'type': '[CastleBoardFeaturesItem]',
             'default': [
               {
-                'maxHealth': 10,
-                'position': {
-                  'x': 1,
-                  'y': 1,
-                },
-                'unitType': 'worker',
-                'name': 'Worker',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb',
-                'team': 'player',
-                'health': 10,
-                'id': 'u1',
+                'id': 'f1',
+                'type': 'gold_mine',
+                'y': 2,
+                'x': 2,
+                'assetUrl': 'https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb',
               },
               {
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb',
-                'name': 'Guardian',
-                'health': 8,
-                'id': 'u2',
-                'maxHealth': 10,
-                'position': {
-                  'x': 3,
-                  'y': 3,
-                },
-                'team': 'enemy',
-                'unitType': 'guardian',
+                'assetUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb',
+                'y': 1,
+                'x': 3,
+                'id': 'f2',
+                'type': 'portal',
               },
             ],
-            'label': 'Units',
-            'description': 'Direct unit data — takes priority over entity-derived units.',
+            'label': 'Features',
+            'description': 'Direct feature data — takes priority over entity-derived features.',
             'tier': 'presentation',
             'items': {
               'type': 'object',
               'properties': {
-                'z': {
-                  'name': 'z',
-                  'type': 'number',
-                  'required': false,
-                },
-                'team': {
-                  'name': 'team',
+                'type': {
+                  'name': 'type',
                   'type': 'string',
-                  'required': false,
-                  'values': [
-                    'player',
-                    'enemy',
-                    'neutral',
-                  ],
+                  'required': true,
                 },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': false,
-                },
-                'unitType': {
-                  'name': 'unitType',
-                  'type': 'string',
-                  'required': false,
-                },
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                  'required': false,
-                },
-                'position': {
-                  'name': 'position',
-                  'type': 'object',
-                  'required': false,
-                  'properties': {
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                  },
-                },
-                'maxHealth': {
-                  'name': 'maxHealth',
-                  'type': 'number',
-                  'required': false,
-                },
-                'name': {
-                  'name': 'name',
+                'id': {
+                  'name': 'id',
                   'type': 'string',
                   'required': false,
                 },
@@ -745,6 +694,380 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                   'type': 'string',
                   'required': false,
                 },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'color': {
+                  'name': 'color',
+                  'type': 'string',
+                  'required': false,
+                },
+                'assetUrl': {
+                  'name': 'assetUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'tiles': {
+            'type': '[CastleBoardTilesItem]',
+            'default': [
+              {
+                'y': 0,
+                'x': 0,
+                'terrain': 'stone',
+                'passable': false,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+              },
+              {
+                'x': 1,
+                'y': 0,
+                'terrain': 'stone',
+                'passable': false,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+              },
+              {
+                'passable': false,
+                'y': 0,
+                'x': 2,
+                'terrain': 'stone',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+              },
+              {
+                'y': 0,
+                'x': 3,
+                'passable': false,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'terrain': 'stone',
+              },
+              {
+                'passable': false,
+                'y': 0,
+                'x': 4,
+                'terrain': 'stone',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+              },
+              {
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'x': 0,
+                'passable': false,
+                'y': 1,
+                'terrain': 'stone',
+              },
+              {
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb',
+                'terrain': 'dirt',
+                'x': 1,
+                'y': 1,
+                'passable': true,
+              },
+              {
+                'passable': true,
+                'terrain': 'grass',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+                'x': 2,
+                'y': 1,
+              },
+              {
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+                'y': 1,
+                'x': 3,
+                'passable': true,
+                'terrain': 'grass',
+              },
+              {
+                'x': 4,
+                'passable': false,
+                'y': 1,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'terrain': 'stone',
+              },
+              {
+                'passable': false,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'y': 2,
+                'terrain': 'stone',
+                'x': 0,
+              },
+              {
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+                'terrain': 'grass',
+                'y': 2,
+                'x': 1,
+                'passable': true,
+              },
+              {
+                'y': 2,
+                'passable': true,
+                'x': 2,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb',
+                'terrain': 'dirt',
+              },
+              {
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+                'terrain': 'grass',
+                'y': 2,
+                'x': 3,
+                'passable': true,
+              },
+              {
+                'terrain': 'stone',
+                'y': 2,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'passable': false,
+                'x': 4,
+              },
+              {
+                'x': 0,
+                'passable': false,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'y': 3,
+                'terrain': 'stone',
+              },
+              {
+                'y': 3,
+                'terrain': 'grass',
+                'x': 1,
+                'passable': true,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+              },
+              {
+                'passable': true,
+                'x': 2,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+                'y': 3,
+                'terrain': 'grass',
+              },
+              {
+                'y': 3,
+                'x': 3,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb',
+                'terrain': 'dirt',
+                'passable': true,
+              },
+              {
+                'x': 4,
+                'terrain': 'stone',
+                'y': 3,
+                'passable': false,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+              },
+              {
+                'terrain': 'stone',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'y': 4,
+                'x': 0,
+                'passable': false,
+              },
+              {
+                'passable': false,
+                'y': 4,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'x': 1,
+                'terrain': 'stone',
+              },
+              {
+                'x': 2,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'y': 4,
+                'passable': false,
+                'terrain': 'stone',
+              },
+              {
+                'x': 3,
+                'y': 4,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'terrain': 'stone',
+                'passable': false,
+              },
+              {
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'x': 4,
+                'passable': false,
+                'y': 4,
+                'terrain': 'stone',
+              },
+            ],
+            'label': 'Tiles',
+            'description': 'Direct tile data — takes priority over entity-derived tiles.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
+                },
+                'type': {
+                  'name': 'type',
+                  'type': 'string',
+                  'required': false,
+                },
+                'terrainSprite': {
+                  'name': 'terrainSprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'passable': {
+                  'name': 'passable',
+                  'type': 'boolean',
+                  'required': false,
+                },
+                'movementCost': {
+                  'name': 'movementCost',
+                  'type': 'number',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': true,
+                },
+                'terrain': {
+                  'name': 'terrain',
+                  'type': 'string',
+                  'required': false,
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': true,
+                },
+                'tileType': {
+                  'name': 'tileType',
+                  'type': 'string',
+                  'required': false,
+                },
+              },
+            },
+          },
+          'assetManifest': {
+            'type': 'CastleBoardAssetManifest',
+            'default': {
+              'features': {
+                'castle': 'castle/resonator_citadel.png',
+                'gold_mine': 'world-map/gold_mine.png',
+                'portal': 'world-map/portal_open.png',
+              },
+              'terrains': {
+                'stone': 'isometric-dungeon/Isometric/stoneInset_E.png',
+                'grass': 'isometric-dungeon/Isometric/dirt_E.png',
+                'castle': 'isometric-dungeon/Isometric/stoneTile_E.png',
+                'dirt': 'isometric-dungeon/Isometric/dirtTiles_E.png',
+                'forest': 'isometric-dungeon/Isometric/planks_E.png',
+              },
+              'units': {
+                'mender': 'units/mender.png',
+                'worker': 'units/worker.png',
+                'scrapper': 'units/scrapper.png',
+                'guardian': 'units/guardian.png',
+              },
+            },
+            'label': 'Asset Manifest',
+            'description': 'Direct asset manifest — takes priority over entity-derived manifest.',
+            'tier': 'presentation',
+            'properties': {
+              'terrains': {
+                'name': 'terrains',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'baseUrl': {
+                'name': 'baseUrl',
+                'type': 'string',
+                'required': false,
+              },
+              'units': {
+                'name': 'units',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+              'features': {
+                'name': 'features',
+                'type': 'object',
+                'required': false,
+                'items': {
+                  'type': 'string',
+                },
+              },
+            },
+          },
+          'units': {
+            'type': '[CastleBoardUnitsItem]',
+            'default': [
+              {
+                'name': 'Worker',
+                'team': 'player',
+                'unitType': 'worker',
+                'id': 'u1',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb',
+                'position': {
+                  'y': 1,
+                  'x': 1,
+                },
+                'health': 10,
+                'maxHealth': 10,
+              },
+              {
+                'id': 'u2',
+                'position': {
+                  'y': 3,
+                  'x': 3,
+                },
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb',
+                'unitType': 'guardian',
+                'team': 'enemy',
+                'name': 'Guardian',
+                'health': 8,
+                'maxHealth': 10,
+              },
+            ],
+            'label': 'Units',
+            'description': 'Direct unit data — takes priority over entity-derived units.',
+            'tier': 'presentation',
+            'items': {
+              'type': 'object',
+              'properties': {
                 'traits': {
                   'name': 'traits',
                   'type': 'array',
@@ -762,6 +1085,11 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                         'type': 'number',
                         'required': true,
                       },
+                      'currentState': {
+                        'name': 'currentState',
+                        'type': 'string',
+                        'required': true,
+                      },
                       'states': {
                         'name': 'states',
                         'type': 'array',
@@ -770,13 +1098,70 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                           'type': 'string',
                         },
                       },
-                      'currentState': {
-                        'name': 'currentState',
-                        'type': 'string',
-                        'required': true,
-                      },
                     },
                   },
+                },
+                'modelUrl': {
+                  'name': 'modelUrl',
+                  'type': 'string',
+                  'required': false,
+                },
+                'previousPosition': {
+                  'name': 'previousPosition',
+                  'type': 'object',
+                  'required': false,
+                  'properties': {
+                    'x': {
+                      'name': 'x',
+                      'type': 'number',
+                      'required': true,
+                    },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
+                  },
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'type': 'string',
+                  'required': false,
+                },
+                'x': {
+                  'name': 'x',
+                  'type': 'number',
+                  'required': false,
+                },
+                'team': {
+                  'name': 'team',
+                  'type': 'string',
+                  'required': false,
+                  'values': [
+                    'player',
+                    'enemy',
+                    'neutral',
+                  ],
+                },
+                'health': {
+                  'name': 'health',
+                  'type': 'number',
+                  'required': false,
+                },
+                'z': {
+                  'name': 'z',
+                  'type': 'number',
+                  'required': false,
+                },
+                'unitType': {
+                  'name': 'unitType',
+                  'type': 'string',
+                  'required': false,
+                },
+                'id': {
+                  'name': 'id',
+                  'type': 'string',
+                  'required': true,
                 },
                 'faction': {
                   'name': 'faction',
@@ -788,40 +1173,45 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
                     'neutral',
                   ],
                 },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
+                'elevation': {
+                  'name': 'elevation',
+                  'type': 'number',
+                  'required': false,
                 },
                 'heroId': {
                   'name': 'heroId',
                   'type': 'string',
                   'required': false,
                 },
-                'previousPosition': {
-                  'name': 'previousPosition',
+                'y': {
+                  'name': 'y',
+                  'type': 'number',
+                  'required': false,
+                },
+                'position': {
+                  'name': 'position',
                   'type': 'object',
                   'required': false,
                   'properties': {
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
-                      'required': true,
-                    },
                     'x': {
                       'name': 'x',
                       'type': 'number',
                       'required': true,
                     },
+                    'y': {
+                      'name': 'y',
+                      'type': 'number',
+                      'required': true,
+                    },
                   },
                 },
-                'health': {
-                  'name': 'health',
-                  'type': 'number',
+                'name': {
+                  'name': 'name',
+                  'type': 'string',
                   'required': false,
                 },
-                'elevation': {
-                  'name': 'elevation',
+                'maxHealth': {
+                  'name': 'maxHealth',
                   'type': 'number',
                   'required': false,
                 },
@@ -834,383 +1224,6 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
             'label': 'Scale',
             'description': 'Canvas render scale',
             'tier': 'presentation',
-          },
-          'features': {
-            'type': '[CastleBoardFeaturesItem]',
-            'default': [
-              {
-                'x': 2,
-                'y': 2,
-                'id': 'f1',
-                'type': 'gold_mine',
-                'assetUrl': 'https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb',
-              },
-              {
-                'x': 3,
-                'type': 'portal',
-                'assetUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb',
-                'y': 1,
-                'id': 'f2',
-              },
-            ],
-            'label': 'Features',
-            'description': 'Direct feature data — takes priority over entity-derived features.',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'type': {
-                  'name': 'type',
-                  'type': 'string',
-                  'required': true,
-                },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': true,
-                },
-                'z': {
-                  'name': 'z',
-                  'type': 'number',
-                  'required': false,
-                },
-                'color': {
-                  'name': 'color',
-                  'type': 'string',
-                  'required': false,
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'type': 'number',
-                  'required': false,
-                },
-                'assetUrl': {
-                  'name': 'assetUrl',
-                  'type': 'string',
-                  'required': false,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': false,
-                },
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                  'required': true,
-                },
-                'sprite': {
-                  'name': 'sprite',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'tiles': {
-            'type': '[CastleBoardTilesItem]',
-            'default': [
-              {
-                'passable': false,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'y': 0,
-                'x': 0,
-                'terrain': 'stone',
-              },
-              {
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'y': 0,
-                'x': 1,
-                'passable': false,
-                'terrain': 'stone',
-              },
-              {
-                'terrain': 'stone',
-                'y': 0,
-                'x': 2,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'passable': false,
-              },
-              {
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'passable': false,
-                'terrain': 'stone',
-                'x': 3,
-                'y': 0,
-              },
-              {
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'terrain': 'stone',
-                'y': 0,
-                'passable': false,
-                'x': 4,
-              },
-              {
-                'y': 1,
-                'x': 0,
-                'terrain': 'stone',
-                'passable': false,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-              },
-              {
-                'y': 1,
-                'passable': true,
-                'terrain': 'dirt',
-                'x': 1,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb',
-              },
-              {
-                'terrain': 'grass',
-                'y': 1,
-                'x': 2,
-                'passable': true,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
-              },
-              {
-                'x': 3,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
-                'y': 1,
-                'passable': true,
-                'terrain': 'grass',
-              },
-              {
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'y': 1,
-                'terrain': 'stone',
-                'x': 4,
-                'passable': false,
-              },
-              {
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'terrain': 'stone',
-                'x': 0,
-                'y': 2,
-                'passable': false,
-              },
-              {
-                'x': 1,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
-                'terrain': 'grass',
-                'passable': true,
-                'y': 2,
-              },
-              {
-                'passable': true,
-                'x': 2,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb',
-                'terrain': 'dirt',
-                'y': 2,
-              },
-              {
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
-                'y': 2,
-                'terrain': 'grass',
-                'passable': true,
-                'x': 3,
-              },
-              {
-                'terrain': 'stone',
-                'y': 2,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'passable': false,
-                'x': 4,
-              },
-              {
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'y': 3,
-                'terrain': 'stone',
-                'x': 0,
-                'passable': false,
-              },
-              {
-                'y': 3,
-                'terrain': 'grass',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
-                'x': 1,
-                'passable': true,
-              },
-              {
-                'passable': true,
-                'x': 2,
-                'y': 3,
-                'terrain': 'grass',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
-              },
-              {
-                'x': 3,
-                'terrain': 'dirt',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb',
-                'y': 3,
-                'passable': true,
-              },
-              {
-                'passable': false,
-                'x': 4,
-                'y': 3,
-                'terrain': 'stone',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-              },
-              {
-                'x': 0,
-                'y': 4,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'terrain': 'stone',
-                'passable': false,
-              },
-              {
-                'terrain': 'stone',
-                'passable': false,
-                'y': 4,
-                'x': 1,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-              },
-              {
-                'y': 4,
-                'terrain': 'stone',
-                'x': 2,
-                'passable': false,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-              },
-              {
-                'y': 4,
-                'terrain': 'stone',
-                'x': 3,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'passable': false,
-              },
-              {
-                'y': 4,
-                'x': 4,
-                'passable': false,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/rooms/room-small.glb',
-                'terrain': 'stone',
-              },
-            ],
-            'label': 'Tiles',
-            'description': 'Direct tile data — takes priority over entity-derived tiles.',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'z': {
-                  'name': 'z',
-                  'type': 'number',
-                  'required': false,
-                },
-                'elevation': {
-                  'name': 'elevation',
-                  'type': 'number',
-                  'required': false,
-                },
-                'type': {
-                  'name': 'type',
-                  'type': 'string',
-                  'required': false,
-                },
-                'modelUrl': {
-                  'name': 'modelUrl',
-                  'type': 'string',
-                  'required': false,
-                },
-                'passable': {
-                  'name': 'passable',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'x': {
-                  'name': 'x',
-                  'type': 'number',
-                  'required': true,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': false,
-                },
-                'terrainSprite': {
-                  'name': 'terrainSprite',
-                  'type': 'string',
-                  'required': false,
-                },
-                'terrain': {
-                  'name': 'terrain',
-                  'type': 'string',
-                  'required': false,
-                },
-                'tileType': {
-                  'name': 'tileType',
-                  'type': 'string',
-                  'required': false,
-                },
-                'y': {
-                  'name': 'y',
-                  'type': 'number',
-                  'required': true,
-                },
-                'movementCost': {
-                  'name': 'movementCost',
-                  'type': 'number',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'assetManifest': {
-            'type': 'CastleBoardAssetManifest',
-            'default': {
-              'features': {
-                'gold_mine': 'world-map/gold_mine.png',
-                'portal': 'world-map/portal_open.png',
-                'castle': 'castle/resonator_citadel.png',
-              },
-              'units': {
-                'scrapper': 'units/scrapper.png',
-                'worker': 'units/worker.png',
-                'mender': 'units/mender.png',
-                'guardian': 'units/guardian.png',
-              },
-              'terrains': {
-                'forest': 'isometric-dungeon/Isometric/planks_E.png',
-                'dirt': 'isometric-dungeon/Isometric/dirtTiles_E.png',
-                'grass': 'isometric-dungeon/Isometric/dirt_E.png',
-                'castle': 'isometric-dungeon/Isometric/stoneTile_E.png',
-                'stone': 'isometric-dungeon/Isometric/stoneInset_E.png',
-              },
-            },
-            'label': 'Asset Manifest',
-            'description': 'Direct asset manifest — takes priority over entity-derived manifest.',
-            'tier': 'presentation',
-            'properties': {
-              'units': {
-                'name': 'units',
-                'type': 'object',
-                'required': false,
-                'items': {
-                  'type': 'string',
-                },
-              },
-              'terrains': {
-                'name': 'terrains',
-                'type': 'object',
-                'required': false,
-                'items': {
-                  'type': 'string',
-                },
-              },
-              'baseUrl': {
-                'name': 'baseUrl',
-                'type': 'string',
-                'required': false,
-              },
-              'features': {
-                'name': 'features',
-                'type': 'object',
-                'required': false,
-                'items': {
-                  'type': 'string',
-                },
-              },
-            },
           },
           'className': {
             'type': 'string',
