@@ -22,6 +22,7 @@ orbital GameCanvas3dOrbital {
     y : number
     z : number
     sprite : json
+    modelUrl : json
     unitType : string
     heroId : string
     name : string
@@ -74,6 +75,103 @@ orbital GameCanvas3dOrbital {
     x : number!
     z : number!
   }
+  type GameCanvas3dTILECLICKTile = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+    modelUrl : asset
+  }
+  type GameCanvas3dTILECLICKEvent = {
+    clientX : number!
+    clientY : number!
+    button : number!
+  }
+  type GameCanvas3dUNITCLICKUnit = {
+    id : string!
+    position : GameCanvas3dUNITCLICKUnitPosition
+    x : number
+    y : number
+    z : number
+    sprite : json
+    modelUrl : json
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [GameCanvas3dUNITCLICKUnitTraitsItem]
+    previousPosition : GameCanvas3dUNITCLICKUnitPreviousPosition
+    elevation : number
+  }
+  type GameCanvas3dUNITCLICKUnitPosition = {
+    x : number!
+    y : number!
+  }
+  type GameCanvas3dUNITCLICKUnitTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type GameCanvas3dUNITCLICKUnitPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type GameCanvas3dUNITCLICKEvent = {
+    clientX : number!
+    clientY : number!
+    button : number!
+  }
+  type GameCanvas3dFEATURECLICKFeature = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : json
+    assetUrl : json
+    color : string
+    elevation : number
+  }
+  type GameCanvas3dFEATURECLICKEvent = {
+    clientX : number!
+    clientY : number!
+    button : number!
+  }
+  type GameCanvas3dCANVASCLICKEvent = {
+    clientX : number!
+    clientY : number!
+    button : number!
+  }
+  type GameCanvas3dTILEHOVERTile = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+    modelUrl : asset
+  }
+  type GameCanvas3dTILEHOVEREvent = {
+    clientX : number!
+    clientY : number!
+    button : number!
+  }
 
   entity GameCanvas3dItem [runtime] {
     id : string!
@@ -103,6 +201,11 @@ orbital GameCanvas3dOrbital {
           overlay: @config.overlay
           shadows: @config.shadows
           backgroundColor: @config.backgroundColor
+          onTileClick: TILE_CLICK
+          onUnitClick: UNIT_CLICK
+          onFeatureClick: FEATURE_CLICK
+          onCanvasClick: CANVAS_CLICK
+          onTileHover: TILE_HOVER
           onUnitAnimation: UNIT_ANIMATION
           preloadAssets: @config.preloadAssets
           tileClickEvent: TILE_CLICK
@@ -124,23 +227,20 @@ orbital GameCanvas3dOrbital {
     }
 
     emits {
-      UNIT_ANIMATION -> external {
-        unitId : string
-        state : string
-        timestamp : number!
-      }
-        @description "Callback for unit animation state change"
-        @tier "essential"
       TILE_CLICK -> external {
+        tile : GameCanvas3dTILECLICKTile
+        event : GameCanvas3dTILECLICKEvent
         tileId : string!
         x : number!
         z : number!
         terrain : string
         elevation : number
       }
-        @description "Declarative event: tile click"
+        @description "Callback when a tile is clicked"
         @tier "essential"
       UNIT_CLICK -> external {
+        unit : GameCanvas3dUNITCLICKUnit
+        event : GameCanvas3dUNITCLICKEvent
         unitId : string!
         x : number!
         z : number!
@@ -151,29 +251,41 @@ orbital GameCanvas3dOrbital {
         health : number
         maxHealth : number
       }
-        @description "Declarative event: unit click"
+        @description "Callback when a unit is clicked"
         @tier "essential"
       FEATURE_CLICK -> external {
+        feature : GameCanvas3dFEATURECLICKFeature
+        event : GameCanvas3dFEATURECLICKEvent
         featureId : string!
         x : number!
         z : number!
         elevation : number
       }
-        @description "Declarative event: feature click"
+        @description "Callback when a feature is clicked"
         @tier "essential"
       CANVAS_CLICK -> external {
+        event : GameCanvas3dCANVASCLICKEvent
         clientX : number!
         clientY : number!
         button : number!
       }
-        @description "Declarative event: canvas click"
+        @description "Callback when canvas is clicked (background)"
         @tier "essential"
       TILE_HOVER -> external {
+        tile : GameCanvas3dTILEHOVERTile
+        event : GameCanvas3dTILEHOVEREvent
         tileId : string!
         x : number!
         z : number!
       }
-        @description "Declarative event: tile hover"
+        @description "Callback when mouse moves over a tile"
+        @tier "essential"
+      UNIT_ANIMATION -> external {
+        unitId : string
+        state : string
+        timestamp : number!
+      }
+        @description "Callback for unit animation state change"
         @tier "essential"
       TILE_LEAVE -> external {
         id : string

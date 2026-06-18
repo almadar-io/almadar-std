@@ -1,0 +1,53 @@
+app ui-segment-renderer "1.0.0"
+"SegmentRenderer — UI factory (1:1 with the @almadar/ui segment-renderer pattern)."
+orbital SegmentRendererOrbital {
+  type SegmentRendererSegmentsItem = {
+    type : json!
+    content : string!
+  }
+  type SegmentRendererUserProgress = {
+    activationResponse : string
+    reflectionNotes : [string]
+    bloomAnswered : Map string boolean
+  }
+
+  entity SegmentRendererItem [runtime] {
+    id : string!
+  }
+
+  trait SegmentRendererRender -> @rebindable SegmentRendererItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          segments: @config.segments
+          className: @config.className
+          containerClassName: @config.containerClassName
+          userProgress: @config.userProgress
+          type: segment-renderer
+        })
+    }
+
+    config {
+      segments : [SegmentRendererSegmentsItem] = [{ type: "Type", content: "Content" }]
+        @label "Segments"
+        @description "Parsed lesson segments (see `parseLessonSegments`)"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes for the root container"
+        @tier "presentation"
+      containerClassName : string = "Container Class Name"
+        @label "Container Class Name"
+        @description "CSS classes for the outer wrapping div"
+        @tier "presentation"
+      userProgress : SegmentRendererUserProgress = { activationResponse: "Activation Response", reflectionNotes: ["Item"] }
+        @label "User Progress"
+        @description "User progress for restoring activation/reflection state"
+        @tier "presentation"
+    }
+  }
+
+  page "/segment-renderer" as SegmentRendererPage -> SegmentRendererRender
+}
