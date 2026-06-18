@@ -234,6 +234,7 @@ export interface OperatorEffectMeta {
     | 'set'
     | 'call-service'
     | 'log'
+    | 'send-server'
     | 'custom';
   /** What the effect puts onto the bus / state when it resolves. */
   produces?: OperatorTypeRef;
