@@ -53,12 +53,12 @@
             },
             {
               "event": "VALUE_CHANGE",
-              "description": "Value-based callback — receives the selected string (or string[] for multiple).",
+              "description": "Value-based change: a React callback (internal use) OR a declarative event key that emits `{ value }` on the bus (render-ui / lolo authoring). Mirrors the `onChange` handler|event convention so it's an event-emitting prop, not a bare callback.",
               "tier": "essential",
               "scope": "external",
               "payloadSchema": [
                 {
-                  "name": "value",
+                  "name": "id",
                   "type": "string"
                 }
               ]
@@ -103,11 +103,11 @@
               {
                 "key": "VALUE_CHANGE",
                 "name": "Value Change",
-                "description": "Value-based callback — receives the selected string (or string[] for multiple).",
+                "description": "Value-based change: a React callback (internal use) OR a declarative event key that emits `{ value }` on the bus (render-ui / lolo authoring). Mirrors the `onChange` handler|event convention so it's an event-emitting prop, not a bare callback.",
                 "tier": "essential",
                 "payloadSchema": [
                   {
-                    "name": "value",
+                    "name": "id",
                     "type": "string"
                   }
                 ]
@@ -123,19 +123,19 @@
                     "render-ui",
                     "main",
                     {
-                      "options": "@config.options",
+                      "searchable": "@config.searchable",
+                      "value": "@config.value",
+                      "error": "@config.error",
+                      "onValueChange": "VALUE_CHANGE",
+                      "multiple": "@config.multiple",
+                      "type": "select",
+                      "clearable": "@config.clearable",
                       "action": "ACTION",
                       "onChange": "CHANGE",
-                      "onValueChange": "VALUE_CHANGE",
-                      "searchable": "@config.searchable",
-                      "type": "select",
-                      "placeholder": "@config.placeholder",
-                      "multiple": "@config.multiple",
                       "className": "@config.className",
-                      "clearable": "@config.clearable",
-                      "error": "@config.error",
-                      "groups": "@config.groups",
-                      "value": "@config.value"
+                      "options": "@config.options",
+                      "placeholder": "@config.placeholder",
+                      "groups": "@config.groups"
                     }
                   ]
                 ]
@@ -143,17 +143,96 @@
             ]
           },
           "config": {
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes applied to the root element.",
+              "tier": "presentation"
+            },
+            "options": {
+              "type": "[SelectOptionsItem]",
+              "default": [
+                {
+                  "value": "Value",
+                  "label": "Label"
+                }
+              ],
+              "label": "Options",
+              "description": "Select options (flat list)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "type": "string",
+                    "required": true
+                  },
+                  "value": {
+                    "name": "value",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "searchable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Searchable",
+              "description": "Show a search input inside the dropdown — activates the rich dropdown.",
+              "tier": "presentation"
+            },
+            "clearable": {
+              "type": "boolean",
+              "default": false,
+              "label": "Clearable",
+              "description": "Show a clear button when a value is selected.",
+              "tier": "presentation"
+            },
+            "error": {
+              "type": "string",
+              "default": "",
+              "label": "Error",
+              "description": "Error message",
+              "tier": "presentation"
+            },
+            "value": {
+              "type": "[string]",
+              "default": [],
+              "label": "Value",
+              "description": "Current value (string for single, string[] for multiple)",
+              "tier": "presentation",
+              "items": {
+                "type": "string"
+              }
+            },
+            "placeholder": {
+              "type": "string",
+              "default": "Placeholder",
+              "label": "Placeholder",
+              "description": "Placeholder text",
+              "tier": "presentation"
+            },
+            "multiple": {
+              "type": "boolean",
+              "default": false,
+              "label": "Multiple",
+              "description": "Allow selecting multiple values — activates the rich dropdown.",
+              "tier": "presentation"
+            },
             "groups": {
               "type": "[SelectGroupsItem]",
               "default": [
                 {
-                  "label": "Label",
                   "options": [
                     {
-                      "value": "Value",
-                      "label": "Label"
+                      "label": "Label",
+                      "value": "Value"
                     }
-                  ]
+                  ],
+                  "label": "Label"
                 }
               ],
               "label": "Groups",
@@ -189,85 +268,6 @@
                   }
                 }
               }
-            },
-            "options": {
-              "type": "[SelectOptionsItem]",
-              "default": [
-                {
-                  "value": "Value",
-                  "label": "Label"
-                }
-              ],
-              "label": "Options",
-              "description": "Select options (flat list)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "searchable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Searchable",
-              "description": "Show a search input inside the dropdown — activates the rich dropdown.",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "string",
-              "default": "",
-              "label": "Error",
-              "description": "Error message",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "[string]",
-              "default": [],
-              "label": "Value",
-              "description": "Current value (string for single, string[] for multiple)",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "multiple": {
-              "type": "boolean",
-              "default": false,
-              "label": "Multiple",
-              "description": "Allow selecting multiple values — activates the rich dropdown.",
-              "tier": "presentation"
-            },
-            "placeholder": {
-              "type": "string",
-              "default": "Placeholder",
-              "label": "Placeholder",
-              "description": "Placeholder text",
-              "tier": "presentation"
-            },
-            "clearable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Clearable",
-              "description": "Show a clear button when a value is selected.",
-              "tier": "presentation"
             }
           },
           "scope": "instance"
