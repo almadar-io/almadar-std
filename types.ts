@@ -224,6 +224,7 @@ export interface OperatorEffectMeta {
     | 'emit'
     | 'persist'
     | 'fetch'
+    | 'fetch-stream'
     | 'ref'
     | 'render-ui'
     | 'navigate'

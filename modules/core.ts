@@ -577,6 +577,37 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       },
     },
   },
+  'fetch-stream': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description: 'Stream an LLM or HTTP response, emitting on_message per chunk, success on completion, failure on error',
+    hasSideEffects: true,
+    returnType: 'void',
+    params: [
+      { name: 'entity', type: { kind: 'entity' }, description: 'Target entity name' },
+      {
+        name: 'options',
+        type: {
+          kind: 'object',
+          fields: {
+            id: STRING,
+            filter: ANY,
+            emit: { kind: 'object', fields: {}, open: true },
+          },
+          open: true,
+        },
+        description: 'Stream options: id | filter | emit',
+        optional: true,
+      },
+    ],
+    example: '["fetch-stream", "Message", { "emit": { "on_message": "CHUNK_RECEIVED", "success": "STREAM_DONE", "failure": "STREAM_FAILED" } }]',
+    effect: {
+      kind: 'fetch-stream',
+      produces: { kind: 'entity' },
+    },
+  },
   ref: {
     module: 'core',
     category: 'effect',
