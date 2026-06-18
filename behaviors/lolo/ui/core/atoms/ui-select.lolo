@@ -5,6 +5,14 @@ orbital SelectOrbital {
     value : string!
     label : string!
   }
+  type SelectGroupsItem = {
+    label : string!
+    options : [SelectGroupsItemOptionsItem]!
+  }
+  type SelectGroupsItemOptionsItem = {
+    value : string!
+    label : string!
+  }
 
   entity SelectItem [runtime] {
     id : string!
@@ -18,11 +26,16 @@ orbital SelectOrbital {
         (render-ui main {
           className: @config.className
           options: @config.options
+          groups: @config.groups
           placeholder: @config.placeholder
           value: @config.value
           action: ACTION
           error: @config.error
+          multiple: @config.multiple
+          searchable: @config.searchable
+          clearable: @config.clearable
           onChange: CHANGE
+          onValueChange: VALUE_CHANGE
           type: select
         })
     }
@@ -36,7 +49,12 @@ orbital SelectOrbital {
       CHANGE -> external {
         id : string
       }
-        @description "onChange handler or declarative event key for trait dispatch"
+        @description "onChange handler (native ChangeEvent) or declarative event key for trait dispatch"
+        @tier "essential"
+      VALUE_CHANGE -> external {
+        value : string
+      }
+        @description "Value-based callback — receives the selected string (or string[] for multiple)."
         @tier "essential"
     }
 
@@ -47,19 +65,35 @@ orbital SelectOrbital {
         @tier "presentation"
       options : [SelectOptionsItem] = [{ value: "Value", label: "Label" }]
         @label "Options"
-        @description "Select options"
+        @description "Select options (flat list)"
+        @tier "presentation"
+      groups : [SelectGroupsItem] = [{ label: "Label", options: [{ value: "Value", label: "Label" }] }]
+        @label "Groups"
+        @description "Grouped options — rendered as <optgroup> in native mode, sections in rich mode."
         @tier "presentation"
       placeholder : string = "Placeholder"
         @label "Placeholder"
         @description "Placeholder text"
         @tier "presentation"
-      value : string = "Value"
+      value : [string] = []
         @label "Value"
-        @description "Current value"
+        @description "Current value (string for single, string[] for multiple)"
         @tier "presentation"
       error : string = ""
         @label "Error"
         @description "Error message"
+        @tier "presentation"
+      multiple : boolean = false
+        @label "Multiple"
+        @description "Allow selecting multiple values — activates the rich dropdown."
+        @tier "presentation"
+      searchable : boolean = false
+        @label "Searchable"
+        @description "Show a search input inside the dropdown — activates the rich dropdown."
+        @tier "presentation"
+      clearable : boolean = false
+        @label "Clearable"
+        @description "Show a clear button when a value is selected."
         @tier "presentation"
     }
   }

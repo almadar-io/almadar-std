@@ -60,28 +60,32 @@ export interface StdUiInputChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiInputConfig {
-  /** Default: `false` */
-  clearable?: boolean;
+  /** Default: `3` */
+  rows?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `""` */
-  error?: string;
-  leftIcon?: unknown;
-  /** Default: `false` */
-  disabled?: boolean;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"Helper Text"` */
+  helperText?: string;
+  /** Default: `"Placeholder"` */
+  placeholder?: string;
   /** Default: `"text"` */
   inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
   /** Default: `"Value"` */
   value?: string;
+  /** Default: `false` */
+  disabled?: boolean;
+  leftIcon?: unknown;
+  /** Default: `""` */
+  error?: string;
+  rightIcon?: unknown;
   /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `3` */
-  rows?: number;
   /** Default: `[{"value":"Value","label":"Label"}]` */
   options?: EntityRow[];
-  /** Default: `"Placeholder"` */
-  placeholder?: string;
-  rightIcon?: unknown;
+  /** Default: `false` */
+  clearable?: boolean;
 }
 
 /**

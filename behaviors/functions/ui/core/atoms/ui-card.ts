@@ -46,20 +46,22 @@ export interface StdUiCardActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCardConfig {
-  /** Default: `"md"` */
-  padding?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `"bordered"` */
   variant?: 'default' | 'bordered' | 'elevated' | 'interactive';
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `"Subtitle"` */
   subtitle?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"none"` */
-  shadow?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `"md"` */
+  padding?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `"elevated"` */
   look?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `"none"` */
+  shadow?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  loading?: boolean;
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**
