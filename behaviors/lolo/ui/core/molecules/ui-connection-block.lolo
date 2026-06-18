@@ -1,0 +1,33 @@
+app ui-connection-block "1.0.0"
+"ConnectionBlock — UI factory (1:1 with the @almadar/ui connection-block pattern)."
+orbital ConnectionBlockOrbital {
+  entity ConnectionBlockItem [runtime] {
+    id : string!
+  }
+
+  trait ConnectionBlockRender -> @rebindable ConnectionBlockItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          content: @config.content
+          className: @config.className
+          type: connection-block
+        })
+    }
+
+    config {
+      content : string = "Content"
+        @label "Content"
+        @description "Markdown content summarising what the learner already knows"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/connection-block" as ConnectionBlockPage -> ConnectionBlockRender
+}

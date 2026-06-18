@@ -1,0 +1,58 @@
+app ui-bloom-quiz-block "1.0.0"
+"BloomQuizBlock — UI factory (1:1 with the @almadar/ui bloom-quiz-block pattern)."
+orbital BloomQuizBlockOrbital {
+  entity BloomQuizBlockItem [runtime] {
+    id : string!
+  }
+
+  trait BloomQuizBlockRender -> @rebindable BloomQuizBlockItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          level: @config.level
+          question: @config.question
+          answer: @config.answer
+          index: @config.index
+          isAnswered: @config.isAnswered
+          answerEvent: @config.answerEvent
+          className: @config.className
+          type: bloom-quiz-block
+        })
+    }
+
+    config {
+      level : "remember" | "understand" | "apply" | "analyze" | "evaluate" | "create" = remember
+        @label "Level"
+        @description "level prop"
+        @tier "presentation"
+      question : string = "Question"
+        @label "Question"
+        @description "question prop"
+        @tier "presentation"
+      answer : string = "Answer"
+        @label "Answer"
+        @description "answer prop"
+        @tier "presentation"
+      index : number = 0
+        @label "Index"
+        @description "Zero-based index (used in the emitted event payload)"
+        @tier "presentation"
+      isAnswered : boolean = false
+        @label "Is Answered"
+        @description "Whether the learner has already answered"
+        @tier "presentation"
+      answerEvent : string = "ANSWER_BLOOM"
+        @label "Answer Event"
+        @description "Event name emitted on first reveal (as `UI:<answerEvent>`). Defaults to 'ANSWER_BLOOM'."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/bloom-quiz-block" as BloomQuizBlockPage -> BloomQuizBlockRender
+}

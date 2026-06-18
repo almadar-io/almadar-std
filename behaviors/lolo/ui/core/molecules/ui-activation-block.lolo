@@ -1,0 +1,43 @@
+app ui-activation-block "1.0.0"
+"ActivationBlock — UI factory (1:1 with the @almadar/ui activation-block pattern)."
+orbital ActivationBlockOrbital {
+  entity ActivationBlockItem [runtime] {
+    id : string!
+  }
+
+  trait ActivationBlockRender -> @rebindable ActivationBlockItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          question: @config.question
+          savedResponse: @config.savedResponse
+          saveEvent: @config.saveEvent
+          className: @config.className
+          type: activation-block
+        })
+    }
+
+    config {
+      question : string = "Question"
+        @label "Question"
+        @description "The prior-knowledge question"
+        @tier "presentation"
+      savedResponse : string = "Saved Response"
+        @label "Saved Response"
+        @description "Pre-filled response from saved state"
+        @tier "presentation"
+      saveEvent : string = "SAVE_ACTIVATION"
+        @label "Save Event"
+        @description "Event name emitted on save/skip (as `UI:<saveEvent>`). Defaults to 'SAVE_ACTIVATION'."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/activation-block" as ActivationBlockPage -> ActivationBlockRender
+}

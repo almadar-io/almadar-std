@@ -1,0 +1,48 @@
+app ui-code-runner-panel "1.0.0"
+"CodeRunnerPanel — UI factory (1:1 with the @almadar/ui code-runner-panel pattern)."
+orbital CodeRunnerPanelOrbital {
+  entity CodeRunnerPanelItem [runtime] {
+    id : string!
+  }
+
+  trait CodeRunnerPanelRender -> @rebindable CodeRunnerPanelItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          code: @config.code
+          language: @config.language
+          runnable: @config.runnable
+          runEvent: @config.runEvent
+          className: @config.className
+          type: code-runner-panel
+        })
+    }
+
+    config {
+      code : string = "Code"
+        @label "Code"
+        @description "Initial code content"
+        @tier "presentation"
+      language : string = "Language"
+        @label "Language"
+        @description "Programming language for syntax highlighting"
+        @tier "presentation"
+      runnable : boolean = true
+        @label "Runnable"
+        @description "Whether the panel allows running (false = read-only code block)"
+        @tier "presentation"
+      runEvent : string = "RUN_CODE"
+        @label "Run Event"
+        @description "Event name to emit on run (emitted as `UI:<runEvent>`). Defaults to 'RUN_CODE'."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+    }
+  }
+
+  page "/code-runner-panel" as CodeRunnerPanelPage -> CodeRunnerPanelRender
+}

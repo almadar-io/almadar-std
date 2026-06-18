@@ -1,0 +1,157 @@
+{
+  "name": "ui-segment-renderer",
+  "version": "1.0.0",
+  "description": "SegmentRenderer — UI factory (1:1 with the @almadar/ui segment-renderer pattern).",
+  "orbitals": [
+    {
+      "name": "SegmentRendererOrbital",
+      "entity": {
+        "name": "SegmentRendererItem",
+        "persistence": "runtime",
+        "fields": [
+          {
+            "name": "id",
+            "type": "string",
+            "required": true
+          }
+        ]
+      },
+      "traits": [
+        {
+          "name": "SegmentRendererRender",
+          "entityRebindable": true,
+          "entityContract": {
+            "requires": [],
+            "provides": []
+          },
+          "category": "interaction",
+          "linkedEntity": "SegmentRendererItem",
+          "stateMachine": {
+            "states": [
+              {
+                "name": "idle",
+                "isInitial": true
+              }
+            ],
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "transitions": [
+              {
+                "from": "idle",
+                "to": "idle",
+                "event": "INIT",
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "segment-renderer",
+                      "className": "@config.className",
+                      "segments": "@config.segments",
+                      "containerClassName": "@config.containerClassName",
+                      "userProgress": "@config.userProgress"
+                    }
+                  ]
+                ]
+              }
+            ]
+          },
+          "config": {
+            "containerClassName": {
+              "type": "string",
+              "default": "Container Class Name",
+              "label": "Container Class Name",
+              "description": "CSS classes for the outer wrapping div",
+              "tier": "presentation"
+            },
+            "segments": {
+              "type": "[SegmentRendererSegmentsItem]",
+              "default": [
+                {
+                  "type": "Type",
+                  "content": "Content"
+                }
+              ],
+              "label": "Segments",
+              "description": "Parsed lesson segments (see `parseLessonSegments`)",
+              "tier": "presentation",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "name": "content",
+                    "type": "string",
+                    "required": true
+                  },
+                  "type": {
+                    "name": "type",
+                    "type": "string",
+                    "required": true
+                  }
+                }
+              }
+            },
+            "userProgress": {
+              "type": "SegmentRendererUserProgress",
+              "default": {
+                "reflectionNotes": [
+                  "Item"
+                ],
+                "activationResponse": "Activation Response"
+              },
+              "label": "User Progress",
+              "description": "User progress for restoring activation/reflection state",
+              "tier": "presentation",
+              "properties": {
+                "activationResponse": {
+                  "name": "activationResponse",
+                  "type": "string",
+                  "required": false
+                },
+                "reflectionNotes": {
+                  "name": "reflectionNotes",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "bloomAnswered": {
+                  "name": "bloomAnswered",
+                  "type": "object",
+                  "required": false,
+                  "items": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "className": {
+              "type": "string",
+              "default": "",
+              "label": "Class Name",
+              "description": "Additional CSS classes for the root container",
+              "tier": "presentation"
+            }
+          },
+          "scope": "instance"
+        }
+      ],
+      "pages": [
+        {
+          "name": "SegmentRendererPage",
+          "path": "/segment-renderer",
+          "traits": [
+            {
+              "ref": "SegmentRendererRender"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

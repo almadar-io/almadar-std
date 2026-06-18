@@ -209,6 +209,11 @@ import {
   isStdUiClassifierBoardClassifierBoardOrbitalParams,
 } from './ui/game/organisms/ui-classifier-board.js';
 import {
+  stdUiCodeRunnerPanelCodeRunnerPanelOrbital,
+  StdUiCodeRunnerPanelCodeRunnerPanelOrbitalManifest,
+  isStdUiCodeRunnerPanelCodeRunnerPanelOrbitalParams,
+} from './ui/core/organisms/ui-code-runner-panel.js';
+import {
   stdUiDashboardGridDashboardGridOrbital,
   StdUiDashboardGridDashboardGridOrbitalManifest,
   isStdUiDashboardGridDashboardGridOrbitalParams,
@@ -328,6 +333,11 @@ import {
   StdUiRuntimeDebuggerRuntimeDebuggerOrbitalManifest,
   isStdUiRuntimeDebuggerRuntimeDebuggerOrbitalParams,
 } from './ui/core/organisms/ui-runtime-debugger.js';
+import {
+  stdUiSegmentRendererSegmentRendererOrbital,
+  StdUiSegmentRendererSegmentRendererOrbitalManifest,
+  isStdUiSegmentRendererSegmentRendererOrbitalParams,
+} from './ui/core/organisms/ui-segment-renderer.js';
 import {
   stdUiSequenceBarSequenceBarOrbital,
   StdUiSequenceBarSequenceBarOrbitalManifest,
@@ -937,6 +947,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiClassifierBoardClassifierBoardOrbitalManifest,
   }],
+  ['ui-code-runner-panel::CodeRunnerPanelOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiCodeRunnerPanelCodeRunnerPanelOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-code-runner-panel::CodeRunnerPanelOrbital');
+      }
+      return stdUiCodeRunnerPanelCodeRunnerPanelOrbital(p);
+    },
+    manifest: StdUiCodeRunnerPanelCodeRunnerPanelOrbitalManifest,
+  }],
   ['ui-dashboard-grid::DashboardGridOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiDashboardGridDashboardGridOrbitalParams(p)) {
@@ -1152,6 +1171,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiRuntimeDebuggerRuntimeDebuggerOrbital(p);
     },
     manifest: StdUiRuntimeDebuggerRuntimeDebuggerOrbitalManifest,
+  }],
+  ['ui-segment-renderer::SegmentRendererOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiSegmentRendererSegmentRendererOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-segment-renderer::SegmentRendererOrbital');
+      }
+      return stdUiSegmentRendererSegmentRendererOrbital(p);
+    },
+    manifest: StdUiSegmentRendererSegmentRendererOrbitalManifest,
   }],
   ['ui-sequence-bar::SequenceBarOrbital', {
     factory: (p: object): OrbitalDefinition => {
