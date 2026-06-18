@@ -30,7 +30,7 @@ const ALIAS = 'UiSelect';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiSelectEventKey = 'ACTION' | 'CHANGE' | 'INIT';
+export type StdUiSelectEventKey = 'ACTION' | 'CHANGE' | 'INIT' | 'VALUE_CHANGE';
 
 /**
  * Payload shape for the `ACTION` event.
@@ -47,22 +47,37 @@ export interface StdUiSelectChangePayload {
 }
 
 /**
+ * Payload shape for the `VALUE_CHANGE` event.
+ */
+export interface StdUiSelectValueChangePayload {
+  value?: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiSelectConfig {
-  /** Default: `"Placeholder"` */
-  placeholder?: string;
-  /** Default: `"Value"` */
-  value?: string;
+  /** Default: `[{"label":"Label","options":[{"value":"Value","label":"Label"}]}]` */
+  groups?: EntityRow[];
   /** Default: `[{"value":"Value","label":"Label"}]` */
   options?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  searchable?: boolean;
   /** Default: `""` */
   error?: string;
+  /** Default: `[]` */
+  value?: string[];
+  /** Default: `false` */
+  multiple?: boolean;
+  /** Default: `"Placeholder"` */
+  placeholder?: string;
+  /** Default: `false` */
+  clearable?: boolean;
 }
 
 /**

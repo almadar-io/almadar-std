@@ -39,10 +39,12 @@ export type StdUiSpinnerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSpinnerConfig {
-  /** Default: `"md"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  overlay?: boolean;
+  /** Default: `"md"` */
+  size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
 /**
