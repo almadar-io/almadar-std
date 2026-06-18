@@ -608,6 +608,26 @@ export const CORE_OPERATORS: Record<string, StdOperatorMeta> = {
       produces: { kind: 'entity' },
     },
   },
+  'send-server': {
+    module: 'core',
+    category: 'effect',
+    minArity: 1,
+    maxArity: 2,
+    description: 'Send an orbital event to the server over WebSocket (client-side; chat/real-time trigger)',
+    hasSideEffects: true,
+    returnType: 'void',
+    params: [
+      { name: 'event', type: EVENT_KEY, description: 'Target orbital event name on the server' },
+      {
+        name: 'payload',
+        type: { kind: 'object', fields: {}, open: true },
+        description: 'Event payload to forward to the server',
+        optional: true,
+      },
+    ],
+    example: '["send-server", "CHAT_MESSAGE", { "text": "@input.text" }]',
+    effect: { kind: 'send-server' },
+  },
   ref: {
     module: 'core',
     category: 'effect',
