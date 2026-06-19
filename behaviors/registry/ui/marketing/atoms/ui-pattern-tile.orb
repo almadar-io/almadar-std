@@ -1,73 +1,69 @@
 {
-  "name": "ui-pattern-tile",
-  "version": "1.0.0",
   "description": "PatternTile — UI factory (1:1 with the @almadar/ui pattern-tile pattern).",
+  "name": "ui-pattern-tile",
   "orbitals": [
     {
-      "name": "PatternTileOrbital",
       "entity": {
-        "name": "PatternTileItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "PatternTileItem",
+        "persistence": "runtime"
       },
+      "name": "PatternTileOrbital",
+      "pages": [
+        {
+          "name": "PatternTilePage",
+          "path": "/pattern-tile",
+          "traits": [
+            {
+              "ref": "PatternTileRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "PatternTileRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "PatternTileItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "type": "pattern-tile",
-                      "size": "@config.size",
-                      "color": "@config.color",
-                      "strokeWidth": "@config.strokeWidth",
-                      "variant": "@config.variant"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
           "config": {
-            "variant": {
-              "type": "string",
-              "default": "star8",
-              "label": "Variant",
-              "description": "Which geometric pattern to render",
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
               "tier": "presentation",
+              "type": "string"
+            },
+            "color": {
+              "default": "var(--color-primary)",
+              "description": "Stroke color (CSS variable or hex)",
+              "label": "Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "size": {
+              "default": 60.0,
+              "description": "Tile unit size in SVG units",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "strokeWidth": {
+              "default": 0.5,
+              "description": "Line thickness",
+              "label": "Stroke Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "variant": {
+              "default": "star8",
+              "description": "Which geometric pattern to render",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
               "values": [
                 "star8",
                 "star6",
@@ -84,50 +80,54 @@
                 "arabesque-vine",
                 "arabesque-net"
               ]
-            },
-            "size": {
-              "type": "number",
-              "default": 60.0,
-              "label": "Size",
-              "description": "Tile unit size in SVG units",
-              "tier": "presentation"
-            },
-            "color": {
-              "type": "string",
-              "default": "var(--color-primary)",
-              "label": "Color",
-              "description": "Stroke color (CSS variable or hex)",
-              "tier": "presentation"
-            },
-            "strokeWidth": {
-              "type": "number",
-              "default": 0.5,
-              "label": "Stroke Width",
-              "description": "Line thickness",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
             }
           },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "PatternTilePage",
-          "path": "/pattern-tile",
-          "traits": [
-            {
-              "ref": "PatternTileRender"
-            }
-          ]
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "PatternTileItem",
+          "name": "PatternTileRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "color": "@config.color",
+                      "size": "@config.size",
+                      "strokeWidth": "@config.strokeWidth",
+                      "type": "pattern-tile",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

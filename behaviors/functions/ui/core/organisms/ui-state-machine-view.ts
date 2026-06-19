@@ -39,9 +39,9 @@ export type StdUiStateMachineViewEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStateMachineViewConfig {
-  error?: EntityRow;
   /** Default: `""` */
   className?: string;
+  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
 }
@@ -104,8 +104,8 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -116,92 +116,92 @@ export function stdUiStateMachineViewStateMachineViewOrbital(params: StdUiStateM
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'StateMachineViewRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'StateMachineViewItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'error': {
+            'description': 'Error state',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
             },
-          ],
+            'tier': 'presentation',
+            'type': 'StateMachineViewError',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'StateMachineViewItem',
+        'name': 'StateMachineViewRender',
+        'scope': 'instance',
+        'stateMachine': {
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
                     'className': '@config.className',
-                    'type': 'state-machine-view',
-                    'isLoading': '@config.isLoading',
                     'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'type': 'state-machine-view',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'error': {
-            'type': 'StateMachineViewError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'StateMachineViewItem', canonicalName) as never,
     ],
     pages: [

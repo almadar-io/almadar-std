@@ -1,148 +1,217 @@
 {
-  "name": "ui-date-range-picker",
-  "version": "1.0.0",
   "description": "DateRangePicker — UI factory (1:1 with the @almadar/ui date-range-picker pattern).",
+  "name": "ui-date-range-picker",
   "orbitals": [
     {
-      "name": "DateRangePickerOrbital",
       "entity": {
-        "name": "DateRangePickerItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
+            "default": "From",
             "name": "fromProp",
-            "type": "string",
-            "default": "From"
+            "type": "string"
           },
           {
+            "default": "To",
             "name": "toProp",
-            "type": "string",
-            "default": "To"
+            "type": "string"
           }
-        ]
+        ],
+        "name": "DateRangePickerItem",
+        "persistence": "runtime"
       },
+      "name": "DateRangePickerOrbital",
+      "pages": [
+        {
+          "name": "DateRangePickerPage",
+          "path": "/date-range-picker",
+          "traits": [
+            {
+              "ref": "DateRangePickerRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "DateRangePickerRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "fromProp",
-              "toProp"
-            ]
-          },
           "category": "interaction",
-          "linkedEntity": "DateRangePickerItem",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "fromLabel": {
+              "default": "From",
+              "description": "From-input label.",
+              "label": "From Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "fromProp": {
+              "default": "From",
+              "description": "Controlled `from` (ISO date YYYY-MM-DD).",
+              "label": "From",
+              "synonyms": "from",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "presets": {
+              "default": [],
+              "description": "Preset shortcuts. Defaults to the standard finance set (Last 7d / Last 30d / This Month / This Quarter / YTD). Pass an empty array to hide presets entirely.",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Presets",
+              "tier": "presentation",
+              "type": "[DateRangePickerPresetsItem]"
+            },
+            "toLabel": {
+              "default": "To",
+              "description": "To-input label.",
+              "label": "To Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "toProp": {
+              "default": "To",
+              "description": "Controlled `to` (ISO date YYYY-MM-DD).",
+              "label": "To",
+              "synonyms": "to",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "EVENT",
               "description": "Event name emitted as `UI:{event}` with payload `{ from, to }`. Optional — when omitted, only the `onChange` callback fires.",
-              "tier": "essential",
-              "scope": "external",
+              "event": "EVENT",
               "payloadSchema": [
                 {
                   "name": "from",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "to",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "scope": "external",
+              "tier": "essential"
             },
             {
-              "event": "CHANGE",
               "description": "Callback fired alongside the bus emit.",
-              "tier": "essential",
-              "scope": "external",
+              "event": "CHANGE",
               "payloadSchema": [
                 {
                   "name": "range",
-                  "type": "object",
                   "properties": [
                     {
                       "name": "from",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "to",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     }
-                  ]
+                  ],
+                  "type": "object"
                 }
-              ]
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
+          "entityContract": {
+            "provides": [
+              "fromProp",
+              "toProp"
             ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DateRangePickerItem",
+          "name": "DateRangePickerRender",
+          "scope": "instance",
+          "stateMachine": {
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Event name emitted as `UI:{event}` with payload `{ from, to }`. Optional — when omitted, only the `onChange` callback fires.",
                 "key": "EVENT",
                 "name": "Event",
-                "description": "Event name emitted as `UI:{event}` with payload `{ from, to }`. Optional — when omitted, only the `onChange` callback fires.",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "from",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   },
                   {
                     "name": "to",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   }
-                ]
+                ],
+                "tier": "essential"
               },
               {
+                "description": "Callback fired alongside the bus emit.",
                 "key": "CHANGE",
                 "name": "Change",
-                "description": "Callback fired alongside the bus emit.",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "range",
-                    "type": "object",
                     "properties": [
                       {
                         "name": "from",
-                        "type": "string",
-                        "required": true
+                        "required": true,
+                        "type": "string"
                       },
                       {
                         "name": "to",
-                        "type": "string",
-                        "required": true
+                        "required": true,
+                        "type": "string"
                       }
-                    ]
+                    ],
+                    "type": "object"
                   }
-                ]
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
               }
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "set",
@@ -158,23 +227,23 @@
                     "render-ui",
                     "main",
                     {
-                      "fromLabel": "@config.fromLabel",
-                      "type": "date-range-picker",
-                      "presets": "@config.presets",
-                      "event": "EVENT",
-                      "toLabel": "@config.toLabel",
                       "className": "@config.className",
+                      "event": "EVENT",
                       "from": "@entity.fromProp",
+                      "fromLabel": "@config.fromLabel",
+                      "onChange": "CHANGE",
+                      "presets": "@config.presets",
                       "to": "@entity.toProp",
-                      "onChange": "CHANGE"
+                      "toLabel": "@config.toLabel",
+                      "type": "date-range-picker"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "EVENT",
                 "effects": [
                   [
                     "set",
@@ -190,96 +259,27 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "@config.className",
+                      "event": "EVENT",
+                      "from": "@entity.fromProp",
                       "fromLabel": "@config.fromLabel",
                       "onChange": "CHANGE",
-                      "className": "@config.className",
-                      "to": "@entity.toProp",
                       "presets": "@config.presets",
-                      "event": "EVENT",
+                      "to": "@entity.toProp",
                       "toLabel": "@config.toLabel",
-                      "type": "date-range-picker",
-                      "from": "@entity.fromProp"
+                      "type": "date-range-picker"
                     }
                   ]
-                ]
+                ],
+                "event": "EVENT",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes.",
-              "tier": "presentation"
-            },
-            "fromProp": {
-              "type": "string",
-              "default": "From",
-              "label": "From",
-              "description": "Controlled `from` (ISO date YYYY-MM-DD).",
-              "synonyms": "from",
-              "tier": "presentation"
-            },
-            "presets": {
-              "type": "[DateRangePickerPresetsItem]",
-              "default": [],
-              "label": "Presets",
-              "description": "Preset shortcuts. Defaults to the standard finance set (Last 7d / Last 30d / This Month / This Quarter / YTD). Pass an empty array to hide presets entirely.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "fromLabel": {
-              "type": "string",
-              "default": "From",
-              "label": "From Label",
-              "description": "From-input label.",
-              "tier": "presentation"
-            },
-            "toLabel": {
-              "type": "string",
-              "default": "To",
-              "label": "To Label",
-              "description": "To-input label.",
-              "tier": "presentation"
-            },
-            "toProp": {
-              "type": "string",
-              "default": "To",
-              "label": "To",
-              "description": "Controlled `to` (ISO date YYYY-MM-DD).",
-              "synonyms": "to",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "DateRangePickerPage",
-          "path": "/date-range-picker",
-          "traits": [
-            {
-              "ref": "DateRangePickerRender"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

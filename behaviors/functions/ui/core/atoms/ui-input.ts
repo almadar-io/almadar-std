@@ -60,32 +60,32 @@ export interface StdUiInputChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiInputConfig {
-  /** Default: `3` */
-  rows?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `"Helper Text"` */
-  helperText?: string;
-  /** Default: `"Placeholder"` */
-  placeholder?: string;
-  /** Default: `"text"` */
-  inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `false` */
-  disabled?: boolean;
-  leftIcon?: unknown;
-  /** Default: `""` */
-  error?: string;
-  rightIcon?: unknown;
-  /** Default: `"circle"` */
-  icon?: unknown;
-  /** Default: `[{"value":"Value","label":"Label"}]` */
-  options?: EntityRow[];
   /** Default: `false` */
   clearable?: boolean;
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `""` */
+  error?: string;
+  /** Default: `"Helper Text"` */
+  helperText?: string;
+  /** Default: `"circle"` */
+  icon?: unknown;
+  /** Default: `"text"` */
+  inputType?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date' | 'datetime-local' | 'time' | 'checkbox' | 'select' | 'textarea';
+  /** Default: `"Label"` */
+  label?: string;
+  leftIcon?: unknown;
+  /** Default: `[{"label":"Label","value":"Value"}]` */
+  options?: EntityRow[];
+  /** Default: `"Placeholder"` */
+  placeholder?: string;
+  rightIcon?: unknown;
+  /** Default: `3` */
+  rows?: number;
+  /** Default: `"Value"` */
+  value?: string;
 }
 
 /**

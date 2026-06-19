@@ -41,7 +41,7 @@ export type StdUiPricingGridEventKey = 'INIT';
 export interface StdUiPricingGridConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"name":"Name","badge":"Badge","description":"Description","highlighted":false,"className":"Class Name","action":{"label":"Label","href":"Href"},"features":["Item"],"price":"Price"}]` */
+  /** Default: `[{"action":{"href":"Href","label":"Label"},"badge":"Badge","className":"Class Name","description":"Description","features":["Item"],"highlighted":false,"name":"Name","price":"Price"}]` */
   plans?: EntityRow[];
 }
 

@@ -39,15 +39,15 @@ export type StdUiModalSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiModalSlotConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   /** Default: `""` */
   className?: string;
+  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**
@@ -108,8 +108,8 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -120,32 +120,95 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'ModalSlotRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'ModalSlotItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Custom class name',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'error': {
+            'description': 'Error state',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
             },
-          ],
+            'tier': 'presentation',
+            'type': 'ModalSlotError',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'size': {
+            'default': 'md',
+            'description': 'Modal size',
+            'label': 'Size',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+              'xl',
+              'full',
+            ],
+          },
+          'title': {
+            'default': 'Title',
+            'description': 'Override modal title (extracted from children if not provided)',
+            'label': 'Title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'ModalSlotItem',
+        'name': 'ModalSlotRender',
+        'scope': 'instance',
+        'stateMachine': {
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -156,91 +219,28 @@ export function stdUiModalSlotModalSlotOrbital(params: StdUiModalSlotModalSlotOr
                   'render-ui',
                   'main',
                   {
-                    'title': '@config.title',
-                    'size': '@config.size',
                     'children': [
                       {
                         'content': 'Sample content',
                         'type': 'typography',
                       },
                     ],
-                    'entity': 'ModalSlotItem',
                     'className': '@config.className',
-                    'isLoading': '@config.isLoading',
-                    'type': 'modal-slot',
+                    'entity': 'ModalSlotItem',
                     'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'size': '@config.size',
+                    'title': '@config.title',
+                    'type': 'modal-slot',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'ModalSlotError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'title': {
-            'type': 'string',
-            'default': 'Title',
-            'label': 'Title',
-            'description': 'Override modal title (extracted from children if not provided)',
-            'tier': 'presentation',
-          },
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Modal size',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-              'xl',
-              'full',
-            ],
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Custom class name',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'ModalSlotItem', canonicalName) as never,
     ],
     pages: [

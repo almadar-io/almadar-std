@@ -41,10 +41,10 @@ export type StdUiTagCloudEventKey = 'INIT';
 export interface StdUiTagCloudConfig {
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"href":"Href","label":"Label","variant":"Variant"}]` */
+  tags?: EntityRow[];
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'accent';
-  /** Default: `[{"label":"Label","variant":"Variant","href":"Href"}]` */
-  tags?: EntityRow[];
 }
 
 /**

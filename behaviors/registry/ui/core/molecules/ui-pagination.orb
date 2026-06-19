@@ -1,258 +1,25 @@
 {
-  "name": "ui-pagination",
-  "version": "1.0.0",
   "description": "Pagination — UI factory (1:1 with the @almadar/ui pagination pattern).",
+  "name": "ui-pagination",
   "orbitals": [
     {
-      "name": "PaginationOrbital",
       "entity": {
-        "name": "PaginationItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
+            "default": 0.0,
             "name": "pageSize",
-            "type": "number",
-            "default": 0.0
+            "type": "number"
           }
-        ]
+        ],
+        "name": "PaginationItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "PaginationRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "pageSize"
-            ]
-          },
-          "category": "interaction",
-          "linkedEntity": "PaginationItem",
-          "emits": [
-            {
-              "event": "PAGE_CHANGE",
-              "description": "Callback when page changes (optional - can be a no-op if not interactive)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "page",
-                  "type": "number"
-                }
-              ]
-            },
-            {
-              "event": "PAGE_SIZE_CHANGE",
-              "description": "Callback when page size changes",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "size",
-                  "type": "number"
-                },
-                {
-                  "name": "pageSize",
-                  "type": "number",
-                  "required": true
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "PAGE_SIZE_CHANGE",
-                "name": "Page Size Change",
-                "description": "Callback when page size changes",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "size",
-                    "type": "number"
-                  },
-                  {
-                    "name": "pageSize",
-                    "type": "number",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "PAGE_CHANGE",
-                "name": "Page Change",
-                "description": "Callback when page changes (optional - can be a no-op if not interactive)",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "page",
-                    "type": "number"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.pageSize",
-                    "@config.pageSize"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "maxVisiblePages": "@config.maxVisiblePages",
-                      "pageSize": "@entity.pageSize",
-                      "onPageSizeChange": "PAGE_SIZE_CHANGE",
-                      "onPageChange": "PAGE_CHANGE",
-                      "totalItems": "@config.totalItems",
-                      "totalPages": "@config.totalPages",
-                      "className": "@config.className",
-                      "showJumpToPage": "@config.showJumpToPage",
-                      "showTotal": "@config.showTotal",
-                      "pageChangeEvent": "PAGE_CHANGE",
-                      "currentPage": "@config.currentPage",
-                      "pageSizeOptions": "@config.pageSizeOptions",
-                      "type": "pagination",
-                      "showPageSize": "@config.showPageSize",
-                      "pageSizeChangeEvent": "PAGE_SIZE_CHANGE"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "PAGE_SIZE_CHANGE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.pageSize",
-                    "@payload.pageSize"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "maxVisiblePages": "@config.maxVisiblePages",
-                      "totalItems": "@config.totalItems",
-                      "className": "@config.className",
-                      "pageSize": "@entity.pageSize",
-                      "showTotal": "@config.showTotal",
-                      "showJumpToPage": "@config.showJumpToPage",
-                      "type": "pagination",
-                      "pageChangeEvent": "PAGE_CHANGE",
-                      "totalPages": "@config.totalPages",
-                      "showPageSize": "@config.showPageSize",
-                      "pageSizeChangeEvent": "PAGE_SIZE_CHANGE",
-                      "onPageSizeChange": "PAGE_SIZE_CHANGE",
-                      "pageSizeOptions": "@config.pageSizeOptions",
-                      "onPageChange": "PAGE_CHANGE",
-                      "currentPage": "@config.currentPage"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "totalItems": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Items",
-              "description": "Total items count",
-              "tier": "presentation"
-            },
-            "showTotal": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Total",
-              "description": "Show total count",
-              "tier": "presentation"
-            },
-            "showPageSize": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Page Size",
-              "description": "Show page size selector",
-              "tier": "presentation"
-            },
-            "pageSizeOptions": {
-              "type": "[number]",
-              "default": [],
-              "label": "Page Size Options",
-              "description": "Page size options",
-              "tier": "presentation",
-              "items": {
-                "type": "number"
-              }
-            },
-            "showJumpToPage": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Jump To Page",
-              "description": "Show jump to page input",
-              "tier": "presentation"
-            },
-            "maxVisiblePages": {
-              "type": "number",
-              "default": 7.0,
-              "label": "Max Visible Pages",
-              "description": "Maximum number of page buttons to show",
-              "tier": "presentation"
-            },
-            "totalPages": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Pages",
-              "description": "Total number of pages",
-              "tier": "presentation"
-            },
-            "currentPage": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current Page",
-              "description": "Current page (1-indexed)",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Current page size",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "PaginationOrbital",
       "pages": [
         {
           "name": "PaginationPage",
@@ -263,7 +30,240 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "currentPage": {
+              "default": 0.0,
+              "description": "Current page (1-indexed)",
+              "label": "Current Page",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "maxVisiblePages": {
+              "default": 7.0,
+              "description": "Maximum number of page buttons to show",
+              "label": "Max Visible Pages",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageSize": {
+              "default": 0.0,
+              "description": "Current page size",
+              "label": "Page Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageSizeOptions": {
+              "default": [],
+              "description": "Page size options",
+              "items": {
+                "type": "number"
+              },
+              "label": "Page Size Options",
+              "tier": "presentation",
+              "type": "[number]"
+            },
+            "showJumpToPage": {
+              "default": false,
+              "description": "Show jump to page input",
+              "label": "Show Jump To Page",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showPageSize": {
+              "default": false,
+              "description": "Show page size selector",
+              "label": "Show Page Size",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showTotal": {
+              "default": false,
+              "description": "Show total count",
+              "label": "Show Total",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "totalItems": {
+              "default": 0.0,
+              "description": "Total items count",
+              "label": "Total Items",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "totalPages": {
+              "default": 0.0,
+              "description": "Total number of pages",
+              "label": "Total Pages",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Callback when page changes (optional - can be a no-op if not interactive)",
+              "event": "PAGE_CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "page",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Callback when page size changes",
+              "event": "PAGE_SIZE_CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "size",
+                  "type": "number"
+                },
+                {
+                  "name": "pageSize",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "pageSize"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "PaginationItem",
+          "name": "PaginationRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Callback when page size changes",
+                "key": "PAGE_SIZE_CHANGE",
+                "name": "Page Size Change",
+                "payloadSchema": [
+                  {
+                    "name": "size",
+                    "type": "number"
+                  },
+                  {
+                    "name": "pageSize",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Callback when page changes (optional - can be a no-op if not interactive)",
+                "key": "PAGE_CHANGE",
+                "name": "Page Change",
+                "payloadSchema": [
+                  {
+                    "name": "page",
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pageSize",
+                    "@config.pageSize"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "currentPage": "@config.currentPage",
+                      "maxVisiblePages": "@config.maxVisiblePages",
+                      "onPageChange": "PAGE_CHANGE",
+                      "onPageSizeChange": "PAGE_SIZE_CHANGE",
+                      "pageChangeEvent": "PAGE_CHANGE",
+                      "pageSize": "@entity.pageSize",
+                      "pageSizeChangeEvent": "PAGE_SIZE_CHANGE",
+                      "pageSizeOptions": "@config.pageSizeOptions",
+                      "showJumpToPage": "@config.showJumpToPage",
+                      "showPageSize": "@config.showPageSize",
+                      "showTotal": "@config.showTotal",
+                      "totalItems": "@config.totalItems",
+                      "totalPages": "@config.totalPages",
+                      "type": "pagination"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pageSize",
+                    "@payload.pageSize"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "currentPage": "@config.currentPage",
+                      "maxVisiblePages": "@config.maxVisiblePages",
+                      "onPageChange": "PAGE_CHANGE",
+                      "onPageSizeChange": "PAGE_SIZE_CHANGE",
+                      "pageChangeEvent": "PAGE_CHANGE",
+                      "pageSize": "@entity.pageSize",
+                      "pageSizeChangeEvent": "PAGE_SIZE_CHANGE",
+                      "pageSizeOptions": "@config.pageSizeOptions",
+                      "showJumpToPage": "@config.showJumpToPage",
+                      "showPageSize": "@config.showPageSize",
+                      "showTotal": "@config.showTotal",
+                      "totalItems": "@config.totalItems",
+                      "totalPages": "@config.totalPages",
+                      "type": "pagination"
+                    }
+                  ]
+                ],
+                "event": "PAGE_SIZE_CHANGE",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

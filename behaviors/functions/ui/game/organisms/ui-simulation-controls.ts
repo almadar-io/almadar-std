@@ -84,12 +84,12 @@ export interface StdUiSimulationControlsParameterChangePayload {
 export interface StdUiSimulationControlsConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  speed?: number;
-  /** Default: `false` */
-  running?: boolean;
   /** Default: `{}` */
   parameters?: unknown;
+  /** Default: `false` */
+  running?: boolean;
+  /** Default: `0` */
+  speed?: number;
 }
 
 /**
@@ -150,13 +150,13 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
           {
+            'default': 0,
             'name': 'speed',
             'type': 'number',
-            'default': 0,
           },
         ];
         const extras = params.fields ?? [];
@@ -167,82 +167,131 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'SimulationControlsRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [
-            'speed',
-          ],
-        },
         'category': 'interaction',
-        'linkedEntity': 'SimulationControlsItem',
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'className prop',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'parameters': {
+            'default': {},
+            'description': 'parameters prop',
+            'items': {
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'max': {
+                  'name': 'max',
+                  'required': true,
+                  'type': 'number',
+                },
+                'min': {
+                  'name': 'min',
+                  'required': true,
+                  'type': 'number',
+                },
+                'step': {
+                  'name': 'step',
+                  'required': true,
+                  'type': 'number',
+                },
+                'value': {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Parameters',
+            'tier': 'presentation',
+            'type': 'Map<string,SimulationControlsParametersValue>',
+          },
+          'running': {
+            'default': false,
+            'description': 'running prop',
+            'label': 'Running',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'speed': {
+            'default': 0,
+            'description': 'speed prop',
+            'label': 'Speed',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+        },
         'emits': [
           {
-            'event': 'PLAY',
             'description': 'onPlay prop',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'PLAY',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
           {
-            'event': 'PAUSE',
             'description': 'onPause prop',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'PAUSE',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
           {
-            'event': 'STEP',
             'description': 'onStep prop',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'STEP',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
           {
-            'event': 'RESET',
             'description': 'onReset prop',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'RESET',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
           {
-            'event': 'SPEED_CHANGE',
             'description': 'onSpeedChange prop',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'SPEED_CHANGE',
             'payloadSchema': [
               {
                 'name': 'speed',
                 'type': 'number',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
           {
-            'event': 'PARAMETER_CHANGE',
             'description': 'onParameterChange prop',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'PARAMETER_CHANGE',
             'payloadSchema': [
               {
                 'name': 'name',
@@ -253,85 +302,90 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                 'type': 'number',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
         ],
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
+        'entityContract': {
+          'provides': [
+            'speed',
           ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'SimulationControlsItem',
+        'name': 'SimulationControlsRender',
+        'scope': 'instance',
+        'stateMachine': {
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'onSpeedChange prop',
               'key': 'SPEED_CHANGE',
               'name': 'Speed Change',
-              'description': 'onSpeedChange prop',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'speed',
                   'type': 'number',
                 },
               ],
+              'tier': 'essential',
             },
             {
+              'description': 'onPlay prop',
               'key': 'PLAY',
               'name': 'Play',
-              'description': 'onPlay prop',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'tier': 'essential',
             },
             {
+              'description': 'onPause prop',
               'key': 'PAUSE',
               'name': 'Pause',
-              'description': 'onPause prop',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'tier': 'essential',
             },
             {
+              'description': 'onStep prop',
               'key': 'STEP',
               'name': 'Step',
-              'description': 'onStep prop',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'tier': 'essential',
             },
             {
+              'description': 'onReset prop',
               'key': 'RESET',
               'name': 'Reset',
-              'description': 'onReset prop',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'tier': 'essential',
             },
             {
+              'description': 'onParameterChange prop',
               'key': 'PARAMETER_CHANGE',
               'name': 'Parameter Change',
-              'description': 'onParameterChange prop',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'name',
@@ -342,13 +396,17 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'type': 'number',
                 },
               ],
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'set',
@@ -359,25 +417,25 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'render-ui',
                   'main',
                   {
-                    'onPause': 'PAUSE',
-                    'onSpeedChange': 'SPEED_CHANGE',
-                    'onReset': 'RESET',
-                    'onParameterChange': 'PARAMETER_CHANGE',
                     'className': '@config.className',
-                    'type': 'simulation-controls',
-                    'speed': '@entity.speed',
+                    'onParameterChange': 'PARAMETER_CHANGE',
+                    'onPause': 'PAUSE',
                     'onPlay': 'PLAY',
-                    'running': '@config.running',
-                    'parameters': '@config.parameters',
+                    'onReset': 'RESET',
+                    'onSpeedChange': 'SPEED_CHANGE',
                     'onStep': 'STEP',
+                    'parameters': '@config.parameters',
+                    'running': '@config.running',
+                    'speed': '@entity.speed',
+                    'type': 'simulation-controls',
                   },
                 ],
               ],
-            },
-            {
+              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
-              'event': 'SPEED_CHANGE',
+            },
+            {
               'effects': [
                 [
                   'set',
@@ -388,84 +446,26 @@ export function stdUiSimulationControlsSimulationControlsOrbital(params: StdUiSi
                   'render-ui',
                   'main',
                   {
-                    'parameters': '@config.parameters',
-                    'onStep': 'STEP',
-                    'onSpeedChange': 'SPEED_CHANGE',
-                    'running': '@config.running',
-                    'onPlay': 'PLAY',
-                    'onPause': 'PAUSE',
-                    'onReset': 'RESET',
-                    'speed': '@entity.speed',
-                    'onParameterChange': 'PARAMETER_CHANGE',
                     'className': '@config.className',
+                    'onParameterChange': 'PARAMETER_CHANGE',
+                    'onPause': 'PAUSE',
+                    'onPlay': 'PLAY',
+                    'onReset': 'RESET',
+                    'onSpeedChange': 'SPEED_CHANGE',
+                    'onStep': 'STEP',
+                    'parameters': '@config.parameters',
+                    'running': '@config.running',
+                    'speed': '@entity.speed',
                     'type': 'simulation-controls',
                   },
                 ],
               ],
+              'event': 'SPEED_CHANGE',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
-          },
-          'speed': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Speed',
-            'description': 'speed prop',
-            'tier': 'presentation',
-          },
-          'running': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Running',
-            'description': 'running prop',
-            'tier': 'presentation',
-          },
-          'parameters': {
-            'type': 'Map<string,SimulationControlsParametersValue>',
-            'default': {},
-            'label': 'Parameters',
-            'description': 'parameters prop',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'min': {
-                  'name': 'min',
-                  'type': 'number',
-                  'required': true,
-                },
-                'max': {
-                  'name': 'max',
-                  'type': 'number',
-                  'required': true,
-                },
-                'value': {
-                  'name': 'value',
-                  'type': 'number',
-                  'required': true,
-                },
-                'step': {
-                  'name': 'step',
-                  'type': 'number',
-                  'required': true,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
-            },
-          },
-        },
-        'scope': 'instance',
       } as never, 'SimulationControlsItem', canonicalName) as never,
     ],
     pages: [

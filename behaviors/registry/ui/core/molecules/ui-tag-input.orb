@@ -1,152 +1,88 @@
 {
-  "name": "ui-tag-input",
-  "version": "1.0.0",
   "description": "TagInput — UI factory (1:1 with the @almadar/ui tag-input pattern).",
+  "name": "ui-tag-input",
   "orbitals": [
     {
-      "name": "TagInputOrbital",
       "entity": {
-        "name": "TagInputItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "TagInputItem",
+        "persistence": "runtime"
       },
+      "name": "TagInputOrbital",
+      "pages": [
+        {
+          "name": "TagInputPage",
+          "path": "/tag-input",
+          "traits": [
+            {
+              "ref": "TagInputRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "TagInputRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "TagInputItem",
-          "emits": [
-            {
-              "event": "CHANGE",
-              "description": "Direct callback emitted on every change. Stays as the Storybook / non-trait contract; trait-driven schemas should prefer the bus events below.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "next",
-                  "type": "[object]"
-                }
-              ]
-            },
-            {
-              "event": "ADD",
-              "description": "Event emitted when a tag is added: `UI:{addEvent}` with payload `{ tag: string, value: string[] }`.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "REMOVE",
-              "description": "Event emitted when a tag is removed: `UI:{removeEvent}` with payload `{ tag: string, index: number, value: string[] }`.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CHANGE",
-                "name": "Change",
-                "description": "Direct callback emitted on every change. Stays as the Storybook / non-trait contract; trait-driven schemas should prefer the bus events below.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "next",
-                    "type": "[object]"
-                  }
-                ]
-              },
-              {
-                "key": "ADD",
-                "name": "Add",
-                "description": "Event emitted when a tag is added: `UI:{addEvent}` with payload `{ tag: string, value: string[] }`.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "REMOVE",
-                "name": "Remove",
-                "description": "Event emitted when a tag is removed: `UI:{removeEvent}` with payload `{ tag: string, index: number, value: string[] }`.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "helperText": "@config.helperText",
-                      "placeholder": "@config.placeholder",
-                      "removeEvent": "REMOVE",
-                      "variant": "@config.variant",
-                      "type": "tag-input",
-                      "disabled": "@config.disabled",
-                      "unique": "@config.unique",
-                      "className": "@config.className",
-                      "value": "@config.value",
-                      "onChange": "CHANGE",
-                      "addEvent": "ADD"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
           "config": {
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Variant",
-              "description": "Variant applied to each chip Badge. Default: `'default'`.",
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the outer container.",
+              "label": "Class Name",
               "tier": "presentation",
+              "type": "string"
+            },
+            "disabled": {
+              "default": false,
+              "description": "Disable add + remove interactions.",
+              "label": "Disabled",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "helperText": {
+              "default": "Helper Text",
+              "description": "Helper text rendered under the input.",
+              "label": "Helper Text",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "placeholder": {
+              "default": "Placeholder",
+              "description": "Placeholder for the entry input. Default: `'Type and press Enter…'`.",
+              "label": "Placeholder",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "unique": {
+              "default": true,
+              "description": "Suppress duplicate entries. Default: `true`.",
+              "label": "Unique",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "value": {
+              "default": [
+                "Item"
+              ],
+              "description": "Current list of tags.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Value",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "variant": {
+              "default": "default",
+              "description": "Variant applied to each chip Badge. Default: `'default'`.",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
               "values": [
                 "default",
                 "primary",
@@ -158,69 +94,133 @@
                 "info",
                 "neutral"
               ]
-            },
-            "unique": {
-              "type": "boolean",
-              "default": true,
-              "label": "Unique",
-              "description": "Suppress duplicate entries. Default: `true`.",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "[string]",
-              "default": [
-                "Item"
-              ],
-              "label": "Value",
-              "description": "Current list of tags.",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "helperText": {
-              "type": "string",
-              "default": "Helper Text",
-              "label": "Helper Text",
-              "description": "Helper text rendered under the input.",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the outer container.",
-              "tier": "presentation"
-            },
-            "placeholder": {
-              "type": "string",
-              "default": "Placeholder",
-              "label": "Placeholder",
-              "description": "Placeholder for the entry input. Default: `'Type and press Enter…'`.",
-              "tier": "presentation"
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disable add + remove interactions.",
-              "tier": "presentation"
             }
           },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "TagInputPage",
-          "path": "/tag-input",
-          "traits": [
+          "emits": [
             {
-              "ref": "TagInputRender"
+              "description": "Direct callback emitted on every change. Stays as the Storybook / non-trait contract; trait-driven schemas should prefer the bus events below.",
+              "event": "CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "next",
+                  "type": "[object]"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Event emitted when a tag is added: `UI:{addEvent}` with payload `{ tag: string, value: string[] }`.",
+              "event": "ADD",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Event emitted when a tag is removed: `UI:{removeEvent}` with payload `{ tag: string, index: number, value: string[] }`.",
+              "event": "REMOVE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
-          ]
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TagInputItem",
+          "name": "TagInputRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Direct callback emitted on every change. Stays as the Storybook / non-trait contract; trait-driven schemas should prefer the bus events below.",
+                "key": "CHANGE",
+                "name": "Change",
+                "payloadSchema": [
+                  {
+                    "name": "next",
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event emitted when a tag is added: `UI:{addEvent}` with payload `{ tag: string, value: string[] }`.",
+                "key": "ADD",
+                "name": "Add",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event emitted when a tag is removed: `UI:{removeEvent}` with payload `{ tag: string, index: number, value: string[] }`.",
+                "key": "REMOVE",
+                "name": "Remove",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addEvent": "ADD",
+                      "className": "@config.className",
+                      "disabled": "@config.disabled",
+                      "helperText": "@config.helperText",
+                      "onChange": "CHANGE",
+                      "placeholder": "@config.placeholder",
+                      "removeEvent": "REMOVE",
+                      "type": "tag-input",
+                      "unique": "@config.unique",
+                      "value": "@config.value",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

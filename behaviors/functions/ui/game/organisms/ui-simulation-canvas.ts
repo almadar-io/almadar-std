@@ -39,14 +39,14 @@ export type StdUiSimulationCanvasEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulationCanvasConfig {
-  /** Default: `{"gravity":{"x":0,"y":9.81},"id":"demo","name":"Demo Scene","description":"Bouncing bodies with a spring","bodies":[{"vx":120,"vy":0,"fixed":false,"id":"b0","mass":1,"radius":14,"y":80,"x":100,"color":"#e94560"},{"mass":2,"radius":20,"vy":60,"fixed":false,"id":"b1","x":300,"y":150,"vx":-80,"color":"#0f3460"},{"vy":90,"y":90,"color":"#533483","fixed":false,"x":480,"vx":50,"id":"b2","radius":12,"mass":1},{"id":"b3","x":200,"y":300,"color":"#16213e","mass":3,"vy":-70,"vx":-40,"radius":22,"fixed":false},{"vx":70,"id":"b4","vy":-50,"y":280,"x":400,"mass":1,"color":"#e94560","radius":16,"fixed":false}],"constraints":[{"bodyA":1,"bodyB":3,"length":160,"stiffness":0.4}],"backgroundColor":"#1a1a2e","showVelocity":true,"domain":"mechanics","parameters":{}}` */
-  preset?: EntityRow;
-  /** Default: `400` */
-  height?: number;
-  /** Default: `true` */
-  running?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `400` */
+  height?: number;
+  /** Default: `{"backgroundColor":"#1a1a2e","bodies":[{"color":"#e94560","fixed":false,"id":"b0","mass":1,"radius":14,"vx":120,"vy":0,"x":100,"y":80},{"color":"#0f3460","fixed":false,"id":"b1","mass":2,"radius":20,"vx":-80,"vy":60,"x":300,"y":150},{"color":"#533483","fixed":false,"id":"b2","mass":1,"radius":12,"vx":50,"vy":90,"x":480,"y":90},{"color":"#16213e","fixed":false,"id":"b3","mass":3,"radius":22,"vx":-40,"vy":-70,"x":200,"y":300},{"color":"#e94560","fixed":false,"id":"b4","mass":1,"radius":16,"vx":70,"vy":-50,"x":400,"y":280}],"constraints":[{"bodyA":1,"bodyB":3,"length":160,"stiffness":0.4}],"description":"Bouncing bodies with a spring","domain":"mechanics","gravity":{"x":0,"y":9.81},"id":"demo","name":"Demo Scene","parameters":{},"showVelocity":true}` */
+  preset?: EntityRow;
+  /** Default: `true` */
+  running?: boolean;
   /** Default: `1` */
   speed?: number;
   /** Default: `600` */
@@ -111,8 +111,8 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -123,116 +123,80 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'SimulationCanvasRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'SimulationCanvasItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'transitions': [
-            {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'height': '@config.height',
-                    'speed': '@config.speed',
-                    'className': '@config.className',
-                    'preset': '@config.preset',
-                    'running': '@config.running',
-                    'type': 'simulation-canvas',
-                    'width': '@config.width',
-                  },
-                ],
-              ],
-            },
-          ],
-        },
         'config': {
+          'className': {
+            'default': '',
+            'description': 'className prop',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'height': {
+            'default': 400,
+            'description': 'height prop',
+            'label': 'Height',
+            'tier': 'presentation',
+            'type': 'number',
+          },
           'preset': {
-            'type': 'SimulationCanvasPreset',
             'default': {
-              'gravity': {
-                'x': 0,
-                'y': 9.81,
-              },
-              'id': 'demo',
-              'name': 'Demo Scene',
-              'description': 'Bouncing bodies with a spring',
+              'backgroundColor': '#1a1a2e',
               'bodies': [
                 {
-                  'vx': 120,
-                  'vy': 0,
+                  'color': '#e94560',
                   'fixed': false,
                   'id': 'b0',
                   'mass': 1,
                   'radius': 14,
-                  'y': 80,
+                  'vx': 120,
+                  'vy': 0,
                   'x': 100,
-                  'color': '#e94560',
+                  'y': 80,
                 },
                 {
-                  'mass': 2,
-                  'radius': 20,
-                  'vy': 60,
+                  'color': '#0f3460',
                   'fixed': false,
                   'id': 'b1',
+                  'mass': 2,
+                  'radius': 20,
+                  'vx': -80,
+                  'vy': 60,
                   'x': 300,
                   'y': 150,
-                  'vx': -80,
-                  'color': '#0f3460',
                 },
                 {
-                  'vy': 90,
-                  'y': 90,
                   'color': '#533483',
                   'fixed': false,
-                  'x': 480,
-                  'vx': 50,
                   'id': 'b2',
-                  'radius': 12,
                   'mass': 1,
+                  'radius': 12,
+                  'vx': 50,
+                  'vy': 90,
+                  'x': 480,
+                  'y': 90,
                 },
                 {
+                  'color': '#16213e',
+                  'fixed': false,
                   'id': 'b3',
+                  'mass': 3,
+                  'radius': 22,
+                  'vx': -40,
+                  'vy': -70,
                   'x': 200,
                   'y': 300,
-                  'color': '#16213e',
-                  'mass': 3,
-                  'vy': -70,
-                  'vx': -40,
-                  'radius': 22,
-                  'fixed': false,
                 },
                 {
-                  'vx': 70,
-                  'id': 'b4',
-                  'vy': -50,
-                  'y': 280,
-                  'x': 400,
-                  'mass': 1,
                   'color': '#e94560',
-                  'radius': 16,
                   'fixed': false,
+                  'id': 'b4',
+                  'mass': 1,
+                  'radius': 16,
+                  'vx': 70,
+                  'vy': -50,
+                  'x': 400,
+                  'y': 280,
                 },
               ],
               'constraints': [
@@ -243,221 +207,257 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
                   'stiffness': 0.4,
                 },
               ],
-              'backgroundColor': '#1a1a2e',
-              'showVelocity': true,
+              'description': 'Bouncing bodies with a spring',
               'domain': 'mechanics',
-              'parameters': {},
-            },
-            'label': 'Preset',
-            'description': 'preset prop',
-            'tier': 'presentation',
-            'properties': {
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': true,
-              },
               'gravity': {
-                'name': 'gravity',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'y': {
-                    'name': 'y',
-                    'type': 'number',
-                    'required': true,
-                  },
-                  'x': {
-                    'name': 'x',
-                    'type': 'number',
-                    'required': true,
-                  },
-                },
+                'x': 0,
+                'y': 9.81,
               },
-              'showVelocity': {
-                'name': 'showVelocity',
-                'type': 'boolean',
+              'id': 'demo',
+              'name': 'Demo Scene',
+              'parameters': {},
+              'showVelocity': true,
+            },
+            'description': 'preset prop',
+            'label': 'Preset',
+            'properties': {
+              'backgroundColor': {
+                'name': 'backgroundColor',
                 'required': false,
-              },
-              'constraints': {
-                'name': 'constraints',
-                'type': 'array',
-                'required': false,
-                'items': {
-                  'type': 'object',
-                  'properties': {
-                    'bodyB': {
-                      'name': 'bodyB',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'bodyA': {
-                      'name': 'bodyA',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'length': {
-                      'name': 'length',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'stiffness': {
-                      'name': 'stiffness',
-                      'type': 'number',
-                      'required': true,
-                    },
-                  },
-                },
-              },
-              'name': {
-                'name': 'name',
                 'type': 'string',
-                'required': true,
               },
               'bodies': {
-                'name': 'bodies',
-                'type': 'array',
-                'required': true,
                 'items': {
-                  'type': 'object',
                   'properties': {
-                    'vy': {
-                      'name': 'vy',
-                      'type': 'number',
-                      'required': true,
-                    },
                     'color': {
                       'name': 'color',
+                      'required': true,
                       'type': 'string',
-                      'required': true,
-                    },
-                    'mass': {
-                      'name': 'mass',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'x': {
-                      'name': 'x',
-                      'type': 'number',
-                      'required': true,
-                    },
-                    'id': {
-                      'name': 'id',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'vx': {
-                      'name': 'vx',
-                      'type': 'number',
-                      'required': true,
                     },
                     'fixed': {
                       'name': 'fixed',
+                      'required': true,
                       'type': 'boolean',
-                      'required': true,
                     },
-                    'y': {
-                      'name': 'y',
-                      'type': 'number',
+                    'id': {
+                      'name': 'id',
                       'required': true,
+                      'type': 'string',
+                    },
+                    'mass': {
+                      'name': 'mass',
+                      'required': true,
+                      'type': 'number',
                     },
                     'radius': {
                       'name': 'radius',
-                      'type': 'number',
                       'required': true,
+                      'type': 'number',
+                    },
+                    'vx': {
+                      'name': 'vx',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'vy': {
+                      'name': 'vy',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'x': {
+                      'name': 'x',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'y': {
+                      'name': 'y',
+                      'required': true,
+                      'type': 'number',
                     },
                   },
-                },
-              },
-              'backgroundColor': {
-                'name': 'backgroundColor',
-                'type': 'string',
-                'required': false,
-              },
-              'parameters': {
-                'name': 'parameters',
-                'type': 'object',
-                'required': true,
-                'items': {
                   'type': 'object',
+                },
+                'name': 'bodies',
+                'required': true,
+                'type': 'array',
+              },
+              'constraints': {
+                'items': {
                   'properties': {
-                    'max': {
-                      'name': 'max',
+                    'bodyA': {
+                      'name': 'bodyA',
+                      'required': true,
                       'type': 'number',
-                      'required': true,
                     },
-                    'min': {
-                      'name': 'min',
+                    'bodyB': {
+                      'name': 'bodyB',
+                      'required': true,
                       'type': 'number',
-                      'required': true,
                     },
-                    'value': {
-                      'name': 'value',
+                    'length': {
+                      'name': 'length',
+                      'required': true,
                       'type': 'number',
-                      'required': true,
                     },
-                    'label': {
-                      'name': 'label',
-                      'type': 'string',
+                    'stiffness': {
+                      'name': 'stiffness',
                       'required': true,
-                    },
-                    'step': {
-                      'name': 'step',
                       'type': 'number',
-                      'required': true,
                     },
                   },
+                  'type': 'object',
                 },
+                'name': 'constraints',
+                'required': false,
+                'type': 'array',
+              },
+              'description': {
+                'name': 'description',
+                'required': true,
+                'type': 'string',
               },
               'domain': {
                 'name': 'domain',
-                'type': 'string',
                 'required': true,
+                'type': 'string',
+              },
+              'gravity': {
+                'name': 'gravity',
+                'properties': {
+                  'x': {
+                    'name': 'x',
+                    'required': true,
+                    'type': 'number',
+                  },
+                  'y': {
+                    'name': 'y',
+                    'required': true,
+                    'type': 'number',
+                  },
+                },
+                'required': false,
+                'type': 'object',
               },
               'id': {
                 'name': 'id',
-                'type': 'string',
                 'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': true,
+                'type': 'string',
+              },
+              'parameters': {
+                'items': {
+                  'properties': {
+                    'label': {
+                      'name': 'label',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'max': {
+                      'name': 'max',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'min': {
+                      'name': 'min',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'step': {
+                      'name': 'step',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'value': {
+                      'name': 'value',
+                      'required': true,
+                      'type': 'number',
+                    },
+                  },
+                  'type': 'object',
+                },
+                'name': 'parameters',
+                'required': true,
+                'type': 'object',
+              },
+              'showVelocity': {
+                'name': 'showVelocity',
+                'required': false,
+                'type': 'boolean',
               },
             },
-          },
-          'height': {
-            'type': 'number',
-            'default': 400,
-            'label': 'Height',
-            'description': 'height prop',
             'tier': 'presentation',
+            'type': 'SimulationCanvasPreset',
           },
           'running': {
-            'type': 'boolean',
             'default': true,
-            'label': 'Running',
             'description': 'running prop',
+            'label': 'Running',
             'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
+            'type': 'boolean',
           },
           'speed': {
-            'type': 'number',
             'default': 1,
-            'label': 'Speed',
             'description': 'speed prop',
+            'label': 'Speed',
             'tier': 'presentation',
+            'type': 'number',
           },
           'width': {
-            'type': 'number',
             'default': 600,
-            'label': 'Width',
             'description': 'width prop',
+            'label': 'Width',
             'tier': 'presentation',
+            'type': 'number',
           },
         },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'SimulationCanvasItem',
+        'name': 'SimulationCanvasRender',
         'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': '@config.className',
+                    'height': '@config.height',
+                    'preset': '@config.preset',
+                    'running': '@config.running',
+                    'speed': '@config.speed',
+                    'type': 'simulation-canvas',
+                    'width': '@config.width',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
       } as never, 'SimulationCanvasItem', canonicalName) as never,
     ],
     pages: [

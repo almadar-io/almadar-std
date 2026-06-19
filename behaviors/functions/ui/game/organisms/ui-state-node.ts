@@ -46,18 +46,18 @@ export interface StdUiStateNodeClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStateNodeConfig {
-  /** Default: `{"x":1,"y":1}` */
-  position?: EntityRow;
+  /** Default: `""` */
+  className?: string;
   /** Default: `false` */
   isCurrent?: boolean;
   /** Default: `false` */
   isInitial?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Name"` */
-  name?: string;
   /** Default: `false` */
   isSelected?: boolean;
+  /** Default: `"Name"` */
+  name?: string;
+  /** Default: `{"x":1,"y":1}` */
+  position?: EntityRow;
 }
 
 /**
@@ -118,8 +118,8 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -130,137 +130,137 @@ export function stdUiStateNodeStateNodeOrbital(params: StdUiStateNodeStateNodeOr
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'StateNodeRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'StateNodeItem',
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'isCurrent': {
+            'default': false,
+            'description': 'Whether this is the current active state',
+            'label': 'Is Current',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'isInitial': {
+            'default': false,
+            'description': 'Whether this is the initial state',
+            'label': 'Is Initial',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'isSelected': {
+            'default': false,
+            'description': 'Whether this node is selected for editing',
+            'label': 'Is Selected',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'name': {
+            'default': 'Name',
+            'description': 'State name',
+            'label': 'Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'position': {
+            'default': {
+              'x': 1,
+              'y': 1,
+            },
+            'description': 'Position on the graph canvas',
+            'label': 'Position',
+            'properties': {
+              'x': {
+                'name': 'x',
+                'required': true,
+                'type': 'number',
+              },
+              'y': {
+                'name': 'y',
+                'required': true,
+                'type': 'number',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'StateNodePosition',
+          },
+        },
         'emits': [
           {
-            'event': 'CLICK',
             'description': 'Click handler',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'CLICK',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
         ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'StateNodeItem',
+        'name': 'StateNodeRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Click handler',
               'key': 'CLICK',
               'name': 'Click',
-              'description': 'Click handler',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'name': '@config.name',
+                    'className': '@config.className',
+                    'isCurrent': '@config.isCurrent',
                     'isInitial': '@config.isInitial',
                     'isSelected': '@config.isSelected',
-                    'position': '@config.position',
-                    'isCurrent': '@config.isCurrent',
-                    'className': '@config.className',
+                    'name': '@config.name',
                     'onClick': 'CLICK',
+                    'position': '@config.position',
                     'type': 'state-node',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'position': {
-            'type': 'StateNodePosition',
-            'default': {
-              'x': 1,
-              'y': 1,
-            },
-            'label': 'Position',
-            'description': 'Position on the graph canvas',
-            'tier': 'presentation',
-            'properties': {
-              'y': {
-                'name': 'y',
-                'type': 'number',
-                'required': true,
-              },
-              'x': {
-                'name': 'x',
-                'type': 'number',
-                'required': true,
-              },
-            },
-          },
-          'isCurrent': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Current',
-            'description': 'Whether this is the current active state',
-            'tier': 'presentation',
-          },
-          'isInitial': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Initial',
-            'description': 'Whether this is the initial state',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'name': {
-            'type': 'string',
-            'default': 'Name',
-            'label': 'Name',
-            'description': 'State name',
-            'tier': 'presentation',
-          },
-          'isSelected': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Selected',
-            'description': 'Whether this node is selected for editing',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'StateNodeItem', canonicalName) as never,
     ],
     pages: [

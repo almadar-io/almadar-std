@@ -39,22 +39,22 @@ export type StdUiSplitPaneEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSplitPaneConfig {
-  left?: unknown;
-  /** Default: `"horizontal"` */
-  direction?: 'horizontal' | 'vertical';
-  /** Default: `"Right Class Name"` */
-  rightClassName?: string;
-  right?: unknown;
-  /** Default: `"Left Class Name"` */
-  leftClassName?: string;
-  /** Default: `0` */
-  ratio?: number;
-  /** Default: `100` */
-  minSize?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `"horizontal"` */
+  direction?: 'horizontal' | 'vertical';
+  left?: unknown;
+  /** Default: `"Left Class Name"` */
+  leftClassName?: string;
+  /** Default: `100` */
+  minSize?: number;
+  /** Default: `0` */
+  ratio?: number;
   /** Default: `true` */
   resizable?: boolean;
+  right?: unknown;
+  /** Default: `"Right Class Name"` */
+  rightClassName?: string;
 }
 
 /**
@@ -115,8 +115,8 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -127,121 +127,121 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'SplitPaneRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'direction': {
+            'default': 'horizontal',
+            'description': 'Direction of the split',
+            'label': 'Direction',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'horizontal',
+              'vertical',
+            ],
+          },
+          'left': {
+            'description': 'Content for the left/top pane',
+            'label': 'Left',
+            'tier': 'presentation',
+            'type': 'node',
+          },
+          'leftClassName': {
+            'default': 'Left Class Name',
+            'description': 'Class for left/top pane',
+            'label': 'Left Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'minSize': {
+            'default': 100,
+            'description': 'Minimum size of either pane in pixels',
+            'label': 'Min Size',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'ratio': {
+            'default': 0,
+            'description': 'Initial ratio (0-100, percentage of first pane)',
+            'label': 'Ratio',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'resizable': {
+            'default': true,
+            'description': 'Allow user resizing',
+            'label': 'Resizable',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'right': {
+            'description': 'Content for the right/bottom pane',
+            'label': 'Right',
+            'tier': 'presentation',
+            'type': 'node',
+          },
+          'rightClassName': {
+            'default': 'Right Class Name',
+            'description': 'Class for right/bottom pane',
+            'label': 'Right Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
         'linkedEntity': 'SplitPaneItem',
+        'name': 'SplitPaneRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'direction': '@config.direction',
-                    'leftClassName': '@config.leftClassName',
-                    'ratio': '@config.ratio',
                     'className': '@config.className',
+                    'direction': '@config.direction',
                     'left': '@config.left',
+                    'leftClassName': '@config.leftClassName',
+                    'minSize': '@config.minSize',
+                    'ratio': '@config.ratio',
+                    'resizable': '@config.resizable',
                     'right': '@config.right',
                     'rightClassName': '@config.rightClassName',
-                    'resizable': '@config.resizable',
-                    'minSize': '@config.minSize',
                     'type': 'split-pane',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'left': {
-            'type': 'node',
-            'label': 'Left',
-            'description': 'Content for the left/top pane',
-            'tier': 'presentation',
-          },
-          'direction': {
-            'type': 'string',
-            'default': 'horizontal',
-            'label': 'Direction',
-            'description': 'Direction of the split',
-            'tier': 'presentation',
-            'values': [
-              'horizontal',
-              'vertical',
-            ],
-          },
-          'rightClassName': {
-            'type': 'string',
-            'default': 'Right Class Name',
-            'label': 'Right Class Name',
-            'description': 'Class for right/bottom pane',
-            'tier': 'presentation',
-          },
-          'right': {
-            'type': 'node',
-            'label': 'Right',
-            'description': 'Content for the right/bottom pane',
-            'tier': 'presentation',
-          },
-          'leftClassName': {
-            'type': 'string',
-            'default': 'Left Class Name',
-            'label': 'Left Class Name',
-            'description': 'Class for left/top pane',
-            'tier': 'presentation',
-          },
-          'ratio': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Ratio',
-            'description': 'Initial ratio (0-100, percentage of first pane)',
-            'tier': 'presentation',
-          },
-          'minSize': {
-            'type': 'number',
-            'default': 100,
-            'label': 'Min Size',
-            'description': 'Minimum size of either pane in pixels',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'resizable': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Resizable',
-            'description': 'Allow user resizing',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'SplitPaneItem', canonicalName) as never,
     ],
     pages: [

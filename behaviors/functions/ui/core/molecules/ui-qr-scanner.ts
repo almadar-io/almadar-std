@@ -51,12 +51,12 @@ export interface StdUiQrScannerConfig {
   className?: string;
   /** Default: `"environment"` */
   facingMode?: 'environment' | 'user';
-  /** Default: `true` */
-  showOverlay?: boolean;
-  /** Default: `true` */
-  showCameraControls?: boolean;
   /** Default: `false` */
   paused?: boolean;
+  /** Default: `true` */
+  showCameraControls?: boolean;
+  /** Default: `true` */
+  showOverlay?: boolean;
 }
 
 /**

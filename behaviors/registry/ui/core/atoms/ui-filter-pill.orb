@@ -1,257 +1,25 @@
 {
-  "name": "ui-filter-pill",
-  "version": "1.0.0",
   "description": "FilterPill — UI factory (1:1 with the @almadar/ui filter-pill pattern).",
+  "name": "ui-filter-pill",
   "orbitals": [
     {
-      "name": "FilterPillOrbital",
       "entity": {
-        "name": "FilterPillItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
+            "default": "Label",
             "name": "label",
-            "type": "string",
-            "default": "Label"
+            "type": "string"
           }
-        ]
+        ],
+        "name": "FilterPillItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "FilterPillRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "label"
-            ]
-          },
-          "category": "interaction",
-          "linkedEntity": "FilterPillItem",
-          "emits": [
-            {
-              "event": "REMOVE",
-              "description": "Called when the user clicks the remove (×) button",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "CLICK",
-              "description": "Click handler for the body of the pill (filter toggle)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "REMOVE",
-                "name": "Remove",
-                "description": "Called when the user clicks the remove (×) button",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CLICK",
-                "name": "Click",
-                "description": "Click handler for the body of the pill (filter toggle)",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.label",
-                    "@config.label"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "removable": "@config.removable",
-                      "clickEvent": "CLICK",
-                      "type": "filter-pill",
-                      "onClick": "CLICK",
-                      "icon": "@config.icon",
-                      "label": "@entity.label",
-                      "removeEvent": "REMOVE",
-                      "variant": "@config.variant",
-                      "size": "@config.size",
-                      "onRemove": "REMOVE",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "REMOVE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.label",
-                    "@payload.label"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "clickEvent": "CLICK",
-                      "label": "@entity.label",
-                      "type": "filter-pill",
-                      "removeEvent": "REMOVE",
-                      "onRemove": "REMOVE",
-                      "removable": "@config.removable",
-                      "size": "@config.size",
-                      "className": "@config.className",
-                      "icon": "@config.icon",
-                      "variant": "@config.variant",
-                      "onClick": "CLICK"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "CLICK",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.label",
-                    "@payload.label"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "@config.size",
-                      "label": "@entity.label",
-                      "type": "filter-pill",
-                      "removable": "@config.removable",
-                      "clickEvent": "CLICK",
-                      "className": "@config.className",
-                      "onClick": "CLICK",
-                      "removeEvent": "REMOVE",
-                      "variant": "@config.variant",
-                      "icon": "@config.icon",
-                      "onRemove": "REMOVE"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Variant",
-              "description": "variant prop",
-              "tier": "presentation",
-              "values": [
-                "default",
-                "primary",
-                "secondary",
-                "success",
-                "warning",
-                "danger",
-                "info",
-                "neutral"
-              ]
-            },
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Lucide icon component or canonical kebab-case icon name string",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Pill label text (alternative to children for schema-driven rendering).",
-              "tier": "presentation"
-            },
-            "removable": {
-              "type": "boolean",
-              "default": true,
-              "label": "Removable",
-              "description": "Disable the remove button (renders without × control)",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "sm",
-              "label": "Size",
-              "description": "size prop",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "FilterPillOrbital",
       "pages": [
         {
           "name": "FilterPillPage",
@@ -262,7 +30,239 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the root element.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Lucide icon component or canonical kebab-case icon name string",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Pill label text (alternative to children for schema-driven rendering).",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "removable": {
+              "default": true,
+              "description": "Disable the remove button (renders without × control)",
+              "label": "Removable",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "size": {
+              "default": "sm",
+              "description": "size prop",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "variant": {
+              "default": "default",
+              "description": "variant prop",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "default",
+                "primary",
+                "secondary",
+                "success",
+                "warning",
+                "danger",
+                "info",
+                "neutral"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Called when the user clicks the remove (×) button",
+              "event": "REMOVE",
+              "payloadSchema": [
+                {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Click handler for the body of the pill (filter toggle)",
+              "event": "CLICK",
+              "payloadSchema": [
+                {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "label"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FilterPillItem",
+          "name": "FilterPillRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Called when the user clicks the remove (×) button",
+                "key": "REMOVE",
+                "name": "Remove",
+                "payloadSchema": [
+                  {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Click handler for the body of the pill (filter toggle)",
+                "key": "CLICK",
+                "name": "Click",
+                "payloadSchema": [
+                  {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.label",
+                    "@config.label"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "clickEvent": "CLICK",
+                      "icon": "@config.icon",
+                      "label": "@entity.label",
+                      "onClick": "CLICK",
+                      "onRemove": "REMOVE",
+                      "removable": "@config.removable",
+                      "removeEvent": "REMOVE",
+                      "size": "@config.size",
+                      "type": "filter-pill",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.label",
+                    "@payload.label"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "clickEvent": "CLICK",
+                      "icon": "@config.icon",
+                      "label": "@entity.label",
+                      "onClick": "CLICK",
+                      "onRemove": "REMOVE",
+                      "removable": "@config.removable",
+                      "removeEvent": "REMOVE",
+                      "size": "@config.size",
+                      "type": "filter-pill",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "REMOVE",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.label",
+                    "@payload.label"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "clickEvent": "CLICK",
+                      "icon": "@config.icon",
+                      "label": "@entity.label",
+                      "onClick": "CLICK",
+                      "onRemove": "REMOVE",
+                      "removable": "@config.removable",
+                      "removeEvent": "REMOVE",
+                      "size": "@config.size",
+                      "type": "filter-pill",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "CLICK",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,106 +1,20 @@
 {
-  "name": "ui-animated-counter",
-  "version": "1.0.0",
   "description": "AnimatedCounter — UI factory (1:1 with the @almadar/ui animated-counter pattern).",
+  "name": "ui-animated-counter",
   "orbitals": [
     {
-      "name": "AnimatedCounterOrbital",
       "entity": {
-        "name": "AnimatedCounterItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "AnimatedCounterItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "AnimatedCounterRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "AnimatedCounterItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "suffix": "@config.suffix",
-                      "type": "animated-counter",
-                      "value": "@config.value",
-                      "prefix": "@config.prefix",
-                      "duration": "@config.duration",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "prefix": {
-              "type": "string",
-              "default": "Prefix",
-              "label": "Prefix",
-              "description": "Text to display before the number",
-              "tier": "presentation"
-            },
-            "duration": {
-              "type": "number",
-              "default": 600.0,
-              "label": "Duration",
-              "description": "Animation duration in milliseconds",
-              "tier": "presentation"
-            },
-            "suffix": {
-              "type": "string",
-              "default": "Suffix",
-              "label": "Suffix",
-              "description": "Text to display after the number",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional class names",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "string",
-              "default": "Value",
-              "label": "Value",
-              "description": "The target value to animate to. Strings are parsed numerically (e.g. '500', '99.9').",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "AnimatedCounterOrbital",
       "pages": [
         {
           "name": "AnimatedCounterPage",
@@ -111,7 +25,93 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional class names",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "duration": {
+              "default": 600.0,
+              "description": "Animation duration in milliseconds",
+              "label": "Duration",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "prefix": {
+              "default": "Prefix",
+              "description": "Text to display before the number",
+              "label": "Prefix",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "suffix": {
+              "default": "Suffix",
+              "description": "Text to display after the number",
+              "label": "Suffix",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "value": {
+              "default": "Value",
+              "description": "The target value to animate to. Strings are parsed numerically (e.g. '500', '99.9').",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AnimatedCounterItem",
+          "name": "AnimatedCounterRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "duration": "@config.duration",
+                      "prefix": "@config.prefix",
+                      "suffix": "@config.suffix",
+                      "type": "animated-counter",
+                      "value": "@config.value"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

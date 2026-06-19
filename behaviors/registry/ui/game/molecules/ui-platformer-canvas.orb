@@ -1,374 +1,20 @@
 {
-  "name": "ui-platformer-canvas",
-  "version": "1.0.0",
   "description": "PlatformerCanvas — UI factory (1:1 with the @almadar/ui platformer-canvas pattern).",
+  "name": "ui-platformer-canvas",
   "orbitals": [
     {
-      "name": "PlatformerCanvasOrbital",
       "entity": {
-        "name": "PlatformerCanvasItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "PlatformerCanvasItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "PlatformerCanvasRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "PlatformerCanvasItem",
-          "emits": [
-            {
-              "event": "LEFT",
-              "description": "Event names for keyboard controls",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "direction",
-                  "type": "number",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "RIGHT",
-              "description": "rightEvent prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "direction",
-                  "type": "number",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "JUMP",
-              "description": "jumpEvent prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "STOP",
-              "description": "stopEvent prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "LEFT",
-                "name": "Left",
-                "description": "Event names for keyboard controls",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "direction",
-                    "type": "number",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "RIGHT",
-                "name": "Right",
-                "description": "rightEvent prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "direction",
-                    "type": "number",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "JUMP",
-                "name": "Jump",
-                "description": "jumpEvent prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "STOP",
-                "name": "Stop",
-                "description": "stopEvent prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "jumpEvent": "JUMP",
-                      "stopEvent": "STOP",
-                      "worldHeight": "@config.worldHeight",
-                      "worldWidth": "@config.worldWidth",
-                      "canvasHeight": "@config.canvasHeight",
-                      "tileSprites": "@config.tileSprites",
-                      "canvasWidth": "@config.canvasWidth",
-                      "type": "platformer-canvas",
-                      "bgColor": "@config.bgColor",
-                      "playerSprite": "@config.playerSprite",
-                      "leftEvent": "LEFT",
-                      "rightEvent": "RIGHT",
-                      "backgroundImage": "@config.backgroundImage",
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "player": "@config.player",
-                      "platforms": "@config.platforms",
-                      "followCamera": "@config.followCamera",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "backgroundImage": {
-              "type": "asset",
-              "default": "https://almadar-kflow-assets.web.app/shared/scenes/court.png",
-              "label": "Background Image",
-              "description": "Background image URL",
-              "tier": "presentation"
-            },
-            "worldWidth": {
-              "type": "number",
-              "default": 800.0,
-              "label": "World Width",
-              "description": "World dimensions",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "tileSprites": {
-              "type": "Map<string,asset>",
-              "default": {},
-              "label": "Tile Sprites",
-              "description": "Map of platform type to tile sprite URL",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "followCamera": {
-              "type": "boolean",
-              "default": true,
-              "label": "Follow Camera",
-              "description": "Camera follows player",
-              "tier": "presentation"
-            },
-            "player": {
-              "type": "PlatformerCanvasPlayer",
-              "default": {
-                "y": 1.0,
-                "width": 1.0,
-                "vx": 1.0,
-                "facingRight": false,
-                "height": 1.0,
-                "vy": 1.0,
-                "grounded": false,
-                "x": 1.0
-              },
-              "label": "Player",
-              "description": "Player state data",
-              "tier": "presentation",
-              "properties": {
-                "width": {
-                  "name": "width",
-                  "type": "number",
-                  "required": false
-                },
-                "vy": {
-                  "name": "vy",
-                  "type": "number",
-                  "required": false
-                },
-                "height": {
-                  "name": "height",
-                  "type": "number",
-                  "required": false
-                },
-                "grounded": {
-                  "name": "grounded",
-                  "type": "boolean",
-                  "required": false
-                },
-                "facingRight": {
-                  "name": "facingRight",
-                  "type": "boolean",
-                  "required": false
-                },
-                "vx": {
-                  "name": "vx",
-                  "type": "number",
-                  "required": false
-                },
-                "y": {
-                  "name": "y",
-                  "type": "number",
-                  "required": true
-                },
-                "x": {
-                  "name": "x",
-                  "type": "number",
-                  "required": true
-                }
-              }
-            },
-            "platforms": {
-              "type": "[PlatformerCanvasPlatformsItem]",
-              "default": [
-                {
-                  "x": 1.0,
-                  "type": "ground",
-                  "width": 1.0,
-                  "y": 1.0,
-                  "height": 1.0
-                }
-              ],
-              "label": "Platforms",
-              "description": "Static platforms / level geometry",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "x": {
-                    "name": "x",
-                    "type": "number",
-                    "required": true
-                  },
-                  "height": {
-                    "name": "height",
-                    "type": "number",
-                    "required": true
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "ground",
-                      "platform",
-                      "hazard",
-                      "goal"
-                    ]
-                  },
-                  "width": {
-                    "name": "width",
-                    "type": "number",
-                    "required": true
-                  },
-                  "y": {
-                    "name": "y",
-                    "type": "number",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "bgColor": {
-              "type": "string",
-              "default": "Bg Color",
-              "label": "Bg Color",
-              "description": "Background color",
-              "tier": "presentation"
-            },
-            "worldHeight": {
-              "type": "number",
-              "default": 400.0,
-              "label": "World Height",
-              "description": "worldHeight prop",
-              "tier": "presentation"
-            },
-            "playerSprite": {
-              "type": "asset",
-              "default": "https://almadar-kflow-assets.web.app/shared/platformer/characters/platformChar_idle.png",
-              "label": "Player Sprite",
-              "description": "Player sprite image URL",
-              "tier": "presentation"
-            },
-            "assetBaseUrl": {
-              "type": "asset",
-              "default": "https://almadar-kflow-assets.web.app/shared/",
-              "label": "Asset Base Url",
-              "description": "Base URL prefix for asset URLs",
-              "tier": "presentation"
-            },
-            "canvasWidth": {
-              "type": "number",
-              "default": 800.0,
-              "label": "Canvas Width",
-              "description": "Canvas display size",
-              "tier": "presentation"
-            },
-            "canvasHeight": {
-              "type": "number",
-              "default": 400.0,
-              "label": "Canvas Height",
-              "description": "canvasHeight prop",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "PlatformerCanvasOrbital",
       "pages": [
         {
           "name": "PlatformerCanvasPage",
@@ -379,7 +25,361 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "assetBaseUrl": {
+              "default": "https://almadar-kflow-assets.web.app/shared/",
+              "description": "Base URL prefix for asset URLs",
+              "label": "Asset Base Url",
+              "tier": "presentation",
+              "type": "asset"
+            },
+            "backgroundImage": {
+              "default": "https://almadar-kflow-assets.web.app/shared/scenes/court.png",
+              "description": "Background image URL",
+              "label": "Background Image",
+              "tier": "presentation",
+              "type": "asset"
+            },
+            "bgColor": {
+              "default": "Bg Color",
+              "description": "Background color",
+              "label": "Bg Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "canvasHeight": {
+              "default": 400.0,
+              "description": "canvasHeight prop",
+              "label": "Canvas Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "canvasWidth": {
+              "default": 800.0,
+              "description": "Canvas display size",
+              "label": "Canvas Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "followCamera": {
+              "default": true,
+              "description": "Camera follows player",
+              "label": "Follow Camera",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "platforms": {
+              "default": [
+                {
+                  "height": 1.0,
+                  "type": "ground",
+                  "width": 1.0,
+                  "x": 1.0,
+                  "y": 1.0
+                }
+              ],
+              "description": "Static platforms / level geometry",
+              "items": {
+                "properties": {
+                  "height": {
+                    "name": "height",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "ground",
+                      "platform",
+                      "hazard",
+                      "goal"
+                    ]
+                  },
+                  "width": {
+                    "name": "width",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Platforms",
+              "tier": "presentation",
+              "type": "[PlatformerCanvasPlatformsItem]"
+            },
+            "player": {
+              "default": {
+                "facingRight": false,
+                "grounded": false,
+                "height": 1.0,
+                "vx": 1.0,
+                "vy": 1.0,
+                "width": 1.0,
+                "x": 1.0,
+                "y": 1.0
+              },
+              "description": "Player state data",
+              "label": "Player",
+              "properties": {
+                "facingRight": {
+                  "name": "facingRight",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "grounded": {
+                  "name": "grounded",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "tier": "presentation",
+              "type": "PlatformerCanvasPlayer"
+            },
+            "playerSprite": {
+              "default": "https://almadar-kflow-assets.web.app/shared/platformer/characters/platformChar_idle.png",
+              "description": "Player sprite image URL",
+              "label": "Player Sprite",
+              "tier": "presentation",
+              "type": "asset"
+            },
+            "tileSprites": {
+              "default": {},
+              "description": "Map of platform type to tile sprite URL",
+              "items": {
+                "type": "string"
+              },
+              "label": "Tile Sprites",
+              "tier": "presentation",
+              "type": "Map<string,asset>"
+            },
+            "worldHeight": {
+              "default": 400.0,
+              "description": "worldHeight prop",
+              "label": "World Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "worldWidth": {
+              "default": 800.0,
+              "description": "World dimensions",
+              "label": "World Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Event names for keyboard controls",
+              "event": "LEFT",
+              "payloadSchema": [
+                {
+                  "name": "direction",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "rightEvent prop",
+              "event": "RIGHT",
+              "payloadSchema": [
+                {
+                  "name": "direction",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "jumpEvent prop",
+              "event": "JUMP",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "stopEvent prop",
+              "event": "STOP",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "PlatformerCanvasItem",
+          "name": "PlatformerCanvasRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Event names for keyboard controls",
+                "key": "LEFT",
+                "name": "Left",
+                "payloadSchema": [
+                  {
+                    "name": "direction",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "rightEvent prop",
+                "key": "RIGHT",
+                "name": "Right",
+                "payloadSchema": [
+                  {
+                    "name": "direction",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "jumpEvent prop",
+                "key": "JUMP",
+                "name": "Jump",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "stopEvent prop",
+                "key": "STOP",
+                "name": "Stop",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "assetBaseUrl": "@config.assetBaseUrl",
+                      "backgroundImage": "@config.backgroundImage",
+                      "bgColor": "@config.bgColor",
+                      "canvasHeight": "@config.canvasHeight",
+                      "canvasWidth": "@config.canvasWidth",
+                      "className": "@config.className",
+                      "followCamera": "@config.followCamera",
+                      "jumpEvent": "JUMP",
+                      "leftEvent": "LEFT",
+                      "platforms": "@config.platforms",
+                      "player": "@config.player",
+                      "playerSprite": "@config.playerSprite",
+                      "rightEvent": "RIGHT",
+                      "stopEvent": "STOP",
+                      "tileSprites": "@config.tileSprites",
+                      "type": "platformer-canvas",
+                      "worldHeight": "@config.worldHeight",
+                      "worldWidth": "@config.worldWidth"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

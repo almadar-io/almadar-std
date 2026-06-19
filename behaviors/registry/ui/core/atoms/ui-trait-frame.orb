@@ -1,80 +1,20 @@
 {
-  "name": "ui-trait-frame",
-  "version": "1.0.0",
   "description": "TraitFrame — UI factory (1:1 with the @almadar/ui trait-frame pattern).",
+  "name": "ui-trait-frame",
   "orbitals": [
     {
-      "name": "TraitFrameOrbital",
       "entity": {
-        "name": "TraitFrameItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "TraitFrameItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "TraitFrameRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "TraitFrameItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "trait-frame",
-                      "fallback": [
-                        {
-                          "type": "typography",
-                          "content": "Fallback"
-                        }
-                      ],
-                      "traitName": "@config.traitName"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "traitName": {
-              "type": "string",
-              "default": "Trait Name",
-              "label": "Trait Name",
-              "description": "Name of the trait whose current frame to embed. Must match a trait declared in the current orbital. Compiler validates that the name exists at build time (see `ORB_BINDING_TRAIT_UNKNOWN`).",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "TraitFrameOrbital",
       "pages": [
         {
           "name": "TraitFramePage",
@@ -85,7 +25,67 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "traitName": {
+              "default": "Trait Name",
+              "description": "Name of the trait whose current frame to embed. Must match a trait declared in the current orbital. Compiler validates that the name exists at build time (see `ORB_BINDING_TRAIT_UNKNOWN`).",
+              "label": "Trait Name",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TraitFrameItem",
+          "name": "TraitFrameRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "fallback": [
+                        {
+                          "content": "Fallback",
+                          "type": "typography"
+                        }
+                      ],
+                      "traitName": "@config.traitName",
+                      "type": "trait-frame"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -43,10 +43,10 @@ export interface StdUiLabelConfig {
   className?: string;
   /** Default: `"Html For"` */
   htmlFor?: string;
-  /** Default: `"Text"` */
-  text?: string;
   /** Default: `false` */
   required?: boolean;
+  /** Default: `"Text"` */
+  text?: string;
 }
 
 /**

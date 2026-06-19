@@ -60,55 +60,55 @@ export interface StdUiDataGridViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDataGridConfig {
-  /** Default: `"Drag Group"` */
-  dragGroup?: string;
   /** Default: `"Accepts"` */
   accepts?: string;
-  /** Default: `"Drop Event"` */
-  dropEvent?: string;
-  /** Default: `"Reorder Event"` */
-  reorderEvent?: string;
-  /** Default: `"Position Event"` */
-  positionEvent?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `1` */
+  cols?: number;
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"}]` */
+  columns?: EntityRow[];
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
-  /** Default: `0` */
-  maxInlineActions?: number;
   /** Default: `false` */
   dndRoot?: boolean;
+  /** Default: `"Drag Group"` */
+  dragGroup?: string;
+  /** Default: `"Drop Event"` */
+  dropEvent?: string;
   error?: EntityRow;
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"}]` */
+  fields?: EntityRow[];
+  /** Default: `"md"` */
+  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `false` */
-  selectable?: boolean;
+  hasMore?: boolean;
+  /** Default: `"Image Field"` */
+  imageField?: string;
   /** Default: `false` */
   infiniteScroll?: boolean;
-  /** Default: `[{"format":"date","name":"Name","label":"Label","icon":"circle","variant":"h3"}]` */
-  fields?: EntityRow[];
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `[]` */
+  itemActions?: EntityRow[];
+  /** Default: `"dense"` */
+  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `0` */
+  maxInlineActions?: number;
   /** Default: `280` */
   minCardWidth?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `"md"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `"Position Event"` */
+  positionEvent?: string;
+  /** Default: `"Reorder Event"` */
+  reorderEvent?: string;
   /** Default: `false` */
   scrollX?: boolean;
   /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `false` */
   sortable?: boolean;
-  /** Default: `[{"variant":"h3","format":"date","icon":"circle","name":"Name","label":"Label"}]` */
-  columns?: EntityRow[];
-  /** Default: `"dense"` */
-  look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"Image Field"` */
-  imageField?: string;
-  /** Default: `false` */
-  hasMore?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
-  itemActions?: EntityRow[];
-  /** Default: `1` */
-  cols?: number;
-  /** Default: `false` */
-  isLoading?: boolean;
 }
 
 /**

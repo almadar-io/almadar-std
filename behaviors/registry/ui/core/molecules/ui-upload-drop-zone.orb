@@ -1,165 +1,20 @@
 {
-  "name": "ui-upload-drop-zone",
-  "version": "1.0.0",
   "description": "UploadDropZone — UI factory (1:1 with the @almadar/ui upload-drop-zone pattern).",
+  "name": "ui-upload-drop-zone",
   "orbitals": [
     {
-      "name": "UploadDropZoneOrbital",
       "entity": {
-        "name": "UploadDropZoneItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "UploadDropZoneItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "UploadDropZoneRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "UploadDropZoneItem",
-          "emits": [
-            {
-              "event": "ACTION",
-              "description": "Declarative event name for file selection",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event name for file selection",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "maxFiles": "@config.maxFiles",
-                      "type": "upload-drop-zone",
-                      "icon": "@config.icon",
-                      "accept": "@config.accept",
-                      "description": "@config.description",
-                      "maxSize": "@config.maxSize",
-                      "label": "@config.label",
-                      "disabled": "@config.disabled",
-                      "action": "ACTION",
-                      "actionPayload": "@config.actionPayload",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Label text",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "maxFiles": {
-              "type": "number",
-              "default": 1.0,
-              "label": "Max Files",
-              "description": "Max number of files",
-              "tier": "presentation"
-            },
-            "description": {
-              "type": "string",
-              "default": "Description",
-              "label": "Description",
-              "description": "Description text below label",
-              "tier": "presentation"
-            },
-            "actionPayload": {
-              "type": "json",
-              "default": {},
-              "label": "Action Payload",
-              "description": "Payload to include with the action event",
-              "tier": "presentation"
-            },
-            "accept": {
-              "type": "string",
-              "default": "Accept",
-              "label": "Accept",
-              "description": "Accepted MIME types (e.g., 'image/*', 'application/pdf')",
-              "tier": "presentation"
-            },
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Icon name or component",
-              "tier": "presentation"
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disabled state",
-              "tier": "presentation"
-            },
-            "maxSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max Size",
-              "description": "Max file size in bytes",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "UploadDropZoneOrbital",
       "pages": [
         {
           "name": "UploadDropZonePage",
@@ -170,7 +25,152 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "accept": {
+              "default": "Accept",
+              "description": "Accepted MIME types (e.g., 'image/*', 'application/pdf')",
+              "label": "Accept",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "actionPayload": {
+              "default": {},
+              "description": "Payload to include with the action event",
+              "label": "Action Payload",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "description": {
+              "default": "Description",
+              "description": "Description text below label",
+              "label": "Description",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "disabled": {
+              "default": false,
+              "description": "Disabled state",
+              "label": "Disabled",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Icon name or component",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Label text",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "maxFiles": {
+              "default": 1.0,
+              "description": "Max number of files",
+              "label": "Max Files",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "maxSize": {
+              "default": 0.0,
+              "description": "Max file size in bytes",
+              "label": "Max Size",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Declarative event name for file selection",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "UploadDropZoneItem",
+          "name": "UploadDropZoneRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Declarative event name for file selection",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "accept": "@config.accept",
+                      "action": "ACTION",
+                      "actionPayload": "@config.actionPayload",
+                      "className": "@config.className",
+                      "description": "@config.description",
+                      "disabled": "@config.disabled",
+                      "icon": "@config.icon",
+                      "label": "@config.label",
+                      "maxFiles": "@config.maxFiles",
+                      "maxSize": "@config.maxSize",
+                      "type": "upload-drop-zone"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

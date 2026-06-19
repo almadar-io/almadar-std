@@ -39,35 +39,35 @@ export type StdUiDocumentViewerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocumentViewerConfig {
-  /** Default: `[{"documentType":"pdf","content":"Content","label":"Label","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}]` */
-  documents?: EntityRow[];
-  /** Default: `0` */
-  currentPage?: number;
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `"Content"` */
+  content?: string;
   /** Default: `0` */
-  totalPages?: number;
-  /** Default: `"Title"` */
-  title?: string;
+  currentPage?: number;
+  /** Default: `"pdf"` */
+  documentType?: 'pdf' | 'text' | 'html' | 'markdown';
+  /** Default: `[{"content":"Content","documentType":"pdf","label":"Label","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}]` */
+  documents?: EntityRow[];
+  error?: EntityRow;
+  /** Default: `"Height"` */
+  height?: string;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `false` */
+  showDownload?: boolean;
+  /** Default: `false` */
+  showPrint?: boolean;
   /** Default: `true` */
   showToolbar?: boolean;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
   src?: unknown;
-  /** Default: `[{"variant":"primary","navigatesTo":"Navigates To","label":"Label"}]` */
-  actions?: EntityRow[];
-  /** Default: `"Content"` */
-  content?: string;
-  /** Default: `false` */
-  showPrint?: boolean;
-  /** Default: `"Height"` */
-  height?: string;
-  /** Default: `false` */
-  showDownload?: boolean;
-  error?: EntityRow;
-  /** Default: `"pdf"` */
-  documentType?: 'pdf' | 'text' | 'html' | 'markdown';
-  /** Default: `false` */
-  isLoading?: boolean;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `0` */
+  totalPages?: number;
 }
 
 /**

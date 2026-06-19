@@ -1,117 +1,20 @@
 {
-  "name": "ui-day-cell",
-  "version": "1.0.0",
   "description": "DayCell — UI factory (1:1 with the @almadar/ui day-cell pattern).",
+  "name": "ui-day-cell",
   "orbitals": [
     {
-      "name": "DayCellOrbital",
       "entity": {
-        "name": "DayCellItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "DayCellItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "DayCellRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "DayCellItem",
-          "emits": [
-            {
-              "event": "CLICK",
-              "description": "Called when the day is clicked",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "date",
-                  "type": "date"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CLICK",
-                "name": "Click",
-                "description": "Called when the day is clicked",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "date",
-                    "type": "date"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "day-cell",
-                      "date": "@config.date",
-                      "className": "@config.className",
-                      "isToday": "@config.isToday",
-                      "onClick": "CLICK"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "date": {
-              "type": "date",
-              "default": "2024-01-01",
-              "label": "Date",
-              "description": "The date this cell represents. Optional at the dynamic render edge: an unbound `@config.date` arrives as `undefined`, so the cell falls back to today.",
-              "tier": "presentation"
-            },
-            "isToday": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Today",
-              "description": "Whether this date is today",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "DayCellOrbital",
       "pages": [
         {
           "name": "DayCellPage",
@@ -122,7 +25,104 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "date": {
+              "default": "2024-01-01",
+              "description": "The date this cell represents. Optional at the dynamic render edge: an unbound `@config.date` arrives as `undefined`, so the cell falls back to today.",
+              "label": "Date",
+              "tier": "presentation",
+              "type": "date"
+            },
+            "isToday": {
+              "default": false,
+              "description": "Whether this date is today",
+              "label": "Is Today",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "Called when the day is clicked",
+              "event": "CLICK",
+              "payloadSchema": [
+                {
+                  "name": "date",
+                  "type": "date"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DayCellItem",
+          "name": "DayCellRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Called when the day is clicked",
+                "key": "CLICK",
+                "name": "Click",
+                "payloadSchema": [
+                  {
+                    "name": "date",
+                    "type": "date"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "date": "@config.date",
+                      "isToday": "@config.isToday",
+                      "onClick": "CLICK",
+                      "type": "day-cell"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

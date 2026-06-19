@@ -1,142 +1,20 @@
 {
-  "name": "ui-jazari-state-machine",
-  "version": "1.0.0",
   "description": "JazariStateMachine — UI factory (1:1 with the @almadar/ui jazari-state-machine pattern).",
+  "name": "ui-jazari-state-machine",
   "orbitals": [
     {
-      "name": "JazariStateMachineOrbital",
       "entity": {
-        "name": "JazariStateMachineItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "JazariStateMachineItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "JazariStateMachineRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "JazariStateMachineItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "@config.direction",
-                      "type": "jazari-state-machine",
-                      "entityFields": "@config.entityFields",
-                      "isLoading": "@config.isLoading",
-                      "className": "@config.className",
-                      "error": "@config.error",
-                      "traitIndex": "@config.traitIndex"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "entityFields": {
-              "type": "[string]",
-              "default": [],
-              "label": "Entity Fields",
-              "description": "Override entity field labels",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "error": {
-              "type": "JazariStateMachineError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "traitIndex": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Trait Index",
-              "description": "Which trait to visualize (default: 0)",
-              "tier": "presentation"
-            },
-            "direction": {
-              "type": "string",
-              "default": "ltr",
-              "label": "Direction",
-              "description": "Text direction (default: 'ltr')",
-              "tier": "presentation",
-              "values": [
-                "ltr",
-                "rtl"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "JazariStateMachineOrbital",
       "pages": [
         {
           "name": "JazariStateMachinePage",
@@ -147,7 +25,129 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "direction": {
+              "default": "ltr",
+              "description": "Text direction (default: 'ltr')",
+              "label": "Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "ltr",
+                "rtl"
+              ]
+            },
+            "entityFields": {
+              "default": [],
+              "description": "Override entity field labels",
+              "items": {
+                "type": "string"
+              },
+              "label": "Entity Fields",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "error": {
+              "description": "Error state",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "JazariStateMachineError"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "traitIndex": {
+              "default": 0.0,
+              "description": "Which trait to visualize (default: 0)",
+              "label": "Trait Index",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "JazariStateMachineItem",
+          "name": "JazariStateMachineRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "direction": "@config.direction",
+                      "entityFields": "@config.entityFields",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "traitIndex": "@config.traitIndex",
+                      "type": "jazari-state-machine"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,250 +1,20 @@
 {
-  "name": "ui-event-handler-board",
-  "version": "1.0.0",
   "description": "EventHandlerBoard — UI factory (1:1 with the @almadar/ui event-handler-board pattern).",
+  "name": "ui-event-handler-board",
   "orbitals": [
     {
-      "name": "EventHandlerBoardOrbital",
       "entity": {
-        "name": "EventHandlerBoardItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "EventHandlerBoardItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "EventHandlerBoardRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "EventHandlerBoardItem",
-          "emits": [
-            {
-              "event": "PLAY",
-              "description": "Emits UI:{playEvent}",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "COMPLETE",
-              "description": "Emits UI:{completeEvent} with { success }",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "success",
-                  "type": "boolean",
-                  "required": true
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "PLAY",
-                "name": "Play",
-                "description": "Emits UI:{playEvent}",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "COMPLETE",
-                "name": "Complete",
-                "description": "Emits UI:{completeEvent} with { success }",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "success",
-                    "type": "boolean",
-                    "required": true
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "EventHandlerBoardItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "completeEvent": "COMPLETE",
-                      "sortBy": "@config.sortBy",
-                      "page": "@config.pageProp",
-                      "isLoading": "@config.isLoading",
-                      "type": "event-handler-board",
-                      "activeFilters": "@config.activeFilters",
-                      "stepDurationMs": "@config.stepDurationMs",
-                      "playEvent": "PLAY",
-                      "className": "@config.className",
-                      "error": "@config.error",
-                      "pageSize": "@config.pageSize",
-                      "selectedIds": "@config.selectedIds",
-                      "entity": "@entity",
-                      "sortDirection": "@config.sortDirection",
-                      "searchValue": "@config.searchValue",
-                      "totalCount": "@config.totalCount"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "EventHandlerBoardError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
-              "tier": "presentation"
-            },
-            "searchValue": {
-              "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "stepDurationMs": {
-              "type": "number",
-              "default": 800.0,
-              "label": "Step Duration Ms",
-              "description": "Playback speed in ms per event",
-              "tier": "presentation"
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "EventHandlerBoardOrbital",
       "pages": [
         {
           "name": "EventHandlerBoardPage",
@@ -255,7 +25,237 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "activeFilters": {
+              "description": "Active filters",
+              "label": "Active Filters",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state (UiError)",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "EventHandlerBoardError"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "pageProp": {
+              "default": 0.0,
+              "description": "Current page number",
+              "label": "Page",
+              "synonyms": "page",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageSize": {
+              "default": 0.0,
+              "description": "Number of items per page",
+              "label": "Page Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "searchValue": {
+              "default": "Search Value",
+              "description": "Current search query value",
+              "label": "Search Value",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "selectedIds": {
+              "default": [],
+              "description": "Currently selected item IDs",
+              "items": {
+                "type": "string"
+              },
+              "label": "Selected Ids",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "sortBy": {
+              "default": "Sort By",
+              "description": "Current sort field",
+              "label": "Sort By",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "sortDirection": {
+              "default": "asc",
+              "description": "Current sort direction",
+              "label": "Sort Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "stepDurationMs": {
+              "default": 800.0,
+              "description": "Playback speed in ms per event",
+              "label": "Step Duration Ms",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "totalCount": {
+              "default": 0.0,
+              "description": "Total number of items",
+              "label": "Total Count",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Emits UI:{playEvent}",
+              "event": "PLAY",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{completeEvent} with { success }",
+              "event": "COMPLETE",
+              "payloadSchema": [
+                {
+                  "name": "success",
+                  "required": true,
+                  "type": "boolean"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "EventHandlerBoardItem",
+          "name": "EventHandlerBoardRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Emits UI:{playEvent}",
+                "key": "PLAY",
+                "name": "Play",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{completeEvent} with { success }",
+                "key": "COMPLETE",
+                "name": "Complete",
+                "payloadSchema": [
+                  {
+                    "name": "success",
+                    "required": true,
+                    "type": "boolean"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "EventHandlerBoardItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "activeFilters": "@config.activeFilters",
+                      "className": "@config.className",
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "playEvent": "PLAY",
+                      "searchValue": "@config.searchValue",
+                      "selectedIds": "@config.selectedIds",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "stepDurationMs": "@config.stepDurationMs",
+                      "totalCount": "@config.totalCount",
+                      "type": "event-handler-board"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,46 +1,282 @@
 {
-  "name": "ui-graph-canvas",
-  "version": "1.0.0",
   "description": "GraphCanvas — UI factory (1:1 with the @almadar/ui graph-canvas pattern).",
+  "name": "ui-graph-canvas",
   "orbitals": [
     {
-      "name": "GraphCanvasOrbital",
       "entity": {
-        "name": "GraphCanvasItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "GraphCanvasItem",
+        "persistence": "runtime"
       },
+      "name": "GraphCanvasOrbital",
+      "pages": [
+        {
+          "name": "GraphCanvasPage",
+          "path": "/graph-canvas",
+          "traits": [
+            {
+              "ref": "GraphCanvasRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "GraphCanvasRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "GraphCanvasItem",
+          "config": {
+            "actions": {
+              "default": [
+                {
+                  "label": "Label",
+                  "navigatesTo": "Navigates To",
+                  "variant": "primary"
+                }
+              ],
+              "description": "Actions",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Actions",
+              "tier": "presentation",
+              "type": "[GraphCanvasActionsItem]"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "draggable": {
+              "default": true,
+              "description": "Enable node dragging",
+              "label": "Draggable",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "edges": {
+              "default": [
+                {
+                  "color": "Color",
+                  "label": "Label",
+                  "source": "Source",
+                  "target": "Target",
+                  "weight": 1.0
+                }
+              ],
+              "description": "Graph edges",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "source": {
+                    "name": "source",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "target": {
+                    "name": "target",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Edges",
+              "tier": "presentation",
+              "type": "[GraphCanvasEdgesItem]"
+            },
+            "error": {
+              "description": "Error state",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "GraphCanvasError"
+            },
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "interactive": {
+              "default": true,
+              "description": "Enable zoom/pan",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "layout": {
+              "default": "force",
+              "description": "Layout algorithm",
+              "label": "Layout",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "force",
+                "circular",
+                "grid"
+              ]
+            },
+            "nodes": {
+              "default": [
+                {
+                  "color": "Color",
+                  "group": "Group",
+                  "id": "Id",
+                  "label": "Label",
+                  "size": 1.0,
+                  "x": 1.0,
+                  "y": 1.0
+                }
+              ],
+              "description": "Graph nodes",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "group": {
+                    "name": "group",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "size": {
+                    "name": "size",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Nodes",
+              "tier": "presentation",
+              "type": "[GraphCanvasNodesItem]"
+            },
+            "showLabels": {
+              "default": true,
+              "description": "Show node labels",
+              "label": "Show Labels",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "title": {
+              "default": "Title",
+              "description": "Graph title",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "NODE_CLICK",
               "description": "On node click",
-              "tier": "essential",
-              "scope": "external",
+              "event": "NODE_CLICK",
               "payloadSchema": [
                 {
                   "name": "node",
-                  "type": "object",
                   "properties": [
                     {
                       "name": "id",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "label",
@@ -66,42 +302,45 @@
                       "name": "y",
                       "type": "number"
                     }
-                  ]
+                  ],
+                  "type": "object"
                 },
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "GraphCanvasItem",
+          "name": "GraphCanvasRender",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "On node click",
                 "key": "NODE_CLICK",
                 "name": "Node Click",
-                "description": "On node click",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "node",
-                    "type": "object",
                     "properties": [
                       {
                         "name": "id",
-                        "type": "string",
-                        "required": true
+                        "required": true,
+                        "type": "string"
                       },
                       {
                         "name": "label",
@@ -127,21 +366,26 @@
                         "name": "y",
                         "type": "number"
                       }
-                    ]
+                    ],
+                    "type": "object"
                   },
                   {
                     "name": "id",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   }
-                ]
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
               }
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -152,278 +396,34 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "@config.title",
-                      "height": "@config.height",
-                      "nodeClickEvent": "NODE_CLICK",
-                      "layout": "@config.layout",
                       "actions": "@config.actions",
-                      "showLabels": "@config.showLabels",
+                      "className": "@config.className",
+                      "draggable": "@config.draggable",
+                      "edges": "@config.edges",
                       "entity": "GraphCanvasItem",
                       "error": "@config.error",
-                      "nodes": "@config.nodes",
-                      "edges": "@config.edges",
-                      "isLoading": "@config.isLoading",
-                      "draggable": "@config.draggable",
+                      "height": "@config.height",
                       "interactive": "@config.interactive",
+                      "isLoading": "@config.isLoading",
+                      "layout": "@config.layout",
+                      "nodeClickEvent": "NODE_CLICK",
+                      "nodes": "@config.nodes",
                       "onNodeClick": "NODE_CLICK",
-                      "className": "@config.className",
+                      "showLabels": "@config.showLabels",
+                      "title": "@config.title",
                       "type": "graph-canvas"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "layout": {
-              "type": "string",
-              "default": "force",
-              "label": "Layout",
-              "description": "Layout algorithm",
-              "tier": "presentation",
-              "values": [
-                "force",
-                "circular",
-                "grid"
-              ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Graph title",
-              "tier": "presentation"
-            },
-            "nodes": {
-              "type": "[GraphCanvasNodesItem]",
-              "default": [
-                {
-                  "x": 1.0,
-                  "y": 1.0,
-                  "group": "Group",
-                  "size": 1.0,
-                  "id": "Id",
-                  "label": "Label",
-                  "color": "Color"
-                }
-              ],
-              "label": "Nodes",
-              "description": "Graph nodes",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "size": {
-                    "name": "size",
-                    "type": "number",
-                    "required": false
-                  },
-                  "y": {
-                    "name": "y",
-                    "type": "number",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "x": {
-                    "name": "x",
-                    "type": "number",
-                    "required": false
-                  },
-                  "group": {
-                    "name": "group",
-                    "type": "string",
-                    "required": false
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "error": {
-              "type": "GraphCanvasError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "edges": {
-              "type": "[GraphCanvasEdgesItem]",
-              "default": [
-                {
-                  "target": "Target",
-                  "source": "Source",
-                  "color": "Color",
-                  "weight": 1.0,
-                  "label": "Label"
-                }
-              ],
-              "label": "Edges",
-              "description": "Graph edges",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "weight": {
-                    "name": "weight",
-                    "type": "number",
-                    "required": false
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
-                  },
-                  "source": {
-                    "name": "source",
-                    "type": "string",
-                    "required": true
-                  },
-                  "target": {
-                    "name": "target",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "showLabels": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Labels",
-              "description": "Show node labels",
-              "tier": "presentation"
-            },
-            "interactive": {
-              "type": "boolean",
-              "default": true,
-              "label": "Interactive",
-              "description": "Enable zoom/pan",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "draggable": {
-              "type": "boolean",
-              "default": true,
-              "label": "Draggable",
-              "description": "Enable node dragging",
-              "tier": "presentation"
-            },
-            "height": {
-              "type": "number",
-              "default": 400.0,
-              "label": "Height",
-              "description": "Canvas height",
-              "tier": "presentation"
-            },
-            "actions": {
-              "type": "[GraphCanvasActionsItem]",
-              "default": [
-                {
-                  "navigatesTo": "Navigates To",
-                  "label": "Label",
-                  "variant": "primary"
-                }
-              ],
-              "label": "Actions",
-              "description": "Actions",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost"
-                    ]
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "GraphCanvasPage",
-          "path": "/graph-canvas",
-          "traits": [
-            {
-              "ref": "GraphCanvasRender"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

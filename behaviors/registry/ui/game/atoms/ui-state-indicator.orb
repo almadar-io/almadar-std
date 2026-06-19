@@ -1,135 +1,20 @@
 {
-  "name": "ui-state-indicator",
-  "version": "1.0.0",
   "description": "StateIndicator — UI factory (1:1 with the @almadar/ui state-indicator pattern).",
+  "name": "ui-state-indicator",
   "orbitals": [
     {
-      "name": "StateIndicatorOrbital",
       "entity": {
-        "name": "StateIndicatorItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "StateIndicatorItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "StateIndicatorRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "StateIndicatorItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "label": "@config.label",
-                      "type": "state-indicator",
-                      "size": "@config.size",
-                      "state": "@config.stateProp",
-                      "stateStyles": "@config.stateStyles",
-                      "animated": "@config.animated",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "stateStyles": {
-              "type": "Map<string,StateIndicatorStateStylesValue>",
-              "default": {},
-              "label": "State Styles",
-              "description": "Custom state styles to extend/override defaults",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "bgClass": {
-                    "name": "bgClass",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "stateProp": {
-              "type": "string",
-              "default": "State",
-              "label": "State",
-              "description": "The current state name",
-              "synonyms": "state",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Optional label override (defaults to capitalized state name)",
-              "tier": "presentation"
-            },
-            "animated": {
-              "type": "boolean",
-              "default": true,
-              "label": "Animated",
-              "description": "Whether to show pulse animation on non-idle states",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "StateIndicatorOrbital",
       "pages": [
         {
           "name": "StateIndicatorPage",
@@ -140,7 +25,122 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "animated": {
+              "default": true,
+              "description": "Whether to show pulse animation on non-idle states",
+              "label": "Animated",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Optional label override (defaults to capitalized state name)",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "stateProp": {
+              "default": "State",
+              "description": "The current state name",
+              "label": "State",
+              "synonyms": "state",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "stateStyles": {
+              "default": {},
+              "description": "Custom state styles to extend/override defaults",
+              "items": {
+                "properties": {
+                  "bgClass": {
+                    "name": "bgClass",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "State Styles",
+              "tier": "presentation",
+              "type": "Map<string,StateIndicatorStateStylesValue>"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "StateIndicatorItem",
+          "name": "StateIndicatorRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animated": "@config.animated",
+                      "className": "@config.className",
+                      "label": "@config.label",
+                      "size": "@config.size",
+                      "state": "@config.stateProp",
+                      "stateStyles": "@config.stateStyles",
+                      "type": "state-indicator"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

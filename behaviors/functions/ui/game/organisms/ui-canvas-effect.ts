@@ -46,30 +46,30 @@ export interface StdUiCanvasEffectCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCanvasEffectConfig {
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/effects/gas/gas00.png"` */
-  effectSpriteUrl?: unknown;
-  /** Default: `0` */
-  y?: number;
-  /** Default: `0` */
-  x?: number;
   /** Default: `"melee"` */
   actionType?: 'melee' | 'ranged' | 'magic' | 'heal' | 'defend' | 'hit' | 'death' | 'buff' | 'debuff' | 'shield' | 'aoe' | 'critical';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `1` */
-  intensity?: number;
-  /** Default: `400` */
-  width?: number;
-  error?: EntityRow;
-  assetManifest?: EntityRow;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
   assetBaseUrl?: unknown;
-  /** Default: `300` */
-  height?: number;
+  assetManifest?: EntityRow;
+  /** Default: `""` */
+  className?: string;
   /** Default: `2000` */
   duration?: number;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/effects/gas/gas00.png"` */
+  effectSpriteUrl?: unknown;
+  error?: EntityRow;
+  /** Default: `300` */
+  height?: number;
+  /** Default: `1` */
+  intensity?: number;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `400` */
+  width?: number;
+  /** Default: `0` */
+  x?: number;
+  /** Default: `0` */
+  y?: number;
 }
 
 /**
@@ -130,8 +130,8 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -142,113 +142,14 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'CanvasEffectRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'CanvasEffectItem',
-        'emits': [
-          {
-            'event': 'COMPLETE',
-            'description': 'Callback when the effect animation completes',
-            'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
-          },
-        ],
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
-              'key': 'COMPLETE',
-              'name': 'Complete',
-              'description': 'Callback when the effect animation completes',
-              'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-            },
-          ],
-          'transitions': [
-            {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'x': '@config.x',
-                    'assetBaseUrl': '@config.assetBaseUrl',
-                    'className': '@config.className',
-                    'completeEvent': 'COMPLETE',
-                    'actionType': '@config.actionType',
-                    'onComplete': 'COMPLETE',
-                    'type': 'canvas-effect',
-                    'isLoading': '@config.isLoading',
-                    'effectSpriteUrl': '@config.effectSpriteUrl',
-                    'width': '@config.width',
-                    'error': '@config.error',
-                    'intensity': '@config.intensity',
-                    'height': '@config.height',
-                    'duration': '@config.duration',
-                    'assetManifest': '@config.assetManifest',
-                    'y': '@config.y',
-                  },
-                ],
-              ],
-            },
-          ],
-        },
         'config': {
-          'effectSpriteUrl': {
-            'type': 'asset',
-            'default': 'https://almadar-kflow-assets.web.app/shared/effects/gas/gas00.png',
-            'label': 'Effect Sprite Url',
-            'description': '--- Remote asset loading ---',
-            'tier': 'presentation',
-          },
-          'y': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Y',
-            'description': 'Screen-space Y position (center of the effect)',
-            'tier': 'presentation',
-          },
-          'x': {
-            'type': 'number',
-            'default': 0,
-            'label': 'X',
-            'description': 'Screen-space X position (center of the effect)',
-            'tier': 'presentation',
-          },
           'actionType': {
-            'type': 'string',
             'default': 'melee',
-            'label': 'Action Type',
             'description': 'The type of combat action to visualise',
+            'label': 'Action Type',
             'tier': 'presentation',
+            'type': 'string',
             'values': [
               'melee',
               'ranged',
@@ -264,293 +165,392 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
               'critical',
             ],
           },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+          'assetBaseUrl': {
+            'default': 'https://almadar-kflow-assets.web.app/shared/',
+            'description': 'Base URL for remote assets. Prepended to relative effectSpriteUrl paths.',
+            'label': 'Asset Base Url',
             'tier': 'presentation',
-          },
-          'intensity': {
-            'type': 'number',
-            'default': 1,
-            'label': 'Intensity',
-            'description': 'Optional intensity multiplier (1 = normal, 2 = double size/brightness)',
-            'tier': 'presentation',
-          },
-          'width': {
-            'type': 'number',
-            'default': 400,
-            'label': 'Width',
-            'description': 'Canvas width (default 400)',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'CanvasEffectError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
+            'type': 'asset',
           },
           'assetManifest': {
-            'type': 'CanvasEffectAssetManifest',
-            'label': 'Asset Manifest',
             'description': 'Full effect asset manifest for the sprite particle engine. When provided, enables the canvas-based particle system.',
-            'tier': 'presentation',
+            'label': 'Asset Manifest',
             'properties': {
               'animations': {
                 'name': 'animations',
-                'type': 'object',
-                'required': false,
                 'properties': {
-                  'explosion': {
-                    'name': 'explosion',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
                   'blackSmoke': {
+                    'items': {
+                      'type': 'string',
+                    },
                     'name': 'blackSmoke',
-                    'type': 'array',
                     'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
+                    'type': 'array',
                   },
-                  'smokePuff': {
-                    'name': 'smokePuff',
-                    'type': 'array',
-                    'required': false,
+                  'explosion': {
                     'items': {
                       'type': 'string',
                     },
-                  },
-                  'gasSmoke': {
-                    'name': 'gasSmoke',
-                    'type': 'array',
+                    'name': 'explosion',
                     'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'smokeExplosion': {
-                    'name': 'smokeExplosion',
                     'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
                   },
                   'flash': {
-                    'name': 'flash',
-                    'type': 'array',
-                    'required': false,
                     'items': {
                       'type': 'string',
                     },
+                    'name': 'flash',
+                    'required': false,
+                    'type': 'array',
+                  },
+                  'gasSmoke': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'gasSmoke',
+                    'required': false,
+                    'type': 'array',
+                  },
+                  'smokeExplosion': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'smokeExplosion',
+                    'required': false,
+                    'type': 'array',
+                  },
+                  'smokePuff': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'smokePuff',
+                    'required': false,
+                    'type': 'array',
                   },
                 },
+                'required': false,
+                'type': 'object',
               },
               'baseUrl': {
                 'name': 'baseUrl',
-                'type': 'string',
                 'required': true,
+                'type': 'string',
               },
               'particles': {
                 'name': 'particles',
-                'type': 'object',
-                'required': false,
                 'properties': {
-                  'fire': {
-                    'name': 'fire',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'symbol': {
-                    'name': 'symbol',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'trace': {
-                    'name': 'trace',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'slash': {
-                    'name': 'slash',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'twirl': {
-                    'name': 'twirl',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'muzzle': {
-                    'name': 'muzzle',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
                   'circle': {
-                    'name': 'circle',
-                    'type': 'array',
-                    'required': false,
                     'items': {
                       'type': 'string',
                     },
+                    'name': 'circle',
+                    'required': false,
+                    'type': 'array',
                   },
                   'dirt': {
+                    'items': {
+                      'type': 'string',
+                    },
                     'name': 'dirt',
-                    'type': 'array',
                     'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
+                    'type': 'array',
                   },
-                  'spark': {
-                    'name': 'spark',
-                    'type': 'array',
-                    'required': false,
+                  'fire': {
                     'items': {
                       'type': 'string',
                     },
+                    'name': 'fire',
+                    'required': false,
+                    'type': 'array',
                   },
                   'flame': {
+                    'items': {
+                      'type': 'string',
+                    },
                     'name': 'flame',
-                    'type': 'array',
                     'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'scratch': {
-                    'name': 'scratch',
                     'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                  'light': {
-                    'name': 'light',
-                    'type': 'array',
-                    'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
                   },
                   'flare': {
                     'name': 'flare',
-                    'type': 'string',
                     'required': false,
+                    'type': 'string',
+                  },
+                  'light': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'light',
+                    'required': false,
+                    'type': 'array',
                   },
                   'magic': {
+                    'items': {
+                      'type': 'string',
+                    },
                     'name': 'magic',
-                    'type': 'array',
                     'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
+                    'type': 'array',
                   },
-                  'star': {
-                    'name': 'star',
-                    'type': 'array',
-                    'required': false,
+                  'muzzle': {
                     'items': {
                       'type': 'string',
                     },
-                  },
-                  'smoke': {
-                    'name': 'smoke',
-                    'type': 'array',
+                    'name': 'muzzle',
                     'required': false,
-                    'items': {
-                      'type': 'string',
-                    },
+                    'type': 'array',
                   },
                   'scorch': {
-                    'name': 'scorch',
-                    'type': 'array',
-                    'required': false,
                     'items': {
                       'type': 'string',
                     },
+                    'name': 'scorch',
+                    'required': false,
+                    'type': 'array',
+                  },
+                  'scratch': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'scratch',
+                    'required': false,
+                    'type': 'array',
+                  },
+                  'slash': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'slash',
+                    'required': false,
+                    'type': 'array',
+                  },
+                  'smoke': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'smoke',
+                    'required': false,
+                    'type': 'array',
+                  },
+                  'spark': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'spark',
+                    'required': false,
+                    'type': 'array',
+                  },
+                  'star': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'star',
+                    'required': false,
+                    'type': 'array',
+                  },
+                  'symbol': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'symbol',
+                    'required': false,
+                    'type': 'array',
+                  },
+                  'trace': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'trace',
+                    'required': false,
+                    'type': 'array',
+                  },
+                  'twirl': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'twirl',
+                    'required': false,
+                    'type': 'array',
                   },
                 },
+                'required': false,
+                'type': 'object',
               },
             },
-          },
-          'assetBaseUrl': {
-            'type': 'asset',
-            'default': 'https://almadar-kflow-assets.web.app/shared/',
-            'label': 'Asset Base Url',
-            'description': 'Base URL for remote assets. Prepended to relative effectSpriteUrl paths.',
             'tier': 'presentation',
+            'type': 'CanvasEffectAssetManifest',
           },
-          'height': {
-            'type': 'number',
-            'default': 300,
-            'label': 'Height',
-            'description': 'Canvas height (default 300)',
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
             'tier': 'presentation',
+            'type': 'string',
           },
           'duration': {
-            'type': 'number',
             'default': 2000,
-            'label': 'Duration',
             'description': 'Duration in ms before auto-dismiss (default 2000 for canvas, 800 for emoji)',
+            'label': 'Duration',
             'tier': 'presentation',
+            'type': 'number',
+          },
+          'effectSpriteUrl': {
+            'default': 'https://almadar-kflow-assets.web.app/shared/effects/gas/gas00.png',
+            'description': '--- Remote asset loading ---',
+            'label': 'Effect Sprite Url',
+            'tier': 'presentation',
+            'type': 'asset',
+          },
+          'error': {
+            'description': 'Error state',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'CanvasEffectError',
+          },
+          'height': {
+            'default': 300,
+            'description': 'Canvas height (default 300)',
+            'label': 'Height',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'intensity': {
+            'default': 1,
+            'description': 'Optional intensity multiplier (1 = normal, 2 = double size/brightness)',
+            'label': 'Intensity',
+            'tier': 'presentation',
+            'type': 'number',
           },
           'isLoading': {
-            'type': 'boolean',
             'default': false,
-            'label': 'Is Loading',
             'description': 'Loading state indicator',
+            'label': 'Is Loading',
             'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'width': {
+            'default': 400,
+            'description': 'Canvas width (default 400)',
+            'label': 'Width',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'x': {
+            'default': 0,
+            'description': 'Screen-space X position (center of the effect)',
+            'label': 'X',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'y': {
+            'default': 0,
+            'description': 'Screen-space Y position (center of the effect)',
+            'label': 'Y',
+            'tier': 'presentation',
+            'type': 'number',
           },
         },
+        'emits': [
+          {
+            'description': 'Callback when the effect animation completes',
+            'event': 'COMPLETE',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
+        ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'CanvasEffectItem',
+        'name': 'CanvasEffectRender',
         'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+            {
+              'description': 'Callback when the effect animation completes',
+              'key': 'COMPLETE',
+              'name': 'Complete',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'actionType': '@config.actionType',
+                    'assetBaseUrl': '@config.assetBaseUrl',
+                    'assetManifest': '@config.assetManifest',
+                    'className': '@config.className',
+                    'completeEvent': 'COMPLETE',
+                    'duration': '@config.duration',
+                    'effectSpriteUrl': '@config.effectSpriteUrl',
+                    'error': '@config.error',
+                    'height': '@config.height',
+                    'intensity': '@config.intensity',
+                    'isLoading': '@config.isLoading',
+                    'onComplete': 'COMPLETE',
+                    'type': 'canvas-effect',
+                    'width': '@config.width',
+                    'x': '@config.x',
+                    'y': '@config.y',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
       } as never, 'CanvasEffectItem', canonicalName) as never,
     ],
     pages: [

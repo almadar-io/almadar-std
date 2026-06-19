@@ -1,137 +1,20 @@
 {
-  "name": "ui-date-range-selector",
-  "version": "1.0.0",
   "description": "DateRangeSelector — UI factory (1:1 with the @almadar/ui date-range-selector pattern).",
+  "name": "ui-date-range-selector",
   "orbitals": [
     {
-      "name": "DateRangeSelectorOrbital",
       "entity": {
-        "name": "DateRangeSelectorItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "DateRangeSelectorItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "DateRangeSelectorRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "DateRangeSelectorItem",
-          "emits": [
-            {
-              "event": "SELECT",
-              "description": "Callback when a range is selected",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "SELECT",
-                "name": "Select",
-                "description": "Callback when a range is selected",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "onSelect": "SELECT",
-                      "className": "@config.className",
-                      "options": "@config.options",
-                      "type": "date-range-selector",
-                      "selected": "@config.selected"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "options": {
-              "type": "[DateRangeSelectorOptionsItem]",
-              "default": [
-                {
-                  "value": "Value",
-                  "label": "Label"
-                }
-              ],
-              "label": "Options",
-              "description": "Available range options",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "selected": {
-              "type": "string",
-              "default": "month",
-              "label": "Selected",
-              "description": "Currently selected value",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "DateRangeSelectorOrbital",
       "pages": [
         {
           "name": "DateRangeSelectorPage",
@@ -142,7 +25,124 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "options": {
+              "default": [
+                {
+                  "label": "Label",
+                  "value": "Value"
+                }
+              ],
+              "description": "Available range options",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Options",
+              "tier": "presentation",
+              "type": "[DateRangeSelectorOptionsItem]"
+            },
+            "selected": {
+              "default": "month",
+              "description": "Currently selected value",
+              "label": "Selected",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Callback when a range is selected",
+              "event": "SELECT",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DateRangeSelectorItem",
+          "name": "DateRangeSelectorRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Callback when a range is selected",
+                "key": "SELECT",
+                "name": "Select",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "onSelect": "SELECT",
+                      "options": "@config.options",
+                      "selected": "@config.selected",
+                      "type": "date-range-selector"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

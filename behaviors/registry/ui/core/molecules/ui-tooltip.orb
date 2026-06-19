@@ -1,124 +1,20 @@
 {
-  "name": "ui-tooltip",
-  "version": "1.0.0",
   "description": "Tooltip — UI factory (1:1 with the @almadar/ui tooltip pattern).",
+  "name": "ui-tooltip",
   "orbitals": [
     {
-      "name": "TooltipOrbital",
       "entity": {
-        "name": "TooltipItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "TooltipItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "TooltipRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "TooltipItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "position": "@config.position",
-                      "delay": "@config.delay",
-                      "type": "tooltip",
-                      "className": "@config.className",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Sample content"
-                        }
-                      ],
-                      "content": [
-                        {
-                          "type": "typography",
-                          "content": "Content"
-                        }
-                      ],
-                      "showArrow": "@config.showArrow",
-                      "hideDelay": "@config.hideDelay"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "position": {
-              "type": "string",
-              "default": "top",
-              "label": "Position",
-              "description": "Tooltip position",
-              "tier": "presentation",
-              "values": [
-                "top",
-                "bottom",
-                "left",
-                "right"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "showArrow": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Arrow",
-              "description": "Show arrow",
-              "tier": "presentation"
-            },
-            "hideDelay": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Hide Delay",
-              "description": "Hide delay in milliseconds",
-              "tier": "presentation"
-            },
-            "delay": {
-              "type": "number",
-              "default": 200.0,
-              "label": "Delay",
-              "description": "Show delay in milliseconds",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "TooltipOrbital",
       "pages": [
         {
           "name": "TooltipPage",
@@ -129,7 +25,111 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "delay": {
+              "default": 200.0,
+              "description": "Show delay in milliseconds",
+              "label": "Delay",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "hideDelay": {
+              "default": 0.0,
+              "description": "Hide delay in milliseconds",
+              "label": "Hide Delay",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "position": {
+              "default": "top",
+              "description": "Tooltip position",
+              "label": "Position",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "top",
+                "bottom",
+                "left",
+                "right"
+              ]
+            },
+            "showArrow": {
+              "default": true,
+              "description": "Show arrow",
+              "label": "Show Arrow",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TooltipItem",
+          "name": "TooltipRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "content": [
+                        {
+                          "content": "Content",
+                          "type": "typography"
+                        }
+                      ],
+                      "delay": "@config.delay",
+                      "hideDelay": "@config.hideDelay",
+                      "position": "@config.position",
+                      "showArrow": "@config.showArrow",
+                      "type": "tooltip"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,98 +1,20 @@
 {
-  "name": "ui-activation-block",
-  "version": "1.0.0",
   "description": "ActivationBlock — UI factory (1:1 with the @almadar/ui activation-block pattern).",
+  "name": "ui-activation-block",
   "orbitals": [
     {
-      "name": "ActivationBlockOrbital",
       "entity": {
-        "name": "ActivationBlockItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ActivationBlockItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ActivationBlockRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ActivationBlockItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "activation-block",
-                      "question": "@config.question",
-                      "savedResponse": "@config.savedResponse",
-                      "saveEvent": "@config.saveEvent",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "savedResponse": {
-              "type": "string",
-              "default": "Saved Response",
-              "label": "Saved Response",
-              "description": "Pre-filled response from saved state",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "question": {
-              "type": "string",
-              "default": "Question",
-              "label": "Question",
-              "description": "The prior-knowledge question",
-              "tier": "presentation"
-            },
-            "saveEvent": {
-              "type": "string",
-              "default": "SAVE_ACTIVATION",
-              "label": "Save Event",
-              "description": "Event name emitted on save/skip (as `UI:<saveEvent>`). Defaults to 'SAVE_ACTIVATION'.",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ActivationBlockOrbital",
       "pages": [
         {
           "name": "ActivationBlockPage",
@@ -103,7 +25,85 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "question": {
+              "default": "Question",
+              "description": "The prior-knowledge question",
+              "label": "Question",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "saveEvent": {
+              "default": "SAVE_ACTIVATION",
+              "description": "Event name emitted on save/skip (as `UI:<saveEvent>`). Defaults to 'SAVE_ACTIVATION'.",
+              "label": "Save Event",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "savedResponse": {
+              "default": "Saved Response",
+              "description": "Pre-filled response from saved state",
+              "label": "Saved Response",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ActivationBlockItem",
+          "name": "ActivationBlockRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "question": "@config.question",
+                      "saveEvent": "@config.saveEvent",
+                      "savedResponse": "@config.savedResponse",
+                      "type": "activation-block"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -46,45 +46,45 @@ export interface StdUiCodeBlockChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeBlockConfig {
-  /** Default: `"Code"` */
-  code?: string;
-  /** Default: `"text"` */
-  language?: 'text' | 'json' | 'javascript' | 'js' | 'typescript' | 'ts' | 'jsx' | 'tsx' | 'css' | 'markdown' | 'md' | 'bash' | 'shell' | 'sh' | 'yaml' | 'yml' | 'rust' | 'python' | 'py' | 'sql' | 'diff' | 'toml' | 'go' | 'graphql' | 'html' | 'xml' | 'orb' | 'lolo';
-  /** Default: `false` */
-  showLineNumbers?: boolean;
-  /** Default: `false` */
-  editable?: boolean;
-  /** Default: `"code"` */
-  mode?: 'code' | 'diff';
-  /** Default: `true` */
-  showCopyButton?: boolean;
-  /** Default: `"New Value"` */
-  newValue?: string;
-  /** Default: `false` */
-  wordWrap?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
-  /** Default: `[{"type":"added","afterLineNumber":1,"beforeLineNumber":1,"content":"Content"}]` */
-  diff?: EntityRow[];
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"variant":"primary","label":"Label","navigatesTo":"Navigates To"}]` */
-  actions?: EntityRow[];
-  /** Default: `"Title"` */
-  title?: string;
+  /** Default: `"Code"` */
+  code?: string;
+  /** Default: `[{"afterLineNumber":1,"beforeLineNumber":1,"content":"Content","type":"added"}]` */
+  diff?: EntityRow[];
+  /** Default: `false` */
+  editable?: boolean;
+  error?: EntityRow;
   /** Default: `[{"code":"Code","label":"Label","language":"text"}]` */
   files?: EntityRow[];
-  /** Default: `true` */
-  showLanguageBadge?: boolean;
   /** Default: `false` */
-  showCopy?: boolean;
+  foldable?: boolean;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"text"` */
+  language?: 'text' | 'json' | 'javascript' | 'js' | 'typescript' | 'ts' | 'jsx' | 'tsx' | 'css' | 'markdown' | 'md' | 'bash' | 'shell' | 'sh' | 'yaml' | 'yml' | 'rust' | 'python' | 'py' | 'sql' | 'diff' | 'toml' | 'go' | 'graphql' | 'html' | 'xml' | 'orb' | 'lolo';
   /** Default: `"60vh"` */
   maxHeight?: string;
+  /** Default: `"code"` */
+  mode?: 'code' | 'diff';
+  /** Default: `"New Value"` */
+  newValue?: string;
   /** Default: `"Old Value"` */
   oldValue?: string;
   /** Default: `false` */
-  foldable?: boolean;
+  showCopy?: boolean;
+  /** Default: `true` */
+  showCopyButton?: boolean;
+  /** Default: `true` */
+  showLanguageBadge?: boolean;
+  /** Default: `false` */
+  showLineNumbers?: boolean;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `false` */
+  wordWrap?: boolean;
 }
 
 /**

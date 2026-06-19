@@ -1,167 +1,20 @@
 {
-  "name": "ui-action-button",
-  "version": "1.0.0",
   "description": "ActionButton — UI factory (1:1 with the @almadar/ui action-button pattern).",
+  "name": "ui-action-button",
   "orbitals": [
     {
-      "name": "ActionButtonOrbital",
       "entity": {
-        "name": "ActionButtonItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ActionButtonItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ActionButtonRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ActionButtonItem",
-          "emits": [
-            {
-              "event": "CLICK",
-              "description": "Click handler",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CLICK",
-                "name": "Click",
-                "description": "Click handler",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "onClick": "CLICK",
-                      "icon": "@config.icon",
-                      "label": "@config.label",
-                      "hotkey": "@config.hotkey",
-                      "cooldown": "@config.cooldown",
-                      "className": "@config.className",
-                      "variant": "@config.variant",
-                      "size": "@config.size",
-                      "disabled": "@config.disabled",
-                      "type": "action-button"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Icon displayed before the label",
-              "tier": "presentation"
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Whether the button is disabled",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "primary",
-              "label": "Variant",
-              "description": "Visual variant",
-              "tier": "presentation",
-              "values": [
-                "primary",
-                "secondary",
-                "danger"
-              ]
-            },
-            "hotkey": {
-              "type": "string",
-              "default": "Hotkey",
-              "label": "Hotkey",
-              "description": "Keyboard hotkey to display as a badge",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Button label text",
-              "tier": "presentation"
-            },
-            "cooldown": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Cooldown",
-              "description": "Cooldown progress from 0 (ready) to 1 (full cooldown)",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ActionButtonOrbital",
       "pages": [
         {
           "name": "ActionButtonPage",
@@ -172,7 +25,154 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "cooldown": {
+              "default": 0.0,
+              "description": "Cooldown progress from 0 (ready) to 1 (full cooldown)",
+              "label": "Cooldown",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "disabled": {
+              "default": false,
+              "description": "Whether the button is disabled",
+              "label": "Disabled",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "hotkey": {
+              "default": "Hotkey",
+              "description": "Keyboard hotkey to display as a badge",
+              "label": "Hotkey",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Icon displayed before the label",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Button label text",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "variant": {
+              "default": "primary",
+              "description": "Visual variant",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "primary",
+                "secondary",
+                "danger"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Click handler",
+              "event": "CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ActionButtonItem",
+          "name": "ActionButtonRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Click handler",
+                "key": "CLICK",
+                "name": "Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "cooldown": "@config.cooldown",
+                      "disabled": "@config.disabled",
+                      "hotkey": "@config.hotkey",
+                      "icon": "@config.icon",
+                      "label": "@config.label",
+                      "onClick": "CLICK",
+                      "size": "@config.size",
+                      "type": "action-button",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,136 +1,20 @@
 {
-  "name": "ui-sparkline",
-  "version": "1.0.0",
   "description": "Sparkline — UI factory (1:1 with the @almadar/ui sparkline pattern).",
+  "name": "ui-sparkline",
   "orbitals": [
     {
-      "name": "SparklineOrbital",
       "entity": {
-        "name": "SparklineItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "SparklineItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "SparklineRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "SparklineItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "width": "@config.width",
-                      "data": "@config.data",
-                      "height": "@config.height",
-                      "color": "@config.color",
-                      "type": "sparkline",
-                      "fill": "@config.fill",
-                      "strokeWidth": "@config.strokeWidth"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "height": {
-              "type": "number",
-              "default": 32.0,
-              "label": "Height",
-              "description": "SVG height in px. Default 32.",
-              "tier": "presentation"
-            },
-            "color": {
-              "type": "string",
-              "default": "auto",
-              "label": "Color",
-              "description": "Stroke color. `auto` (default): success when the series trends up (last ≥ first), error when it trends down.",
-              "tier": "presentation",
-              "values": [
-                "auto",
-                "primary",
-                "success",
-                "warning",
-                "error",
-                "info",
-                "muted"
-              ]
-            },
-            "width": {
-              "type": "number",
-              "default": 80.0,
-              "label": "Width",
-              "description": "SVG width in px. Default 80.",
-              "tier": "presentation"
-            },
-            "strokeWidth": {
-              "type": "number",
-              "default": 2.0,
-              "label": "Stroke Width",
-              "description": "Stroke width in px. Default 2.",
-              "tier": "presentation"
-            },
-            "data": {
-              "type": "[number]",
-              "default": [
-                1.0
-              ],
-              "label": "Data",
-              "description": "Numeric series to plot. Length < 2 renders nothing.",
-              "tier": "presentation",
-              "items": {
-                "type": "number"
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes.",
-              "tier": "presentation"
-            },
-            "fill": {
-              "type": "boolean",
-              "default": false,
-              "label": "Fill",
-              "description": "Fill the area under the line with the stroke color at low opacity.",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "SparklineOrbital",
       "pages": [
         {
           "name": "SparklinePage",
@@ -141,7 +25,123 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "color": {
+              "default": "auto",
+              "description": "Stroke color. `auto` (default): success when the series trends up (last ≥ first), error when it trends down.",
+              "label": "Color",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "auto",
+                "primary",
+                "success",
+                "warning",
+                "error",
+                "info",
+                "muted"
+              ]
+            },
+            "data": {
+              "default": [
+                1.0
+              ],
+              "description": "Numeric series to plot. Length < 2 renders nothing.",
+              "items": {
+                "type": "number"
+              },
+              "label": "Data",
+              "tier": "presentation",
+              "type": "[number]"
+            },
+            "fill": {
+              "default": false,
+              "description": "Fill the area under the line with the stroke color at low opacity.",
+              "label": "Fill",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "height": {
+              "default": 32.0,
+              "description": "SVG height in px. Default 32.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "strokeWidth": {
+              "default": 2.0,
+              "description": "Stroke width in px. Default 2.",
+              "label": "Stroke Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "width": {
+              "default": 80.0,
+              "description": "SVG width in px. Default 80.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SparklineItem",
+          "name": "SparklineRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "color": "@config.color",
+                      "data": "@config.data",
+                      "fill": "@config.fill",
+                      "height": "@config.height",
+                      "strokeWidth": "@config.strokeWidth",
+                      "type": "sparkline",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

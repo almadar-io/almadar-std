@@ -1,278 +1,20 @@
 {
-  "name": "ui-select",
-  "version": "1.0.0",
   "description": "Select — UI factory (1:1 with the @almadar/ui select pattern).",
+  "name": "ui-select",
   "orbitals": [
     {
-      "name": "SelectOrbital",
       "entity": {
-        "name": "SelectItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "SelectItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "SelectRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "SelectItem",
-          "emits": [
-            {
-              "event": "ACTION",
-              "description": "Declarative event name for trait dispatch",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "CHANGE",
-              "description": "onChange handler (native ChangeEvent) or declarative event key for trait dispatch",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "VALUE_CHANGE",
-              "description": "Value-based change: a React callback (internal use) OR a declarative event key that emits `{ value }` on the bus (render-ui / lolo authoring). Mirrors the `onChange` handler|event convention so it's an event-emitting prop, not a bare callback.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event name for trait dispatch",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CHANGE",
-                "name": "Change",
-                "description": "onChange handler (native ChangeEvent) or declarative event key for trait dispatch",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "VALUE_CHANGE",
-                "name": "Value Change",
-                "description": "Value-based change: a React callback (internal use) OR a declarative event key that emits `{ value }` on the bus (render-ui / lolo authoring). Mirrors the `onChange` handler|event convention so it's an event-emitting prop, not a bare callback.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "searchable": "@config.searchable",
-                      "value": "@config.value",
-                      "error": "@config.error",
-                      "onValueChange": "VALUE_CHANGE",
-                      "multiple": "@config.multiple",
-                      "type": "select",
-                      "clearable": "@config.clearable",
-                      "action": "ACTION",
-                      "onChange": "CHANGE",
-                      "className": "@config.className",
-                      "options": "@config.options",
-                      "placeholder": "@config.placeholder",
-                      "groups": "@config.groups"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "options": {
-              "type": "[SelectOptionsItem]",
-              "default": [
-                {
-                  "value": "Value",
-                  "label": "Label"
-                }
-              ],
-              "label": "Options",
-              "description": "Select options (flat list)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "searchable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Searchable",
-              "description": "Show a search input inside the dropdown — activates the rich dropdown.",
-              "tier": "presentation"
-            },
-            "clearable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Clearable",
-              "description": "Show a clear button when a value is selected.",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "string",
-              "default": "",
-              "label": "Error",
-              "description": "Error message",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "[string]",
-              "default": [],
-              "label": "Value",
-              "description": "Current value (string for single, string[] for multiple)",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "placeholder": {
-              "type": "string",
-              "default": "Placeholder",
-              "label": "Placeholder",
-              "description": "Placeholder text",
-              "tier": "presentation"
-            },
-            "multiple": {
-              "type": "boolean",
-              "default": false,
-              "label": "Multiple",
-              "description": "Allow selecting multiple values — activates the rich dropdown.",
-              "tier": "presentation"
-            },
-            "groups": {
-              "type": "[SelectGroupsItem]",
-              "default": [
-                {
-                  "options": [
-                    {
-                      "label": "Label",
-                      "value": "Value"
-                    }
-                  ],
-                  "label": "Label"
-                }
-              ],
-              "label": "Groups",
-              "description": "Grouped options — rendered as <optgroup> in native mode, sections in rich mode.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "options": {
-                    "name": "options",
-                    "type": "array",
-                    "required": true,
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "label": {
-                          "name": "label",
-                          "type": "string",
-                          "required": true
-                        },
-                        "value": {
-                          "name": "value",
-                          "type": "string",
-                          "required": true
-                        }
-                      }
-                    }
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "SelectOrbital",
       "pages": [
         {
           "name": "SelectPage",
@@ -283,7 +25,265 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the root element.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "clearable": {
+              "default": false,
+              "description": "Show a clear button when a value is selected.",
+              "label": "Clearable",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "error": {
+              "default": "",
+              "description": "Error message",
+              "label": "Error",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "groups": {
+              "default": [
+                {
+                  "label": "Label",
+                  "options": [
+                    {
+                      "label": "Label",
+                      "value": "Value"
+                    }
+                  ]
+                }
+              ],
+              "description": "Grouped options — rendered as <optgroup> in native mode, sections in rich mode.",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "items": {
+                      "properties": {
+                        "label": {
+                          "name": "label",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "value": {
+                          "name": "value",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "options",
+                    "required": true,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Groups",
+              "tier": "presentation",
+              "type": "[SelectGroupsItem]"
+            },
+            "multiple": {
+              "default": false,
+              "description": "Allow selecting multiple values — activates the rich dropdown.",
+              "label": "Multiple",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "options": {
+              "default": [
+                {
+                  "label": "Label",
+                  "value": "Value"
+                }
+              ],
+              "description": "Select options (flat list)",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Options",
+              "tier": "presentation",
+              "type": "[SelectOptionsItem]"
+            },
+            "placeholder": {
+              "default": "Placeholder",
+              "description": "Placeholder text",
+              "label": "Placeholder",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "searchable": {
+              "default": false,
+              "description": "Show a search input inside the dropdown — activates the rich dropdown.",
+              "label": "Searchable",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "value": {
+              "default": [],
+              "description": "Current value (string for single, string[] for multiple)",
+              "items": {
+                "type": "string"
+              },
+              "label": "Value",
+              "tier": "presentation",
+              "type": "[string]"
+            }
+          },
+          "emits": [
+            {
+              "description": "Declarative event name for trait dispatch",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "onChange handler (native ChangeEvent) or declarative event key for trait dispatch",
+              "event": "CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Value-based change: a React callback (internal use) OR a declarative event key that emits `{ value }` on the bus (render-ui / lolo authoring). Mirrors the `onChange` handler|event convention so it's an event-emitting prop, not a bare callback.",
+              "event": "VALUE_CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SelectItem",
+          "name": "SelectRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Declarative event name for trait dispatch",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "onChange handler (native ChangeEvent) or declarative event key for trait dispatch",
+                "key": "CHANGE",
+                "name": "Change",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Value-based change: a React callback (internal use) OR a declarative event key that emits `{ value }` on the bus (render-ui / lolo authoring). Mirrors the `onChange` handler|event convention so it's an event-emitting prop, not a bare callback.",
+                "key": "VALUE_CHANGE",
+                "name": "Value Change",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "className": "@config.className",
+                      "clearable": "@config.clearable",
+                      "error": "@config.error",
+                      "groups": "@config.groups",
+                      "multiple": "@config.multiple",
+                      "onChange": "CHANGE",
+                      "onValueChange": "VALUE_CHANGE",
+                      "options": "@config.options",
+                      "placeholder": "@config.placeholder",
+                      "searchable": "@config.searchable",
+                      "type": "select",
+                      "value": "@config.value"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,176 +1,20 @@
 {
-  "name": "ui-file-tree",
-  "version": "1.0.0",
   "description": "FileTree — UI factory (1:1 with the @almadar/ui file-tree pattern).",
+  "name": "ui-file-tree",
   "orbitals": [
     {
-      "name": "FileTreeOrbital",
       "entity": {
-        "name": "FileTreeItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "FileTreeItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "FileTreeRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "FileTreeItem",
-          "emits": [
-            {
-              "event": "FILE_SELECT",
-              "description": "Called when a file is clicked",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "path",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "FILE_SELECT",
-                "name": "File Select",
-                "description": "Called when a file is clicked",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "path",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "onFileSelect": "FILE_SELECT",
-                      "indent": "@config.indent",
-                      "type": "file-tree",
-                      "selectedPath": "@config.selectedPath",
-                      "tree": "@config.tree"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "selectedPath": {
-              "type": "string",
-              "default": "Selected Path",
-              "label": "Selected Path",
-              "description": "Currently selected file path",
-              "tier": "presentation"
-            },
-            "tree": {
-              "type": "[FileTreeTreeItem]",
-              "default": [
-                {
-                  "name": "Name",
-                  "children": [],
-                  "size": 1.0,
-                  "type": "file",
-                  "path": "Path",
-                  "language": "Language"
-                }
-              ],
-              "label": "Tree",
-              "description": "The tree data",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "children": {
-                    "name": "children",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "language": {
-                    "name": "language",
-                    "type": "string",
-                    "required": false
-                  },
-                  "path": {
-                    "name": "path",
-                    "type": "string",
-                    "required": true
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": true,
-                    "values": [
-                      "file",
-                      "dir"
-                    ]
-                  },
-                  "size": {
-                    "name": "size",
-                    "type": "number",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "CSS class",
-              "tier": "presentation"
-            },
-            "indent": {
-              "type": "number",
-              "default": 16.0,
-              "label": "Indent",
-              "description": "Indent size per level in px (default: 16)",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "FileTreeOrbital",
       "pages": [
         {
           "name": "FileTreePage",
@@ -181,7 +25,163 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "CSS class",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "indent": {
+              "default": 16.0,
+              "description": "Indent size per level in px (default: 16)",
+              "label": "Indent",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "selectedPath": {
+              "default": "Selected Path",
+              "description": "Currently selected file path",
+              "label": "Selected Path",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "tree": {
+              "default": [
+                {
+                  "children": [],
+                  "language": "Language",
+                  "name": "Name",
+                  "path": "Path",
+                  "size": 1.0,
+                  "type": "file"
+                }
+              ],
+              "description": "The tree data",
+              "items": {
+                "properties": {
+                  "children": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "children",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "language": {
+                    "name": "language",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "path": {
+                    "name": "path",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "size": {
+                    "name": "size",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "file",
+                      "dir"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tree",
+              "tier": "presentation",
+              "type": "[FileTreeTreeItem]"
+            }
+          },
+          "emits": [
+            {
+              "description": "Called when a file is clicked",
+              "event": "FILE_SELECT",
+              "payloadSchema": [
+                {
+                  "name": "path",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FileTreeItem",
+          "name": "FileTreeRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Called when a file is clicked",
+                "key": "FILE_SELECT",
+                "name": "File Select",
+                "payloadSchema": [
+                  {
+                    "name": "path",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "indent": "@config.indent",
+                      "onFileSelect": "FILE_SELECT",
+                      "selectedPath": "@config.selectedPath",
+                      "tree": "@config.tree",
+                      "type": "file-tree"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

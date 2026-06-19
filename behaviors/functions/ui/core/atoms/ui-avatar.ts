@@ -55,24 +55,24 @@ export interface StdUiAvatarActionPayload {
 export interface StdUiAvatarConfig {
   /** Default: `{}` */
   actionPayload?: unknown;
-  /** Default: `"md"` */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Name"` */
-  name?: string;
-  /** Default: `"Initials"` */
-  initials?: string;
-  /** Default: `"online"` */
-  status?: 'online' | 'offline' | 'away' | 'busy';
-  /** Default: `"circle"` */
-  icon?: unknown;
-  /** Default: `"Badge"` */
-  badge?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  src?: unknown;
   /** Default: `"Alt"` */
   alt?: string;
+  /** Default: `"Badge"` */
+  badge?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"circle"` */
+  icon?: unknown;
+  /** Default: `"Initials"` */
+  initials?: string;
+  /** Default: `"Name"` */
+  name?: string;
+  /** Default: `"md"` */
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  src?: unknown;
+  /** Default: `"online"` */
+  status?: 'online' | 'offline' | 'away' | 'busy';
 }
 
 /**

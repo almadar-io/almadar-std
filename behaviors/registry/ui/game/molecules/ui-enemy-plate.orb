@@ -1,145 +1,20 @@
 {
-  "name": "ui-enemy-plate",
-  "version": "1.0.0",
   "description": "EnemyPlate — UI factory (1:1 with the @almadar/ui enemy-plate pattern).",
+  "name": "ui-enemy-plate",
   "orbitals": [
     {
-      "name": "EnemyPlateOrbital",
       "entity": {
-        "name": "EnemyPlateItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "EnemyPlateItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "EnemyPlateRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "EnemyPlateItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "level": "@config.level",
-                      "className": "@config.className",
-                      "maxHealth": "@config.maxHealth",
-                      "name": "@config.name",
-                      "effects": "@config.effects",
-                      "health": "@config.health",
-                      "type": "enemy-plate"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "maxHealth": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max Health",
-              "description": "Maximum health",
-              "tier": "presentation"
-            },
-            "health": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Health",
-              "description": "Current health",
-              "tier": "presentation"
-            },
-            "level": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Level",
-              "description": "Enemy level",
-              "tier": "presentation"
-            },
-            "effects": {
-              "type": "[EnemyPlateEffectsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "variant": "buff",
-                  "icon": "circle"
-                }
-              ],
-              "label": "Effects",
-              "description": "Active status effects",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "buff",
-                      "debuff",
-                      "neutral"
-                    ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "name": {
-              "type": "string",
-              "default": "Name",
-              "label": "Name",
-              "description": "Enemy name",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "EnemyPlateOrbital",
       "pages": [
         {
           "name": "EnemyPlatePage",
@@ -150,7 +25,132 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "effects": {
+              "default": [
+                {
+                  "icon": "circle",
+                  "label": "Label",
+                  "variant": "buff"
+                }
+              ],
+              "description": "Active status effects",
+              "items": {
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "buff",
+                      "debuff",
+                      "neutral"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Effects",
+              "tier": "presentation",
+              "type": "[EnemyPlateEffectsItem]"
+            },
+            "health": {
+              "default": 0.0,
+              "description": "Current health",
+              "label": "Health",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "level": {
+              "default": 0.0,
+              "description": "Enemy level",
+              "label": "Level",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "maxHealth": {
+              "default": 0.0,
+              "description": "Maximum health",
+              "label": "Max Health",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "name": {
+              "default": "Name",
+              "description": "Enemy name",
+              "label": "Name",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "EnemyPlateItem",
+          "name": "EnemyPlateRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "effects": "@config.effects",
+                      "health": "@config.health",
+                      "level": "@config.level",
+                      "maxHealth": "@config.maxHealth",
+                      "name": "@config.name",
+                      "type": "enemy-plate"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

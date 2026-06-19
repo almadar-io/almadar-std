@@ -41,15 +41,15 @@ export type StdUiDrawerSlotEventKey = 'INIT';
 export interface StdUiDrawerSlotConfig {
   /** Default: `""` */
   className?: string;
+  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  error?: EntityRow;
   /** Default: `"right"` */
   position?: 'left' | 'right';
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**
@@ -110,8 +110,8 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -122,32 +122,106 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'DrawerSlotRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'DrawerSlotItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Custom class name',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'error': {
+            'description': 'Error state',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
             },
-          ],
+            'tier': 'presentation',
+            'type': 'DrawerSlotError',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'position': {
+            'default': 'right',
+            'description': 'Drawer position',
+            'label': 'Position',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'left',
+              'right',
+            ],
+          },
+          'size': {
+            'default': 'md',
+            'description': 'Drawer size',
+            'label': 'Size',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+              'xl',
+              'full',
+            ],
+          },
+          'title': {
+            'default': 'Title',
+            'description': 'Override drawer title (extracted from children if not provided)',
+            'label': 'Title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'DrawerSlotItem',
+        'name': 'DrawerSlotRender',
+        'scope': 'instance',
+        'stateMachine': {
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -158,103 +232,29 @@ export function stdUiDrawerSlotDrawerSlotOrbital(params: StdUiDrawerSlotDrawerSl
                   'render-ui',
                   'main',
                   {
-                    'entity': 'DrawerSlotItem',
-                    'className': '@config.className',
-                    'position': '@config.position',
-                    'title': '@config.title',
-                    'size': '@config.size',
-                    'error': '@config.error',
                     'children': [
                       {
-                        'type': 'typography',
                         'content': 'Sample content',
+                        'type': 'typography',
                       },
                     ],
+                    'className': '@config.className',
+                    'entity': 'DrawerSlotItem',
+                    'error': '@config.error',
                     'isLoading': '@config.isLoading',
+                    'position': '@config.position',
+                    'size': '@config.size',
+                    'title': '@config.title',
                     'type': 'drawer-slot',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Custom class name',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'DrawerSlotError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'position': {
-            'type': 'string',
-            'default': 'right',
-            'label': 'Position',
-            'description': 'Drawer position',
-            'tier': 'presentation',
-            'values': [
-              'left',
-              'right',
-            ],
-          },
-          'title': {
-            'type': 'string',
-            'default': 'Title',
-            'label': 'Title',
-            'description': 'Override drawer title (extracted from children if not provided)',
-            'tier': 'presentation',
-          },
-          'size': {
-            'type': 'string',
-            'default': 'md',
-            'label': 'Size',
-            'description': 'Drawer size',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-              'xl',
-              'full',
-            ],
-          },
-        },
-        'scope': 'instance',
       } as never, 'DrawerSlotItem', canonicalName) as never,
     ],
     pages: [

@@ -1,100 +1,20 @@
 {
-  "name": "ui-book-table-of-contents",
-  "version": "1.0.0",
   "description": "BookTableOfContents — UI factory (1:1 with the @almadar/ui book-table-of-contents pattern).",
+  "name": "ui-book-table-of-contents",
   "orbitals": [
     {
-      "name": "BookTableOfContentsOrbital",
       "entity": {
-        "name": "BookTableOfContentsItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "BookTableOfContentsItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "BookTableOfContentsRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "BookTableOfContentsItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "BookTableOfContentsItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "currentChapterId": "@config.currentChapterId",
-                      "className": "@config.className",
-                      "direction": "@config.direction",
-                      "type": "book-table-of-contents",
-                      "parts": "@entity"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "currentChapterId": {
-              "type": "string",
-              "default": "Current Chapter Id",
-              "label": "Current Chapter Id",
-              "description": "currentChapterId prop",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "direction": {
-              "type": "string",
-              "default": "rtl",
-              "label": "Direction",
-              "description": "direction prop",
-              "tier": "presentation",
-              "values": [
-                "rtl",
-                "ltr"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "BookTableOfContentsOrbital",
       "pages": [
         {
           "name": "BookTableOfContentsPage",
@@ -105,7 +25,87 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "currentChapterId": {
+              "default": "Current Chapter Id",
+              "description": "currentChapterId prop",
+              "label": "Current Chapter Id",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "direction": {
+              "default": "rtl",
+              "description": "direction prop",
+              "label": "Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "rtl",
+                "ltr"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "BookTableOfContentsItem",
+          "name": "BookTableOfContentsRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "BookTableOfContentsItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "currentChapterId": "@config.currentChapterId",
+                      "direction": "@config.direction",
+                      "parts": "@entity",
+                      "type": "book-table-of-contents"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

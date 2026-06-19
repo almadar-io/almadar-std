@@ -1,130 +1,20 @@
 {
-  "name": "ui-bloom-quiz-block",
-  "version": "1.0.0",
   "description": "BloomQuizBlock — UI factory (1:1 with the @almadar/ui bloom-quiz-block pattern).",
+  "name": "ui-bloom-quiz-block",
   "orbitals": [
     {
-      "name": "BloomQuizBlockOrbital",
       "entity": {
-        "name": "BloomQuizBlockItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "BloomQuizBlockItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "BloomQuizBlockRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "BloomQuizBlockItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "answer": "@config.answer",
-                      "index": "@config.index",
-                      "type": "bloom-quiz-block",
-                      "level": "@config.level",
-                      "question": "@config.question",
-                      "isAnswered": "@config.isAnswered",
-                      "answerEvent": "@config.answerEvent",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "question": {
-              "type": "string",
-              "default": "Question",
-              "label": "Question",
-              "description": "question prop",
-              "tier": "presentation"
-            },
-            "level": {
-              "type": "string",
-              "default": "remember",
-              "label": "Level",
-              "description": "level prop",
-              "tier": "presentation",
-              "values": [
-                "remember",
-                "understand",
-                "apply",
-                "analyze",
-                "evaluate",
-                "create"
-              ]
-            },
-            "answerEvent": {
-              "type": "string",
-              "default": "ANSWER_BLOOM",
-              "label": "Answer Event",
-              "description": "Event name emitted on first reveal (as `UI:<answerEvent>`). Defaults to 'ANSWER_BLOOM'.",
-              "tier": "presentation"
-            },
-            "isAnswered": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Answered",
-              "description": "Whether the learner has already answered",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "index": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Index",
-              "description": "Zero-based index (used in the emitted event payload)",
-              "tier": "presentation"
-            },
-            "answer": {
-              "type": "string",
-              "default": "Answer",
-              "label": "Answer",
-              "description": "answer prop",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "BloomQuizBlockOrbital",
       "pages": [
         {
           "name": "BloomQuizBlockPage",
@@ -135,7 +25,117 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "answer": {
+              "default": "Answer",
+              "description": "answer prop",
+              "label": "Answer",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "answerEvent": {
+              "default": "ANSWER_BLOOM",
+              "description": "Event name emitted on first reveal (as `UI:<answerEvent>`). Defaults to 'ANSWER_BLOOM'.",
+              "label": "Answer Event",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "index": {
+              "default": 0.0,
+              "description": "Zero-based index (used in the emitted event payload)",
+              "label": "Index",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "isAnswered": {
+              "default": false,
+              "description": "Whether the learner has already answered",
+              "label": "Is Answered",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "level": {
+              "default": "remember",
+              "description": "level prop",
+              "label": "Level",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "remember",
+                "understand",
+                "apply",
+                "analyze",
+                "evaluate",
+                "create"
+              ]
+            },
+            "question": {
+              "default": "Question",
+              "description": "question prop",
+              "label": "Question",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "BloomQuizBlockItem",
+          "name": "BloomQuizBlockRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "answer": "@config.answer",
+                      "answerEvent": "@config.answerEvent",
+                      "className": "@config.className",
+                      "index": "@config.index",
+                      "isAnswered": "@config.isAnswered",
+                      "level": "@config.level",
+                      "question": "@config.question",
+                      "type": "bloom-quiz-block"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

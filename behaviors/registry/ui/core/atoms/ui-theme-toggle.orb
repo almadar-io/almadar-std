@@ -1,95 +1,20 @@
 {
-  "name": "ui-theme-toggle",
-  "version": "1.0.0",
   "description": "ThemeToggle — UI factory (1:1 with the @almadar/ui theme-toggle pattern).",
+  "name": "ui-theme-toggle",
   "orbitals": [
     {
-      "name": "ThemeToggleOrbital",
       "entity": {
-        "name": "ThemeToggleItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ThemeToggleItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ThemeToggleRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ThemeToggleItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "theme-toggle",
-                      "showLabel": "@config.showLabel",
-                      "className": "@config.className",
-                      "size": "@config.size"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "showLabel": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Label",
-              "description": "Show label text",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ThemeToggleOrbital",
       "pages": [
         {
           "name": "ThemeTogglePage",
@@ -100,7 +25,82 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "showLabel": {
+              "default": false,
+              "description": "Show label text",
+              "label": "Show Label",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ThemeToggleItem",
+          "name": "ThemeToggleRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "showLabel": "@config.showLabel",
+                      "size": "@config.size",
+                      "type": "theme-toggle"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

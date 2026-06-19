@@ -1,83 +1,48 @@
 {
-  "name": "ui-animated-reveal",
-  "version": "1.0.0",
   "description": "AnimatedReveal — UI factory (1:1 with the @almadar/ui animated-reveal pattern).",
+  "name": "ui-animated-reveal",
   "orbitals": [
     {
-      "name": "AnimatedRevealOrbital",
       "entity": {
-        "name": "AnimatedRevealItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "AnimatedRevealItem",
+        "persistence": "runtime"
       },
+      "name": "AnimatedRevealOrbital",
+      "pages": [
+        {
+          "name": "AnimatedRevealPage",
+          "path": "/animated-reveal",
+          "traits": [
+            {
+              "ref": "AnimatedRevealRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "AnimatedRevealRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "AnimatedRevealItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "duration": "@config.duration",
-                      "type": "animated-reveal",
-                      "className": "@config.className",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Sample content"
-                        }
-                      ],
-                      "threshold": "@config.threshold",
-                      "trigger": "@config.trigger",
-                      "animation": "@config.animation",
-                      "once": "@config.once",
-                      "animate": "@config.animate",
-                      "easing": "@config.easing",
-                      "delay": "@config.delay"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
           "config": {
-            "animation": {
-              "type": "string",
-              "default": "fade-up",
-              "label": "Animation",
-              "description": "Built-in animation preset",
+            "animate": {
+              "default": false,
+              "description": "Manual control: when trigger='manual', set this to true to animate",
+              "label": "Animate",
               "tier": "presentation",
+              "type": "boolean"
+            },
+            "animation": {
+              "default": "fade-up",
+              "description": "Built-in animation preset",
+              "label": "Animation",
+              "tier": "presentation",
+              "type": "string",
               "values": [
                 "fade-up",
                 "fade-down",
@@ -89,61 +54,54 @@
                 "none"
               ]
             },
-            "delay": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Delay",
-              "description": "Delay before animation starts in ms (default: 0)",
-              "tier": "presentation"
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the root element.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
             },
-            "threshold": {
-              "type": "number",
-              "default": 0.15,
-              "label": "Threshold",
-              "description": "How much of the element must be visible before triggering, 0-1 (default: 0.15)",
-              "tier": "presentation"
+            "delay": {
+              "default": 0.0,
+              "description": "Delay before animation starts in ms (default: 0)",
+              "label": "Delay",
+              "tier": "presentation",
+              "type": "number"
             },
             "duration": {
-              "type": "number",
               "default": 600.0,
-              "label": "Duration",
               "description": "Animation duration in ms (default: 600)",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
+              "label": "Duration",
+              "tier": "presentation",
+              "type": "number"
             },
             "easing": {
-              "type": "string",
               "default": "cubic-bezier(0.16, 1, 0.3, 1)",
-              "label": "Easing",
               "description": "Easing function (default: cubic-bezier(0.16, 1, 0.3, 1))",
-              "tier": "presentation"
-            },
-            "animate": {
-              "type": "boolean",
-              "default": false,
-              "label": "Animate",
-              "description": "Manual control: when trigger='manual', set this to true to animate",
-              "tier": "presentation"
+              "label": "Easing",
+              "tier": "presentation",
+              "type": "string"
             },
             "once": {
-              "type": "boolean",
               "default": true,
-              "label": "Once",
               "description": "Animate only the first time the element enters the viewport (default: true)",
-              "tier": "presentation"
+              "label": "Once",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "threshold": {
+              "default": 0.15,
+              "description": "How much of the element must be visible before triggering, 0-1 (default: 0.15)",
+              "label": "Threshold",
+              "tier": "presentation",
+              "type": "number"
             },
             "trigger": {
-              "type": "string",
               "default": "scroll",
-              "label": "Trigger",
               "description": "What triggers the animation",
+              "label": "Trigger",
               "tier": "presentation",
+              "type": "string",
               "values": [
                 "scroll",
                 "hover",
@@ -151,20 +109,62 @@
               ]
             }
           },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "AnimatedRevealPage",
-          "path": "/animated-reveal",
-          "traits": [
-            {
-              "ref": "AnimatedRevealRender"
-            }
-          ]
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AnimatedRevealItem",
+          "name": "AnimatedRevealRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animate": "@config.animate",
+                      "animation": "@config.animation",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "delay": "@config.delay",
+                      "duration": "@config.duration",
+                      "easing": "@config.easing",
+                      "once": "@config.once",
+                      "threshold": "@config.threshold",
+                      "trigger": "@config.trigger",
+                      "type": "animated-reveal"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

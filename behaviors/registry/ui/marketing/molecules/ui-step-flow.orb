@@ -1,134 +1,20 @@
 {
-  "name": "ui-step-flow",
-  "version": "1.0.0",
   "description": "StepFlow — UI factory (1:1 with the @almadar/ui step-flow pattern).",
+  "name": "ui-step-flow",
   "orbitals": [
     {
-      "name": "StepFlowOrbital",
       "entity": {
-        "name": "StepFlowItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "StepFlowItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "StepFlowRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "StepFlowItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "orientation": "@config.orientation",
-                      "className": "@config.className",
-                      "showConnectors": "@config.showConnectors",
-                      "steps": "@config.steps",
-                      "type": "step-flow"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "steps": {
-              "type": "[StepFlowStepsItem]",
-              "default": [
-                {
-                  "title": "Title",
-                  "description": "Description",
-                  "icon": "circle",
-                  "number": 1.0
-                }
-              ],
-              "label": "Steps",
-              "description": "steps prop",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "number": {
-                    "name": "number",
-                    "type": "number",
-                    "required": false
-                  },
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "showConnectors": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Connectors",
-              "description": "showConnectors prop",
-              "tier": "presentation"
-            },
-            "orientation": {
-              "type": "string",
-              "default": "horizontal",
-              "label": "Orientation",
-              "description": "orientation prop",
-              "tier": "presentation",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "StepFlowOrbital",
       "pages": [
         {
           "name": "StepFlowPage",
@@ -139,7 +25,121 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "orientation": {
+              "default": "horizontal",
+              "description": "orientation prop",
+              "label": "Orientation",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "showConnectors": {
+              "default": true,
+              "description": "showConnectors prop",
+              "label": "Show Connectors",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "steps": {
+              "default": [
+                {
+                  "description": "Description",
+                  "icon": "circle",
+                  "number": 1.0,
+                  "title": "Title"
+                }
+              ],
+              "description": "steps prop",
+              "items": {
+                "properties": {
+                  "description": {
+                    "name": "description",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "number": {
+                    "name": "number",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "title": {
+                    "name": "title",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Steps",
+              "tier": "presentation",
+              "type": "[StepFlowStepsItem]"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "StepFlowItem",
+          "name": "StepFlowRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "orientation": "@config.orientation",
+                      "showConnectors": "@config.showConnectors",
+                      "steps": "@config.steps",
+                      "type": "step-flow"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

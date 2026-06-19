@@ -62,25 +62,25 @@ export interface StdUiSidebarLogoClickPayload {
 export interface StdUiSidebarConfig {
   /** Default: `"KFlow"` */
   brandName?: string;
-  footerContent?: unknown;
-  userSection?: unknown;
-  /** Default: `false` */
-  defaultCollapsed?: boolean;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  logoSrc?: unknown;
-  /** Default: `[{"href":"Href","label":"Label","subItems":[],"id":"Id","active":false,"badge":"Badge","isActive":false,"icon":"circle"}]` */
-  items?: EntityRow[];
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
-  showCloseButton?: boolean;
+  collapsed?: boolean;
+  /** Default: `false` */
+  defaultCollapsed?: boolean;
+  error?: EntityRow;
+  footerContent?: unknown;
   /** Default: `false` */
   hideCollapseButton?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
-  error?: EntityRow;
+  /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","id":"Id","isActive":false,"label":"Label","subItems":[]}]` */
+  items?: EntityRow[];
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  logoSrc?: unknown;
   /** Default: `false` */
-  collapsed?: boolean;
+  showCloseButton?: boolean;
+  userSection?: unknown;
 }
 
 /**

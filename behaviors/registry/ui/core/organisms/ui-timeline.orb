@@ -1,308 +1,20 @@
 {
-  "name": "ui-timeline",
-  "version": "1.0.0",
   "description": "Timeline — UI factory (1:1 with the @almadar/ui timeline pattern).",
+  "name": "ui-timeline",
   "orbitals": [
     {
-      "name": "TimelineOrbital",
       "entity": {
-        "name": "TimelineItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "TimelineItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "TimelineRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "TimelineItem",
-          "emits": [
-            {
-              "event": "VIEW",
-              "description": "User opened a record from the list.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
-                "description": "User opened a record from the list.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "TimelineItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "timeline",
-                      "isLoading": "@config.isLoading",
-                      "items": "@config.items",
-                      "entity": "@entity",
-                      "fields": "@config.fields",
-                      "itemActions": [
-                        {
-                          "label": "View",
-                          "event": "VIEW"
-                        }
-                      ],
-                      "className": "@config.className",
-                      "error": "@config.error",
-                      "look": "@config.look",
-                      "title": "@config.title"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "VIEW",
-                "effects": [
-                  [
-                    "emit",
-                    "VIEW",
-                    {}
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "itemActions": {
-              "type": "[TimelineItemActionsItem]",
-              "default": [
-                {
-                  "variant": "primary",
-                  "label": "Label",
-                  "navigatesTo": "Navigates To"
-                }
-              ],
-              "label": "Item Actions",
-              "description": "Actions per item",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost"
-                    ]
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Timeline title",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "TimelineError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "items": {
-              "type": "[TimelineItemsItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "title": "Title",
-                  "status": "complete",
-                  "icon": "circle",
-                  "tags": [
-                    "Item"
-                  ],
-                  "description": "Description",
-                  "date": "Date"
-                }
-              ],
-              "label": "Items",
-              "description": "Timeline items",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "title": {
-                    "name": "title",
-                    "type": "string",
-                    "required": true
-                  },
-                  "status": {
-                    "name": "status",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "complete",
-                      "active",
-                      "pending",
-                      "error"
-                    ]
-                  },
-                  "tags": {
-                    "name": "tags",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "date": {
-                    "name": "date",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "look": {
-              "type": "string",
-              "default": "vertical-spacious",
-              "label": "Look",
-              "description": "Layer 2 visual treatment.",
-              "tier": "presentation",
-              "values": [
-                "vertical-compact",
-                "vertical-spacious",
-                "horizontal",
-                "swimlane"
-              ]
-            },
-            "fields": {
-              "type": "[string]",
-              "default": [
-                "Item"
-              ],
-              "label": "Fields",
-              "description": "Fields to display",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "TimelineOrbital",
       "pages": [
         {
           "name": "TimelinePage",
@@ -313,7 +25,295 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "TimelineError"
+            },
+            "fields": {
+              "default": [
+                "Item"
+              ],
+              "description": "Fields to display",
+              "items": {
+                "type": "string"
+              },
+              "label": "Fields",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "itemActions": {
+              "default": [
+                {
+                  "label": "Label",
+                  "navigatesTo": "Navigates To",
+                  "variant": "primary"
+                }
+              ],
+              "description": "Actions per item",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Item Actions",
+              "tier": "presentation",
+              "type": "[TimelineItemActionsItem]"
+            },
+            "items": {
+              "default": [
+                {
+                  "date": "Date",
+                  "description": "Description",
+                  "icon": "circle",
+                  "id": "Id",
+                  "status": "complete",
+                  "tags": [
+                    "Item"
+                  ],
+                  "title": "Title"
+                }
+              ],
+              "description": "Timeline items",
+              "items": {
+                "properties": {
+                  "date": {
+                    "name": "date",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "status": {
+                    "name": "status",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "complete",
+                      "active",
+                      "pending",
+                      "error"
+                    ]
+                  },
+                  "tags": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "tags",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "title": {
+                    "name": "title",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Items",
+              "tier": "presentation",
+              "type": "[TimelineItemsItem]"
+            },
+            "look": {
+              "default": "vertical-spacious",
+              "description": "Layer 2 visual treatment.",
+              "label": "Look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "vertical-compact",
+                "vertical-spacious",
+                "horizontal",
+                "swimlane"
+              ]
+            },
+            "title": {
+              "default": "Title",
+              "description": "Timeline title",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "User opened a record from the list.",
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TimelineItem",
+          "name": "TimelineRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "User opened a record from the list.",
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "TimelineItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "fields": "@config.fields",
+                      "isLoading": "@config.isLoading",
+                      "itemActions": [
+                        {
+                          "event": "VIEW",
+                          "label": "View"
+                        }
+                      ],
+                      "items": "@config.items",
+                      "look": "@config.look",
+                      "title": "@config.title",
+                      "type": "timeline"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "VIEW",
+                    {}
+                  ]
+                ],
+                "event": "VIEW",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

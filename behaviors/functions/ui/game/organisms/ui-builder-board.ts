@@ -30,7 +30,7 @@ const ALIAS = 'UiBuilderBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiBuilderBoardEventKey = 'COMPLETE' | 'INIT';
+export type StdUiBuilderBoardEventKey = 'CHECK' | 'COMPLETE' | 'INIT' | 'PLACE' | 'PLAY_AGAIN' | 'START';
 
 /**
  * Payload shape for the `COMPLETE` event.
@@ -41,32 +41,58 @@ export interface StdUiBuilderBoardCompletePayload {
 }
 
 /**
+ * Payload shape for the `PLACE` event.
+ */
+export interface StdUiBuilderBoardPlacePayload {
+  slotId: string;
+  componentId: string;
+}
+
+/**
+ * Payload shape for the `CHECK` event.
+ */
+export interface StdUiBuilderBoardCheckPayload {
+  id?: string;
+}
+
+/**
+ * Payload shape for the `PLAY_AGAIN` event.
+ */
+export interface StdUiBuilderBoardPlayAgainPayload {
+  id?: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiBuilderBoardConfig {
-  /** Default: `[]` */
-  selectedIds?: string[];
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  error?: EntityRow;
+  activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"description":"User-facing layer","iconEmoji":"🖥️","id":"comp-a","label":"Frontend"},{"description":"Service boundary","iconEmoji":"🔌","id":"comp-b","label":"API"},{"description":"Persistence layer","iconEmoji":"🗄️","id":"comp-c","label":"Database"}]` */
+  components?: EntityRow[];
+  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
+  /** Default: `0` */
+  pageProp?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `0` */
-  totalCount?: number;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `[{"id":"slot-1","requiredComponentId":"comp-a"},{"id":"slot-2","requiredComponentId":"comp-b"},{"id":"slot-3","requiredComponentId":"comp-c"}]` */
+  slots?: EntityRow[];
+  /** Default: `"Sort By"` */
+  sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `0` */
-  pageProp?: number;
-  activeFilters?: unknown;
+  totalCount?: number;
 }
 
 /**
@@ -127,8 +153,85 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
+          },
+          {
+            'items': {
+              'properties': {
+                'category': {
+                  'name': 'category',
+                  'required': false,
+                  'type': 'string',
+                },
+                'description': {
+                  'name': 'description',
+                  'required': false,
+                  'type': 'string',
+                },
+                'iconEmoji': {
+                  'name': 'iconEmoji',
+                  'required': false,
+                  'type': 'string',
+                },
+                'iconUrl': {
+                  'name': 'iconUrl',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'components',
+            'type': 'array',
+          },
+          {
+            'items': {
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'placedComponentId': {
+                  'name': 'placedComponentId',
+                  'required': false,
+                  'type': 'string',
+                },
+                'requiredComponentId': {
+                  'name': 'requiredComponentId',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'slots',
+            'type': 'array',
+          },
+          {
+            'default': 0,
+            'name': 'attempts',
+            'type': 'number',
+          },
+          {
+            'default': 'none',
+            'name': 'result',
+            'type': 'string',
+            'values': [
+              'none',
+              'win',
+            ],
           },
         ];
         const extras = params.fields ?? [];
@@ -139,208 +242,645 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'BuilderBoardRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'BuilderBoardItem',
+        'config': {
+          'activeFilters': {
+            'description': 'Active filters',
+            'label': 'Active Filters',
+            'tier': 'presentation',
+            'type': 'json',
+          },
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'components': {
+            'default': [
+              {
+                'description': 'User-facing layer',
+                'iconEmoji': '🖥️',
+                'id': 'comp-a',
+                'label': 'Frontend',
+              },
+              {
+                'description': 'Service boundary',
+                'iconEmoji': '🔌',
+                'id': 'comp-b',
+                'label': 'API',
+              },
+              {
+                'description': 'Persistence layer',
+                'iconEmoji': '🗄️',
+                'id': 'comp-c',
+                'label': 'Database',
+              },
+            ],
+            'description': 'Draggable build components the player snaps into slots.',
+            'items': {
+              'properties': {
+                'category': {
+                  'name': 'category',
+                  'required': false,
+                  'type': 'string',
+                },
+                'description': {
+                  'name': 'description',
+                  'required': false,
+                  'type': 'string',
+                },
+                'iconEmoji': {
+                  'name': 'iconEmoji',
+                  'required': false,
+                  'type': 'string',
+                },
+                'iconUrl': {
+                  'name': 'iconUrl',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Components',
+            'tier': 'presentation',
+            'type': '[BuilderBoardComponentsItem]',
+          },
+          'error': {
+            'description': 'Error state (UiError)',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'BuilderBoardError',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'pageProp': {
+            'default': 0,
+            'description': 'Current page number',
+            'label': 'Page',
+            'synonyms': 'page',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'pageSize': {
+            'default': 0,
+            'description': 'Number of items per page',
+            'label': 'Page Size',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'searchValue': {
+            'default': 'Search Value',
+            'description': 'Current search query value',
+            'label': 'Search Value',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'selectedIds': {
+            'default': [],
+            'description': 'Currently selected item IDs',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Selected Ids',
+            'tier': 'presentation',
+            'type': '[string]',
+          },
+          'slots': {
+            'default': [
+              {
+                'id': 'slot-1',
+                'requiredComponentId': 'comp-a',
+              },
+              {
+                'id': 'slot-2',
+                'requiredComponentId': 'comp-b',
+              },
+              {
+                'id': 'slot-3',
+                'requiredComponentId': 'comp-c',
+              },
+            ],
+            'description': 'Blueprint slots; each requires a specific component for a win.',
+            'items': {
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'placedComponentId': {
+                  'name': 'placedComponentId',
+                  'required': false,
+                  'type': 'string',
+                },
+                'requiredComponentId': {
+                  'name': 'requiredComponentId',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Slots',
+            'tier': 'presentation',
+            'type': '[BuilderBoardSlotsItem]',
+          },
+          'sortBy': {
+            'default': 'Sort By',
+            'description': 'Current sort field',
+            'label': 'Sort By',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'sortDirection': {
+            'default': 'asc',
+            'description': 'Current sort direction',
+            'label': 'Sort Direction',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'totalCount': {
+            'default': 0,
+            'description': 'Total number of items',
+            'label': 'Total Count',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+        },
         'emits': [
           {
-            'event': 'COMPLETE',
             'description': 'completeEvent prop',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'COMPLETE',
             'payloadSchema': [
               {
                 'name': 'success',
-                'type': 'boolean',
                 'required': true,
+                'type': 'boolean',
               },
               {
                 'name': 'attempts',
-                'type': 'number',
                 'required': true,
+                'type': 'number',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
+          {
+            'description': 'Emits UI:{placeEvent} with { slotId, componentId } on component placement',
+            'event': 'PLACE',
+            'payloadSchema': [
+              {
+                'name': 'slotId',
+                'required': true,
+                'type': 'string',
+              },
+              {
+                'name': 'componentId',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
+          {
+            'description': 'Emits UI:{checkEvent} with {} when the player checks the build',
+            'event': 'CHECK',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
+          {
+            'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
+            'event': 'PLAY_AGAIN',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
           },
         ],
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
+        'entityContract': {
+          'provides': [
+            'attempts',
+            'components',
+            'result',
+            'slots',
           ],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'BuilderBoardItem',
+        'name': 'BuilderBoardRender',
+        'scope': 'instance',
+        'stateMachine': {
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'key': 'START',
+              'name': 'Start',
+            },
+            {
+              'description': 'Emits UI:{placeEvent} with { slotId, componentId } on component placement',
+              'key': 'PLACE',
+              'name': 'Place',
+              'payloadSchema': [
+                {
+                  'name': 'slotId',
+                  'required': true,
+                  'type': 'string',
+                },
+                {
+                  'name': 'componentId',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'essential',
+            },
+            {
+              'description': 'Emits UI:{checkEvent} with {} when the player checks the build',
+              'key': 'CHECK',
+              'name': 'Check',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'essential',
+            },
+            {
+              'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
+              'key': 'PLAY_AGAIN',
+              'name': 'Play Again',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'essential',
+            },
+            {
+              'description': 'completeEvent prop',
               'key': 'COMPLETE',
               'name': 'Complete',
-              'description': 'completeEvent prop',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'success',
-                  'type': 'boolean',
                   'required': true,
+                  'type': 'boolean',
                 },
                 {
                   'name': 'attempts',
-                  'type': 'number',
                   'required': true,
+                  'type': 'number',
                 },
               ],
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'menu',
+            },
+            {
+              'name': 'playing',
+            },
+            {
+              'name': 'complete',
             },
           ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
-                  'fetch',
-                  'BuilderBoardItem',
-                  {},
+                  'set',
+                  '@entity.components',
+                  '@config.components',
+                ],
+                [
+                  'set',
+                  '@entity.slots',
+                  '@config.slots',
+                ],
+                [
+                  'set',
+                  '@entity.attempts',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.result',
+                  'none',
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'isLoading': '@config.isLoading',
-                    'pageSize': '@config.pageSize',
-                    'error': '@config.error',
                     'activeFilters': '@config.activeFilters',
-                    'selectedIds': '@config.selectedIds',
-                    'type': 'builder-board',
                     'className': '@config.className',
-                    'searchValue': '@config.searchValue',
-                    'page': '@config.pageProp',
-                    'sortDirection': '@config.sortDirection',
-                    'sortBy': '@config.sortBy',
-                    'totalCount': '@config.totalCount',
-                    'entity': '@entity',
                     'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'builder-board',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'menu',
+              'to': 'menu',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.components',
+                  '@config.components',
+                ],
+                [
+                  'set',
+                  '@entity.slots',
+                  '@config.slots',
+                ],
+                [
+                  'set',
+                  '@entity.attempts',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'type': 'builder-board',
+                  },
+                ],
+              ],
+              'event': 'START',
+              'from': 'menu',
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.slots',
+                  [
+                    'array/map',
+                    '@entity.slots',
+                    [
+                      'fn',
+                      's',
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@s.id',
+                          '@payload.slotId',
+                        ],
+                        [
+                          'object/merge',
+                          '@s',
+                          {
+                            'placedComponentId': '@payload.componentId',
+                          },
+                        ],
+                        '@s',
+                      ],
+                    ],
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'type': 'builder-board',
+                  },
+                ],
+              ],
+              'event': 'PLACE',
+              'from': 'playing',
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.attempts',
+                  [
+                    '+',
+                    '@entity.attempts',
+                    1,
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.result',
+                  'win',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'type': 'builder-board',
+                  },
+                ],
+              ],
+              'event': 'CHECK',
+              'from': 'playing',
+              'guard': [
+                '==',
+                [
+                  'array/len',
+                  [
+                    'array/filter',
+                    '@entity.slots',
+                    [
+                      'fn',
+                      's',
+                      [
+                        '!=',
+                        [
+                          'object/get',
+                          's',
+                          'placedComponentId',
+                        ],
+                        [
+                          'object/get',
+                          's',
+                          'requiredComponentId',
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+                0,
+              ],
+              'to': 'complete',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.attempts',
+                  [
+                    '+',
+                    '@entity.attempts',
+                    1,
+                  ],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'type': 'builder-board',
+                  },
+                ],
+              ],
+              'event': 'CHECK',
+              'from': 'playing',
+              'guard': [
+                '>',
+                [
+                  'array/len',
+                  [
+                    'array/filter',
+                    '@entity.slots',
+                    [
+                      'fn',
+                      's',
+                      [
+                        '!=',
+                        [
+                          'object/get',
+                          's',
+                          'placedComponentId',
+                        ],
+                        [
+                          'object/get',
+                          's',
+                          'requiredComponentId',
+                        ],
+                      ],
+                    ],
+                  ],
+                ],
+                0,
+              ],
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.slots',
+                  '@config.slots',
+                ],
+                [
+                  'set',
+                  '@entity.attempts',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'type': 'builder-board',
+                  },
+                ],
+              ],
+              'event': 'PLAY_AGAIN',
+              'from': 'complete',
+              'to': 'menu',
             },
           ],
         },
-        'config': {
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'BuilderBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'BuilderBoardItem', canonicalName) as never,
     ],
     pages: [

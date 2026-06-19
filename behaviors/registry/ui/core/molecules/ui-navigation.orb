@@ -1,190 +1,20 @@
 {
-  "name": "ui-navigation",
-  "version": "1.0.0",
   "description": "Navigation — UI factory (1:1 with the @almadar/ui navigation pattern).",
+  "name": "ui-navigation",
   "orbitals": [
     {
-      "name": "NavigationOrbital",
       "entity": {
-        "name": "NavigationItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "NavigationItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "NavigationRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "NavigationItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "isLoading": "@config.isLoading",
-                      "type": "navigation",
-                      "orientation": "@config.orientation",
-                      "items": "@config.items",
-                      "className": "@config.className",
-                      "error": "@config.error"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "items": {
-              "type": "[NavigationItemsItem]",
-              "default": [
-                {
-                  "icon": "circle",
-                  "badge": "Badge",
-                  "label": "Label",
-                  "id": "Id",
-                  "href": "Href",
-                  "isActive": false,
-                  "disabled": false,
-                  "subMenu": []
-                }
-              ],
-              "label": "Items",
-              "description": "Navigation items",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "subMenu": {
-                    "name": "subMenu",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "isActive": {
-                    "name": "isActive",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "error": {
-              "type": "NavigationError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "orientation": {
-              "type": "string",
-              "default": "horizontal",
-              "label": "Orientation",
-              "description": "Navigation orientation",
-              "tier": "presentation",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "NavigationOrbital",
       "pages": [
         {
           "name": "NavigationPage",
@@ -195,7 +25,177 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "NavigationError"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "items": {
+              "default": [
+                {
+                  "badge": "Badge",
+                  "disabled": false,
+                  "href": "Href",
+                  "icon": "circle",
+                  "id": "Id",
+                  "isActive": false,
+                  "label": "Label",
+                  "subMenu": []
+                }
+              ],
+              "description": "Navigation items",
+              "items": {
+                "properties": {
+                  "badge": {
+                    "name": "badge",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "href": {
+                    "name": "href",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "isActive": {
+                    "name": "isActive",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "subMenu": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "subMenu",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Items",
+              "tier": "presentation",
+              "type": "[NavigationItemsItem]"
+            },
+            "orientation": {
+              "default": "horizontal",
+              "description": "Navigation orientation",
+              "label": "Orientation",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "NavigationItem",
+          "name": "NavigationRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "items": "@config.items",
+                      "orientation": "@config.orientation",
+                      "type": "navigation"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

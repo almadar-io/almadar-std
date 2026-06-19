@@ -1,244 +1,331 @@
 {
-  "name": "ui-wizard-navigation",
-  "version": "1.0.0",
   "description": "WizardNavigation — UI factory (1:1 with the @almadar/ui wizard-navigation pattern).",
+  "name": "ui-wizard-navigation",
   "orbitals": [
     {
-      "name": "WizardNavigationOrbital",
       "entity": {
-        "name": "WizardNavigationItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
+            "default": 0.0,
             "name": "currentStep",
-            "type": "number",
-            "default": 0.0
+            "type": "number"
           },
           {
+            "default": 0.0,
             "name": "totalSteps",
-            "type": "number",
-            "default": 0.0
+            "type": "number"
           }
-        ]
+        ],
+        "name": "WizardNavigationItem",
+        "persistence": "runtime"
       },
+      "name": "WizardNavigationOrbital",
+      "pages": [
+        {
+          "name": "WizardNavigationPage",
+          "path": "/wizard-navigation",
+          "traits": [
+            {
+              "ref": "WizardNavigationRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "WizardNavigationRender",
-          "entityRebindable": true,
+          "category": "interaction",
+          "config": {
+            "backLabel": {
+              "default": "Back Label",
+              "description": "Custom label for Back button",
+              "label": "Back Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "compact": {
+              "default": false,
+              "description": "Compact mode (smaller padding)",
+              "label": "Compact",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "completeLabel": {
+              "default": "Complete Label",
+              "description": "Custom label for Complete button",
+              "label": "Complete Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "currentStep": {
+              "default": 0.0,
+              "description": "Current step index (0-based)",
+              "label": "Current Step",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "isValid": {
+              "default": true,
+              "description": "Whether the current step is valid (enables Next/Complete)",
+              "label": "Is Valid",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "nextLabel": {
+              "default": "Next Label",
+              "description": "Custom label for Next button",
+              "label": "Next Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "showBack": {
+              "default": true,
+              "description": "Show the Back button",
+              "label": "Show Back",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showComplete": {
+              "default": true,
+              "description": "Show the Complete button (on last step)",
+              "label": "Show Complete",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showNext": {
+              "default": true,
+              "description": "Show the Next button",
+              "label": "Show Next",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "totalSteps": {
+              "default": 0.0,
+              "description": "Total number of steps",
+              "label": "Total Steps",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Event to emit on Back click — emits UI:{onBack} with { currentStep, totalSteps }",
+              "event": "BACK",
+              "payloadSchema": [
+                {
+                  "name": "currentStep",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "totalSteps",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Event to emit on Next click — emits UI:{onNext} with { currentStep, totalSteps }",
+              "event": "NEXT",
+              "payloadSchema": [
+                {
+                  "name": "currentStep",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "totalSteps",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Event to emit on Complete click — emits UI:{onComplete} with { currentStep, totalSteps }",
+              "event": "COMPLETE",
+              "payloadSchema": [
+                {
+                  "name": "currentStep",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "totalSteps",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Direct callback for Back (alternative to event)",
+              "event": "BACK_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Direct callback for Next (alternative to event)",
+              "event": "NEXT_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Direct callback for Complete (alternative to event)",
+              "event": "COMPLETE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
-            "requires": [],
             "provides": [
               "currentStep",
               "totalSteps"
-            ]
-          },
-          "category": "interaction",
-          "linkedEntity": "WizardNavigationItem",
-          "emits": [
-            {
-              "event": "BACK",
-              "description": "Event to emit on Back click — emits UI:{onBack} with { currentStep, totalSteps }",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "currentStep",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "totalSteps",
-                  "type": "number",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "NEXT",
-              "description": "Event to emit on Next click — emits UI:{onNext} with { currentStep, totalSteps }",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "currentStep",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "totalSteps",
-                  "type": "number",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "COMPLETE",
-              "description": "Event to emit on Complete click — emits UI:{onComplete} with { currentStep, totalSteps }",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "currentStep",
-                  "type": "number",
-                  "required": true
-                },
-                {
-                  "name": "totalSteps",
-                  "type": "number",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "BACK_CLICK",
-              "description": "Direct callback for Back (alternative to event)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "NEXT_CLICK",
-              "description": "Direct callback for Next (alternative to event)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "COMPLETE_CLICK",
-              "description": "Direct callback for Complete (alternative to event)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
             ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "WizardNavigationItem",
+          "name": "WizardNavigationRender",
+          "scope": "instance",
+          "stateMachine": {
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Event to emit on Back click — emits UI:{onBack} with { currentStep, totalSteps }",
                 "key": "BACK",
                 "name": "Back",
-                "description": "Event to emit on Back click — emits UI:{onBack} with { currentStep, totalSteps }",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "currentStep",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   },
                   {
                     "name": "totalSteps",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   }
-                ]
+                ],
+                "tier": "essential"
               },
               {
+                "description": "Event to emit on Next click — emits UI:{onNext} with { currentStep, totalSteps }",
                 "key": "NEXT",
                 "name": "Next",
-                "description": "Event to emit on Next click — emits UI:{onNext} with { currentStep, totalSteps }",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "currentStep",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   },
                   {
                     "name": "totalSteps",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   }
-                ]
+                ],
+                "tier": "essential"
               },
               {
+                "description": "Event to emit on Complete click — emits UI:{onComplete} with { currentStep, totalSteps }",
                 "key": "COMPLETE",
                 "name": "Complete",
-                "description": "Event to emit on Complete click — emits UI:{onComplete} with { currentStep, totalSteps }",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "currentStep",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   },
                   {
                     "name": "totalSteps",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   }
-                ]
+                ],
+                "tier": "essential"
               },
               {
+                "description": "Direct callback for Back (alternative to event)",
                 "key": "BACK_CLICK",
                 "name": "Back Click",
-                "description": "Direct callback for Back (alternative to event)",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
                   }
-                ]
+                ],
+                "tier": "essential"
               },
               {
+                "description": "Direct callback for Next (alternative to event)",
                 "key": "NEXT_CLICK",
                 "name": "Next Click",
-                "description": "Direct callback for Next (alternative to event)",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
                   }
-                ]
+                ],
+                "tier": "essential"
               },
               {
+                "description": "Direct callback for Complete (alternative to event)",
                 "key": "COMPLETE_CLICK",
                 "name": "Complete Click",
-                "description": "Direct callback for Complete (alternative to event)",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
                   }
-                ]
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
               }
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "set",
@@ -254,32 +341,73 @@
                     "render-ui",
                     "main",
                     {
-                      "onComplete": "COMPLETE",
+                      "backLabel": "@config.backLabel",
+                      "className": "@config.className",
+                      "compact": "@config.compact",
                       "completeLabel": "@config.completeLabel",
+                      "currentStep": "@entity.currentStep",
+                      "isValid": "@config.isValid",
+                      "nextLabel": "@config.nextLabel",
+                      "onBack": "BACK",
+                      "onBackClick": "BACK_CLICK",
+                      "onComplete": "COMPLETE",
+                      "onCompleteClick": "COMPLETE_CLICK",
                       "onNext": "NEXT",
                       "onNextClick": "NEXT_CLICK",
-                      "onCompleteClick": "COMPLETE_CLICK",
-                      "currentStep": "@entity.currentStep",
-                      "className": "@config.className",
-                      "type": "wizard-navigation",
-                      "showNext": "@config.showNext",
-                      "onBack": "BACK",
-                      "nextLabel": "@config.nextLabel",
-                      "backLabel": "@config.backLabel",
-                      "compact": "@config.compact",
                       "showBack": "@config.showBack",
+                      "showComplete": "@config.showComplete",
+                      "showNext": "@config.showNext",
                       "totalSteps": "@entity.totalSteps",
-                      "onBackClick": "BACK_CLICK",
-                      "isValid": "@config.isValid",
-                      "showComplete": "@config.showComplete"
+                      "type": "wizard-navigation"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentStep",
+                    "@payload.currentStep"
+                  ],
+                  [
+                    "set",
+                    "@entity.totalSteps",
+                    "@payload.totalSteps"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "backLabel": "@config.backLabel",
+                      "className": "@config.className",
+                      "compact": "@config.compact",
+                      "completeLabel": "@config.completeLabel",
+                      "currentStep": "@entity.currentStep",
+                      "isValid": "@config.isValid",
+                      "nextLabel": "@config.nextLabel",
+                      "onBack": "BACK",
+                      "onBackClick": "BACK_CLICK",
+                      "onComplete": "COMPLETE",
+                      "onCompleteClick": "COMPLETE_CLICK",
+                      "onNext": "NEXT",
+                      "onNextClick": "NEXT_CLICK",
+                      "showBack": "@config.showBack",
+                      "showComplete": "@config.showComplete",
+                      "showNext": "@config.showNext",
+                      "totalSteps": "@entity.totalSteps",
+                      "type": "wizard-navigation"
+                    }
+                  ]
+                ],
                 "event": "BACK",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
                 "effects": [
                   [
                     "set",
@@ -295,73 +423,32 @@
                     "render-ui",
                     "main",
                     {
-                      "onCompleteClick": "COMPLETE_CLICK",
-                      "showBack": "@config.showBack",
-                      "nextLabel": "@config.nextLabel",
-                      "showComplete": "@config.showComplete",
                       "backLabel": "@config.backLabel",
                       "className": "@config.className",
-                      "type": "wizard-navigation",
-                      "showNext": "@config.showNext",
+                      "compact": "@config.compact",
+                      "completeLabel": "@config.completeLabel",
+                      "currentStep": "@entity.currentStep",
+                      "isValid": "@config.isValid",
+                      "nextLabel": "@config.nextLabel",
                       "onBack": "BACK",
+                      "onBackClick": "BACK_CLICK",
+                      "onComplete": "COMPLETE",
+                      "onCompleteClick": "COMPLETE_CLICK",
                       "onNext": "NEXT",
                       "onNextClick": "NEXT_CLICK",
-                      "currentStep": "@entity.currentStep",
-                      "onBackClick": "BACK_CLICK",
+                      "showBack": "@config.showBack",
+                      "showComplete": "@config.showComplete",
+                      "showNext": "@config.showNext",
                       "totalSteps": "@entity.totalSteps",
-                      "completeLabel": "@config.completeLabel",
-                      "onComplete": "COMPLETE",
-                      "isValid": "@config.isValid",
-                      "compact": "@config.compact"
+                      "type": "wizard-navigation"
                     }
                   ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
+                ],
                 "event": "NEXT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.currentStep",
-                    "@payload.currentStep"
-                  ],
-                  [
-                    "set",
-                    "@entity.totalSteps",
-                    "@payload.totalSteps"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "compact": "@config.compact",
-                      "onComplete": "COMPLETE",
-                      "onCompleteClick": "COMPLETE_CLICK",
-                      "onBackClick": "BACK_CLICK",
-                      "onNextClick": "NEXT_CLICK",
-                      "currentStep": "@entity.currentStep",
-                      "showNext": "@config.showNext",
-                      "showBack": "@config.showBack",
-                      "completeLabel": "@config.completeLabel",
-                      "isValid": "@config.isValid",
-                      "className": "@config.className",
-                      "totalSteps": "@entity.totalSteps",
-                      "nextLabel": "@config.nextLabel",
-                      "type": "wizard-navigation",
-                      "showComplete": "@config.showComplete",
-                      "backLabel": "@config.backLabel",
-                      "onBack": "BACK",
-                      "onNext": "NEXT"
-                    }
-                  ]
-                ]
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "COMPLETE",
                 "effects": [
                   [
                     "set",
@@ -377,123 +464,36 @@
                     "render-ui",
                     "main",
                     {
-                      "showComplete": "@config.showComplete",
-                      "onComplete": "COMPLETE",
-                      "onBackClick": "BACK_CLICK",
-                      "onNextClick": "NEXT_CLICK",
-                      "type": "wizard-navigation",
-                      "onCompleteClick": "COMPLETE_CLICK",
-                      "nextLabel": "@config.nextLabel",
-                      "isValid": "@config.isValid",
-                      "showBack": "@config.showBack",
-                      "onNext": "NEXT",
-                      "showNext": "@config.showNext",
-                      "onBack": "BACK",
-                      "totalSteps": "@entity.totalSteps",
+                      "backLabel": "@config.backLabel",
                       "className": "@config.className",
                       "compact": "@config.compact",
                       "completeLabel": "@config.completeLabel",
                       "currentStep": "@entity.currentStep",
-                      "backLabel": "@config.backLabel"
+                      "isValid": "@config.isValid",
+                      "nextLabel": "@config.nextLabel",
+                      "onBack": "BACK",
+                      "onBackClick": "BACK_CLICK",
+                      "onComplete": "COMPLETE",
+                      "onCompleteClick": "COMPLETE_CLICK",
+                      "onNext": "NEXT",
+                      "onNextClick": "NEXT_CLICK",
+                      "showBack": "@config.showBack",
+                      "showComplete": "@config.showComplete",
+                      "showNext": "@config.showNext",
+                      "totalSteps": "@entity.totalSteps",
+                      "type": "wizard-navigation"
                     }
                   ]
-                ]
+                ],
+                "event": "COMPLETE",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "totalSteps": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Steps",
-              "description": "Total number of steps",
-              "tier": "presentation"
-            },
-            "nextLabel": {
-              "type": "string",
-              "default": "Next Label",
-              "label": "Next Label",
-              "description": "Custom label for Next button",
-              "tier": "presentation"
-            },
-            "isValid": {
-              "type": "boolean",
-              "default": true,
-              "label": "Is Valid",
-              "description": "Whether the current step is valid (enables Next/Complete)",
-              "tier": "presentation"
-            },
-            "currentStep": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current Step",
-              "description": "Current step index (0-based)",
-              "tier": "presentation"
-            },
-            "showComplete": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Complete",
-              "description": "Show the Complete button (on last step)",
-              "tier": "presentation"
-            },
-            "showBack": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Back",
-              "description": "Show the Back button",
-              "tier": "presentation"
-            },
-            "completeLabel": {
-              "type": "string",
-              "default": "Complete Label",
-              "label": "Complete Label",
-              "description": "Custom label for Complete button",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "compact": {
-              "type": "boolean",
-              "default": false,
-              "label": "Compact",
-              "description": "Compact mode (smaller padding)",
-              "tier": "presentation"
-            },
-            "showNext": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Next",
-              "description": "Show the Next button",
-              "tier": "presentation"
-            },
-            "backLabel": {
-              "type": "string",
-              "default": "Back Label",
-              "label": "Back Label",
-              "description": "Custom label for Back button",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "WizardNavigationPage",
-          "path": "/wizard-navigation",
-          "traits": [
-            {
-              "ref": "WizardNavigationRender"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

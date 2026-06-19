@@ -46,18 +46,18 @@ export interface StdUiTransitionArrowClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTransitionArrowConfig {
-  /** Default: `"Guard Hint"` */
-  guardHint?: string;
-  /** Default: `false` */
-  isActive?: boolean;
-  /** Default: `{"y":1,"x":1}` */
-  toProp?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `"Event Label"` */
   eventLabel?: string;
   /** Default: `{"x":1,"y":1}` */
   fromProp?: EntityRow;
+  /** Default: `"Guard Hint"` */
+  guardHint?: string;
+  /** Default: `false` */
+  isActive?: boolean;
+  /** Default: `{"x":1,"y":1}` */
+  toProp?: EntityRow;
 }
 
 /**
@@ -118,8 +118,8 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -130,154 +130,154 @@ export function stdUiTransitionArrowTransitionArrowOrbital(params: StdUiTransiti
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'TransitionArrowRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'TransitionArrowItem',
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes for the SVG group',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'eventLabel': {
+            'default': 'Event Label',
+            'description': 'Event label shown on the arrow',
+            'label': 'Event Label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'fromProp': {
+            'default': {
+              'x': 1,
+              'y': 1,
+            },
+            'description': 'Start position (center of from-node)',
+            'label': 'From',
+            'properties': {
+              'x': {
+                'name': 'x',
+                'required': true,
+                'type': 'number',
+              },
+              'y': {
+                'name': 'y',
+                'required': true,
+                'type': 'number',
+              },
+            },
+            'synonyms': 'from',
+            'tier': 'presentation',
+            'type': 'TransitionArrowFrom',
+          },
+          'guardHint': {
+            'default': 'Guard Hint',
+            'description': 'Guard hint shown below event',
+            'label': 'Guard Hint',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'isActive': {
+            'default': false,
+            'description': 'Whether this transition is currently active',
+            'label': 'Is Active',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'toProp': {
+            'default': {
+              'x': 1,
+              'y': 1,
+            },
+            'description': 'End position (center of to-node)',
+            'label': 'To',
+            'properties': {
+              'x': {
+                'name': 'x',
+                'required': true,
+                'type': 'number',
+              },
+              'y': {
+                'name': 'y',
+                'required': true,
+                'type': 'number',
+              },
+            },
+            'synonyms': 'to',
+            'tier': 'presentation',
+            'type': 'TransitionArrowTo',
+          },
+        },
         'emits': [
           {
-            'event': 'CLICK',
             'description': 'Click handler',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'CLICK',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
         ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'TransitionArrowItem',
+        'name': 'TransitionArrowRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Click handler',
               'key': 'CLICK',
               'name': 'Click',
-              'description': 'Click handler',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'type': 'transition-arrow',
-                    'from': '@config.fromProp',
-                    'isActive': '@config.isActive',
-                    'guardHint': '@config.guardHint',
-                    'onClick': 'CLICK',
                     'className': '@config.className',
-                    'to': '@config.toProp',
                     'eventLabel': '@config.eventLabel',
+                    'from': '@config.fromProp',
+                    'guardHint': '@config.guardHint',
+                    'isActive': '@config.isActive',
+                    'onClick': 'CLICK',
+                    'to': '@config.toProp',
+                    'type': 'transition-arrow',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'guardHint': {
-            'type': 'string',
-            'default': 'Guard Hint',
-            'label': 'Guard Hint',
-            'description': 'Guard hint shown below event',
-            'tier': 'presentation',
-          },
-          'isActive': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Active',
-            'description': 'Whether this transition is currently active',
-            'tier': 'presentation',
-          },
-          'toProp': {
-            'type': 'TransitionArrowTo',
-            'default': {
-              'y': 1,
-              'x': 1,
-            },
-            'label': 'To',
-            'description': 'End position (center of to-node)',
-            'synonyms': 'to',
-            'tier': 'presentation',
-            'properties': {
-              'y': {
-                'name': 'y',
-                'type': 'number',
-                'required': true,
-              },
-              'x': {
-                'name': 'x',
-                'type': 'number',
-                'required': true,
-              },
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes for the SVG group',
-            'tier': 'presentation',
-          },
-          'eventLabel': {
-            'type': 'string',
-            'default': 'Event Label',
-            'label': 'Event Label',
-            'description': 'Event label shown on the arrow',
-            'tier': 'presentation',
-          },
-          'fromProp': {
-            'type': 'TransitionArrowFrom',
-            'default': {
-              'x': 1,
-              'y': 1,
-            },
-            'label': 'From',
-            'description': 'Start position (center of from-node)',
-            'synonyms': 'from',
-            'tier': 'presentation',
-            'properties': {
-              'x': {
-                'name': 'x',
-                'type': 'number',
-                'required': true,
-              },
-              'y': {
-                'name': 'y',
-                'type': 'number',
-                'required': true,
-              },
-            },
-          },
-        },
-        'scope': 'instance',
       } as never, 'TransitionArrowItem', canonicalName) as never,
     ],
     pages: [

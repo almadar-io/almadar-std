@@ -7,7 +7,44 @@
     "entities": [
       {
         "name": "SimulatorBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "paramA",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "paramB",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "target",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "tolerance",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "output",
+            "type": "number",
+            "required": false,
+            "intrinsic": true
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -15,7 +52,11 @@
       {
         "name": "SimulatorBoardRender",
         "emittedEvents": [
-          "COMPLETE"
+          "COMPLETE",
+          "SET_A",
+          "SET_B",
+          "CHECK",
+          "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
@@ -26,7 +67,35 @@
             "tier": "essential"
           },
           {
+            "name": "SET_A",
+            "direction": "emit",
+            "description": "Sets parameter A from { value } during play.",
+            "tier": "essential"
+          },
+          {
+            "name": "SET_B",
+            "direction": "emit",
+            "description": "Sets parameter B from { value } during play.",
+            "tier": "essential"
+          },
+          {
+            "name": "CHECK",
+            "direction": "emit",
+            "description": "Evaluates output vs target/tolerance; wins or retries.",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Resets the puzzle back to the menu.",
+            "tier": "essential"
+          },
+          {
             "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "START",
             "direction": "listen"
           }
         ],
@@ -53,23 +122,23 @@
             "description": "Error state (UiError)",
             "tier": "presentation",
             "properties": {
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
-              },
-              "stack": {
-                "name": "stack",
-                "required": false,
-                "type": "string"
-              },
               "code": {
                 "name": "code",
                 "required": false,
                 "type": "string"
               },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
               "name": {
                 "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
                 "required": false,
                 "type": "string"
               }
@@ -152,7 +221,14 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "attempts",
+            "paramA",
+            "paramB",
+            "result",
+            "target",
+            "tolerance"
+          ]
         }
       }
     ],
@@ -164,7 +240,11 @@
       }
     ],
     "emittedEvents": [
-      "COMPLETE"
+      "CHECK",
+      "COMPLETE",
+      "PLAY_AGAIN",
+      "SET_A",
+      "SET_B"
     ],
     "listenedEvents": []
   }

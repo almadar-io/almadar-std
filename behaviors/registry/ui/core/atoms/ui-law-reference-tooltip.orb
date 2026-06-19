@@ -1,135 +1,20 @@
 {
-  "name": "ui-law-reference-tooltip",
-  "version": "1.0.0",
   "description": "LawReferenceTooltip — UI factory (1:1 with the @almadar/ui law-reference-tooltip pattern).",
+  "name": "ui-law-reference-tooltip",
   "orbitals": [
     {
-      "name": "LawReferenceTooltipOrbital",
       "entity": {
-        "name": "LawReferenceTooltipItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "LawReferenceTooltipItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "LawReferenceTooltipRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "LawReferenceTooltipItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "law-reference-tooltip",
-                      "position": "@config.position",
-                      "reference": "@config.reference",
-                      "children": [
-                        {
-                          "content": "Sample content",
-                          "type": "typography"
-                        }
-                      ],
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "position": {
-              "type": "string",
-              "default": "top",
-              "label": "Position",
-              "description": "Tooltip position",
-              "tier": "presentation",
-              "values": [
-                "top",
-                "bottom",
-                "left",
-                "right"
-              ]
-            },
-            "reference": {
-              "type": "LawReferenceTooltipReference",
-              "default": {
-                "link": "Link",
-                "lawName": "Law Name",
-                "clause": "Clause",
-                "article": "Article",
-                "law": "Law"
-              },
-              "label": "Reference",
-              "description": "The law reference to display",
-              "tier": "presentation",
-              "properties": {
-                "link": {
-                  "name": "link",
-                  "type": "string",
-                  "required": false
-                },
-                "article": {
-                  "name": "article",
-                  "type": "string",
-                  "required": true
-                },
-                "clause": {
-                  "name": "clause",
-                  "type": "string",
-                  "required": false
-                },
-                "lawName": {
-                  "name": "lawName",
-                  "type": "string",
-                  "required": false
-                },
-                "law": {
-                  "name": "law",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "LawReferenceTooltipOrbital",
       "pages": [
         {
           "name": "LawReferenceTooltipPage",
@@ -140,7 +25,122 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "position": {
+              "default": "top",
+              "description": "Tooltip position",
+              "label": "Position",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "top",
+                "bottom",
+                "left",
+                "right"
+              ]
+            },
+            "reference": {
+              "default": {
+                "article": "Article",
+                "clause": "Clause",
+                "law": "Law",
+                "lawName": "Law Name",
+                "link": "Link"
+              },
+              "description": "The law reference to display",
+              "label": "Reference",
+              "properties": {
+                "article": {
+                  "name": "article",
+                  "required": true,
+                  "type": "string"
+                },
+                "clause": {
+                  "name": "clause",
+                  "required": false,
+                  "type": "string"
+                },
+                "law": {
+                  "name": "law",
+                  "required": true,
+                  "type": "string"
+                },
+                "lawName": {
+                  "name": "lawName",
+                  "required": false,
+                  "type": "string"
+                },
+                "link": {
+                  "name": "link",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "LawReferenceTooltipReference"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "LawReferenceTooltipItem",
+          "name": "LawReferenceTooltipRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "position": "@config.position",
+                      "reference": "@config.reference",
+                      "type": "law-reference-tooltip"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

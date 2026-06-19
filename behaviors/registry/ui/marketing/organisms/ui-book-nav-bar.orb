@@ -1,110 +1,20 @@
 {
-  "name": "ui-book-nav-bar",
-  "version": "1.0.0",
   "description": "BookNavBar — UI factory (1:1 with the @almadar/ui book-nav-bar pattern).",
+  "name": "ui-book-nav-bar",
   "orbitals": [
     {
-      "name": "BookNavBarOrbital",
       "entity": {
-        "name": "BookNavBarItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "BookNavBarItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "BookNavBarRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "BookNavBarItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "totalPages": "@config.totalPages",
-                      "chapterTitle": "@config.chapterTitle",
-                      "type": "book-nav-bar",
-                      "currentPage": "@config.currentPage",
-                      "className": "@config.className",
-                      "direction": "@config.direction"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "currentPage": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current Page",
-              "description": "currentPage prop",
-              "tier": "presentation"
-            },
-            "chapterTitle": {
-              "type": "string",
-              "default": "Chapter Title",
-              "label": "Chapter Title",
-              "description": "chapterTitle prop",
-              "tier": "presentation"
-            },
-            "totalPages": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Pages",
-              "description": "totalPages prop",
-              "tier": "presentation"
-            },
-            "direction": {
-              "type": "string",
-              "default": "rtl",
-              "label": "Direction",
-              "description": "direction prop",
-              "tier": "presentation",
-              "values": [
-                "rtl",
-                "ltr"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "BookNavBarOrbital",
       "pages": [
         {
           "name": "BookNavBarPage",
@@ -115,7 +25,97 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "chapterTitle": {
+              "default": "Chapter Title",
+              "description": "chapterTitle prop",
+              "label": "Chapter Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "currentPage": {
+              "default": 0.0,
+              "description": "currentPage prop",
+              "label": "Current Page",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "direction": {
+              "default": "rtl",
+              "description": "direction prop",
+              "label": "Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "rtl",
+                "ltr"
+              ]
+            },
+            "totalPages": {
+              "default": 0.0,
+              "description": "totalPages prop",
+              "label": "Total Pages",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "BookNavBarItem",
+          "name": "BookNavBarRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "chapterTitle": "@config.chapterTitle",
+                      "className": "@config.className",
+                      "currentPage": "@config.currentPage",
+                      "direction": "@config.direction",
+                      "totalPages": "@config.totalPages",
+                      "type": "book-nav-bar"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

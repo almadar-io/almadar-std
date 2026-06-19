@@ -53,18 +53,18 @@ export interface StdUiFeatureRendererFeatureHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureRendererConfig {
-  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","y":2,"x":2,"id":"f1","type":"gold_mine"},{"id":"f2","y":1,"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","type":"portal","x":3}]` */
+  /** Default: `1` */
+  cellSize?: number;
+  /** Default: `{}` */
+  featureColors?: unknown;
+  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":1}]` */
   features?: EntityRow[];
   /** Default: `0` */
   offsetX?: number;
   /** Default: `0` */
   offsetZ?: number;
-  /** Default: `1` */
-  cellSize?: number;
   /** Default: `[]` */
   selectedFeatureIds?: string[];
-  /** Default: `{}` */
-  featureColors?: unknown;
 }
 
 /**

@@ -1,94 +1,20 @@
 {
-  "name": "ui-markdown-content",
-  "version": "1.0.0",
   "description": "MarkdownContent — UI factory (1:1 with the @almadar/ui markdown-content pattern).",
+  "name": "ui-markdown-content",
   "orbitals": [
     {
-      "name": "MarkdownContentOrbital",
       "entity": {
-        "name": "MarkdownContentItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "MarkdownContentItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "MarkdownContentRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "MarkdownContentItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "content": "@config.content",
-                      "type": "markdown-content",
-                      "direction": "@config.direction"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "direction": {
-              "type": "string",
-              "default": "ltr",
-              "label": "Direction",
-              "description": "Text direction (defaults to ltr; `ltr` is first so the generated config seeds it)",
-              "tier": "presentation",
-              "values": [
-                "ltr",
-                "rtl"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "content": {
-              "type": "string",
-              "default": "Content",
-              "label": "Content",
-              "description": "The markdown content to render",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "MarkdownContentOrbital",
       "pages": [
         {
           "name": "MarkdownContentPage",
@@ -99,7 +25,81 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "content": {
+              "default": "Content",
+              "description": "The markdown content to render",
+              "label": "Content",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "direction": {
+              "default": "ltr",
+              "description": "Text direction (defaults to ltr; `ltr` is first so the generated config seeds it)",
+              "label": "Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "ltr",
+                "rtl"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MarkdownContentItem",
+          "name": "MarkdownContentRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "content": "@config.content",
+                      "direction": "@config.direction",
+                      "type": "markdown-content"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

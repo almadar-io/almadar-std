@@ -46,42 +46,42 @@ export interface StdUiMediaGallerySelectionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiMediaGalleryConfig {
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  actions?: EntityRow[];
+  activeFilters?: unknown;
+  /** Default: `"square"` */
+  aspectRatio?: 'square' | 'landscape' | 'portrait';
+  /** Default: `""` */
+  className?: string;
   /** Default: `3` */
   columns?: number;
+  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `[{"src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","caption":"Caption","fileSize":"File Size","alt":"Alt","mediaType":"image","id":"Id","thumbnail":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}]` */
+  /** Default: `[{"alt":"Alt","caption":"Caption","fileSize":"File Size","id":"Id","mediaType":"image","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","thumbnail":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}]` */
   items?: EntityRow[];
-  error?: EntityRow;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `false` */
+  selectable?: boolean;
+  /** Default: `[]` */
+  selectedIds?: string[];
   /** Default: `[]` */
   selectedItems?: string[];
   /** Default: `false` */
   showUpload?: boolean;
-  /** Default: `[{"navigatesTo":"Navigates To","label":"Label","variant":"primary"}]` */
-  actions?: EntityRow[];
-  /** Default: `0` */
-  pageProp?: number;
-  activeFilters?: unknown;
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `"Sort By"` */
   sortBy?: string;
-  /** Default: `"square"` */
-  aspectRatio?: 'square' | 'landscape' | 'portrait';
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[]` */
-  selectedIds?: string[];
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `"Title"` */
+  title?: string;
   /** Default: `0` */
-  pageSize?: number;
-  /** Default: `false` */
-  selectable?: boolean;
+  totalCount?: number;
 }
 
 /**
@@ -142,8 +142,8 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -154,60 +154,319 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'MediaGalleryRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'MediaGalleryItem',
+        'config': {
+          'actions': {
+            'default': [
+              {
+                'label': 'Label',
+                'navigatesTo': 'Navigates To',
+                'variant': 'primary',
+              },
+            ],
+            'description': 'Actions',
+            'items': {
+              'properties': {
+                'event': {
+                  'name': 'event',
+                  'required': false,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'navigatesTo': {
+                  'name': 'navigatesTo',
+                  'required': false,
+                  'type': 'string',
+                },
+                'variant': {
+                  'name': 'variant',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'primary',
+                    'secondary',
+                    'ghost',
+                  ],
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Actions',
+            'tier': 'presentation',
+            'type': '[MediaGalleryActionsItem]',
+          },
+          'activeFilters': {
+            'description': 'Active filters',
+            'label': 'Active Filters',
+            'tier': 'presentation',
+            'type': 'json',
+          },
+          'aspectRatio': {
+            'default': 'square',
+            'description': 'Aspect ratio for thumbnails',
+            'label': 'Aspect Ratio',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'square',
+              'landscape',
+              'portrait',
+            ],
+          },
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'columns': {
+            'default': 3,
+            'description': 'Column count',
+            'label': 'Columns',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'error': {
+            'description': 'Error state (UiError)',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'MediaGalleryError',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'items': {
+            'default': [
+              {
+                'alt': 'Alt',
+                'caption': 'Caption',
+                'fileSize': 'File Size',
+                'id': 'Id',
+                'mediaType': 'image',
+                'src': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
+                'thumbnail': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
+              },
+            ],
+            'description': 'Media items',
+            'items': {
+              'properties': {
+                'alt': {
+                  'name': 'alt',
+                  'required': false,
+                  'type': 'string',
+                },
+                'caption': {
+                  'name': 'caption',
+                  'required': false,
+                  'type': 'string',
+                },
+                'fileSize': {
+                  'name': 'fileSize',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'mediaType': {
+                  'name': 'mediaType',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'image',
+                    'video',
+                  ],
+                },
+                'src': {
+                  'name': 'src',
+                  'required': false,
+                  'type': 'string',
+                },
+                'thumbnail': {
+                  'name': 'thumbnail',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Items',
+            'tier': 'presentation',
+            'type': '[MediaGalleryItemsItem]',
+          },
+          'pageProp': {
+            'default': 0,
+            'description': 'Current page number',
+            'label': 'Page',
+            'synonyms': 'page',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'pageSize': {
+            'default': 0,
+            'description': 'Number of items per page',
+            'label': 'Page Size',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'searchValue': {
+            'default': 'Search Value',
+            'description': 'Current search query value',
+            'label': 'Search Value',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'selectable': {
+            'default': false,
+            'description': 'Enable item selection',
+            'label': 'Selectable',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'selectedIds': {
+            'default': [],
+            'description': 'Currently selected item IDs',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Selected Ids',
+            'tier': 'presentation',
+            'type': '[string]',
+          },
+          'selectedItems': {
+            'default': [],
+            'description': 'Selected item IDs',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Selected Items',
+            'tier': 'presentation',
+            'type': '[string]',
+          },
+          'showUpload': {
+            'default': false,
+            'description': 'Show upload button',
+            'label': 'Show Upload',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'sortBy': {
+            'default': 'Sort By',
+            'description': 'Current sort field',
+            'label': 'Sort By',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'sortDirection': {
+            'default': 'asc',
+            'description': 'Current sort direction',
+            'label': 'Sort Direction',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'title': {
+            'default': 'Title',
+            'description': 'Gallery title',
+            'label': 'Title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'totalCount': {
+            'default': 0,
+            'description': 'Total number of items',
+            'label': 'Total Count',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+        },
         'emits': [
           {
-            'event': 'SELECTION',
             'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'SELECTION',
             'payloadSchema': [
               {
                 'name': 'selection',
-                'type': '[object]',
                 'required': true,
+                'type': '[object]',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
         ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'MediaGalleryItem',
+        'name': 'MediaGalleryRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
               'key': 'SELECTION',
               'name': 'Selection',
-              'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'selection',
-                  'type': '[object]',
                   'required': true,
+                  'type': '[object]',
                 },
               ],
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -218,296 +477,37 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                   'render-ui',
                   'main',
                   {
-                    'items': '@config.items',
-                    'className': '@config.className',
-                    'totalCount': '@config.totalCount',
-                    'error': '@config.error',
-                    'selectionEvent': 'SELECTION',
-                    'sortBy': '@config.sortBy',
-                    'activeFilters': '@config.activeFilters',
-                    'entity': '@entity',
-                    'selectedItems': '@config.selectedItems',
-                    'aspectRatio': '@config.aspectRatio',
-                    'page': '@config.pageProp',
-                    'selectedIds': '@config.selectedIds',
-                    'sortDirection': '@config.sortDirection',
-                    'selectable': '@config.selectable',
-                    'searchValue': '@config.searchValue',
-                    'type': 'media-gallery',
-                    'isLoading': '@config.isLoading',
-                    'columns': '@config.columns',
-                    'title': '@config.title',
-                    'showUpload': '@config.showUpload',
                     'actions': '@config.actions',
+                    'activeFilters': '@config.activeFilters',
+                    'aspectRatio': '@config.aspectRatio',
+                    'className': '@config.className',
+                    'columns': '@config.columns',
+                    'entity': '@entity',
+                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'items': '@config.items',
+                    'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectable': '@config.selectable',
+                    'selectedIds': '@config.selectedIds',
+                    'selectedItems': '@config.selectedItems',
+                    'selectionEvent': 'SELECTION',
+                    'showUpload': '@config.showUpload',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'title': '@config.title',
+                    'totalCount': '@config.totalCount',
+                    'type': 'media-gallery',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'columns': {
-            'type': 'number',
-            'default': 3,
-            'label': 'Columns',
-            'description': 'Column count',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'items': {
-            'type': '[MediaGalleryItemsItem]',
-            'default': [
-              {
-                'src': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
-                'caption': 'Caption',
-                'fileSize': 'File Size',
-                'alt': 'Alt',
-                'mediaType': 'image',
-                'id': 'Id',
-                'thumbnail': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
-              },
-            ],
-            'label': 'Items',
-            'description': 'Media items',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'src': {
-                  'name': 'src',
-                  'type': 'string',
-                  'required': false,
-                },
-                'caption': {
-                  'name': 'caption',
-                  'type': 'string',
-                  'required': false,
-                },
-                'mediaType': {
-                  'name': 'mediaType',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'image',
-                    'video',
-                  ],
-                },
-                'fileSize': {
-                  'name': 'fileSize',
-                  'type': 'string',
-                  'required': false,
-                },
-                'alt': {
-                  'name': 'alt',
-                  'type': 'string',
-                  'required': false,
-                },
-                'thumbnail': {
-                  'name': 'thumbnail',
-                  'type': 'string',
-                  'required': false,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'error': {
-            'type': 'MediaGalleryError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'selectedItems': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Items',
-            'description': 'Selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'showUpload': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Show Upload',
-            'description': 'Show upload button',
-            'tier': 'presentation',
-          },
-          'actions': {
-            'type': '[MediaGalleryActionsItem]',
-            'default': [
-              {
-                'navigatesTo': 'Navigates To',
-                'label': 'Label',
-                'variant': 'primary',
-              },
-            ],
-            'label': 'Actions',
-            'description': 'Actions',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'variant': {
-                  'name': 'variant',
-                  'type': 'string',
-                  'required': false,
-                  'values': [
-                    'primary',
-                    'secondary',
-                    'ghost',
-                  ],
-                },
-                'event': {
-                  'name': 'event',
-                  'type': 'string',
-                  'required': false,
-                },
-                'navigatesTo': {
-                  'name': 'navigatesTo',
-                  'type': 'string',
-                  'required': false,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
-            },
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'title': {
-            'type': 'string',
-            'default': 'Title',
-            'label': 'Title',
-            'description': 'Gallery title',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'aspectRatio': {
-            'type': 'string',
-            'default': 'square',
-            'label': 'Aspect Ratio',
-            'description': 'Aspect ratio for thumbnails',
-            'tier': 'presentation',
-            'values': [
-              'square',
-              'landscape',
-              'portrait',
-            ],
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'selectable': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Selectable',
-            'description': 'Enable item selection',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'MediaGalleryItem', canonicalName) as never,
     ],
     pages: [

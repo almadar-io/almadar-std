@@ -1,107 +1,20 @@
 {
-  "name": "ui-content-section",
-  "version": "1.0.0",
   "description": "ContentSection — UI factory (1:1 with the @almadar/ui content-section pattern).",
+  "name": "ui-content-section",
   "orbitals": [
     {
-      "name": "ContentSectionOrbital",
       "entity": {
-        "name": "ContentSectionItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ContentSectionItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ContentSectionRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ContentSectionItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "content-section",
-                      "background": "@config.background",
-                      "className": "@config.className",
-                      "padding": "@config.padding",
-                      "children": [
-                        {
-                          "content": "Sample content",
-                          "type": "typography"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "padding": {
-              "type": "string",
-              "default": "lg",
-              "label": "Padding",
-              "description": "Vertical padding size",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional class names",
-              "tier": "presentation"
-            },
-            "background": {
-              "type": "string",
-              "default": "default",
-              "label": "Background",
-              "description": "Background style",
-              "tier": "presentation",
-              "values": [
-                "default",
-                "alt",
-                "dark",
-                "gradient"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ContentSectionOrbital",
       "pages": [
         {
           "name": "ContentSectionPage",
@@ -112,7 +25,94 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "background": {
+              "default": "default",
+              "description": "Background style",
+              "label": "Background",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "default",
+                "alt",
+                "dark",
+                "gradient"
+              ]
+            },
+            "className": {
+              "default": "",
+              "description": "Additional class names",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "padding": {
+              "default": "lg",
+              "description": "Vertical padding size",
+              "label": "Padding",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ContentSectionItem",
+          "name": "ContentSectionRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "background": "@config.background",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "padding": "@config.padding",
+                      "type": "content-section"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

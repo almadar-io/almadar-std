@@ -1,102 +1,20 @@
 {
-  "name": "ui-doc-breadcrumb",
-  "version": "1.0.0",
   "description": "DocBreadcrumb — UI factory (1:1 with the @almadar/ui doc-breadcrumb pattern).",
+  "name": "ui-doc-breadcrumb",
   "orbitals": [
     {
-      "name": "DocBreadcrumbOrbital",
       "entity": {
-        "name": "DocBreadcrumbItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "DocBreadcrumbItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "DocBreadcrumbRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "DocBreadcrumbItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "doc-breadcrumb",
-                      "items": "@config.items",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "items": {
-              "type": "[DocBreadcrumbItemsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "href": "Href"
-                }
-              ],
-              "label": "Items",
-              "description": "Breadcrumb path items, last item is treated as current page",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "DocBreadcrumbOrbital",
       "pages": [
         {
           "name": "DocBreadcrumbPage",
@@ -107,7 +25,89 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "items": {
+              "default": [
+                {
+                  "href": "Href",
+                  "label": "Label"
+                }
+              ],
+              "description": "Breadcrumb path items, last item is treated as current page",
+              "items": {
+                "properties": {
+                  "href": {
+                    "name": "href",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Items",
+              "tier": "presentation",
+              "type": "[DocBreadcrumbItemsItem]"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DocBreadcrumbItem",
+          "name": "DocBreadcrumbRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "items": "@config.items",
+                      "type": "doc-breadcrumb"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

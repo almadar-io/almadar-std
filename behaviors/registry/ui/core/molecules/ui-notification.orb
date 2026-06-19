@@ -1,190 +1,20 @@
 {
-  "name": "ui-notification",
-  "version": "1.0.0",
   "description": "Notification — UI factory (1:1 with the @almadar/ui notification pattern).",
+  "name": "ui-notification",
   "orbitals": [
     {
-      "name": "NotificationOrbital",
       "entity": {
-        "name": "NotificationItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "NotificationItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "NotificationRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "NotificationItem",
-          "emits": [
-            {
-              "event": "DISMISS",
-              "description": "Callback when toast is dismissed",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "ACTION",
-              "description": "Action button click handler",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "DISMISS",
-                "name": "Dismiss",
-                "description": "Callback when toast is dismissed",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Action button click handler",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "actionEvent": "ACTION",
-                      "type": "notification",
-                      "variant": "@config.variant",
-                      "actionLabel": "@config.actionLabel",
-                      "dismissible": "@config.dismissible",
-                      "badge": "@config.badge",
-                      "title": "@config.title",
-                      "className": "@config.className",
-                      "dismissEvent": "DISMISS",
-                      "duration": "@config.duration",
-                      "onDismiss": "DISMISS",
-                      "message": "@config.message",
-                      "onAction": "ACTION"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Toast title (optional)",
-              "tier": "presentation"
-            },
-            "message": {
-              "type": "string",
-              "default": "Message",
-              "label": "Message",
-              "description": "Toast message",
-              "tier": "presentation"
-            },
-            "actionLabel": {
-              "type": "string",
-              "default": "Action Label",
-              "label": "Action Label",
-              "description": "Action button label",
-              "tier": "presentation"
-            },
-            "dismissible": {
-              "type": "boolean",
-              "default": true,
-              "label": "Dismissible",
-              "description": "Show dismiss button",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "duration": {
-              "type": "number",
-              "default": 5000.0,
-              "label": "Duration",
-              "description": "Auto-dismiss duration in milliseconds (0 = no auto-dismiss)",
-              "tier": "presentation"
-            },
-            "badge": {
-              "type": "string",
-              "default": "Badge",
-              "label": "Badge",
-              "description": "Badge count (optional)",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "info",
-              "label": "Variant",
-              "description": "Toast variant",
-              "tier": "presentation",
-              "values": [
-                "success",
-                "error",
-                "info",
-                "warning"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "NotificationOrbital",
       "pages": [
         {
           "name": "NotificationPage",
@@ -195,7 +25,177 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actionLabel": {
+              "default": "Action Label",
+              "description": "Action button label",
+              "label": "Action Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "badge": {
+              "default": "Badge",
+              "description": "Badge count (optional)",
+              "label": "Badge",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "dismissible": {
+              "default": true,
+              "description": "Show dismiss button",
+              "label": "Dismissible",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "duration": {
+              "default": 5000.0,
+              "description": "Auto-dismiss duration in milliseconds (0 = no auto-dismiss)",
+              "label": "Duration",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "message": {
+              "default": "Message",
+              "description": "Toast message",
+              "label": "Message",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Title",
+              "description": "Toast title (optional)",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "variant": {
+              "default": "info",
+              "description": "Toast variant",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "success",
+                "error",
+                "info",
+                "warning"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Callback when toast is dismissed",
+              "event": "DISMISS",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Action button click handler",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "NotificationItem",
+          "name": "NotificationRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Callback when toast is dismissed",
+                "key": "DISMISS",
+                "name": "Dismiss",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Action button click handler",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actionEvent": "ACTION",
+                      "actionLabel": "@config.actionLabel",
+                      "badge": "@config.badge",
+                      "className": "@config.className",
+                      "dismissEvent": "DISMISS",
+                      "dismissible": "@config.dismissible",
+                      "duration": "@config.duration",
+                      "message": "@config.message",
+                      "onAction": "ACTION",
+                      "onDismiss": "DISMISS",
+                      "title": "@config.title",
+                      "type": "notification",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

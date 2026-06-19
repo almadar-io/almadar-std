@@ -1,56 +1,229 @@
 {
-  "name": "ui-map-view",
-  "version": "1.0.0",
   "description": "MapView — UI factory (1:1 with the @almadar/ui map-view pattern).",
+  "name": "ui-map-view",
   "orbitals": [
     {
-      "name": "MapViewOrbital",
       "entity": {
-        "name": "MapViewItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "MapViewItem",
+        "persistence": "runtime"
       },
+      "name": "MapViewOrbital",
+      "pages": [
+        {
+          "name": "MapViewPage",
+          "path": "/map-view",
+          "traits": [
+            {
+              "ref": "MapViewRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "MapViewRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "MapViewItem",
+          "config": {
+            "centerLat": {
+              "default": 51.505,
+              "description": "Map center latitude",
+              "label": "Center Lat",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "centerLng": {
+              "default": -0.09,
+              "description": "Map center longitude",
+              "label": "Center Lng",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "height": {
+              "default": "400px",
+              "description": "Height of the map container (default '400px')",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "markers": {
+              "default": [
+                {
+                  "category": "Category",
+                  "id": "Id",
+                  "label": "Label",
+                  "lat": 1.0,
+                  "lng": 1.0
+                }
+              ],
+              "description": "Array of markers to display",
+              "items": {
+                "properties": {
+                  "category": {
+                    "name": "category",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "lat": {
+                    "name": "lat",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "lng": {
+                    "name": "lng",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Markers",
+              "tier": "presentation",
+              "type": "[MapViewMarkersItem]"
+            },
+            "routes": {
+              "default": [
+                {
+                  "color": "Color",
+                  "dashArray": "Dash Array",
+                  "id": "Id",
+                  "label": "Label",
+                  "opacity": 1.0,
+                  "waypoints": [
+                    {
+                      "lat": 1.0,
+                      "lng": 1.0
+                    }
+                  ],
+                  "weight": 1.0
+                }
+              ],
+              "description": "Routes (polylines with optional popups) drawn over the tile layer",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dashArray": {
+                    "name": "dashArray",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "opacity": {
+                    "name": "opacity",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "waypoints": {
+                    "items": {
+                      "properties": {
+                        "lat": {
+                          "name": "lat",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "lng": {
+                          "name": "lng",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "waypoints",
+                    "required": true,
+                    "type": "array"
+                  },
+                  "weight": {
+                    "name": "weight",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Routes",
+              "tier": "presentation",
+              "type": "[MapViewRoutesItem]"
+            },
+            "showAttribution": {
+              "default": true,
+              "description": "Show attribution (default true)",
+              "label": "Show Attribution",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showClickedPin": {
+              "default": false,
+              "description": "Whether to show a pin at the clicked location",
+              "label": "Show Clicked Pin",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "zoom": {
+              "default": 13.0,
+              "description": "Zoom level (1-18, default 13)",
+              "label": "Zoom",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
           "emits": [
             {
-              "event": "MARKER_CLICK",
               "description": "Callback when a marker is clicked (programmatic use)",
-              "tier": "essential",
-              "scope": "external",
+              "event": "MARKER_CLICK",
               "payloadSchema": [
                 {
                   "name": "marker",
-                  "type": "object",
                   "properties": [
                     {
                       "name": "id",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "lat",
-                      "type": "number",
-                      "required": true
+                      "required": true,
+                      "type": "number"
                     },
                     {
                       "name": "lng",
-                      "type": "number",
-                      "required": true
+                      "required": true,
+                      "type": "number"
                     },
                     {
                       "name": "label",
@@ -60,22 +233,23 @@
                       "name": "category",
                       "type": "string"
                     }
-                  ]
+                  ],
+                  "type": "object"
                 },
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "lat",
-                  "type": "number",
-                  "required": true
+                  "required": true,
+                  "type": "number"
                 },
                 {
                   "name": "lng",
-                  "type": "number",
-                  "required": true
+                  "required": true,
+                  "type": "number"
                 },
                 {
                   "name": "label",
@@ -85,13 +259,13 @@
                   "name": "category",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "external",
+              "tier": "essential"
             },
             {
-              "event": "MAP_CLICK",
               "description": "Callback when the map is clicked (programmatic use)",
-              "tier": "essential",
-              "scope": "external",
+              "event": "MAP_CLICK",
               "payloadSchema": [
                 {
                   "name": "lat",
@@ -103,53 +277,55 @@
                 },
                 {
                   "name": "latitude",
-                  "type": "number",
-                  "required": true
+                  "required": true,
+                  "type": "number"
                 },
                 {
                   "name": "longitude",
-                  "type": "number",
-                  "required": true
+                  "required": true,
+                  "type": "number"
                 }
-              ]
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MapViewItem",
+          "name": "MapViewRender",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Callback when a marker is clicked (programmatic use)",
                 "key": "MARKER_CLICK",
                 "name": "Marker Click",
-                "description": "Callback when a marker is clicked (programmatic use)",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "marker",
-                    "type": "object",
                     "properties": [
                       {
                         "name": "id",
-                        "type": "string",
-                        "required": true
+                        "required": true,
+                        "type": "string"
                       },
                       {
                         "name": "lat",
-                        "type": "number",
-                        "required": true
+                        "required": true,
+                        "type": "number"
                       },
                       {
                         "name": "lng",
-                        "type": "number",
-                        "required": true
+                        "required": true,
+                        "type": "number"
                       },
                       {
                         "name": "label",
@@ -159,22 +335,23 @@
                         "name": "category",
                         "type": "string"
                       }
-                    ]
+                    ],
+                    "type": "object"
                   },
                   {
                     "name": "id",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   },
                   {
                     "name": "lat",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   },
                   {
                     "name": "lng",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   },
                   {
                     "name": "label",
@@ -184,13 +361,13 @@
                     "name": "category",
                     "type": "string"
                   }
-                ]
+                ],
+                "tier": "essential"
               },
               {
+                "description": "Callback when the map is clicked (programmatic use)",
                 "key": "MAP_CLICK",
                 "name": "Map Click",
-                "description": "Callback when the map is clicked (programmatic use)",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "lat",
@@ -202,234 +379,57 @@
                   },
                   {
                     "name": "latitude",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   },
                   {
                     "name": "longitude",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   }
-                ]
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
               }
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "showAttribution": "@config.showAttribution",
-                      "height": "@config.height",
-                      "markerClickEvent": "MARKER_CLICK",
-                      "type": "map-view",
-                      "zoom": "@config.zoom",
                       "centerLat": "@config.centerLat",
+                      "centerLng": "@config.centerLng",
+                      "className": "@config.className",
+                      "height": "@config.height",
+                      "mapClickEvent": "MAP_CLICK",
+                      "markerClickEvent": "MARKER_CLICK",
+                      "markers": "@config.markers",
                       "onMapClick": "MAP_CLICK",
                       "onMarkerClick": "MARKER_CLICK",
-                      "mapClickEvent": "MAP_CLICK",
                       "routes": "@config.routes",
-                      "markers": "@config.markers",
+                      "showAttribution": "@config.showAttribution",
                       "showClickedPin": "@config.showClickedPin",
-                      "centerLng": "@config.centerLng",
-                      "className": "@config.className"
+                      "type": "map-view",
+                      "zoom": "@config.zoom"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "height": {
-              "type": "string",
-              "default": "400px",
-              "label": "Height",
-              "description": "Height of the map container (default '400px')",
-              "tier": "presentation"
-            },
-            "showClickedPin": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Clicked Pin",
-              "description": "Whether to show a pin at the clicked location",
-              "tier": "presentation"
-            },
-            "zoom": {
-              "type": "number",
-              "default": 13.0,
-              "label": "Zoom",
-              "description": "Zoom level (1-18, default 13)",
-              "tier": "presentation"
-            },
-            "markers": {
-              "type": "[MapViewMarkersItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "lng": 1.0,
-                  "lat": 1.0,
-                  "label": "Label",
-                  "category": "Category"
-                }
-              ],
-              "label": "Markers",
-              "description": "Array of markers to display",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "lat": {
-                    "name": "lat",
-                    "type": "number",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "lng": {
-                    "name": "lng",
-                    "type": "number",
-                    "required": true
-                  },
-                  "category": {
-                    "name": "category",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "centerLng": {
-              "type": "number",
-              "default": -0.09,
-              "label": "Center Lng",
-              "description": "Map center longitude",
-              "tier": "presentation"
-            },
-            "routes": {
-              "type": "[MapViewRoutesItem]",
-              "default": [
-                {
-                  "dashArray": "Dash Array",
-                  "opacity": 1.0,
-                  "id": "Id",
-                  "color": "Color",
-                  "waypoints": [
-                    {
-                      "lat": 1.0,
-                      "lng": 1.0
-                    }
-                  ],
-                  "weight": 1.0,
-                  "label": "Label"
-                }
-              ],
-              "label": "Routes",
-              "description": "Routes (polylines with optional popups) drawn over the tile layer",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "dashArray": {
-                    "name": "dashArray",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "waypoints": {
-                    "name": "waypoints",
-                    "type": "array",
-                    "required": true,
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "lng": {
-                          "name": "lng",
-                          "type": "number",
-                          "required": true
-                        },
-                        "lat": {
-                          "name": "lat",
-                          "type": "number",
-                          "required": true
-                        }
-                      }
-                    }
-                  },
-                  "weight": {
-                    "name": "weight",
-                    "type": "number",
-                    "required": false
-                  },
-                  "opacity": {
-                    "name": "opacity",
-                    "type": "number",
-                    "required": false
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "centerLat": {
-              "type": "number",
-              "default": 51.505,
-              "label": "Center Lat",
-              "description": "Map center latitude",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "showAttribution": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Attribution",
-              "description": "Show attribution (default true)",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "MapViewPage",
-          "path": "/map-view",
-          "traits": [
-            {
-              "ref": "MapViewRender"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

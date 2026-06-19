@@ -1,336 +1,20 @@
 {
-  "name": "ui-graph-view",
-  "version": "1.0.0",
   "description": "GraphView — UI factory (1:1 with the @almadar/ui graph-view pattern).",
+  "name": "ui-graph-view",
   "orbitals": [
     {
-      "name": "GraphViewOrbital",
       "entity": {
-        "name": "GraphViewItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "GraphViewItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "GraphViewRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "GraphViewItem",
-          "emits": [
-            {
-              "event": "NODE_CLICK",
-              "description": "Callback when a node is clicked",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "node",
-                  "type": "object",
-                  "properties": [
-                    {
-                      "name": "id",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "label",
-                      "type": "string"
-                    },
-                    {
-                      "name": "color",
-                      "type": "string"
-                    },
-                    {
-                      "name": "size",
-                      "type": "number"
-                    },
-                    {
-                      "name": "group",
-                      "type": "string"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "event": "NODE_HOVER",
-              "description": "Callback when a node is hovered (null on leave)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "node",
-                  "type": "object",
-                  "properties": [
-                    {
-                      "name": "id",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "label",
-                      "type": "string"
-                    },
-                    {
-                      "name": "color",
-                      "type": "string"
-                    },
-                    {
-                      "name": "size",
-                      "type": "number"
-                    },
-                    {
-                      "name": "group",
-                      "type": "string"
-                    }
-                  ]
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "NODE_CLICK",
-                "name": "Node Click",
-                "description": "Callback when a node is clicked",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "node",
-                    "type": "object",
-                    "properties": [
-                      {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "label",
-                        "type": "string"
-                      },
-                      {
-                        "name": "color",
-                        "type": "string"
-                      },
-                      {
-                        "name": "size",
-                        "type": "number"
-                      },
-                      {
-                        "name": "group",
-                        "type": "string"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "key": "NODE_HOVER",
-                "name": "Node Hover",
-                "description": "Callback when a node is hovered (null on leave)",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "node",
-                    "type": "object",
-                    "properties": [
-                      {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "label",
-                        "type": "string"
-                      },
-                      {
-                        "name": "color",
-                        "type": "string"
-                      },
-                      {
-                        "name": "size",
-                        "type": "number"
-                      },
-                      {
-                        "name": "group",
-                        "type": "string"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "edges": "@config.edges",
-                      "nodes": "@config.nodes",
-                      "onNodeHover": "NODE_HOVER",
-                      "zoomToFit": "@config.zoomToFit",
-                      "showLabels": "@config.showLabels",
-                      "type": "graph-view",
-                      "onNodeClick": "NODE_CLICK",
-                      "className": "@config.className",
-                      "height": "@config.height",
-                      "width": "@config.width"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "width": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Width",
-              "description": "Width in pixels",
-              "tier": "presentation"
-            },
-            "zoomToFit": {
-              "type": "boolean",
-              "default": true,
-              "label": "Zoom To Fit",
-              "description": "Auto zoom-to-fit after layout settles (default true)",
-              "tier": "presentation"
-            },
-            "nodes": {
-              "type": "[GraphViewNodesItem]",
-              "default": [
-                {
-                  "color": "Color",
-                  "id": "Id",
-                  "size": 1.0,
-                  "group": "Group",
-                  "label": "Label"
-                }
-              ],
-              "label": "Nodes",
-              "description": "Graph nodes",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "size": {
-                    "name": "size",
-                    "type": "number",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "group": {
-                    "name": "group",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "showLabels": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Labels",
-              "description": "Show node labels (default true)",
-              "tier": "presentation"
-            },
-            "height": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Height",
-              "description": "Height in pixels",
-              "tier": "presentation"
-            },
-            "edges": {
-              "type": "[GraphViewEdgesItem]",
-              "default": [
-                {
-                  "color": "Color",
-                  "label": "Label",
-                  "source": "Source",
-                  "target": "Target"
-                }
-              ],
-              "label": "Edges",
-              "description": "Graph edges",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "source": {
-                    "name": "source",
-                    "type": "string",
-                    "required": true
-                  },
-                  "target": {
-                    "name": "target",
-                    "type": "string",
-                    "required": true
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "GraphViewOrbital",
       "pages": [
         {
           "name": "GraphViewPage",
@@ -341,7 +25,323 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "edges": {
+              "default": [
+                {
+                  "color": "Color",
+                  "label": "Label",
+                  "source": "Source",
+                  "target": "Target"
+                }
+              ],
+              "description": "Graph edges",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "source": {
+                    "name": "source",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "target": {
+                    "name": "target",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Edges",
+              "tier": "presentation",
+              "type": "[GraphViewEdgesItem]"
+            },
+            "height": {
+              "default": 0.0,
+              "description": "Height in pixels",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "nodes": {
+              "default": [
+                {
+                  "color": "Color",
+                  "group": "Group",
+                  "id": "Id",
+                  "label": "Label",
+                  "size": 1.0
+                }
+              ],
+              "description": "Graph nodes",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "group": {
+                    "name": "group",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "size": {
+                    "name": "size",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Nodes",
+              "tier": "presentation",
+              "type": "[GraphViewNodesItem]"
+            },
+            "showLabels": {
+              "default": true,
+              "description": "Show node labels (default true)",
+              "label": "Show Labels",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "width": {
+              "default": 0.0,
+              "description": "Width in pixels",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "zoomToFit": {
+              "default": true,
+              "description": "Auto zoom-to-fit after layout settles (default true)",
+              "label": "Zoom To Fit",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "Callback when a node is clicked",
+              "event": "NODE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "node",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "label",
+                      "type": "string"
+                    },
+                    {
+                      "name": "color",
+                      "type": "string"
+                    },
+                    {
+                      "name": "size",
+                      "type": "number"
+                    },
+                    {
+                      "name": "group",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Callback when a node is hovered (null on leave)",
+              "event": "NODE_HOVER",
+              "payloadSchema": [
+                {
+                  "name": "node",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "label",
+                      "type": "string"
+                    },
+                    {
+                      "name": "color",
+                      "type": "string"
+                    },
+                    {
+                      "name": "size",
+                      "type": "number"
+                    },
+                    {
+                      "name": "group",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "GraphViewItem",
+          "name": "GraphViewRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Callback when a node is clicked",
+                "key": "NODE_CLICK",
+                "name": "Node Click",
+                "payloadSchema": [
+                  {
+                    "name": "node",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "size",
+                        "type": "number"
+                      },
+                      {
+                        "name": "group",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Callback when a node is hovered (null on leave)",
+                "key": "NODE_HOVER",
+                "name": "Node Hover",
+                "payloadSchema": [
+                  {
+                    "name": "node",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "size",
+                        "type": "number"
+                      },
+                      {
+                        "name": "group",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "edges": "@config.edges",
+                      "height": "@config.height",
+                      "nodes": "@config.nodes",
+                      "onNodeClick": "NODE_CLICK",
+                      "onNodeHover": "NODE_HOVER",
+                      "showLabels": "@config.showLabels",
+                      "type": "graph-view",
+                      "width": "@config.width",
+                      "zoomToFit": "@config.zoomToFit"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

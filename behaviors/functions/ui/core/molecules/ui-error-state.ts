@@ -46,14 +46,14 @@ export interface StdUiErrorStateRetryPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiErrorStateConfig {
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"Description"` */
-  description?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Description"` */
+  description?: string;
   /** Default: `"Message"` */
   message?: string;
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**

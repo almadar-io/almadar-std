@@ -46,22 +46,22 @@ export interface StdUiCardActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCardConfig {
-  /** Default: `"bordered"` */
-  variant?: 'default' | 'bordered' | 'elevated' | 'interactive';
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `"md"` */
-  padding?: 'none' | 'sm' | 'md' | 'lg';
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `"none"` */
-  shadow?: 'none' | 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   loading?: boolean;
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `"md"` */
+  padding?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `"none"` */
+  shadow?: 'none' | 'sm' | 'md' | 'lg';
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `"bordered"` */
+  variant?: 'default' | 'bordered' | 'elevated' | 'interactive';
 }
 
 /**

@@ -1,145 +1,20 @@
 {
-  "name": "ui-turn-panel",
-  "version": "1.0.0",
   "description": "TurnPanel — UI factory (1:1 with the @almadar/ui turn-panel pattern).",
+  "name": "ui-turn-panel",
   "orbitals": [
     {
-      "name": "TurnPanelOrbital",
       "entity": {
-        "name": "TurnPanelItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "TurnPanelItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "TurnPanelRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "TurnPanelItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "actions": "@config.actions",
-                      "className": "@config.className",
-                      "type": "turn-panel",
-                      "phase": "@config.phase",
-                      "activeTeam": "@config.activeTeam",
-                      "currentTurn": "@config.currentTurn",
-                      "maxTurns": "@config.maxTurns"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "currentTurn": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current Turn",
-              "description": "Current turn number",
-              "tier": "presentation"
-            },
-            "actions": {
-              "type": "[TurnPanelActionsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "disabled": false,
-                  "icon": "circle"
-                }
-              ],
-              "label": "Actions",
-              "description": "Action buttons to display",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "maxTurns": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max Turns",
-              "description": "Maximum number of turns",
-              "tier": "presentation"
-            },
-            "phase": {
-              "type": "string",
-              "default": "Phase",
-              "label": "Phase",
-              "description": "Current phase label",
-              "tier": "presentation"
-            },
-            "activeTeam": {
-              "type": "string",
-              "default": "Active Team",
-              "label": "Active Team",
-              "description": "Active team name",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "TurnPanelOrbital",
       "pages": [
         {
           "name": "TurnPanelPage",
@@ -150,7 +25,132 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actions": {
+              "default": [
+                {
+                  "disabled": false,
+                  "icon": "circle",
+                  "label": "Label"
+                }
+              ],
+              "description": "Action buttons to display",
+              "items": {
+                "properties": {
+                  "disabled": {
+                    "name": "disabled",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Actions",
+              "tier": "presentation",
+              "type": "[TurnPanelActionsItem]"
+            },
+            "activeTeam": {
+              "default": "Active Team",
+              "description": "Active team name",
+              "label": "Active Team",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "currentTurn": {
+              "default": 0.0,
+              "description": "Current turn number",
+              "label": "Current Turn",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "maxTurns": {
+              "default": 0.0,
+              "description": "Maximum number of turns",
+              "label": "Max Turns",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "phase": {
+              "default": "Phase",
+              "description": "Current phase label",
+              "label": "Phase",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TurnPanelItem",
+          "name": "TurnPanelRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": "@config.actions",
+                      "activeTeam": "@config.activeTeam",
+                      "className": "@config.className",
+                      "currentTurn": "@config.currentTurn",
+                      "maxTurns": "@config.maxTurns",
+                      "phase": "@config.phase",
+                      "type": "turn-panel"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

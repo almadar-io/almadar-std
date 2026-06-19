@@ -40,31 +40,31 @@ export type StdUiContentRendererEventKey = 'INIT';
  */
 export interface StdUiContentRendererConfig {
   activeFilters?: unknown;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
   /** Default: `""` */
   className?: string;
+  /** Default: `"Content"` */
+  content?: string;
+  /** Default: `"rtl"` */
+  direction?: 'rtl' | 'ltr';
   error?: EntityRow;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  /** Default: `0` */
-  pageProp?: number;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `0` */
-  pageSize?: number;
+  pageProp?: number;
   /** Default: `0` */
-  totalCount?: number;
-  /** Default: `[]` */
-  selectedIds?: string[];
+  pageSize?: number;
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `"Content"` */
-  content?: string;
   /** Default: `[{"content":"Content","type":"markdown"}]` */
   segments?: EntityRow[];
-  /** Default: `"rtl"` */
-  direction?: 'rtl' | 'ltr';
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `0` */
+  totalCount?: number;
 }
 
 /**

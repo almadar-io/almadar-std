@@ -1,156 +1,20 @@
 {
-  "name": "ui-state-node",
-  "version": "1.0.0",
   "description": "StateNode — UI factory (1:1 with the @almadar/ui state-node pattern).",
+  "name": "ui-state-node",
   "orbitals": [
     {
-      "name": "StateNodeOrbital",
       "entity": {
-        "name": "StateNodeItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "StateNodeItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "StateNodeRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "StateNodeItem",
-          "emits": [
-            {
-              "event": "CLICK",
-              "description": "Click handler",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CLICK",
-                "name": "Click",
-                "description": "Click handler",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "name": "@config.name",
-                      "isInitial": "@config.isInitial",
-                      "isSelected": "@config.isSelected",
-                      "position": "@config.position",
-                      "isCurrent": "@config.isCurrent",
-                      "className": "@config.className",
-                      "onClick": "CLICK",
-                      "type": "state-node"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "position": {
-              "type": "StateNodePosition",
-              "default": {
-                "x": 1.0,
-                "y": 1.0
-              },
-              "label": "Position",
-              "description": "Position on the graph canvas",
-              "tier": "presentation",
-              "properties": {
-                "y": {
-                  "name": "y",
-                  "type": "number",
-                  "required": true
-                },
-                "x": {
-                  "name": "x",
-                  "type": "number",
-                  "required": true
-                }
-              }
-            },
-            "isCurrent": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Current",
-              "description": "Whether this is the current active state",
-              "tier": "presentation"
-            },
-            "isInitial": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Initial",
-              "description": "Whether this is the initial state",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "name": {
-              "type": "string",
-              "default": "Name",
-              "label": "Name",
-              "description": "State name",
-              "tier": "presentation"
-            },
-            "isSelected": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Selected",
-              "description": "Whether this node is selected for editing",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "StateNodeOrbital",
       "pages": [
         {
           "name": "StateNodePage",
@@ -161,7 +25,143 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "isCurrent": {
+              "default": false,
+              "description": "Whether this is the current active state",
+              "label": "Is Current",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "isInitial": {
+              "default": false,
+              "description": "Whether this is the initial state",
+              "label": "Is Initial",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "isSelected": {
+              "default": false,
+              "description": "Whether this node is selected for editing",
+              "label": "Is Selected",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "name": {
+              "default": "Name",
+              "description": "State name",
+              "label": "Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "position": {
+              "default": {
+                "x": 1.0,
+                "y": 1.0
+              },
+              "description": "Position on the graph canvas",
+              "label": "Position",
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "tier": "presentation",
+              "type": "StateNodePosition"
+            }
+          },
+          "emits": [
+            {
+              "description": "Click handler",
+              "event": "CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "StateNodeItem",
+          "name": "StateNodeRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Click handler",
+                "key": "CLICK",
+                "name": "Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "isCurrent": "@config.isCurrent",
+                      "isInitial": "@config.isInitial",
+                      "isSelected": "@config.isSelected",
+                      "name": "@config.name",
+                      "onClick": "CLICK",
+                      "position": "@config.position",
+                      "type": "state-node"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -39,16 +39,16 @@ export type StdUiRuntimeDebuggerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiRuntimeDebuggerConfig {
-  /** Default: `true` */
-  defaultCollapsed?: boolean;
-  /** Default: `"bottom-right"` */
-  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  /** Default: `"Default Tab"` */
-  defaultTab?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `true` */
+  defaultCollapsed?: boolean;
+  /** Default: `"Default Tab"` */
+  defaultTab?: string;
   /** Default: `"floating"` */
   mode?: 'floating' | 'inline' | 'verify';
+  /** Default: `"bottom-right"` */
+  position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
   schema?: unknown;
 }
 
@@ -110,8 +110,8 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -122,64 +122,47 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'RuntimeDebuggerRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'RuntimeDebuggerItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'transitions': [
-            {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'defaultCollapsed': '@config.defaultCollapsed',
-                    'mode': '@config.mode',
-                    'position': '@config.position',
-                    'schema': '@config.schema',
-                    'type': 'runtime-debugger',
-                    'className': '@config.className',
-                    'defaultTab': '@config.defaultTab',
-                  },
-                ],
-              ],
-            },
-          ],
-        },
         'config': {
-          'defaultCollapsed': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Default Collapsed',
-            'description': 'Initial collapsed state',
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'defaultCollapsed': {
+            'default': true,
+            'description': 'Initial collapsed state',
+            'label': 'Default Collapsed',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'defaultTab': {
+            'default': 'Default Tab',
+            'description': 'Default active tab id',
+            'label': 'Default Tab',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'mode': {
+            'default': 'floating',
+            'description': 'Display mode: floating (fixed overlay), inline (block element), or verify (always-visible compact overlay for verification runs)',
+            'label': 'Mode',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'floating',
+              'inline',
+              'verify',
+            ],
           },
           'position': {
-            'type': 'string',
             'default': 'bottom-right',
-            'label': 'Position',
             'description': 'Initial position',
+            'label': 'Position',
             'tier': 'presentation',
+            'type': 'string',
             'values': [
               'bottom-right',
               'bottom-left',
@@ -187,40 +170,57 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'top-left',
             ],
           },
-          'defaultTab': {
-            'type': 'string',
-            'default': 'Default Tab',
-            'label': 'Default Tab',
-            'description': 'Default active tab id',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'mode': {
-            'type': 'string',
-            'default': 'floating',
-            'label': 'Mode',
-            'description': 'Display mode: floating (fixed overlay), inline (block element), or verify (always-visible compact overlay for verification runs)',
-            'tier': 'presentation',
-            'values': [
-              'floating',
-              'inline',
-              'verify',
-            ],
-          },
           'schema': {
-            'type': 'json',
-            'label': 'Schema',
             'description': 'Raw schema for EventDispatcherTab payload extraction',
+            'label': 'Schema',
             'tier': 'presentation',
+            'type': 'json',
           },
         },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'RuntimeDebuggerItem',
+        'name': 'RuntimeDebuggerRender',
         'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': '@config.className',
+                    'defaultCollapsed': '@config.defaultCollapsed',
+                    'defaultTab': '@config.defaultTab',
+                    'mode': '@config.mode',
+                    'position': '@config.position',
+                    'schema': '@config.schema',
+                    'type': 'runtime-debugger',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
       } as never, 'RuntimeDebuggerItem', canonicalName) as never,
     ],
     pages: [

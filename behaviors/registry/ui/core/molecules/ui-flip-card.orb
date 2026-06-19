@@ -1,131 +1,20 @@
 {
-  "name": "ui-flip-card",
-  "version": "1.0.0",
   "description": "FlipCard — UI factory (1:1 with the @almadar/ui flip-card pattern).",
+  "name": "ui-flip-card",
   "orbitals": [
     {
-      "name": "FlipCardOrbital",
       "entity": {
-        "name": "FlipCardItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "FlipCardItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "FlipCardRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "FlipCardItem",
-          "emits": [
-            {
-              "event": "FLIP",
-              "description": "Callback when the card is clicked to flip",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "FLIP",
-                "name": "Flip",
-                "description": "Callback when the card is clicked to flip",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "front": "@config.front",
-                      "flipped": "@config.flipped",
-                      "height": "@config.height",
-                      "back": "@config.back",
-                      "className": "@config.className",
-                      "type": "flip-card",
-                      "onFlip": "FLIP"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "front": {
-              "type": "node",
-              "label": "Front",
-              "description": "Content rendered on the front face",
-              "tier": "presentation"
-            },
-            "back": {
-              "type": "node",
-              "label": "Back",
-              "description": "Content rendered on the back face",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Optional className for the outer container",
-              "tier": "presentation"
-            },
-            "flipped": {
-              "type": "boolean",
-              "default": false,
-              "label": "Flipped",
-              "description": "Controlled flip state",
-              "tier": "presentation"
-            },
-            "height": {
-              "type": "string",
-              "default": "h-64",
-              "label": "Height",
-              "description": "Card height as a Tailwind class (default: 'h-64')",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "FlipCardOrbital",
       "pages": [
         {
           "name": "FlipCardPage",
@@ -136,7 +25,118 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "back": {
+              "description": "Content rendered on the back face",
+              "label": "Back",
+              "tier": "presentation",
+              "type": "node"
+            },
+            "className": {
+              "default": "",
+              "description": "Optional className for the outer container",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "flipped": {
+              "default": false,
+              "description": "Controlled flip state",
+              "label": "Flipped",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "front": {
+              "description": "Content rendered on the front face",
+              "label": "Front",
+              "tier": "presentation",
+              "type": "node"
+            },
+            "height": {
+              "default": "h-64",
+              "description": "Card height as a Tailwind class (default: 'h-64')",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Callback when the card is clicked to flip",
+              "event": "FLIP",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FlipCardItem",
+          "name": "FlipCardRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Callback when the card is clicked to flip",
+                "key": "FLIP",
+                "name": "Flip",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "back": "@config.back",
+                      "className": "@config.className",
+                      "flipped": "@config.flipped",
+                      "front": "@config.front",
+                      "height": "@config.height",
+                      "onFlip": "FLIP",
+                      "type": "flip-card"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

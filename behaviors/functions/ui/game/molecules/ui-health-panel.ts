@@ -39,22 +39,22 @@ export type StdUiHealthPanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHealthPanelConfig {
-  /** Default: `[{"variant":"buff","label":"Label","icon":"circle"}]` */
-  effects?: EntityRow[];
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
+  /** Default: `0` */
+  current?: number;
+  /** Default: `[{"icon":"circle","label":"Label","variant":"buff"}]` */
+  effects?: EntityRow[];
   /** Default: `"Label"` */
   label?: string;
   /** Default: `0` */
   max?: number;
   /** Default: `0` */
   shield?: number;
-  /** Default: `0` */
-  current?: number;
   /** Default: `true` */
   showNumbers?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

@@ -1,49 +1,66 @@
 {
-  "name": "ui-pricing-page-template",
-  "version": "1.0.0",
   "description": "PricingPageTemplate — UI factory (1:1 with the @almadar/ui pricing-page-template pattern).",
+  "name": "ui-pricing-page-template",
   "orbitals": [
     {
-      "name": "PricingPageTemplateOrbital",
       "entity": {
-        "name": "PricingPageTemplateItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "PricingPageTemplateItem",
+        "persistence": "runtime"
       },
+      "name": "PricingPageTemplateOrbital",
+      "pages": [
+        {
+          "name": "PricingPageTemplatePage",
+          "path": "/pricing-page-template",
+          "traits": [
+            {
+              "ref": "PricingPageTemplateRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "PricingPageTemplateRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "External styling override",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
           "linkedEntity": "PricingPageTemplateItem",
+          "name": "PricingPageTemplateRender",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -59,33 +76,16 @@
                       "type": "pricing-page-template"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "External styling override",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "PricingPageTemplatePage",
-          "path": "/pricing-page-template",
-          "traits": [
-            {
-              "ref": "PricingPageTemplateRender"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

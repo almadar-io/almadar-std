@@ -46,24 +46,24 @@ export interface StdUiGameOverScreenActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameOverScreenConfig {
-  /** Default: `"Current Score"` */
-  currentScore?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"navigatesTo":"Navigates To","label":"Label","variant":"primary"}]` */
-  menuItems?: EntityRow[];
-  /** Default: `"neutral"` */
-  variant?: 'victory' | 'defeat' | 'neutral';
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
   actions?: EntityRow[];
-  /** Default: `[{"icon":"circle","format":"number","label":"Label","bind":"Bind","value":"Value"}]` */
-  stats?: EntityRow[];
-  /** Default: `"Message"` */
-  message?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Current Score"` */
+  currentScore?: string;
   /** Default: `"High Score"` */
   highScore?: string;
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  menuItems?: EntityRow[];
+  /** Default: `"Message"` */
+  message?: string;
+  /** Default: `[{"bind":"Bind","format":"number","icon":"circle","label":"Label","value":"Value"}]` */
+  stats?: EntityRow[];
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"neutral"` */
+  variant?: 'victory' | 'defeat' | 'neutral';
 }
 
 /**

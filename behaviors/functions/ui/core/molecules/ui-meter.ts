@@ -39,33 +39,33 @@ export type StdUiMeterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMeterConfig {
-  /** Default: `[{"value":1,"label":"Label","color":"Color"}]` */
-  thresholds?: EntityRow[];
-  /** Default: `5` */
-  segments?: number;
-  /** Default: `0` */
-  value?: number;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
-  min?: number;
-  /** Default: `100` */
-  max?: number;
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `true` */
-  showValue?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `"Unit"` */
-  unit?: string;
-  error?: EntityRow;
-  /** Default: `"linear"` */
-  variant?: 'linear' | 'radial' | 'segmented';
-  /** Default: `[{"navigatesTo":"Navigates To","variant":"primary","label":"Label"}]` */
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
   actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `100` */
+  max?: number;
+  /** Default: `0` */
+  min?: number;
+  /** Default: `5` */
+  segments?: number;
+  /** Default: `true` */
+  showValue?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `[{"color":"Color","label":"Label","value":1}]` */
+  thresholds?: EntityRow[];
+  /** Default: `"Unit"` */
+  unit?: string;
+  /** Default: `0` */
+  value?: number;
+  /** Default: `"linear"` */
+  variant?: 'linear' | 'radial' | 'segmented';
 }
 
 /**

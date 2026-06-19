@@ -1,5 +1,5 @@
 app ui-negotiator-board "1.0.0"
-"NegotiatorBoard — UI factory (1:1 with the @almadar/ui negotiator-board pattern)."
+"NegotiatorBoard — game-theory payoff gameplay state machine (1:1 with the @almadar/ui negotiator-board pattern)."
 orbital NegotiatorBoardOrbital {
   type NegotiatorBoardError = {
     message : string!
@@ -7,17 +7,44 @@ orbital NegotiatorBoardOrbital {
     code : string
     stack : string
   }
+  type NegotiatorBoardActionsItem = {
+    id : string!
+    label : string!
+    description : string
+  }
+  type NegotiatorBoardPayoffItem = {
+    playerAction : string!
+    opponentAction : string!
+    playerPayoff : number!
+    opponentPayoff : number!
+  }
 
   entity NegotiatorBoardItem [runtime] {
     id : string!
+    score : number = 0
+    round : number = 0
+    targetScore : number = 10
+    maxRounds : number = 5
+    result : "none" | "win" | "lose" = none
+    opponentStrategy : string = "tit-for-tat"
+    actions : [NegotiatorBoardActionsItem] = []
+    payoffMatrix : [NegotiatorBoardPayoffItem] = []
   }
 
   trait NegotiatorBoardRender -> @rebindable NegotiatorBoardItem [interaction, instance] {
-    initial: idle
+    initial: menu
 
-    state idle {
-      INIT -> idle
+    state menu {
+      INIT -> menu
         (fetch NegotiatorBoardItem {})
+        (set @entity.score 0)
+        (set @entity.round 0)
+        (set @entity.targetScore @config.targetScore)
+        (set @entity.maxRounds @config.maxRounds)
+        (set @entity.result "none")
+        (set @entity.opponentStrategy @config.opponentStrategy)
+        (set @entity.actions @config.actions)
+        (set @entity.payoffMatrix @config.payoffMatrix)
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -34,9 +61,75 @@ orbital NegotiatorBoardOrbital {
           completeEvent: COMPLETE
           type: negotiator-board
         })
+      START -> playing
+        (set @entity.score 0)
+        (set @entity.round 0)
+        (set @entity.targetScore @config.targetScore)
+        (set @entity.maxRounds @config.maxRounds)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: negotiator-board
+        })
+    }
+
+    state playing {
+      PLAY_ROUND -> playing when (< @entity.round @entity.maxRounds)
+        (set @entity.score (+ @entity.score (if (>= ?payoff 0) ?payoff 0)))
+        (set @entity.round (+ @entity.round 1))
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: negotiator-board
+        })
+
+      FINISH -> complete when (>= @entity.score @entity.targetScore)
+        (set @entity.result "win")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: negotiator-board
+        })
+
+      FINISH -> complete when (< @entity.score @entity.targetScore)
+        (set @entity.result "lose")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: negotiator-board
+        })
+    }
+
+    state complete {
+      PLAY_AGAIN -> menu
+        (set @entity.score 0)
+        (set @entity.round 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: negotiator-board
+        })
     }
 
     emits {
+      PLAY_ROUND -> external {
+        playerAction : string!
+        payoff : number!
+      }
+        @description "Emits one negotiation round; the UI resolves the payoff before emitting."
+        @tier "essential"
+      FINISH -> external {
+        id : string
+      }
+        @description "Emits when all rounds are spent; routes to win/lose by score vs target."
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "essential"
       COMPLETE -> external {
         success : boolean!
         score : number!
@@ -91,6 +184,26 @@ orbital NegotiatorBoardOrbital {
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
+      targetScore : number = 10
+        @label "Target Score"
+        @description "Total payoff the player must reach to win."
+        @tier "domain"
+      maxRounds : number = 5
+        @label "Max Rounds"
+        @description "Number of negotiation rounds before the game finishes."
+        @tier "domain"
+      opponentStrategy : string = "tit-for-tat"
+        @label "Opponent Strategy"
+        @description "AI opponent strategy (always-cooperate | always-defect | tit-for-tat | random)."
+        @tier "domain"
+      actions : [NegotiatorBoardActionsItem] = []
+        @label "Actions"
+        @description "Selectable round actions (id/label/description)."
+        @tier "domain"
+      payoffMatrix : [NegotiatorBoardPayoffItem] = []
+        @label "Payoff Matrix"
+        @description "Payoff-matrix cells (playerAction/opponentAction/playerPayoff/opponentPayoff)."
+        @tier "domain"
     }
   }
 

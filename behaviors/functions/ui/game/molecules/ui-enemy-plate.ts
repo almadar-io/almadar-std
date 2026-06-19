@@ -41,14 +41,14 @@ export type StdUiEnemyPlateEventKey = 'INIT';
 export interface StdUiEnemyPlateConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  maxHealth?: number;
+  /** Default: `[{"icon":"circle","label":"Label","variant":"buff"}]` */
+  effects?: EntityRow[];
   /** Default: `0` */
   health?: number;
   /** Default: `0` */
   level?: number;
-  /** Default: `[{"label":"Label","variant":"buff","icon":"circle"}]` */
-  effects?: EntityRow[];
+  /** Default: `0` */
+  maxHealth?: number;
   /** Default: `"Name"` */
   name?: string;
 }

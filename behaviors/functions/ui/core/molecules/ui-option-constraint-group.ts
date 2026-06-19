@@ -46,20 +46,20 @@ export interface StdUiOptionConstraintGroupChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiOptionConstraintGroupConfig {
-  /** Default: `[{"priceDelta":1,"outOfStock":false,"id":"Id","disabled":false,"label":"Label"}]` */
-  options?: EntityRow[];
-  /** Default: `"Group Id"` */
-  groupId?: string;
-  /** Default: `"Title"` */
-  title?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"Description"` */
   description?: string;
+  /** Default: `"Group Id"` */
+  groupId?: string;
+  /** Default: `[{"disabled":false,"id":"Id","label":"Label","outOfStock":false,"priceDelta":1}]` */
+  options?: EntityRow[];
   /** Default: `[]` */
   selected?: string[];
   /** Default: `"md"` */
   size?: 'sm' | 'md';
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**

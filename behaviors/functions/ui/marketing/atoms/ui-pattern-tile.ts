@@ -39,16 +39,16 @@ export type StdUiPatternTileEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiPatternTileConfig {
-  /** Default: `"star8"` */
-  variant?: 'star8' | 'star6' | 'khatam' | 'star10' | 'star12' | 'rosette-double' | 'rosette-filled' | 'seigaiha' | 'greek-key' | 'celtic-knot' | 'kolam' | 'arch' | 'arabesque-vine' | 'arabesque-net';
-  /** Default: `60` */
-  size?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
-  /** Default: `0.5` */
-  strokeWidth?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
+  /** Default: `60` */
+  size?: number;
+  /** Default: `0.5` */
+  strokeWidth?: number;
+  /** Default: `"star8"` */
+  variant?: 'star8' | 'star6' | 'khatam' | 'star10' | 'star12' | 'rosette-double' | 'rosette-filled' | 'seigaiha' | 'greek-key' | 'celtic-knot' | 'kolam' | 'arch' | 'arabesque-vine' | 'arabesque-net';
 }
 
 /**

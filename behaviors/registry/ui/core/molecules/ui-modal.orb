@@ -1,150 +1,242 @@
 {
-  "name": "ui-modal",
-  "version": "1.0.0",
   "description": "Modal — UI factory (1:1 with the @almadar/ui modal pattern).",
+  "name": "ui-modal",
   "orbitals": [
     {
-      "name": "ModalOrbital",
       "entity": {
-        "name": "ModalItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ModalItem",
+        "persistence": "runtime"
       },
+      "name": "ModalOrbital",
+      "pages": [
+        {
+          "name": "ModalPage",
+          "path": "/modal",
+          "traits": [
+            {
+              "ref": "ModalRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "ModalRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "ModalItem",
-          "emits": [
-            {
-              "event": "CLOSE",
-              "description": "Callback when modal should close (injected by slot wrapper)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "closeOnEscape": {
+              "default": true,
+              "description": "closeOnEscape prop",
+              "label": "Close On Escape",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "closeOnOverlayClick": {
+              "default": true,
+              "description": "closeOnOverlayClick prop",
+              "label": "Close On Overlay Click",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "footer": {
+              "description": "footer prop",
+              "label": "Footer",
+              "tier": "presentation",
+              "type": "node"
+            },
+            "isOpen": {
+              "default": true,
+              "description": "Whether the modal is open (defaults to true when rendered by slot wrapper)",
+              "label": "Is Open",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "look": {
+              "default": "centered-card",
+              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
+              "label": "Look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "centered-card",
+                "top-sheet",
+                "side-drawer",
+                "full-screen"
               ]
             },
+            "showCloseButton": {
+              "default": true,
+              "description": "showCloseButton prop",
+              "label": "Show Close Button",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "size": {
+              "default": "md",
+              "description": "size prop",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "full"
+              ]
+            },
+            "swipeDownToClose": {
+              "default": true,
+              "description": "Enable swipe-down-to-close on mobile bottom sheet (default: true)",
+              "label": "Swipe Down To Close",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "title": {
+              "default": "Title",
+              "description": "title prop",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
             {
-              "event": "OPEN",
-              "description": "Open the Modal.",
-              "tier": "essential",
-              "scope": "external",
+              "description": "Callback when modal should close (injected by slot wrapper)",
+              "event": "CLOSE",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Open the Modal.",
+              "event": "OPEN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ModalItem",
+          "name": "ModalRender",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Open the Modal.",
                 "key": "OPEN",
                 "name": "Open",
-                "description": "Open the Modal.",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
                   }
-                ]
+                ],
+                "tier": "essential"
               },
               {
+                "description": "Callback when modal should close (injected by slot wrapper)",
                 "key": "CLOSE",
                 "name": "Close",
-                "description": "Callback when modal should close (injected by slot wrapper)",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
                   }
-                ]
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "closed"
+              },
+              {
+                "name": "open"
               }
             ],
             "transitions": [
               {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
+                      "action": "OPEN",
                       "label": "Open Modal",
-                      "type": "button",
-                      "action": "OPEN"
+                      "type": "button"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "closed",
+                "to": "closed"
               },
               {
-                "from": "closed",
-                "to": "open",
-                "event": "OPEN",
                 "effects": [
                   [
                     "render-ui",
                     "modal",
                     {
-                      "closeOnOverlayClick": "@config.closeOnOverlayClick",
-                      "title": "@config.title",
                       "children": [
                         {
                           "content": "Sample content",
                           "type": "typography"
                         }
                       ],
-                      "showCloseButton": "@config.showCloseButton",
-                      "footer": "@config.footer",
-                      "size": "@config.size",
-                      "onClose": "CLOSE",
-                      "closeOnEscape": "@config.closeOnEscape",
                       "className": "@config.className",
-                      "isOpen": "@config.isOpen",
                       "closeEvent": "CLOSE",
-                      "swipeDownToClose": "@config.swipeDownToClose",
+                      "closeOnEscape": "@config.closeOnEscape",
+                      "closeOnOverlayClick": "@config.closeOnOverlayClick",
+                      "footer": "@config.footer",
+                      "isOpen": "@config.isOpen",
                       "look": "@config.look",
+                      "onClose": "CLOSE",
+                      "showCloseButton": "@config.showCloseButton",
+                      "size": "@config.size",
+                      "swipeDownToClose": "@config.swipeDownToClose",
+                      "title": "@config.title",
                       "type": "modal"
                     }
                   ]
-                ]
+                ],
+                "event": "OPEN",
+                "from": "closed",
+                "to": "open"
               },
               {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
                 "effects": [
                   [
                     "render-ui",
@@ -156,112 +248,20 @@
                     "main",
                     {
                       "action": "OPEN",
-                      "type": "button",
-                      "label": "Open Modal"
+                      "label": "Open Modal",
+                      "type": "button"
                     }
                   ]
-                ]
+                ],
+                "event": "CLOSE",
+                "from": "open",
+                "to": "closed"
               }
             ]
-          },
-          "config": {
-            "showCloseButton": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Close Button",
-              "description": "showCloseButton prop",
-              "tier": "presentation"
-            },
-            "closeOnOverlayClick": {
-              "type": "boolean",
-              "default": true,
-              "label": "Close On Overlay Click",
-              "description": "closeOnOverlayClick prop",
-              "tier": "presentation"
-            },
-            "footer": {
-              "type": "node",
-              "label": "Footer",
-              "description": "footer prop",
-              "tier": "presentation"
-            },
-            "isOpen": {
-              "type": "boolean",
-              "default": true,
-              "label": "Is Open",
-              "description": "Whether the modal is open (defaults to true when rendered by slot wrapper)",
-              "tier": "presentation"
-            },
-            "closeOnEscape": {
-              "type": "boolean",
-              "default": true,
-              "label": "Close On Escape",
-              "description": "closeOnEscape prop",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "size prop",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "full"
-              ]
-            },
-            "look": {
-              "type": "string",
-              "default": "centered-card",
-              "label": "Look",
-              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
-              "tier": "presentation",
-              "values": [
-                "centered-card",
-                "top-sheet",
-                "side-drawer",
-                "full-screen"
-              ]
-            },
-            "swipeDownToClose": {
-              "type": "boolean",
-              "default": true,
-              "label": "Swipe Down To Close",
-              "description": "Enable swipe-down-to-close on mobile bottom sheet (default: true)",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "title prop",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "ModalPage",
-          "path": "/modal",
-          "traits": [
-            {
-              "ref": "ModalRender"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

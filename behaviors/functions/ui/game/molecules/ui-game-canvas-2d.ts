@@ -48,20 +48,20 @@ export interface StdUiGameCanvas2dTickPayload {
 export interface StdUiGameCanvas2dConfig {
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
   assetBaseUrl?: unknown;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Tick Event"` */
-  tickEvent?: string;
-  /** Default: `800` */
-  width?: number;
-  /** Default: `600` */
-  height?: number;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/scenes/resonators.jpeg"` */
   backgroundImage?: unknown;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"Draw Event"` */
   drawEvent?: string;
   /** Default: `60` */
   fps?: number;
+  /** Default: `600` */
+  height?: number;
+  /** Default: `"Tick Event"` */
+  tickEvent?: string;
+  /** Default: `800` */
+  width?: number;
 }
 
 /**

@@ -1,140 +1,20 @@
 {
-  "name": "ui-edge-decoration",
-  "version": "1.0.0",
   "description": "EdgeDecoration — UI factory (1:1 with the @almadar/ui edge-decoration pattern).",
+  "name": "ui-edge-decoration",
   "orbitals": [
     {
-      "name": "EdgeDecorationOrbital",
       "entity": {
-        "name": "EdgeDecorationItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "EdgeDecorationItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "EdgeDecorationRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "EdgeDecorationItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "edge-decoration",
-                      "color": "@config.color",
-                      "opacity": "@config.opacity",
-                      "className": "@config.className",
-                      "variant": "@config.variant",
-                      "side": "@config.side",
-                      "width": "@config.width",
-                      "strokeWidth": "@config.strokeWidth"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "opacity": {
-              "type": "number",
-              "default": 0.15,
-              "label": "Opacity",
-              "description": "Overall opacity (default: 0.15)",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "side": {
-              "type": "string",
-              "default": "both",
-              "label": "Side",
-              "description": "Which side(s) to place the decoration",
-              "tier": "presentation",
-              "values": [
-                "left",
-                "right",
-                "both"
-              ]
-            },
-            "variant": {
-              "type": "string",
-              "default": "arch",
-              "label": "Variant",
-              "description": "Which decorative element",
-              "tier": "presentation",
-              "values": [
-                "arch",
-                "vine",
-                "lattice"
-              ]
-            },
-            "strokeWidth": {
-              "type": "number",
-              "default": 0.5,
-              "label": "Stroke Width",
-              "description": "Stroke width",
-              "tier": "presentation"
-            },
-            "color": {
-              "type": "string",
-              "default": "primary",
-              "label": "Color",
-              "description": "Semantic palette token or a raw CSS color value for the stroke.",
-              "tier": "presentation",
-              "values": [
-                "primary",
-                "secondary",
-                "success",
-                "warning",
-                "error",
-                "muted"
-              ]
-            },
-            "width": {
-              "type": "number",
-              "default": 15.0,
-              "label": "Width",
-              "description": "Width of the decoration area as percentage of container (default: 15)",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "EdgeDecorationOrbital",
       "pages": [
         {
           "name": "EdgeDecorationPage",
@@ -145,7 +25,127 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "color": {
+              "default": "primary",
+              "description": "Semantic palette token or a raw CSS color value for the stroke.",
+              "label": "Color",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "primary",
+                "secondary",
+                "success",
+                "warning",
+                "error",
+                "muted"
+              ]
+            },
+            "opacity": {
+              "default": 0.15,
+              "description": "Overall opacity (default: 0.15)",
+              "label": "Opacity",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "side": {
+              "default": "both",
+              "description": "Which side(s) to place the decoration",
+              "label": "Side",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "left",
+                "right",
+                "both"
+              ]
+            },
+            "strokeWidth": {
+              "default": 0.5,
+              "description": "Stroke width",
+              "label": "Stroke Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "variant": {
+              "default": "arch",
+              "description": "Which decorative element",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "arch",
+                "vine",
+                "lattice"
+              ]
+            },
+            "width": {
+              "default": 15.0,
+              "description": "Width of the decoration area as percentage of container (default: 15)",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "EdgeDecorationItem",
+          "name": "EdgeDecorationRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "color": "@config.color",
+                      "opacity": "@config.opacity",
+                      "side": "@config.side",
+                      "strokeWidth": "@config.strokeWidth",
+                      "type": "edge-decoration",
+                      "variant": "@config.variant",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

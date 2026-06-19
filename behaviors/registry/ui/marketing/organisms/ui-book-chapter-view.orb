@@ -1,92 +1,20 @@
 {
-  "name": "ui-book-chapter-view",
-  "version": "1.0.0",
   "description": "BookChapterView — UI factory (1:1 with the @almadar/ui book-chapter-view pattern).",
+  "name": "ui-book-chapter-view",
   "orbitals": [
     {
-      "name": "BookChapterViewOrbital",
       "entity": {
-        "name": "BookChapterViewItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "BookChapterViewItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "BookChapterViewRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "BookChapterViewItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "BookChapterViewItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "book-chapter-view",
-                      "chapter": "@entity",
-                      "className": "@config.className",
-                      "direction": "@config.direction"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "direction": {
-              "type": "string",
-              "default": "rtl",
-              "label": "Direction",
-              "description": "direction prop",
-              "tier": "presentation",
-              "values": [
-                "rtl",
-                "ltr"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "BookChapterViewOrbital",
       "pages": [
         {
           "name": "BookChapterViewPage",
@@ -97,7 +25,79 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "direction": {
+              "default": "rtl",
+              "description": "direction prop",
+              "label": "Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "rtl",
+                "ltr"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "BookChapterViewItem",
+          "name": "BookChapterViewRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "BookChapterViewItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "chapter": "@entity",
+                      "className": "@config.className",
+                      "direction": "@config.direction",
+                      "type": "book-chapter-view"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

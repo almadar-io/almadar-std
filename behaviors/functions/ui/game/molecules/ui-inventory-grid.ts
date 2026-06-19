@@ -46,14 +46,14 @@ export interface StdUiInventoryGridSelectPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiInventoryGridConfig {
-  /** Default: `"Selected Id"` */
-  selectedId?: string;
-  /** Default: `[{"icon":"circle","id":"Id","label":"Label","quantity":1,"rarity":"common"}]` */
-  items?: EntityRow[];
-  /** Default: `4` */
-  columns?: number;
   /** Default: `""` */
   className?: string;
+  /** Default: `4` */
+  columns?: number;
+  /** Default: `[{"icon":"circle","id":"Id","label":"Label","quantity":1,"rarity":"common"}]` */
+  items?: EntityRow[];
+  /** Default: `"Selected Id"` */
+  selectedId?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */

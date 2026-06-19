@@ -1,133 +1,20 @@
 {
-  "name": "ui-choice-button",
-  "version": "1.0.0",
   "description": "ChoiceButton — UI factory (1:1 with the @almadar/ui choice-button pattern).",
+  "name": "ui-choice-button",
   "orbitals": [
     {
-      "name": "ChoiceButtonOrbital",
       "entity": {
-        "name": "ChoiceButtonItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ChoiceButtonItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ChoiceButtonRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ChoiceButtonItem",
-          "emits": [
-            {
-              "event": "CLICK",
-              "description": "Click handler",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CLICK",
-                "name": "Click",
-                "description": "Click handler",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "disabled": "@config.disabled",
-                      "index": "@config.index",
-                      "text": "@config.text",
-                      "selected": "@config.selected",
-                      "type": "choice-button",
-                      "onClick": "CLICK",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "index": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Index",
-              "description": "Choice index number (displayed as prefix)",
-              "tier": "presentation"
-            },
-            "text": {
-              "type": "string",
-              "default": "Text",
-              "label": "Text",
-              "description": "Choice text content",
-              "tier": "presentation"
-            },
-            "selected": {
-              "type": "boolean",
-              "default": false,
-              "label": "Selected",
-              "description": "Whether the choice is currently selected",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Whether the choice is disabled",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ChoiceButtonOrbital",
       "pages": [
         {
           "name": "ChoiceButtonPage",
@@ -138,7 +25,120 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "disabled": {
+              "default": false,
+              "description": "Whether the choice is disabled",
+              "label": "Disabled",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "index": {
+              "default": 0.0,
+              "description": "Choice index number (displayed as prefix)",
+              "label": "Index",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "selected": {
+              "default": false,
+              "description": "Whether the choice is currently selected",
+              "label": "Selected",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "text": {
+              "default": "Text",
+              "description": "Choice text content",
+              "label": "Text",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Click handler",
+              "event": "CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ChoiceButtonItem",
+          "name": "ChoiceButtonRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Click handler",
+                "key": "CLICK",
+                "name": "Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "disabled": "@config.disabled",
+                      "index": "@config.index",
+                      "onClick": "CLICK",
+                      "selected": "@config.selected",
+                      "text": "@config.text",
+                      "type": "choice-button"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

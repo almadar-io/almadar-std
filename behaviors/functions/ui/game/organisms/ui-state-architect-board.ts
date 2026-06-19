@@ -54,28 +54,28 @@ export interface StdUiStateArchitectBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiStateArchitectBoardConfig {
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `0` */
-  totalCount?: number;
+  activeFilters?: unknown;
+  /** Default: `""` */
+  className?: string;
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
+  /** Default: `0` */
+  pageProp?: number;
   /** Default: `0` */
   pageSize?: number;
-  activeFilters?: unknown;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
   /** Default: `[]` */
   selectedIds?: string[];
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
   /** Default: `600` */
   stepDurationMs?: number;
   /** Default: `0` */
-  pageProp?: number;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
+  totalCount?: number;
 }
 
 /**
@@ -136,8 +136,8 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -148,94 +148,206 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'StateArchitectBoardRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'StateArchitectBoardItem',
+        'config': {
+          'activeFilters': {
+            'description': 'Active filters',
+            'label': 'Active Filters',
+            'tier': 'presentation',
+            'type': 'json',
+          },
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'error': {
+            'description': 'Error state (UiError)',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'StateArchitectBoardError',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'pageProp': {
+            'default': 0,
+            'description': 'Current page number',
+            'label': 'Page',
+            'synonyms': 'page',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'pageSize': {
+            'default': 0,
+            'description': 'Number of items per page',
+            'label': 'Page Size',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'searchValue': {
+            'default': 'Search Value',
+            'description': 'Current search query value',
+            'label': 'Search Value',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'selectedIds': {
+            'default': [],
+            'description': 'Currently selected item IDs',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Selected Ids',
+            'tier': 'presentation',
+            'type': '[string]',
+          },
+          'sortBy': {
+            'default': 'Sort By',
+            'description': 'Current sort field',
+            'label': 'Sort By',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'sortDirection': {
+            'default': 'asc',
+            'description': 'Current sort direction',
+            'label': 'Sort Direction',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'stepDurationMs': {
+            'default': 600,
+            'description': 'Playback speed',
+            'label': 'Step Duration Ms',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'totalCount': {
+            'default': 0,
+            'description': 'Total number of items',
+            'label': 'Total Count',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+        },
         'emits': [
           {
-            'event': 'TEST',
             'description': 'Emits UI:{testEvent}',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'TEST',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
           {
-            'event': 'COMPLETE',
             'description': 'Emits UI:{completeEvent} with { success, passedTests }',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'COMPLETE',
             'payloadSchema': [
               {
                 'name': 'success',
-                'type': 'boolean',
                 'required': true,
+                'type': 'boolean',
               },
               {
                 'name': 'passedTests',
-                'type': 'number',
                 'required': true,
+                'type': 'number',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
         ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'StateArchitectBoardItem',
+        'name': 'StateArchitectBoardRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Emits UI:{testEvent}',
               'key': 'TEST',
               'name': 'Test',
-              'description': 'Emits UI:{testEvent}',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'tier': 'essential',
             },
             {
+              'description': 'Emits UI:{completeEvent} with { success, passedTests }',
               'key': 'COMPLETE',
               'name': 'Complete',
-              'description': 'Emits UI:{completeEvent} with { success, passedTests }',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'success',
-                  'type': 'boolean',
                   'required': true,
+                  'type': 'boolean',
                 },
                 {
                   'name': 'passedTests',
-                  'type': 'number',
                   'required': true,
+                  'type': 'number',
                 },
               ],
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -246,143 +358,31 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
+                    'activeFilters': '@config.activeFilters',
                     'className': '@config.className',
                     'completeEvent': 'COMPLETE',
-                    'isLoading': '@config.isLoading',
-                    'stepDurationMs': '@config.stepDurationMs',
-                    'selectedIds': '@config.selectedIds',
                     'entity': '@entity',
-                    'activeFilters': '@config.activeFilters',
+                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'page': '@config.pageProp',
                     'pageSize': '@config.pageSize',
                     'searchValue': '@config.searchValue',
-                    'testEvent': 'TEST',
-                    'page': '@config.pageProp',
+                    'selectedIds': '@config.selectedIds',
                     'sortBy': '@config.sortBy',
-                    'type': 'state-architect-board',
-                    'error': '@config.error',
-                    'totalCount': '@config.totalCount',
                     'sortDirection': '@config.sortDirection',
+                    'stepDurationMs': '@config.stepDurationMs',
+                    'testEvent': 'TEST',
+                    'totalCount': '@config.totalCount',
+                    'type': 'state-architect-board',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'StateArchitectBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'stepDurationMs': {
-            'type': 'number',
-            'default': 600,
-            'label': 'Step Duration Ms',
-            'description': 'Playback speed',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'StateArchitectBoardItem', canonicalName) as never,
     ],
     pages: [

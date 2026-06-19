@@ -67,36 +67,36 @@ export interface StdUiHeaderLogoClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiHeaderConfig {
-  /** Default: `false` */
-  showSearch?: boolean;
-  /** Default: `"mobile"` */
-  variant?: 'mobile' | 'desktop';
-  error?: EntityRow;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `{"src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","alt":"Alt","initials":"Initials"}` */
-  userAvatar?: EntityRow;
-  /** Default: `[{"label":"Label","href":"Href","active":false,"badge":"Badge","icon":"circle"}]` */
-  navigationItems?: EntityRow[];
+  actions?: unknown;
   /** Default: `"KFlow"` */
   brandName?: string;
-  /** Default: `true` */
-  sticky?: boolean;
-  actions?: unknown;
+  /** Default: `""` */
+  className?: string;
+  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `true` */
-  showMenuToggle?: boolean;
-  /** Default: `"Search Placeholder"` */
-  searchPlaceholder?: string;
-  /** Default: `"compact-bar"` */
-  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  logoSrc?: unknown;
   /** Default: `false` */
   isMenuOpen?: boolean;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  logoSrc?: unknown;
+  /** Default: `"compact-bar"` */
+  look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
+  /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","label":"Label"}]` */
+  navigationItems?: EntityRow[];
+  /** Default: `"Search Placeholder"` */
+  searchPlaceholder?: string;
+  /** Default: `true` */
+  showMenuToggle?: boolean;
+  /** Default: `false` */
+  showSearch?: boolean;
+  /** Default: `true` */
+  sticky?: boolean;
+  /** Default: `{"alt":"Alt","initials":"Initials","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
+  userAvatar?: EntityRow;
   /** Default: `"User Name"` */
   userName?: string;
+  /** Default: `"mobile"` */
+  variant?: 'mobile' | 'desktop';
 }
 
 /**

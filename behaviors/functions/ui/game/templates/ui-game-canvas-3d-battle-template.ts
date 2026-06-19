@@ -39,36 +39,36 @@ export type StdUiGameCanvas3dBattleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas3dBattleTemplateConfig {
-  /** Default: `true` */
-  shadows?: boolean;
-  /** Default: `false` */
-  showTurnIndicator?: boolean;
-  /** Default: `"End Turn Event"` */
-  endTurnEvent?: string;
-  /** Default: `"Unit Move Event"` */
-  unitMoveEvent?: string;
-  /** Default: `"Exit Event"` */
-  exitEvent?: string;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `[{"x":1,"z":1}]` */
+  attackTargets?: EntityRow[];
   /** Default: `"#2a1a1a"` */
   backgroundColor?: string;
-  /** Default: `true` */
-  showGrid?: boolean;
-  /** Default: `"Tile Click Event"` */
-  tileClickEvent?: string;
-  /** Default: `[{"z":1,"x":1}]` */
-  attackTargets?: EntityRow[];
-  /** Default: `"Unit Attack Event"` */
-  unitAttackEvent?: string;
-  /** Default: `"Selected Unit Id"` */
-  selectedUnitId?: string;
-  /** Default: `"Unit Click Event"` */
-  unitClickEvent?: string;
-  /** Default: `[{"x":1,"z":1}]` */
-  validMoves?: EntityRow[];
   /** Default: `"perspective"` */
   cameraMode?: 'isometric' | 'perspective' | 'top-down';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"End Turn Event"` */
+  endTurnEvent?: string;
+  /** Default: `"Exit Event"` */
+  exitEvent?: string;
+  /** Default: `"Selected Unit Id"` */
+  selectedUnitId?: string;
+  /** Default: `true` */
+  shadows?: boolean;
+  /** Default: `true` */
+  showGrid?: boolean;
+  /** Default: `false` */
+  showTurnIndicator?: boolean;
+  /** Default: `"Tile Click Event"` */
+  tileClickEvent?: string;
+  /** Default: `"Unit Attack Event"` */
+  unitAttackEvent?: string;
+  /** Default: `"Unit Click Event"` */
+  unitClickEvent?: string;
+  /** Default: `"Unit Move Event"` */
+  unitMoveEvent?: string;
+  /** Default: `[{"x":1,"z":1}]` */
+  validMoves?: EntityRow[];
 }
 
 /**

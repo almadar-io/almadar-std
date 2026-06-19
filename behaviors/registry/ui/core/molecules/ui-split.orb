@@ -1,157 +1,89 @@
 {
-  "name": "ui-split",
-  "version": "1.0.0",
   "description": "Split — UI factory (1:1 with the @almadar/ui split pattern).",
+  "name": "ui-split",
   "orbitals": [
     {
-      "name": "SplitOrbital",
       "entity": {
-        "name": "SplitItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "SplitItem",
+        "persistence": "runtime"
       },
+      "name": "SplitOrbital",
+      "pages": [
+        {
+          "name": "SplitPage",
+          "path": "/split",
+          "traits": [
+            {
+              "ref": "SplitRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "SplitRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "SplitItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "SplitItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "rightClassName": "@config.rightClassName",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Panel A"
-                        },
-                        {
-                          "content": "Panel B",
-                          "type": "typography"
-                        }
-                      ],
-                      "isLoading": "@config.isLoading",
-                      "ratio": "@config.ratio",
-                      "error": "@config.error",
-                      "entity": "SplitItem",
-                      "type": "split",
-                      "gap": "@config.gap",
-                      "reverse": "@config.reverse",
-                      "align": "@config.align",
-                      "stackOnMobile": "@config.stackOnMobile",
-                      "stackBreakpoint": "@config.stackBreakpoint",
-                      "className": "@config.className",
-                      "leftClassName": "@config.leftClassName"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
           "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Custom class name",
-              "tier": "presentation"
-            },
-            "stackBreakpoint": {
-              "type": "string",
-              "default": "md",
-              "label": "Stack Breakpoint",
-              "description": "Breakpoint to switch from stacked to side-by-side",
+            "align": {
+              "default": "stretch",
+              "description": "Align items vertically",
+              "label": "Align",
               "tier": "presentation",
+              "type": "string",
               "values": [
-                "sm",
-                "md",
-                "lg",
-                "xl"
+                "start",
+                "center",
+                "end",
+                "stretch"
               ]
             },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
+            "className": {
+              "default": "",
+              "description": "Custom class name",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
             },
             "error": {
-              "type": "SplitError",
-              "label": "Error",
               "description": "Error state",
-              "tier": "presentation",
+              "label": "Error",
               "properties": {
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
                 "code": {
                   "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
+                  "required": false,
+                  "type": "string"
                 },
                 "message": {
                   "name": "message",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
                 }
-              }
-            },
-            "rightClassName": {
-              "type": "string",
-              "default": "Right Class Name",
-              "label": "Right Class Name",
-              "description": "Right/second panel class name",
-              "tier": "presentation"
+              },
+              "tier": "presentation",
+              "type": "SplitError"
             },
             "gap": {
-              "type": "string",
               "default": "md",
-              "label": "Gap",
               "description": "Gap between panels",
+              "label": "Gap",
               "tier": "presentation",
+              "type": "string",
               "values": [
                 "none",
                 "sm",
@@ -160,12 +92,26 @@
                 "xl"
               ]
             },
-            "ratio": {
-              "type": "string",
-              "default": "1:1",
-              "label": "Ratio",
-              "description": "Size ratio between left and right panels",
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
               "tier": "presentation",
+              "type": "boolean"
+            },
+            "leftClassName": {
+              "default": "Left Class Name",
+              "description": "Left/first panel class name",
+              "label": "Left Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "ratio": {
+              "default": "1:1",
+              "description": "Size ratio between left and right panels",
+              "label": "Ratio",
+              "tier": "presentation",
+              "type": "string",
               "values": [
                 "1:1",
                 "1:2",
@@ -178,55 +124,109 @@
                 "3:2"
               ]
             },
-            "leftClassName": {
-              "type": "string",
-              "default": "Left Class Name",
-              "label": "Left Class Name",
-              "description": "Left/first panel class name",
-              "tier": "presentation"
-            },
-            "align": {
-              "type": "string",
-              "default": "stretch",
-              "label": "Align",
-              "description": "Align items vertically",
+            "reverse": {
+              "default": false,
+              "description": "Reverse the order (right first)",
+              "label": "Reverse",
               "tier": "presentation",
+              "type": "boolean"
+            },
+            "rightClassName": {
+              "default": "Right Class Name",
+              "description": "Right/second panel class name",
+              "label": "Right Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "stackBreakpoint": {
+              "default": "md",
+              "description": "Breakpoint to switch from stacked to side-by-side",
+              "label": "Stack Breakpoint",
+              "tier": "presentation",
+              "type": "string",
               "values": [
-                "start",
-                "center",
-                "end",
-                "stretch"
+                "sm",
+                "md",
+                "lg",
+                "xl"
               ]
             },
-            "reverse": {
-              "type": "boolean",
-              "default": false,
-              "label": "Reverse",
-              "description": "Reverse the order (right first)",
-              "tier": "presentation"
-            },
             "stackOnMobile": {
-              "type": "boolean",
               "default": true,
-              "label": "Stack On Mobile",
               "description": "Stack vertically on mobile",
-              "tier": "presentation"
+              "label": "Stack On Mobile",
+              "tier": "presentation",
+              "type": "boolean"
             }
           },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "SplitPage",
-          "path": "/split",
-          "traits": [
-            {
-              "ref": "SplitRender"
-            }
-          ]
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SplitItem",
+          "name": "SplitRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "SplitItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "@config.align",
+                      "children": [
+                        {
+                          "content": "Panel A",
+                          "type": "typography"
+                        },
+                        {
+                          "content": "Panel B",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "entity": "SplitItem",
+                      "error": "@config.error",
+                      "gap": "@config.gap",
+                      "isLoading": "@config.isLoading",
+                      "leftClassName": "@config.leftClassName",
+                      "ratio": "@config.ratio",
+                      "reverse": "@config.reverse",
+                      "rightClassName": "@config.rightClassName",
+                      "stackBreakpoint": "@config.stackBreakpoint",
+                      "stackOnMobile": "@config.stackOnMobile",
+                      "type": "split"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,297 +1,20 @@
 {
-  "name": "ui-repeatable-form-section",
-  "version": "1.0.0",
   "description": "RepeatableFormSection — UI factory (1:1 with the @almadar/ui repeatable-form-section pattern).",
+  "name": "ui-repeatable-form-section",
   "orbitals": [
     {
-      "name": "RepeatableFormSectionOrbital",
       "entity": {
-        "name": "RepeatableFormSectionItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "RepeatableFormSectionItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "RepeatableFormSectionRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "RepeatableFormSectionItem",
-          "emits": [
-            {
-              "event": "ADD",
-              "description": "Add handler",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "REMOVE",
-              "description": "Remove handler",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "itemId",
-                  "type": "string"
-                },
-                {
-                  "name": "index",
-                  "type": "number"
-                }
-              ]
-            },
-            {
-              "event": "REORDER",
-              "description": "Reorder handler",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "fromIndex",
-                  "type": "number"
-                },
-                {
-                  "name": "toIndex",
-                  "type": "number"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ADD",
-                "name": "Add",
-                "description": "Add handler",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "REMOVE",
-                "name": "Remove",
-                "description": "Remove handler",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "itemId",
-                    "type": "string"
-                  },
-                  {
-                    "name": "index",
-                    "type": "number"
-                  }
-                ]
-              },
-              {
-                "key": "REORDER",
-                "name": "Reorder",
-                "description": "Reorder handler",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "fromIndex",
-                    "type": "number"
-                  },
-                  {
-                    "name": "toIndex",
-                    "type": "number"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "renderItem": [
-                        "fn",
-                        "item",
-                        {
-                          "type": "typography",
-                          "content": "@item.id"
-                        }
-                      ],
-                      "emptyMessage": "@config.emptyMessage",
-                      "trackAddedInState": "@config.trackAddedInState",
-                      "title": "@config.title",
-                      "maxItems": "@config.maxItems",
-                      "addLabel": "@config.addLabel",
-                      "onReorder": "REORDER",
-                      "readOnly": "@config.readOnly",
-                      "onRemove": "REMOVE",
-                      "currentState": "@config.currentState",
-                      "items": "@config.items",
-                      "minItems": "@config.minItems",
-                      "type": "repeatable-form-section",
-                      "sectionType": "@config.sectionType",
-                      "allowReorder": "@config.allowReorder",
-                      "showAuditInfo": "@config.showAuditInfo",
-                      "className": "@config.className",
-                      "onAdd": "ADD"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "minItems": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Min Items",
-              "description": "Minimum items required",
-              "tier": "presentation"
-            },
-            "allowReorder": {
-              "type": "boolean",
-              "default": false,
-              "label": "Allow Reorder",
-              "description": "Allow reordering",
-              "tier": "presentation"
-            },
-            "addLabel": {
-              "type": "string",
-              "default": "Add Label",
-              "label": "Add Label",
-              "description": "Add button label",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Section title",
-              "tier": "presentation"
-            },
-            "trackAddedInState": {
-              "type": "boolean",
-              "default": false,
-              "label": "Track Added In State",
-              "description": "Inspection-specific enhancements",
-              "tier": "presentation"
-            },
-            "maxItems": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max Items",
-              "description": "Maximum items allowed",
-              "tier": "presentation"
-            },
-            "readOnly": {
-              "type": "boolean",
-              "default": false,
-              "label": "Read Only",
-              "description": "Read-only mode",
-              "tier": "presentation"
-            },
-            "showAuditInfo": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Audit Info",
-              "description": "Show audit metadata (addedInState, addedAt)",
-              "tier": "presentation"
-            },
-            "emptyMessage": {
-              "type": "string",
-              "default": "Empty Message",
-              "label": "Empty Message",
-              "description": "Empty state message",
-              "tier": "presentation"
-            },
-            "sectionType": {
-              "type": "string",
-              "default": "Section Type",
-              "label": "Section Type",
-              "description": "Section type identifier",
-              "tier": "presentation"
-            },
-            "currentState": {
-              "type": "string",
-              "default": "Current State",
-              "label": "Current State",
-              "description": "Current inspection state (used when trackAddedInState is true)",
-              "tier": "presentation"
-            },
-            "items": {
-              "type": "[RepeatableFormSectionItemsItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "addedInState": "Added In State",
-                  "addedAt": "Added At"
-                }
-              ],
-              "label": "Items",
-              "description": "Items in the section",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "addedAt": {
-                    "name": "addedAt",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "addedInState": {
-                    "name": "addedInState",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "RepeatableFormSectionOrbital",
       "pages": [
         {
           "name": "RepeatableFormSectionPage",
@@ -302,7 +25,284 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "addLabel": {
+              "default": "Add Label",
+              "description": "Add button label",
+              "label": "Add Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "allowReorder": {
+              "default": false,
+              "description": "Allow reordering",
+              "label": "Allow Reorder",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "currentState": {
+              "default": "Current State",
+              "description": "Current inspection state (used when trackAddedInState is true)",
+              "label": "Current State",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "emptyMessage": {
+              "default": "Empty Message",
+              "description": "Empty state message",
+              "label": "Empty Message",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "items": {
+              "default": [
+                {
+                  "addedAt": "Added At",
+                  "addedInState": "Added In State",
+                  "id": "Id"
+                }
+              ],
+              "description": "Items in the section",
+              "items": {
+                "properties": {
+                  "addedAt": {
+                    "name": "addedAt",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "addedInState": {
+                    "name": "addedInState",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Items",
+              "tier": "presentation",
+              "type": "[RepeatableFormSectionItemsItem]"
+            },
+            "maxItems": {
+              "default": 0.0,
+              "description": "Maximum items allowed",
+              "label": "Max Items",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "minItems": {
+              "default": 0.0,
+              "description": "Minimum items required",
+              "label": "Min Items",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "readOnly": {
+              "default": false,
+              "description": "Read-only mode",
+              "label": "Read Only",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "sectionType": {
+              "default": "Section Type",
+              "description": "Section type identifier",
+              "label": "Section Type",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "showAuditInfo": {
+              "default": false,
+              "description": "Show audit metadata (addedInState, addedAt)",
+              "label": "Show Audit Info",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "title": {
+              "default": "Title",
+              "description": "Section title",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "trackAddedInState": {
+              "default": false,
+              "description": "Inspection-specific enhancements",
+              "label": "Track Added In State",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "Add handler",
+              "event": "ADD",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Remove handler",
+              "event": "REMOVE",
+              "payloadSchema": [
+                {
+                  "name": "itemId",
+                  "type": "string"
+                },
+                {
+                  "name": "index",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Reorder handler",
+              "event": "REORDER",
+              "payloadSchema": [
+                {
+                  "name": "fromIndex",
+                  "type": "number"
+                },
+                {
+                  "name": "toIndex",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "RepeatableFormSectionItem",
+          "name": "RepeatableFormSectionRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Add handler",
+                "key": "ADD",
+                "name": "Add",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Remove handler",
+                "key": "REMOVE",
+                "name": "Remove",
+                "payloadSchema": [
+                  {
+                    "name": "itemId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "index",
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Reorder handler",
+                "key": "REORDER",
+                "name": "Reorder",
+                "payloadSchema": [
+                  {
+                    "name": "fromIndex",
+                    "type": "number"
+                  },
+                  {
+                    "name": "toIndex",
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "addLabel": "@config.addLabel",
+                      "allowReorder": "@config.allowReorder",
+                      "className": "@config.className",
+                      "currentState": "@config.currentState",
+                      "emptyMessage": "@config.emptyMessage",
+                      "items": "@config.items",
+                      "maxItems": "@config.maxItems",
+                      "minItems": "@config.minItems",
+                      "onAdd": "ADD",
+                      "onRemove": "REMOVE",
+                      "onReorder": "REORDER",
+                      "readOnly": "@config.readOnly",
+                      "renderItem": [
+                        "fn",
+                        "item",
+                        {
+                          "content": "@item.id",
+                          "type": "typography"
+                        }
+                      ],
+                      "sectionType": "@config.sectionType",
+                      "showAuditInfo": "@config.showAuditInfo",
+                      "title": "@config.title",
+                      "trackAddedInState": "@config.trackAddedInState",
+                      "type": "repeatable-form-section"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

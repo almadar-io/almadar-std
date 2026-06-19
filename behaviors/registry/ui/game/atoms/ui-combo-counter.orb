@@ -1,111 +1,20 @@
 {
-  "name": "ui-combo-counter",
-  "version": "1.0.0",
   "description": "ComboCounter — UI factory (1:1 with the @almadar/ui combo-counter pattern).",
+  "name": "ui-combo-counter",
   "orbitals": [
     {
-      "name": "ComboCounterOrbital",
       "entity": {
-        "name": "ComboCounterItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ComboCounterItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ComboCounterRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ComboCounterItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "type": "combo-counter",
-                      "multiplier": "@config.multiplier",
-                      "size": "@config.size",
-                      "streak": "@config.streak",
-                      "combo": "@config.combo"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "multiplier": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Multiplier",
-              "description": "Score multiplier",
-              "tier": "presentation"
-            },
-            "streak": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Streak",
-              "description": "Current streak",
-              "tier": "presentation"
-            },
-            "combo": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Combo",
-              "description": "Current combo count",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ComboCounterOrbital",
       "pages": [
         {
           "name": "ComboCounterPage",
@@ -116,7 +25,98 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "combo": {
+              "default": 0.0,
+              "description": "Current combo count",
+              "label": "Combo",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "multiplier": {
+              "default": 0.0,
+              "description": "Score multiplier",
+              "label": "Multiplier",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "streak": {
+              "default": 0.0,
+              "description": "Current streak",
+              "label": "Streak",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ComboCounterItem",
+          "name": "ComboCounterRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "combo": "@config.combo",
+                      "multiplier": "@config.multiplier",
+                      "size": "@config.size",
+                      "streak": "@config.streak",
+                      "type": "combo-counter"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

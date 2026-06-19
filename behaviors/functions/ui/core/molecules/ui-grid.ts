@@ -39,24 +39,24 @@ export type StdUiGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGridConfig {
-  /** Default: `"row"` */
-  flow?: 'row' | 'col' | 'row-dense' | 'col-dense';
-  style?: unknown;
-  /** Default: `"md"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  cols?: string;
-  /** Default: `"none"` */
-  rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"start"` */
-  justifyItems?: 'start' | 'center' | 'end' | 'stretch';
-  /** Default: `"none"` */
-  colGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `0` */
-  rows?: number;
   /** Default: `"start"` */
   alignItems?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   /** Default: `""` */
   className?: string;
+  /** Default: `"none"` */
+  colGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  cols?: string;
+  /** Default: `"row"` */
+  flow?: 'row' | 'col' | 'row-dense' | 'col-dense';
+  /** Default: `"md"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"start"` */
+  justifyItems?: 'start' | 'center' | 'end' | 'stretch';
+  /** Default: `"none"` */
+  rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `0` */
+  rows?: number;
+  style?: unknown;
 }
 
 /**

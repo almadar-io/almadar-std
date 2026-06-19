@@ -54,30 +54,30 @@ export interface StdUiSequencerBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSequencerBoardConfig {
+  activeFilters?: unknown;
+  /** Default: `{}` */
+  categoryColors?: unknown;
+  /** Default: `""` */
+  className?: string;
   error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `0` */
   pageProp?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  /** Default: `{}` */
-  categoryColors?: unknown;
-  /** Default: `1000` */
-  stepDurationMs?: number;
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `0` */
-  totalCount?: number;
-  activeFilters?: unknown;
   /** Default: `[]` */
   selectedIds?: string[];
-  /** Default: `""` */
-  className?: string;
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `1000` */
+  stepDurationMs?: number;
+  /** Default: `0` */
+  totalCount?: number;
 }
 
 /**
@@ -138,8 +138,8 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -150,96 +150,230 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'SequencerBoardRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'SequencerBoardItem',
+        'config': {
+          'activeFilters': {
+            'description': 'Active filters',
+            'label': 'Active Filters',
+            'tier': 'presentation',
+            'type': 'json',
+          },
+          'categoryColors': {
+            'default': {},
+            'description': 'Category → color mapping',
+            'items': {
+              'properties': {
+                'bg': {
+                  'name': 'bg',
+                  'required': true,
+                  'type': 'string',
+                },
+                'border': {
+                  'name': 'border',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Category Colors',
+            'tier': 'presentation',
+            'type': 'Map<string,SequencerBoardCategoryColorsValue>',
+          },
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'error': {
+            'description': 'Error state (UiError)',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'SequencerBoardError',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'pageProp': {
+            'default': 0,
+            'description': 'Current page number',
+            'label': 'Page',
+            'synonyms': 'page',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'pageSize': {
+            'default': 0,
+            'description': 'Number of items per page',
+            'label': 'Page Size',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'searchValue': {
+            'default': 'Search Value',
+            'description': 'Current search query value',
+            'label': 'Search Value',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'selectedIds': {
+            'default': [],
+            'description': 'Currently selected item IDs',
+            'items': {
+              'type': 'string',
+            },
+            'label': 'Selected Ids',
+            'tier': 'presentation',
+            'type': '[string]',
+          },
+          'sortBy': {
+            'default': 'Sort By',
+            'description': 'Current sort field',
+            'label': 'Sort By',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'sortDirection': {
+            'default': 'asc',
+            'description': 'Current sort direction',
+            'label': 'Sort Direction',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'asc',
+              'desc',
+            ],
+          },
+          'stepDurationMs': {
+            'default': 1000,
+            'description': 'Playback speed in ms per step',
+            'label': 'Step Duration Ms',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'totalCount': {
+            'default': 0,
+            'description': 'Total number of items',
+            'label': 'Total Count',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+        },
         'emits': [
           {
-            'event': 'PLAY',
             'description': 'Emits UI:{playEvent} with { sequence: string[] }',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'PLAY',
             'payloadSchema': [
               {
                 'name': 'sequence',
-                'type': '[object]',
                 'required': true,
+                'type': '[object]',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
           {
-            'event': 'COMPLETE',
             'description': 'Emits UI:{completeEvent} with { success: boolean }',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'COMPLETE',
             'payloadSchema': [
               {
                 'name': 'success',
-                'type': 'boolean',
                 'required': true,
+                'type': 'boolean',
               },
               {
                 'name': 'sequence',
-                'type': '[object]',
                 'required': true,
+                'type': '[object]',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
         ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'SequencerBoardItem',
+        'name': 'SequencerBoardRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Emits UI:{playEvent} with { sequence: string[] }',
               'key': 'PLAY',
               'name': 'Play',
-              'description': 'Emits UI:{playEvent} with { sequence: string[] }',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'sequence',
-                  'type': '[object]',
                   'required': true,
+                  'type': '[object]',
                 },
               ],
+              'tier': 'essential',
             },
             {
+              'description': 'Emits UI:{completeEvent} with { success: boolean }',
               'key': 'COMPLETE',
               'name': 'Complete',
-              'description': 'Emits UI:{completeEvent} with { success: boolean }',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'success',
-                  'type': 'boolean',
                   'required': true,
+                  'type': 'boolean',
                 },
                 {
                   'name': 'sequence',
-                  'type': '[object]',
                   'required': true,
+                  'type': '[object]',
                 },
               ],
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -250,166 +384,32 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'render-ui',
                   'main',
                   {
-                    'sortBy': '@config.sortBy',
-                    'isLoading': '@config.isLoading',
                     'activeFilters': '@config.activeFilters',
-                    'className': '@config.className',
-                    'entity': '@entity',
-                    'completeEvent': 'COMPLETE',
-                    'selectedIds': '@config.selectedIds',
-                    'pageSize': '@config.pageSize',
-                    'stepDurationMs': '@config.stepDurationMs',
                     'categoryColors': '@config.categoryColors',
-                    'sortDirection': '@config.sortDirection',
-                    'playEvent': 'PLAY',
+                    'className': '@config.className',
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
                     'error': '@config.error',
+                    'isLoading': '@config.isLoading',
                     'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'playEvent': 'PLAY',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'stepDurationMs': '@config.stepDurationMs',
                     'totalCount': '@config.totalCount',
                     'type': 'sequencer-board',
-                    'searchValue': '@config.searchValue',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'error': {
-            'type': 'SequencerBoardError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
-            'tier': 'presentation',
-            'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
-            'tier': 'presentation',
-          },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
-            'tier': 'presentation',
-            'values': [
-              'asc',
-              'desc',
-            ],
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'categoryColors': {
-            'type': 'Map<string,SequencerBoardCategoryColorsValue>',
-            'default': {},
-            'label': 'Category Colors',
-            'description': 'Category → color mapping',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'bg': {
-                  'name': 'bg',
-                  'type': 'string',
-                  'required': true,
-                },
-                'border': {
-                  'name': 'border',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
-            },
-          },
-          'stepDurationMs': {
-            'type': 'number',
-            'default': 1000,
-            'label': 'Step Duration Ms',
-            'description': 'Playback speed in ms per step',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'selectedIds': {
-            'type': '[string]',
-            'default': [],
-            'label': 'Selected Ids',
-            'description': 'Currently selected item IDs',
-            'tier': 'presentation',
-            'items': {
-              'type': 'string',
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'SequencerBoardItem', canonicalName) as never,
     ],
     pages: [

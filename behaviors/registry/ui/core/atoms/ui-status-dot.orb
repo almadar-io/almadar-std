@@ -1,119 +1,20 @@
 {
-  "name": "ui-status-dot",
-  "version": "1.0.0",
   "description": "StatusDot — UI factory (1:1 with the @almadar/ui status-dot pattern).",
+  "name": "ui-status-dot",
   "orbitals": [
     {
-      "name": "StatusDotOrbital",
       "entity": {
-        "name": "StatusDotItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "StatusDotItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "StatusDotRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "StatusDotItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "label": "@config.label",
-                      "pulse": "@config.pulse",
-                      "type": "status-dot",
-                      "className": "@config.className",
-                      "status": "@config.status",
-                      "size": "@config.size"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "status": {
-              "type": "string",
-              "default": "offline",
-              "label": "Status",
-              "description": "Status determines the dot color",
-              "tier": "presentation",
-              "values": [
-                "online",
-                "offline",
-                "away",
-                "busy",
-                "warning",
-                "critical"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Dot size",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Accessible label (rendered as sr-only text)",
-              "tier": "presentation"
-            },
-            "pulse": {
-              "type": "boolean",
-              "default": false,
-              "label": "Pulse",
-              "description": "Enable pulse animation for active/critical states",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "StatusDotOrbital",
       "pages": [
         {
           "name": "StatusDotPage",
@@ -124,7 +25,106 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the root element.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Accessible label (rendered as sr-only text)",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "pulse": {
+              "default": false,
+              "description": "Enable pulse animation for active/critical states",
+              "label": "Pulse",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "size": {
+              "default": "md",
+              "description": "Dot size",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "status": {
+              "default": "offline",
+              "description": "Status determines the dot color",
+              "label": "Status",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "online",
+                "offline",
+                "away",
+                "busy",
+                "warning",
+                "critical"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "StatusDotItem",
+          "name": "StatusDotRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "label": "@config.label",
+                      "pulse": "@config.pulse",
+                      "size": "@config.size",
+                      "status": "@config.status",
+                      "type": "status-dot"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

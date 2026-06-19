@@ -41,10 +41,10 @@ export type StdUiThemeToggleEventKey = 'INIT';
 export interface StdUiThemeToggleConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `false` */
   showLabel?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

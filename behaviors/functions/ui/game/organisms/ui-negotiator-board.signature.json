@@ -7,7 +7,48 @@
     "entities": [
       {
         "name": "NegotiatorBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "round",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "targetScore",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "maxRounds",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "opponentStrategy",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "actions",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "payoffMatrix",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -15,10 +56,31 @@
       {
         "name": "NegotiatorBoardRender",
         "emittedEvents": [
+          "PLAY_ROUND",
+          "FINISH",
+          "PLAY_AGAIN",
           "COMPLETE"
         ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "PLAY_ROUND",
+            "direction": "emit",
+            "description": "Emits one negotiation round; the UI resolves the payoff before emitting.",
+            "tier": "essential"
+          },
+          {
+            "name": "FINISH",
+            "direction": "emit",
+            "description": "Emits when all rounds are spent; routes to win/lose by score vs target.",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "essential"
+          },
           {
             "name": "COMPLETE",
             "direction": "emit",
@@ -28,9 +90,41 @@
           {
             "name": "INIT",
             "direction": "listen"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
           }
         ],
         "overridableConfigKeys": [
+          {
+            "key": "actions",
+            "type": "[NegotiatorBoardActionsItem]",
+            "default": [],
+            "label": "Actions",
+            "description": "Selectable round actions (id/label/description).",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
           {
             "key": "activeFilters",
             "type": "json",
@@ -53,14 +147,14 @@
             "description": "Error state (UiError)",
             "tier": "presentation",
             "properties": {
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
-              },
               "code": {
                 "name": "code",
                 "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
                 "type": "string"
               },
               "name": {
@@ -84,6 +178,22 @@
             "tier": "presentation"
           },
           {
+            "key": "maxRounds",
+            "type": "number",
+            "default": 5,
+            "label": "Max Rounds",
+            "description": "Number of negotiation rounds before the game finishes.",
+            "tier": "domain"
+          },
+          {
+            "key": "opponentStrategy",
+            "type": "string",
+            "default": "tit-for-tat",
+            "label": "Opponent Strategy",
+            "description": "AI opponent strategy (always-cooperate | always-defect | tit-for-tat | random).",
+            "tier": "domain"
+          },
+          {
             "key": "pageProp",
             "type": "number",
             "default": 0,
@@ -99,6 +209,39 @@
             "label": "Page Size",
             "description": "Number of items per page",
             "tier": "presentation"
+          },
+          {
+            "key": "payoffMatrix",
+            "type": "[NegotiatorBoardPayoffItem]",
+            "default": [],
+            "label": "Payoff Matrix",
+            "description": "Payoff-matrix cells (playerAction/opponentAction/playerPayoff/opponentPayoff).",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "opponentAction": {
+                  "name": "opponentAction",
+                  "required": true,
+                  "type": "string"
+                },
+                "opponentPayoff": {
+                  "name": "opponentPayoff",
+                  "required": true,
+                  "type": "number"
+                },
+                "playerAction": {
+                  "name": "playerAction",
+                  "required": true,
+                  "type": "string"
+                },
+                "playerPayoff": {
+                  "name": "playerPayoff",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "searchValue",
@@ -140,6 +283,14 @@
             ]
           },
           {
+            "key": "targetScore",
+            "type": "number",
+            "default": 10,
+            "label": "Target Score",
+            "description": "Total payoff the player must reach to win.",
+            "tier": "domain"
+          },
+          {
             "key": "totalCount",
             "type": "number",
             "default": 0,
@@ -152,7 +303,16 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "actions",
+            "maxRounds",
+            "opponentStrategy",
+            "payoffMatrix",
+            "result",
+            "round",
+            "score",
+            "targetScore"
+          ]
         }
       }
     ],
@@ -164,7 +324,10 @@
       }
     ],
     "emittedEvents": [
-      "COMPLETE"
+      "COMPLETE",
+      "FINISH",
+      "PLAY_AGAIN",
+      "PLAY_ROUND"
     ],
     "listenedEvents": []
   }

@@ -60,18 +60,18 @@ export interface StdUiLightboxOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiLightboxConfig {
-  /** Default: `0` */
-  currentIndex?: number;
-  /** Default: `true` */
-  showCounter?: boolean;
-  /** Default: `"Close Action"` */
-  closeAction?: string;
-  /** Default: `false` */
-  isOpen?: boolean;
-  /** Default: `[{"src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","alt":"Alt","caption":"Caption"}]` */
-  images?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `"Close Action"` */
+  closeAction?: string;
+  /** Default: `0` */
+  currentIndex?: number;
+  /** Default: `[{"alt":"Alt","caption":"Caption","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}]` */
+  images?: EntityRow[];
+  /** Default: `false` */
+  isOpen?: boolean;
+  /** Default: `true` */
+  showCounter?: boolean;
 }
 
 /**

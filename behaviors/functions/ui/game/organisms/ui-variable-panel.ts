@@ -39,10 +39,10 @@ export type StdUiVariablePanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiVariablePanelConfig {
-  /** Default: `"Entity Name"` */
-  entityName?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Entity Name"` */
+  entityName?: string;
 }
 
 /**
@@ -103,8 +103,8 @@ export function stdUiVariablePanelVariablePanelOrbital(params: StdUiVariablePane
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -115,32 +115,46 @@ export function stdUiVariablePanelVariablePanelOrbital(params: StdUiVariablePane
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'VariablePanelRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'entityName': {
+            'default': 'Entity Name',
+            'description': 'Entity name',
+            'label': 'Entity Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
         'linkedEntity': 'VariablePanelItem',
+        'name': 'VariablePanelRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -151,33 +165,19 @@ export function stdUiVariablePanelVariablePanelOrbital(params: StdUiVariablePane
                   'render-ui',
                   'main',
                   {
-                    'variables': '@entity',
                     'className': '@config.className',
-                    'type': 'variable-panel',
                     'entityName': '@config.entityName',
+                    'type': 'variable-panel',
+                    'variables': '@entity',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'entityName': {
-            'type': 'string',
-            'default': 'Entity Name',
-            'label': 'Entity Name',
-            'description': 'Entity name',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'VariablePanelItem', canonicalName) as never,
     ],
     pages: [

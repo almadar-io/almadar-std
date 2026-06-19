@@ -1,236 +1,20 @@
 {
-  "name": "ui-version-diff",
-  "version": "1.0.0",
   "description": "VersionDiff — UI factory (1:1 with the @almadar/ui version-diff pattern).",
+  "name": "ui-version-diff",
   "orbitals": [
     {
-      "name": "VersionDiffOrbital",
       "entity": {
-        "name": "VersionDiffItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "VersionDiffItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "VersionDiffRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "VersionDiffItem",
-          "emits": [
-            {
-              "event": "SELECT_BEFORE",
-              "description": "Called when the user picks a different 'before' revision.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "SELECT_AFTER",
-              "description": "Called when the user picks a different 'after' revision.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "REVERT",
-              "description": "Called when the user clicks the revert button (passes the 'before' id).",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "SELECT_BEFORE",
-                "name": "Select Before",
-                "description": "Called when the user picks a different 'before' revision.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SELECT_AFTER",
-                "name": "Select After",
-                "description": "Called when the user picks a different 'after' revision.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "REVERT",
-                "name": "Revert",
-                "description": "Called when the user clicks the revert button (passes the 'before' id).",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "afterId": "@config.afterId",
-                      "view": "@config.view",
-                      "onSelectBefore": "SELECT_BEFORE",
-                      "language": "@config.language",
-                      "selectBeforeEvent": "SELECT_BEFORE",
-                      "revisions": "@config.revisions",
-                      "onRevert": "REVERT",
-                      "revertEvent": "REVERT",
-                      "className": "@config.className",
-                      "type": "version-diff",
-                      "onSelectAfter": "SELECT_AFTER",
-                      "beforeId": "@config.beforeId",
-                      "selectAfterEvent": "SELECT_AFTER"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "view": {
-              "type": "string",
-              "default": "side-by-side",
-              "label": "View",
-              "description": "Display mode.",
-              "tier": "presentation",
-              "values": [
-                "side-by-side",
-                "inline"
-              ]
-            },
-            "revisions": {
-              "type": "[VersionDiffRevisionsItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "label": "Label",
-                  "author": "Author",
-                  "timestamp": "Timestamp",
-                  "content": "Content"
-                }
-              ],
-              "label": "Revisions",
-              "description": "All available revisions (at least 2). Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.revisions`). Narrowed to `[]` internally when the value isn't an array.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "author": {
-                    "name": "author",
-                    "type": "string",
-                    "required": false
-                  },
-                  "timestamp": {
-                    "name": "timestamp",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "afterId": {
-              "type": "string",
-              "default": "After Id",
-              "label": "After Id",
-              "description": "Currently selected 'after' revision id.",
-              "tier": "presentation"
-            },
-            "beforeId": {
-              "type": "string",
-              "default": "Before Id",
-              "label": "Before Id",
-              "description": "Currently selected 'before' revision id.",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes.",
-              "tier": "presentation"
-            },
-            "language": {
-              "type": "string",
-              "default": "Language",
-              "label": "Language",
-              "description": "Language label (informational).",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "VersionDiffOrbital",
       "pages": [
         {
           "name": "VersionDiffPage",
@@ -241,7 +25,223 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "afterId": {
+              "default": "After Id",
+              "description": "Currently selected 'after' revision id.",
+              "label": "After Id",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "beforeId": {
+              "default": "Before Id",
+              "description": "Currently selected 'before' revision id.",
+              "label": "Before Id",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "language": {
+              "default": "Language",
+              "description": "Language label (informational).",
+              "label": "Language",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "revisions": {
+              "default": [
+                {
+                  "author": "Author",
+                  "content": "Content",
+                  "id": "Id",
+                  "label": "Label",
+                  "timestamp": "Timestamp"
+                }
+              ],
+              "description": "All available revisions (at least 2). Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.revisions`). Narrowed to `[]` internally when the value isn't an array.",
+              "items": {
+                "properties": {
+                  "author": {
+                    "name": "author",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "content": {
+                    "name": "content",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "timestamp": {
+                    "name": "timestamp",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Revisions",
+              "tier": "presentation",
+              "type": "[VersionDiffRevisionsItem]"
+            },
+            "view": {
+              "default": "side-by-side",
+              "description": "Display mode.",
+              "label": "View",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "side-by-side",
+                "inline"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Called when the user picks a different 'before' revision.",
+              "event": "SELECT_BEFORE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Called when the user picks a different 'after' revision.",
+              "event": "SELECT_AFTER",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Called when the user clicks the revert button (passes the 'before' id).",
+              "event": "REVERT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "VersionDiffItem",
+          "name": "VersionDiffRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Called when the user picks a different 'before' revision.",
+                "key": "SELECT_BEFORE",
+                "name": "Select Before",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Called when the user picks a different 'after' revision.",
+                "key": "SELECT_AFTER",
+                "name": "Select After",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Called when the user clicks the revert button (passes the 'before' id).",
+                "key": "REVERT",
+                "name": "Revert",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "afterId": "@config.afterId",
+                      "beforeId": "@config.beforeId",
+                      "className": "@config.className",
+                      "language": "@config.language",
+                      "onRevert": "REVERT",
+                      "onSelectAfter": "SELECT_AFTER",
+                      "onSelectBefore": "SELECT_BEFORE",
+                      "revertEvent": "REVERT",
+                      "revisions": "@config.revisions",
+                      "selectAfterEvent": "SELECT_AFTER",
+                      "selectBeforeEvent": "SELECT_BEFORE",
+                      "type": "version-diff",
+                      "view": "@config.view"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -39,20 +39,20 @@ export type StdUiFormActionsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFormActionsConfig {
-  /** Default: `"default"` */
-  variant?: 'default' | 'segmented' | 'toggle';
-  /** Default: `[{"label":"Label","variant":"Variant","navigatesTo":"Navigates To","actionType":"Action Type"}]` */
-  secondary?: EntityRow[];
-  /** Default: `"right-aligned-buttons"` */
-  look?: 'right-aligned-buttons' | 'floating-bar' | 'inline-row' | 'dropdown-menu' | 'command-palette-trigger';
   /** Default: `""` */
   className?: string;
-  /** Default: `{"variant":"Variant","label":"Label","actionType":"Action Type","navigatesTo":"Navigates To"}` */
-  primary?: EntityRow;
-  /** Default: `[{"type":"checkbox","label":"Label","field":"Field","options":["Item"]}]` */
+  /** Default: `[{"field":"Field","label":"Label","options":["Item"],"type":"checkbox"}]` */
   filters?: EntityRow[];
+  /** Default: `"right-aligned-buttons"` */
+  look?: 'right-aligned-buttons' | 'floating-bar' | 'inline-row' | 'dropdown-menu' | 'command-palette-trigger';
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
+  /** Default: `{"actionType":"Action Type","label":"Label","navigatesTo":"Navigates To","variant":"Variant"}` */
+  primary?: EntityRow;
+  /** Default: `[{"actionType":"Action Type","label":"Label","navigatesTo":"Navigates To","variant":"Variant"}]` */
+  secondary?: EntityRow[];
+  /** Default: `"default"` */
+  variant?: 'default' | 'segmented' | 'toggle';
 }
 
 /**

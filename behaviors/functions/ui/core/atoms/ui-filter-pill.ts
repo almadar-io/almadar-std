@@ -55,8 +55,6 @@ export interface StdUiFilterPillClickPayload {
 export interface StdUiFilterPillConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
   /** Default: `"circle"` */
   icon?: unknown;
   /** Default: `"Label"` */
@@ -65,6 +63,8 @@ export interface StdUiFilterPillConfig {
   removable?: boolean;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 }
 
 /**

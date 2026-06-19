@@ -60,16 +60,16 @@ export interface StdUiCounterTemplateResetPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCounterTemplateConfig {
-  /** Default: `true` */
-  showReset?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `true` */
+  showReset?: boolean;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `"Counter"` */
   title?: string;
   /** Default: `"minimal"` */
   variant?: 'minimal' | 'standard' | 'full';
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
 }
 
 /**

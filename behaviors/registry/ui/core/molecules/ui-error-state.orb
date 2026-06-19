@@ -1,126 +1,20 @@
 {
-  "name": "ui-error-state",
-  "version": "1.0.0",
   "description": "ErrorState — UI factory (1:1 with the @almadar/ui error-state pattern).",
+  "name": "ui-error-state",
   "orbitals": [
     {
-      "name": "ErrorStateOrbital",
       "entity": {
-        "name": "ErrorStateItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ErrorStateItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ErrorStateRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ErrorStateItem",
-          "emits": [
-            {
-              "event": "RETRY",
-              "description": "onRetry prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "RETRY",
-                "name": "Retry",
-                "description": "onRetry prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "message": "@config.message",
-                      "retryEvent": "RETRY",
-                      "className": "@config.className",
-                      "description": "@config.description",
-                      "onRetry": "RETRY",
-                      "type": "error-state",
-                      "title": "@config.title"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "title prop",
-              "tier": "presentation"
-            },
-            "description": {
-              "type": "string",
-              "default": "Description",
-              "label": "Description",
-              "description": "Alias for message (schema compatibility)",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "message": {
-              "type": "string",
-              "default": "Message",
-              "label": "Message",
-              "description": "Error message to display",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ErrorStateOrbital",
       "pages": [
         {
           "name": "ErrorStatePage",
@@ -131,7 +25,113 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "description": {
+              "default": "Description",
+              "description": "Alias for message (schema compatibility)",
+              "label": "Description",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "message": {
+              "default": "Message",
+              "description": "Error message to display",
+              "label": "Message",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Title",
+              "description": "title prop",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "onRetry prop",
+              "event": "RETRY",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ErrorStateItem",
+          "name": "ErrorStateRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "onRetry prop",
+                "key": "RETRY",
+                "name": "Retry",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "description": "@config.description",
+                      "message": "@config.message",
+                      "onRetry": "RETRY",
+                      "retryEvent": "RETRY",
+                      "title": "@config.title",
+                      "type": "error-state"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

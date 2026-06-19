@@ -1,149 +1,20 @@
 {
-  "name": "ui-icon",
-  "version": "1.0.0",
   "description": "Icon — UI factory (1:1 with the @almadar/ui icon pattern).",
+  "name": "ui-icon",
   "orbitals": [
     {
-      "name": "IconOrbital",
       "entity": {
-        "name": "IconItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "IconItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "IconRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "IconItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "icon": "@config.icon",
-                      "size": "@config.size",
-                      "strokeWidth": "@config.strokeWidth",
-                      "style": "@config.style",
-                      "color": "@config.color",
-                      "className": "@config.className",
-                      "type": "icon",
-                      "name": "@config.name",
-                      "animation": "@config.animation"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "color": {
-              "type": "string",
-              "default": "primary",
-              "label": "Color",
-              "description": "Semantic palette token or an arbitrary Tailwind color class.",
-              "tier": "presentation",
-              "values": [
-                "primary",
-                "secondary",
-                "success",
-                "warning",
-                "error",
-                "muted"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "strokeWidth": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Stroke Width",
-              "description": "Icon stroke width - uses theme default if not specified",
-              "tier": "presentation"
-            },
-            "name": {
-              "type": "string",
-              "default": "Name",
-              "label": "Name",
-              "description": "Icon name as string (resolved from iconMap)",
-              "tier": "presentation"
-            },
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Lucide icon component (preferred for type-safe usage), OR a canonical kebab-case icon name string — a string is treated exactly like `name` so trait/factory authors can pass an icon by name through the `icon` prop.",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size of the icon",
-              "tier": "presentation",
-              "values": [
-                "xs",
-                "sm",
-                "md",
-                "lg",
-                "xl"
-              ]
-            },
-            "style": {
-              "type": "json",
-              "label": "Style",
-              "description": "Inline style",
-              "tier": "presentation"
-            },
-            "animation": {
-              "type": "string",
-              "default": "none",
-              "label": "Animation",
-              "description": "Animation type",
-              "tier": "presentation",
-              "values": [
-                "spin",
-                "pulse",
-                "none"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "IconOrbital",
       "pages": [
         {
           "name": "IconPage",
@@ -154,7 +25,136 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "animation": {
+              "default": "none",
+              "description": "Animation type",
+              "label": "Animation",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "spin",
+                "pulse",
+                "none"
+              ]
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "color": {
+              "default": "primary",
+              "description": "Semantic palette token or an arbitrary Tailwind color class.",
+              "label": "Color",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "primary",
+                "secondary",
+                "success",
+                "warning",
+                "error",
+                "muted"
+              ]
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Lucide icon component (preferred for type-safe usage), OR a canonical kebab-case icon name string — a string is treated exactly like `name` so trait/factory authors can pass an icon by name through the `icon` prop.",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "name": {
+              "default": "Name",
+              "description": "Icon name as string (resolved from iconMap)",
+              "label": "Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size of the icon",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "strokeWidth": {
+              "default": 0.0,
+              "description": "Icon stroke width - uses theme default if not specified",
+              "label": "Stroke Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "style": {
+              "description": "Inline style",
+              "label": "Style",
+              "tier": "presentation",
+              "type": "json"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "IconItem",
+          "name": "IconRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animation": "@config.animation",
+                      "className": "@config.className",
+                      "color": "@config.color",
+                      "icon": "@config.icon",
+                      "name": "@config.name",
+                      "size": "@config.size",
+                      "strokeWidth": "@config.strokeWidth",
+                      "style": "@config.style",
+                      "type": "icon"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

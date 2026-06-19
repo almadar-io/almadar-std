@@ -1,164 +1,20 @@
 {
-  "name": "ui-vote-stack",
-  "version": "1.0.0",
   "description": "VoteStack — UI factory (1:1 with the @almadar/ui vote-stack pattern).",
+  "name": "ui-vote-stack",
   "orbitals": [
     {
-      "name": "VoteStackOrbital",
       "entity": {
-        "name": "VoteStackItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "VoteStackItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "VoteStackRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "VoteStackItem",
-          "emits": [
-            {
-              "event": "VOTE",
-              "description": "Toggle handler. Clicking the same arrow clears (emits null).",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "next",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "VOTE",
-                "name": "Vote",
-                "description": "Toggle handler. Clicking the same arrow clears (emits null).",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "next",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "@config.size",
-                      "onVote": "VOTE",
-                      "type": "vote-stack",
-                      "userVote": "@config.userVote",
-                      "label": "@config.label",
-                      "variant": "@config.variant",
-                      "count": "@config.count",
-                      "voteEvent": "VOTE",
-                      "disabled": "@config.disabled",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "count": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Count",
-              "description": "Current tally",
-              "tier": "presentation"
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disabled state",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "variant": {
-              "type": "string",
-              "default": "vertical",
-              "label": "Variant",
-              "description": "Layout orientation. `vertical` = forum/Q&A column; `horizontal` = compact row.",
-              "tier": "presentation",
-              "values": [
-                "vertical",
-                "horizontal"
-              ]
-            },
-            "userVote": {
-              "type": "string",
-              "default": "up",
-              "label": "User Vote",
-              "description": "Current user's vote (null = no vote cast)",
-              "tier": "presentation",
-              "values": [
-                "up",
-                "down",
-                "none"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Accessible label for the group",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "VoteStackOrbital",
       "pages": [
         {
           "name": "VoteStackPage",
@@ -169,7 +25,151 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "count": {
+              "default": 0.0,
+              "description": "Current tally",
+              "label": "Count",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "disabled": {
+              "default": false,
+              "description": "Disabled state",
+              "label": "Disabled",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Accessible label for the group",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "userVote": {
+              "default": "up",
+              "description": "Current user's vote (null = no vote cast)",
+              "label": "User Vote",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "up",
+                "down",
+                "none"
+              ]
+            },
+            "variant": {
+              "default": "vertical",
+              "description": "Layout orientation. `vertical` = forum/Q&A column; `horizontal` = compact row.",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "vertical",
+                "horizontal"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Toggle handler. Clicking the same arrow clears (emits null).",
+              "event": "VOTE",
+              "payloadSchema": [
+                {
+                  "name": "next",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "VoteStackItem",
+          "name": "VoteStackRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Toggle handler. Clicking the same arrow clears (emits null).",
+                "key": "VOTE",
+                "name": "Vote",
+                "payloadSchema": [
+                  {
+                    "name": "next",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "count": "@config.count",
+                      "disabled": "@config.disabled",
+                      "label": "@config.label",
+                      "onVote": "VOTE",
+                      "size": "@config.size",
+                      "type": "vote-stack",
+                      "userVote": "@config.userVote",
+                      "variant": "@config.variant",
+                      "voteEvent": "VOTE"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

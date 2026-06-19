@@ -1,211 +1,20 @@
 {
-  "name": "ui-avatar",
-  "version": "1.0.0",
   "description": "Avatar — UI factory (1:1 with the @almadar/ui avatar pattern).",
+  "name": "ui-avatar",
   "orbitals": [
     {
-      "name": "AvatarOrbital",
       "entity": {
-        "name": "AvatarItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "AvatarItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "AvatarRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "AvatarItem",
-          "emits": [
-            {
-              "event": "CLICK",
-              "description": "Click handler",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "ACTION",
-              "description": "Declarative event name — emits UI:{action} via eventBus on click",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CLICK",
-                "name": "Click",
-                "description": "Click handler",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event name — emits UI:{action} via eventBus on click",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "src": "@config.src",
-                      "initials": "@config.initials",
-                      "icon": "@config.icon",
-                      "name": "@config.name",
-                      "badge": "@config.badge",
-                      "size": "@config.size",
-                      "className": "@config.className",
-                      "onClick": "CLICK",
-                      "action": "ACTION",
-                      "type": "avatar",
-                      "actionPayload": "@config.actionPayload",
-                      "alt": "@config.alt",
-                      "status": "@config.status"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "actionPayload": {
-              "type": "json",
-              "default": {},
-              "label": "Action Payload",
-              "description": "Payload to include with the action event",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size of the avatar",
-              "tier": "presentation",
-              "values": [
-                "xs",
-                "sm",
-                "md",
-                "lg",
-                "xl"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "name": {
-              "type": "string",
-              "default": "Name",
-              "label": "Name",
-              "description": "Full name - initials will be generated automatically",
-              "tier": "presentation"
-            },
-            "initials": {
-              "type": "string",
-              "default": "Initials",
-              "label": "Initials",
-              "description": "Initials to display (e.g., 'JD' for John Doe) If not provided but name is, initials will be auto-generated",
-              "tier": "presentation"
-            },
-            "status": {
-              "type": "string",
-              "default": "online",
-              "label": "Status",
-              "description": "Status indicator",
-              "tier": "presentation",
-              "values": [
-                "online",
-                "offline",
-                "away",
-                "busy"
-              ]
-            },
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Icon to display when no image or initials. Accepts a Lucide component directly, or a canonical kebab-case icon name string (resolved via `resolveIcon`) so trait/factory authors can pass an icon by name.",
-              "tier": "presentation"
-            },
-            "badge": {
-              "type": "string",
-              "default": "Badge",
-              "label": "Badge",
-              "description": "Badge content (e.g., notification count)",
-              "tier": "presentation"
-            },
-            "src": {
-              "type": "asset",
-              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
-              "label": "Src",
-              "description": "Image source URL",
-              "tier": "presentation"
-            },
-            "alt": {
-              "type": "string",
-              "default": "Alt",
-              "label": "Alt",
-              "description": "Alt text for the image",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "AvatarOrbital",
       "pages": [
         {
           "name": "AvatarPage",
@@ -216,7 +25,198 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actionPayload": {
+              "default": {},
+              "description": "Payload to include with the action event",
+              "label": "Action Payload",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "alt": {
+              "default": "Alt",
+              "description": "Alt text for the image",
+              "label": "Alt",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "badge": {
+              "default": "Badge",
+              "description": "Badge content (e.g., notification count)",
+              "label": "Badge",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Icon to display when no image or initials. Accepts a Lucide component directly, or a canonical kebab-case icon name string (resolved via `resolveIcon`) so trait/factory authors can pass an icon by name.",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "initials": {
+              "default": "Initials",
+              "description": "Initials to display (e.g., 'JD' for John Doe) If not provided but name is, initials will be auto-generated",
+              "label": "Initials",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "name": {
+              "default": "Name",
+              "description": "Full name - initials will be generated automatically",
+              "label": "Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size of the avatar",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "src": {
+              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+              "description": "Image source URL",
+              "label": "Src",
+              "tier": "presentation",
+              "type": "asset"
+            },
+            "status": {
+              "default": "online",
+              "description": "Status indicator",
+              "label": "Status",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "online",
+                "offline",
+                "away",
+                "busy"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Click handler",
+              "event": "CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Declarative event name — emits UI:{action} via eventBus on click",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AvatarItem",
+          "name": "AvatarRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Click handler",
+                "key": "CLICK",
+                "name": "Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Declarative event name — emits UI:{action} via eventBus on click",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "actionPayload": "@config.actionPayload",
+                      "alt": "@config.alt",
+                      "badge": "@config.badge",
+                      "className": "@config.className",
+                      "icon": "@config.icon",
+                      "initials": "@config.initials",
+                      "name": "@config.name",
+                      "onClick": "CLICK",
+                      "size": "@config.size",
+                      "src": "@config.src",
+                      "status": "@config.status",
+                      "type": "avatar"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }
