@@ -1,5 +1,5 @@
 app ui-classifier-board "1.0.0"
-"ClassifierBoard — UI factory (1:1 with the @almadar/ui classifier-board pattern)."
+"ClassifierBoard — guarded classification puzzle: assign items to categories, win when every item's assigned category equals its correct category."
 orbital ClassifierBoardOrbital {
   type ClassifierBoardError = {
     message : string!
@@ -7,17 +7,33 @@ orbital ClassifierBoardOrbital {
     code : string
     stack : string
   }
+  type ClassifierBoardItemsItem = {
+    id : string!
+    label : string
+    correctCategory : string!
+    assignedCategory : string
+  }
+  type ClassifierBoardCategoriesItem = {
+    id : string!
+    label : string
+    color : string
+  }
 
   entity ClassifierBoardItem [runtime] {
     id : string!
+    items : [ClassifierBoardItemsItem]
+    attempts : number = 0
+    result : "none" | "win" = none
   }
 
   trait ClassifierBoardRender -> @rebindable ClassifierBoardItem [interaction, instance] {
-    initial: idle
+    initial: menu
 
-    state idle {
-      INIT -> idle
-        (fetch ClassifierBoardItem {})
+    state menu {
+      INIT -> menu
+        (set @entity.items @config.items)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -34,6 +50,54 @@ orbital ClassifierBoardOrbital {
           completeEvent: COMPLETE
           type: classifier-board
         })
+      START -> playing
+        (set @entity.items @config.items)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: classifier-board
+        })
+    }
+
+    state playing {
+      ASSIGN -> playing
+        (set @entity.items (array/map @entity.items (fn i (if (== @i.id ?itemId) (object/merge @i { assignedCategory: ?categoryId }) @i))))
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: classifier-board
+        })
+
+      CHECK -> complete when (== (array/len (array/filter @entity.items (fn i (!= (object/get @i assignedCategory) (object/get @i correctCategory))))) 0)
+        (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.result "win")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: classifier-board
+        })
+
+      CHECK -> playing when (> (array/len (array/filter @entity.items (fn i (!= (object/get @i assignedCategory) (object/get @i correctCategory))))) 0)
+        (set @entity.attempts (+ @entity.attempts 1))
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: classifier-board
+        })
+    }
+
+    state complete {
+      PLAY_AGAIN -> menu
+        (set @entity.items @config.items)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: classifier-board
+        })
     }
 
     emits {
@@ -42,6 +106,22 @@ orbital ClassifierBoardOrbital {
         attempts : number!
       }
         @description "completeEvent prop"
+        @tier "essential"
+      ASSIGN -> external {
+        itemId : string!
+        categoryId : string!
+      }
+        @description "Emits UI:{assignEvent} with { itemId, categoryId } when an item is dropped into a category"
+        @tier "essential"
+      CHECK -> external {
+        id : string
+      }
+        @description "Emits UI:{checkEvent} with {} when the player submits their assignments"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
         @tier "essential"
     }
 
@@ -90,6 +170,14 @@ orbital ClassifierBoardOrbital {
       selectedIds : [string] = []
         @label "Selected Ids"
         @description "Currently selected item IDs"
+        @tier "presentation"
+      items : [ClassifierBoardItemsItem] = [{ id: "i1", label: "Apple", correctCategory: "fruit", assignedCategory: "" }, { id: "i2", label: "Carrot", correctCategory: "vegetable", assignedCategory: "" }, { id: "i3", label: "Banana", correctCategory: "fruit", assignedCategory: "" }, { id: "i4", label: "Potato", correctCategory: "vegetable", assignedCategory: "" }]
+        @label "Items"
+        @description "Sortable items — each carries its correct category and the player's current assignment."
+        @tier "presentation"
+      categories : [ClassifierBoardCategoriesItem] = [{ id: "fruit", label: "Fruit" }, { id: "vegetable", label: "Vegetable" }]
+        @label "Categories"
+        @description "Category buckets the player sorts items into."
         @tier "presentation"
     }
   }

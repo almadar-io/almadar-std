@@ -1,5 +1,5 @@
 app ui-simulator-board "1.0.0"
-"SimulatorBoard — UI factory (1:1 with the @almadar/ui simulator-board pattern)."
+"SimulatorBoard — parameter-tuning puzzle: adjust params until output is within tolerance of target."
 orbital SimulatorBoardOrbital {
   type SimulatorBoardError = {
     message : string!
@@ -10,14 +10,26 @@ orbital SimulatorBoardOrbital {
 
   entity SimulatorBoardItem [runtime] {
     id : string!
+    paramA : number = 0
+    paramB : number = 0
+    target : number = 10
+    tolerance : number = 1
+    output : number @intrinsic = derived (+ @entity.paramA (* @entity.paramB 2))
+    attempts : number = 0
+    result : "none" | "win" = none
   }
 
   trait SimulatorBoardRender -> @rebindable SimulatorBoardItem [interaction, instance] {
-    initial: idle
+    initial: menu
 
-    state idle {
-      INIT -> idle
-        (fetch SimulatorBoardItem {})
+    state menu {
+      INIT -> menu
+        (set @entity.paramA 0)
+        (set @entity.paramB 0)
+        (set @entity.target 10)
+        (set @entity.tolerance 1)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -34,6 +46,64 @@ orbital SimulatorBoardOrbital {
           completeEvent: COMPLETE
           type: simulator-board
         })
+      START -> playing
+        (set @entity.paramA 0)
+        (set @entity.paramB 0)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: simulator-board
+        })
+    }
+
+    state playing {
+      SET_A -> playing when (== @entity.result "none")
+        (set @entity.paramA ?value)
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: simulator-board
+        })
+
+      SET_B -> playing when (== @entity.result "none")
+        (set @entity.paramB ?value)
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: simulator-board
+        })
+
+      CHECK -> complete when (<= (math/abs (- @entity.output @entity.target)) @entity.tolerance)
+        (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.result "win")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: simulator-board
+        })
+
+      CHECK -> playing when (> (math/abs (- @entity.output @entity.target)) @entity.tolerance)
+        (set @entity.attempts (+ @entity.attempts 1))
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: simulator-board
+        })
+    }
+
+    state complete {
+      PLAY_AGAIN -> menu
+        (set @entity.paramA 0)
+        (set @entity.paramB 0)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: simulator-board
+        })
     }
 
     emits {
@@ -42,6 +112,26 @@ orbital SimulatorBoardOrbital {
         attempts : number!
       }
         @description "completeEvent prop"
+        @tier "essential"
+      SET_A -> external {
+        value : number!
+      }
+        @description "Sets parameter A from { value } during play."
+        @tier "essential"
+      SET_B -> external {
+        value : number!
+      }
+        @description "Sets parameter B from { value } during play."
+        @tier "essential"
+      CHECK -> external {
+        id : string
+      }
+        @description "Evaluates output vs target/tolerance; wins or retries."
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Resets the puzzle back to the menu."
         @tier "essential"
     }
 

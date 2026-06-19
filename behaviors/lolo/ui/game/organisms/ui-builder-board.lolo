@@ -7,17 +7,37 @@ orbital BuilderBoardOrbital {
     code : string
     stack : string
   }
+  type BuilderBoardComponentsItem = {
+    id : string!
+    label : string
+    description : string
+    iconEmoji : string
+    iconUrl : asset
+    category : string
+  }
+  type BuilderBoardSlotsItem = {
+    id : string!
+    requiredComponentId : string!
+    placedComponentId : string
+  }
 
   entity BuilderBoardItem [runtime] {
     id : string!
+    components : [BuilderBoardComponentsItem]
+    slots : [BuilderBoardSlotsItem]
+    attempts : number = 0
+    result : "none" | "win" = none
   }
 
   trait BuilderBoardRender -> @rebindable BuilderBoardItem [interaction, instance] {
-    initial: idle
+    initial: menu
 
-    state idle {
-      INIT -> idle
-        (fetch BuilderBoardItem {})
+    state menu {
+      INIT -> menu
+        (set @entity.components @config.components)
+        (set @entity.slots @config.slots)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -34,6 +54,55 @@ orbital BuilderBoardOrbital {
           completeEvent: COMPLETE
           type: builder-board
         })
+      START -> playing
+        (set @entity.components @config.components)
+        (set @entity.slots @config.slots)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: builder-board
+        })
+    }
+
+    state playing {
+      PLACE -> playing
+        (set @entity.slots (array/map @entity.slots (fn s (if (== @s.id ?slotId) (object/merge @s { placedComponentId: ?componentId }) @s))))
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: builder-board
+        })
+
+      CHECK -> complete when (== (array/len (array/filter @entity.slots (fn s (!= (object/get s placedComponentId) (object/get s requiredComponentId))))) 0)
+        (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.result "win")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: builder-board
+        })
+
+      CHECK -> playing when (> (array/len (array/filter @entity.slots (fn s (!= (object/get s placedComponentId) (object/get s requiredComponentId))))) 0)
+        (set @entity.attempts (+ @entity.attempts 1))
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: builder-board
+        })
+    }
+
+    state complete {
+      PLAY_AGAIN -> menu
+        (set @entity.slots @config.slots)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: builder-board
+        })
     }
 
     emits {
@@ -42,6 +111,22 @@ orbital BuilderBoardOrbital {
         attempts : number!
       }
         @description "completeEvent prop"
+        @tier "essential"
+      PLACE -> external {
+        slotId : string!
+        componentId : string!
+      }
+        @description "Emits UI:{placeEvent} with { slotId, componentId } on component placement"
+        @tier "essential"
+      CHECK -> external {
+        id : string
+      }
+        @description "Emits UI:{checkEvent} with {} when the player checks the build"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
         @tier "essential"
     }
 
@@ -90,6 +175,14 @@ orbital BuilderBoardOrbital {
       selectedIds : [string] = []
         @label "Selected Ids"
         @description "Currently selected item IDs"
+        @tier "presentation"
+      components : [BuilderBoardComponentsItem] = [{ id: "comp-a", label: "Frontend", description: "User-facing layer", iconEmoji: "🖥️" }, { id: "comp-b", label: "API", description: "Service boundary", iconEmoji: "🔌" }, { id: "comp-c", label: "Database", description: "Persistence layer", iconEmoji: "🗄️" }]
+        @label "Components"
+        @description "Draggable build components the player snaps into slots."
+        @tier "presentation"
+      slots : [BuilderBoardSlotsItem] = [{ id: "slot-1", requiredComponentId: "comp-a" }, { id: "slot-2", requiredComponentId: "comp-b" }, { id: "slot-3", requiredComponentId: "comp-c" }]
+        @label "Slots"
+        @description "Blueprint slots; each requires a specific component for a win."
         @tier "presentation"
     }
   }
