@@ -31,6 +31,8 @@ import { GEO_OPERATORS } from './modules/geo.js';
 import { GRID_OPERATORS } from './modules/grid.js';
 import { ANIM_OPERATORS } from './modules/anim.js';
 import { EASE_OPERATORS } from './modules/ease.js';
+import { NOISE_OPERATORS } from './modules/noise.js';
+import { PATH_OPERATORS } from './modules/path.js';
 
 // ============================================================================
 // Combined Registry
@@ -61,6 +63,8 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...GRID_OPERATORS,
   ...ANIM_OPERATORS,
   ...EASE_OPERATORS,
+  ...NOISE_OPERATORS,
+  ...PATH_OPERATORS,
 };
 
 /**
@@ -94,6 +98,8 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   grid: GRID_OPERATORS,
   anim: ANIM_OPERATORS,
   ease: EASE_OPERATORS,
+  noise: NOISE_OPERATORS,
+  path: PATH_OPERATORS,
 };
 
 // ============================================================================

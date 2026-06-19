@@ -41,6 +41,8 @@ export const OPERATOR_CATEGORIES = [
   'std-grid',
   'std-anim',
   'std-ease',
+  'std-noise',
+  'std-path',
   'ml-arch',
   'ml-effect',
   'ml-tensor',
@@ -162,6 +164,8 @@ export const STD_MODULES = [
   'grid',
   'anim',
   'ease',
+  'noise',
+  'path',
 ] as const;
 
 export type StdModule = (typeof STD_MODULES)[number];
@@ -191,6 +195,8 @@ export const STD_OPERATOR_CATEGORIES = [
   'std-grid',
   'std-anim',
   'std-ease',
+  'std-noise',
+  'std-path',
   'ml-arch',
   'ml-effect',
   'ml-tensor',
