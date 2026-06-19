@@ -166,6 +166,18 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Penner easing curves and smoothstep interpolation.',
         icon: '〽️',
     },
+    noise: {
+        name: 'Noise',
+        displayName: 'Coherent Noise',
+        description: 'Deterministic perlin-derived coherent noise (perlin/simplex/fbm) for procedural generation.',
+        icon: '🌫️',
+    },
+    path: {
+        name: 'Path',
+        displayName: 'Grid Pathfinding',
+        description: 'Deterministic A* shortest path and BFS reachability over integer grid cells.',
+        icon: '🧭',
+    },
 };
 
 /**

@@ -48,3 +48,5 @@ export { GEO_OPERATORS, getGeoOperators } from './geo.js';
 export { GRID_OPERATORS, getGridOperators } from './grid.js';
 export { ANIM_OPERATORS, getAnimOperators } from './anim.js';
 export { EASE_OPERATORS, getEaseOperators } from './ease.js';
+export { NOISE_OPERATORS, getNoiseOperators } from './noise.js';
+export { PATH_OPERATORS, getPathOperators } from './path.js';
