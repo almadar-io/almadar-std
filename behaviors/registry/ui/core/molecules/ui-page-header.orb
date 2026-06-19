@@ -1,350 +1,20 @@
 {
-  "name": "ui-page-header",
-  "version": "1.0.0",
   "description": "PageHeader — UI factory (1:1 with the @almadar/ui page-header pattern).",
+  "name": "ui-page-header",
   "orbitals": [
     {
-      "name": "PageHeaderOrbital",
       "entity": {
-        "name": "PageHeaderItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "PageHeaderItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "PageHeaderRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "PageHeaderItem",
-          "emits": [
-            {
-              "event": "BACK",
-              "description": "Event to emit when back is clicked (default: BACK)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "TAB_CHANGE",
-              "description": "onTabChange prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "BACK",
-                "name": "Back",
-                "description": "Event to emit when back is clicked (default: BACK)",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "TAB_CHANGE",
-                "name": "Tab Change",
-                "description": "onTabChange prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Sample content"
-                        }
-                      ],
-                      "subtitle": "@config.subtitle",
-                      "backEvent": "BACK",
-                      "type": "page-header",
-                      "activeTab": "@config.activeTab",
-                      "title": "@config.title",
-                      "breadcrumbs": "@config.breadcrumbs",
-                      "actions": "@config.actions",
-                      "status": "@config.status",
-                      "isLoading": "@config.isLoading",
-                      "className": "@config.className",
-                      "showBack": "@config.showBack",
-                      "tabs": "@config.tabs",
-                      "onTabChange": "TAB_CHANGE",
-                      "error": "@config.error"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "subtitle": {
-              "type": "json",
-              "label": "Subtitle",
-              "description": "Optional subtitle/description",
-              "tier": "presentation"
-            },
-            "actions": {
-              "type": "[PageHeaderActionsItem]",
-              "default": [
-                {
-                  "navigatesTo": "Navigates To",
-                  "icon": "circle",
-                  "loading": false,
-                  "disabled": false,
-                  "label": "Label",
-                  "variant": "primary"
-                }
-              ],
-              "label": "Actions",
-              "description": "Actions array - first action with variant='primary' (or first action) is the main action",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost",
-                      "danger"
-                    ]
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "loading": {
-                    "name": "loading",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "status": {
-              "type": "PageHeaderStatus",
-              "label": "Status",
-              "description": "Status badge",
-              "tier": "presentation",
-              "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "variant": {
-                  "name": "variant",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "default",
-                    "success",
-                    "warning",
-                    "danger",
-                    "info"
-                  ]
-                }
-              }
-            },
-            "activeTab": {
-              "type": "string",
-              "default": "Active Tab",
-              "label": "Active Tab",
-              "description": "activeTab prop",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "json",
-              "label": "Title",
-              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
-              "tier": "presentation"
-            },
-            "tabs": {
-              "type": "[PageHeaderTabsItem]",
-              "default": [
-                {
-                  "count": 1.0,
-                  "value": "Value",
-                  "label": "Label"
-                }
-              ],
-              "label": "Tabs",
-              "description": "Tabs for sub-navigation",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  },
-                  "count": {
-                    "name": "count",
-                    "type": "number",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "showBack": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Back",
-              "description": "Show back button",
-              "tier": "presentation"
-            },
-            "breadcrumbs": {
-              "type": "[PageHeaderBreadcrumbsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "href": "Href"
-                }
-              ],
-              "label": "Breadcrumbs",
-              "description": "Breadcrumbs",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "error": {
-              "type": "PageHeaderError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "PageHeaderOrbital",
       "pages": [
         {
           "name": "PageHeaderPage",
@@ -355,7 +25,337 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actions": {
+              "default": [
+                {
+                  "disabled": false,
+                  "icon": "circle",
+                  "label": "Label",
+                  "loading": false,
+                  "navigatesTo": "Navigates To",
+                  "variant": "primary"
+                }
+              ],
+              "description": "Actions array - first action with variant='primary' (or first action) is the main action",
+              "items": {
+                "properties": {
+                  "disabled": {
+                    "name": "disabled",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "loading": {
+                    "name": "loading",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost",
+                      "danger"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Actions",
+              "tier": "presentation",
+              "type": "[PageHeaderActionsItem]"
+            },
+            "activeTab": {
+              "default": "Active Tab",
+              "description": "activeTab prop",
+              "label": "Active Tab",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "breadcrumbs": {
+              "default": [
+                {
+                  "href": "Href",
+                  "label": "Label"
+                }
+              ],
+              "description": "Breadcrumbs",
+              "items": {
+                "properties": {
+                  "href": {
+                    "name": "href",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Breadcrumbs",
+              "tier": "presentation",
+              "type": "[PageHeaderBreadcrumbsItem]"
+            },
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "PageHeaderError"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showBack": {
+              "default": false,
+              "description": "Show back button",
+              "label": "Show Back",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "status": {
+              "description": "Status badge",
+              "label": "Status",
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "default",
+                    "success",
+                    "warning",
+                    "danger",
+                    "info"
+                  ]
+                }
+              },
+              "tier": "presentation",
+              "type": "PageHeaderStatus"
+            },
+            "subtitle": {
+              "description": "Optional subtitle/description",
+              "label": "Subtitle",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "tabs": {
+              "default": [
+                {
+                  "count": 1.0,
+                  "label": "Label",
+                  "value": "Value"
+                }
+              ],
+              "description": "Tabs for sub-navigation",
+              "items": {
+                "properties": {
+                  "count": {
+                    "name": "count",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tabs",
+              "tier": "presentation",
+              "type": "[PageHeaderTabsItem]"
+            },
+            "title": {
+              "description": "Page title - accepts unknown to handle generated code accessing dynamic entity data",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "json"
+            }
+          },
+          "emits": [
+            {
+              "description": "Event to emit when back is clicked (default: BACK)",
+              "event": "BACK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "onTabChange prop",
+              "event": "TAB_CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "PageHeaderItem",
+          "name": "PageHeaderRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Event to emit when back is clicked (default: BACK)",
+                "key": "BACK",
+                "name": "Back",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "onTabChange prop",
+                "key": "TAB_CHANGE",
+                "name": "Tab Change",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": "@config.actions",
+                      "activeTab": "@config.activeTab",
+                      "backEvent": "BACK",
+                      "breadcrumbs": "@config.breadcrumbs",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "onTabChange": "TAB_CHANGE",
+                      "showBack": "@config.showBack",
+                      "status": "@config.status",
+                      "subtitle": "@config.subtitle",
+                      "tabs": "@config.tabs",
+                      "title": "@config.title",
+                      "type": "page-header"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

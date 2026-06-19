@@ -1,192 +1,20 @@
 {
-  "name": "ui-inventory-grid",
-  "version": "1.0.0",
   "description": "InventoryGrid — UI factory (1:1 with the @almadar/ui inventory-grid pattern).",
+  "name": "ui-inventory-grid",
   "orbitals": [
     {
-      "name": "InventoryGridOrbital",
       "entity": {
-        "name": "InventoryGridItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "InventoryGridItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "InventoryGridRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "InventoryGridItem",
-          "emits": [
-            {
-              "event": "SELECT",
-              "description": "Callback when an item is selected",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "SELECT",
-                "name": "Select",
-                "description": "Callback when an item is selected",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "totalSlots": "@config.totalSlots",
-                      "selectedId": "@config.selectedId",
-                      "onSelect": "SELECT",
-                      "size": "@config.size",
-                      "items": "@config.items",
-                      "type": "inventory-grid",
-                      "selectEvent": "SELECT",
-                      "columns": "@config.columns",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "selectedId": {
-              "type": "string",
-              "default": "Selected Id",
-              "label": "Selected Id",
-              "description": "Currently selected item ID",
-              "tier": "presentation"
-            },
-            "items": {
-              "type": "[InventoryGridItemsItem]",
-              "default": [
-                {
-                  "icon": "circle",
-                  "id": "Id",
-                  "label": "Label",
-                  "quantity": 1.0,
-                  "rarity": "common"
-                }
-              ],
-              "label": "Items",
-              "description": "Array of items to display in the grid",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "rarity": {
-                    "name": "rarity",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "common",
-                      "uncommon",
-                      "rare",
-                      "epic",
-                      "legendary"
-                    ]
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "quantity": {
-                    "name": "quantity",
-                    "type": "number",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "columns": {
-              "type": "number",
-              "default": 4.0,
-              "label": "Columns",
-              "description": "Number of columns in the grid",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant for all item slots",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "totalSlots": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Slots",
-              "description": "Total number of slots (empty slots fill remaining space)",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "InventoryGridOrbital",
       "pages": [
         {
           "name": "InventoryGridPage",
@@ -197,7 +25,179 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "columns": {
+              "default": 4.0,
+              "description": "Number of columns in the grid",
+              "label": "Columns",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "items": {
+              "default": [
+                {
+                  "icon": "circle",
+                  "id": "Id",
+                  "label": "Label",
+                  "quantity": 1.0,
+                  "rarity": "common"
+                }
+              ],
+              "description": "Array of items to display in the grid",
+              "items": {
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "name": "quantity",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "rarity": {
+                    "name": "rarity",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "common",
+                      "uncommon",
+                      "rare",
+                      "epic",
+                      "legendary"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Items",
+              "tier": "presentation",
+              "type": "[InventoryGridItemsItem]"
+            },
+            "selectedId": {
+              "default": "Selected Id",
+              "description": "Currently selected item ID",
+              "label": "Selected Id",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant for all item slots",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "totalSlots": {
+              "default": 0.0,
+              "description": "Total number of slots (empty slots fill remaining space)",
+              "label": "Total Slots",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Callback when an item is selected",
+              "event": "SELECT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "InventoryGridItem",
+          "name": "InventoryGridRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Callback when an item is selected",
+                "key": "SELECT",
+                "name": "Select",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "columns": "@config.columns",
+                      "items": "@config.items",
+                      "onSelect": "SELECT",
+                      "selectEvent": "SELECT",
+                      "selectedId": "@config.selectedId",
+                      "size": "@config.size",
+                      "totalSlots": "@config.totalSlots",
+                      "type": "inventory-grid"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

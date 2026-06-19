@@ -1,189 +1,20 @@
 {
-  "name": "ui-action-buttons",
-  "version": "1.0.0",
   "description": "ActionButtons — UI factory (1:1 with the @almadar/ui action-buttons pattern).",
+  "name": "ui-action-buttons",
   "orbitals": [
     {
-      "name": "ActionButtonsOrbital",
       "entity": {
-        "name": "ActionButtonsItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ActionButtonsItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ActionButtonsRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ActionButtonsItem",
-          "emits": [
-            {
-              "event": "ACTION",
-              "description": "Called when a button is pressed/released",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "pressed",
-                  "type": "boolean"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Called when a button is pressed/released",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "pressed",
-                    "type": "boolean"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "actionEvent": "ACTION",
-                      "layout": "@config.layout",
-                      "type": "action-buttons",
-                      "disabled": "@config.disabled",
-                      "onAction": "ACTION",
-                      "size": "@config.size",
-                      "buttons": "@config.buttons"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disabled state",
-              "tier": "presentation"
-            },
-            "layout": {
-              "type": "string",
-              "default": "horizontal",
-              "label": "Layout",
-              "description": "Layout variant",
-              "tier": "presentation",
-              "values": [
-                "horizontal",
-                "vertical",
-                "diamond"
-              ]
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "buttons": {
-              "type": "[ActionButtonsButtonsItem]",
-              "default": [
-                {
-                  "variant": "primary",
-                  "id": "Id",
-                  "label": "Label",
-                  "icon": "circle"
-                }
-              ],
-              "label": "Buttons",
-              "description": "Button configurations",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost"
-                    ]
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ActionButtonsOrbital",
       "pages": [
         {
           "name": "ActionButtonsPage",
@@ -194,7 +25,176 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "buttons": {
+              "default": [
+                {
+                  "icon": "circle",
+                  "id": "Id",
+                  "label": "Label",
+                  "variant": "primary"
+                }
+              ],
+              "description": "Button configurations",
+              "items": {
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Buttons",
+              "tier": "presentation",
+              "type": "[ActionButtonsButtonsItem]"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "disabled": {
+              "default": false,
+              "description": "Disabled state",
+              "label": "Disabled",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "layout": {
+              "default": "horizontal",
+              "description": "Layout variant",
+              "label": "Layout",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "horizontal",
+                "vertical",
+                "diamond"
+              ]
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Called when a button is pressed/released",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "pressed",
+                  "type": "boolean"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ActionButtonsItem",
+          "name": "ActionButtonsRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Called when a button is pressed/released",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "pressed",
+                    "type": "boolean"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actionEvent": "ACTION",
+                      "buttons": "@config.buttons",
+                      "className": "@config.className",
+                      "disabled": "@config.disabled",
+                      "layout": "@config.layout",
+                      "onAction": "ACTION",
+                      "size": "@config.size",
+                      "type": "action-buttons"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

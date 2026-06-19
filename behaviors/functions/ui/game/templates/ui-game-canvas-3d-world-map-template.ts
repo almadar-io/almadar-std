@@ -39,40 +39,40 @@ export type StdUiGameCanvas3dWorldMapTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas3dWorldMapTemplateConfig {
+  /** Default: `[{"x":1,"z":1}]` */
+  attackTargets?: EntityRow[];
+  /** Default: `"#1a1a2e"` */
+  backgroundColor?: string;
+  /** Default: `"Camera Change Event"` */
+  cameraChangeEvent?: string;
+  /** Default: `"isometric"` */
+  cameraMode?: 'isometric' | 'perspective' | 'top-down';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"Exit Event"` */
+  exitEvent?: string;
+  /** Default: `"Feature Click Event"` */
+  featureClickEvent?: string;
+  /** Default: `"Selected Unit Id"` */
+  selectedUnitId?: string;
+  /** Default: `true` */
+  shadows?: boolean;
+  /** Default: `true` */
+  showCoordinates?: boolean;
+  /** Default: `true` */
+  showGrid?: boolean;
   /** Default: `true` */
   showTileInfo?: boolean;
   /** Default: `"Tile Click Event"` */
   tileClickEvent?: string;
-  /** Default: `[{"x":1,"z":1}]` */
-  validMoves?: EntityRow[];
-  /** Default: `true` */
-  shadows?: boolean;
-  /** Default: `"Selected Unit Id"` */
-  selectedUnitId?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"x":1,"z":1}]` */
-  attackTargets?: EntityRow[];
-  /** Default: `"Exit Event"` */
-  exitEvent?: string;
   /** Default: `"Tile Hover Event"` */
   tileHoverEvent?: string;
   /** Default: `"Tile Leave Event"` */
   tileLeaveEvent?: string;
-  /** Default: `"#1a1a2e"` */
-  backgroundColor?: string;
-  /** Default: `"isometric"` */
-  cameraMode?: 'isometric' | 'perspective' | 'top-down';
-  /** Default: `"Camera Change Event"` */
-  cameraChangeEvent?: string;
-  /** Default: `true` */
-  showGrid?: boolean;
-  /** Default: `true` */
-  showCoordinates?: boolean;
   /** Default: `"Unit Click Event"` */
   unitClickEvent?: string;
-  /** Default: `"Feature Click Event"` */
-  featureClickEvent?: string;
+  /** Default: `[{"x":1,"z":1}]` */
+  validMoves?: EntityRow[];
 }
 
 /**

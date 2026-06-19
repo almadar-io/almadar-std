@@ -39,21 +39,21 @@ export type StdUiCenterEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCenterConfig {
-  style?: unknown;
-  /** Default: `false` */
-  fullWidth?: boolean;
-  /** Default: `"Min Height"` */
-  minHeight?: string;
-  /** Default: `true` */
-  horizontal?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   fullHeight?: boolean;
+  /** Default: `false` */
+  fullWidth?: boolean;
   /** Default: `true` */
-  vertical?: boolean;
+  horizontal?: boolean;
   /** Default: `false` */
   inline?: boolean;
+  /** Default: `"Min Height"` */
+  minHeight?: string;
+  style?: unknown;
+  /** Default: `true` */
+  vertical?: boolean;
 }
 
 /**

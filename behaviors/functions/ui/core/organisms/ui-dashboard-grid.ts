@@ -39,32 +39,32 @@ export type StdUiDashboardGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardGridConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
   activeFilters?: unknown;
-  /** Default: `"md"` */
-  gap?: 'sm' | 'md' | 'lg';
-  /** Default: `[{"content":"Content","rowSpan":1,"id":"Id","colSpan":1}]` */
+  /** Default: `[{"colSpan":1,"content":"Content","id":"Id","rowSpan":1}]` */
   cells?: EntityRow[];
-  /** Default: `"Search Value"` */
-  searchValue?: string;
-  /** Default: `0` */
-  totalCount?: number;
-  /** Default: `[]` */
-  selectedIds?: string[];
-  error?: EntityRow;
-  /** Default: `0` */
-  pageSize?: number;
   /** Default: `""` */
   className?: string;
-  /** Default: `"asc"` */
-  sortDirection?: 'asc' | 'desc';
   /** Default: `3` */
   columns?: number;
+  error?: EntityRow;
+  /** Default: `"md"` */
+  gap?: 'sm' | 'md' | 'lg';
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `0` */
   pageProp?: number;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
   /** Default: `"Sort By"` */
   sortBy?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `0` */
+  totalCount?: number;
 }
 
 /**
@@ -125,8 +125,8 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -137,224 +137,224 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'DashboardGridRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'DashboardGridItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'transitions': [
-            {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'page': '@config.pageProp',
-                    'isLoading': '@config.isLoading',
-                    'columns': '@config.columns',
-                    'selectedIds': '@config.selectedIds',
-                    'totalCount': '@config.totalCount',
-                    'type': 'dashboard-grid',
-                    'activeFilters': '@config.activeFilters',
-                    'searchValue': '@config.searchValue',
-                    'sortDirection': '@config.sortDirection',
-                    'error': '@config.error',
-                    'gap': '@config.gap',
-                    'cells': '@config.cells',
-                    'className': '@config.className',
-                    'sortBy': '@config.sortBy',
-                    'pageSize': '@config.pageSize',
-                  },
-                ],
-              ],
-            },
-          ],
-        },
         'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
           'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
             'description': 'Active filters',
+            'label': 'Active Filters',
             'tier': 'presentation',
+            'type': 'json',
+          },
+          'cells': {
+            'default': [
+              {
+                'colSpan': 1,
+                'content': 'Content',
+                'id': 'Id',
+                'rowSpan': 1,
+              },
+            ],
+            'description': 'Cell definitions',
+            'items': {
+              'properties': {
+                'colSpan': {
+                  'name': 'colSpan',
+                  'required': false,
+                  'type': 'number',
+                },
+                'content': {
+                  'name': 'content',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'rowSpan': {
+                  'name': 'rowSpan',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Cells',
+            'tier': 'presentation',
+            'type': '[DashboardGridCellsItem]',
+          },
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'columns': {
+            'default': 3,
+            'description': 'Number of columns',
+            'label': 'Columns',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'error': {
+            'description': 'Error state (UiError)',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'DashboardGridError',
           },
           'gap': {
-            'type': 'string',
             'default': 'md',
-            'label': 'Gap',
             'description': 'Gap between cells',
+            'label': 'Gap',
             'tier': 'presentation',
+            'type': 'string',
             'values': [
               'sm',
               'md',
               'lg',
             ],
           },
-          'cells': {
-            'type': '[DashboardGridCellsItem]',
-            'default': [
-              {
-                'content': 'Content',
-                'rowSpan': 1,
-                'id': 'Id',
-                'colSpan': 1,
-              },
-            ],
-            'label': 'Cells',
-            'description': 'Cell definitions',
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
             'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'colSpan': {
-                  'name': 'colSpan',
-                  'type': 'number',
-                  'required': false,
-                },
-                'content': {
-                  'name': 'content',
-                  'type': 'string',
-                  'required': false,
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': false,
-                },
-                'rowSpan': {
-                  'name': 'rowSpan',
-                  'type': 'number',
-                  'required': false,
-                },
-              },
-            },
+            'type': 'boolean',
+          },
+          'pageProp': {
+            'default': 0,
+            'description': 'Current page number',
+            'label': 'Page',
+            'synonyms': 'page',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'pageSize': {
+            'default': 0,
+            'description': 'Number of items per page',
+            'label': 'Page Size',
+            'tier': 'presentation',
+            'type': 'number',
           },
           'searchValue': {
-            'type': 'string',
             'default': 'Search Value',
-            'label': 'Search Value',
             'description': 'Current search query value',
+            'label': 'Search Value',
             'tier': 'presentation',
-          },
-          'totalCount': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Count',
-            'description': 'Total number of items',
-            'tier': 'presentation',
+            'type': 'string',
           },
           'selectedIds': {
-            'type': '[string]',
             'default': [],
-            'label': 'Selected Ids',
             'description': 'Currently selected item IDs',
-            'tier': 'presentation',
             'items': {
               'type': 'string',
             },
-          },
-          'error': {
-            'type': 'DashboardGridError',
-            'label': 'Error',
-            'description': 'Error state (UiError)',
+            'label': 'Selected Ids',
             'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
+            'type': '[string]',
           },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
+          'sortBy': {
+            'default': 'Sort By',
+            'description': 'Current sort field',
+            'label': 'Sort By',
             'tier': 'presentation',
-          },
-          'className': {
             'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
           },
           'sortDirection': {
-            'type': 'string',
             'default': 'asc',
-            'label': 'Sort Direction',
             'description': 'Current sort direction',
+            'label': 'Sort Direction',
             'tier': 'presentation',
+            'type': 'string',
             'values': [
               'asc',
               'desc',
             ],
           },
-          'columns': {
-            'type': 'number',
-            'default': 3,
-            'label': 'Columns',
-            'description': 'Number of columns',
-            'tier': 'presentation',
-          },
-          'pageProp': {
-            'type': 'number',
+          'totalCount': {
             'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
+            'description': 'Total number of items',
+            'label': 'Total Count',
             'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
+            'type': 'number',
           },
         },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'DashboardGridItem',
+        'name': 'DashboardGridRender',
         'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'cells': '@config.cells',
+                    'className': '@config.className',
+                    'columns': '@config.columns',
+                    'error': '@config.error',
+                    'gap': '@config.gap',
+                    'isLoading': '@config.isLoading',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'dashboard-grid',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
       } as never, 'DashboardGridItem', canonicalName) as never,
     ],
     pages: [

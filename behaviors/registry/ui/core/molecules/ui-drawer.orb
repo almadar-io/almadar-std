@@ -1,246 +1,20 @@
 {
-  "name": "ui-drawer",
-  "version": "1.0.0",
   "description": "Drawer — UI factory (1:1 with the @almadar/ui drawer pattern).",
+  "name": "ui-drawer",
   "orbitals": [
     {
-      "name": "DrawerOrbital",
       "entity": {
-        "name": "DrawerItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "DrawerItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "DrawerRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "DrawerItem",
-          "emits": [
-            {
-              "event": "CLOSE",
-              "description": "Callback when drawer should close (injected by slot wrapper)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "OPEN",
-              "description": "Open the Drawer.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "OPEN",
-                "name": "Open",
-                "description": "Open the Drawer.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close",
-                "description": "Callback when drawer should close (injected by slot wrapper)",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "label": "Open Drawer",
-                      "action": "OPEN",
-                      "type": "button"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "closed",
-                "to": "open",
-                "event": "OPEN",
-                "effects": [
-                  [
-                    "render-ui",
-                    "drawer",
-                    {
-                      "className": "@config.className",
-                      "footer": "@config.footer",
-                      "width": "@config.width",
-                      "onClose": "CLOSE",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Sample content"
-                        }
-                      ],
-                      "title": "@config.title",
-                      "showCloseButton": "@config.showCloseButton",
-                      "closeOnEscape": "@config.closeOnEscape",
-                      "position": "@config.position",
-                      "closeOnOverlayClick": "@config.closeOnOverlayClick",
-                      "closeEvent": "CLOSE",
-                      "type": "drawer",
-                      "isOpen": "@config.isOpen"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
-                "effects": [
-                  [
-                    "render-ui",
-                    "drawer",
-                    null
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "button",
-                      "label": "Open Drawer",
-                      "action": "OPEN"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "closeOnOverlayClick": {
-              "type": "boolean",
-              "default": true,
-              "label": "Close On Overlay Click",
-              "description": "Close on overlay click",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional class name",
-              "tier": "presentation"
-            },
-            "closeOnEscape": {
-              "type": "boolean",
-              "default": true,
-              "label": "Close On Escape",
-              "description": "Close on escape key",
-              "tier": "presentation"
-            },
-            "position": {
-              "type": "string",
-              "default": "right",
-              "label": "Position",
-              "description": "Position (left or right)",
-              "tier": "presentation",
-              "values": [
-                "left",
-                "right"
-              ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Drawer title",
-              "tier": "presentation"
-            },
-            "showCloseButton": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Close Button",
-              "description": "Show close button",
-              "tier": "presentation"
-            },
-            "footer": {
-              "type": "node",
-              "label": "Footer",
-              "description": "Footer content",
-              "tier": "presentation"
-            },
-            "width": {
-              "type": "string",
-              "default": "md",
-              "label": "Width",
-              "description": "Width (CSS value or preset size)",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "full"
-              ]
-            },
-            "isOpen": {
-              "type": "boolean",
-              "default": true,
-              "label": "Is Open",
-              "description": "Whether the drawer is open (defaults to true when rendered by slot wrapper)",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "DrawerOrbital",
       "pages": [
         {
           "name": "DrawerPage",
@@ -251,7 +25,233 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional class name",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "closeOnEscape": {
+              "default": true,
+              "description": "Close on escape key",
+              "label": "Close On Escape",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "closeOnOverlayClick": {
+              "default": true,
+              "description": "Close on overlay click",
+              "label": "Close On Overlay Click",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "footer": {
+              "description": "Footer content",
+              "label": "Footer",
+              "tier": "presentation",
+              "type": "node"
+            },
+            "isOpen": {
+              "default": true,
+              "description": "Whether the drawer is open (defaults to true when rendered by slot wrapper)",
+              "label": "Is Open",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "position": {
+              "default": "right",
+              "description": "Position (left or right)",
+              "label": "Position",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "left",
+                "right"
+              ]
+            },
+            "showCloseButton": {
+              "default": true,
+              "description": "Show close button",
+              "label": "Show Close Button",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "title": {
+              "default": "Title",
+              "description": "Drawer title",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "width": {
+              "default": "md",
+              "description": "Width (CSS value or preset size)",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "full"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Callback when drawer should close (injected by slot wrapper)",
+              "event": "CLOSE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Open the Drawer.",
+              "event": "OPEN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DrawerItem",
+          "name": "DrawerRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Open the Drawer.",
+                "key": "OPEN",
+                "name": "Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Callback when drawer should close (injected by slot wrapper)",
+                "key": "CLOSE",
+                "name": "Close",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "closed"
+              },
+              {
+                "name": "open"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "OPEN",
+                      "label": "Open Drawer",
+                      "type": "button"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "closed",
+                "to": "closed"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "drawer",
+                    {
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "closeEvent": "CLOSE",
+                      "closeOnEscape": "@config.closeOnEscape",
+                      "closeOnOverlayClick": "@config.closeOnOverlayClick",
+                      "footer": "@config.footer",
+                      "isOpen": "@config.isOpen",
+                      "onClose": "CLOSE",
+                      "position": "@config.position",
+                      "showCloseButton": "@config.showCloseButton",
+                      "title": "@config.title",
+                      "type": "drawer",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "OPEN",
+                "from": "closed",
+                "to": "open"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "drawer",
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "OPEN",
+                      "label": "Open Drawer",
+                      "type": "button"
+                    }
+                  ]
+                ],
+                "event": "CLOSE",
+                "from": "open",
+                "to": "closed"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

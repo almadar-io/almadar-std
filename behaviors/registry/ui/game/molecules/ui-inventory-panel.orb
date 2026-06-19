@@ -1,362 +1,20 @@
 {
-  "name": "ui-inventory-panel",
-  "version": "1.0.0",
   "description": "InventoryPanel — UI factory (1:1 with the @almadar/ui inventory-panel pattern).",
+  "name": "ui-inventory-panel",
   "orbitals": [
     {
-      "name": "InventoryPanelOrbital",
       "entity": {
-        "name": "InventoryPanelItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "InventoryPanelItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "InventoryPanelRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "InventoryPanelItem",
-          "emits": [
-            {
-              "event": "SELECT_SLOT",
-              "description": "Called when a slot is selected",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "index",
-                  "type": "number"
-                }
-              ]
-            },
-            {
-              "event": "USE_ITEM",
-              "description": "Called when an item is used (double-click or Enter)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "item",
-                  "type": "object",
-                  "properties": [
-                    {
-                      "name": "id",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "type",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "quantity",
-                      "type": "number",
-                      "required": true
-                    },
-                    {
-                      "name": "sprite",
-                      "type": "string"
-                    },
-                    {
-                      "name": "name",
-                      "type": "string"
-                    },
-                    {
-                      "name": "description",
-                      "type": "string"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "event": "DROP_ITEM",
-              "description": "Called when an item is dropped",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "item",
-                  "type": "object",
-                  "properties": [
-                    {
-                      "name": "id",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "type",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "quantity",
-                      "type": "number",
-                      "required": true
-                    },
-                    {
-                      "name": "sprite",
-                      "type": "string"
-                    },
-                    {
-                      "name": "name",
-                      "type": "string"
-                    },
-                    {
-                      "name": "description",
-                      "type": "string"
-                    }
-                  ]
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "SELECT_SLOT",
-                "name": "Select Slot",
-                "description": "Called when a slot is selected",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "index",
-                    "type": "number"
-                  }
-                ]
-              },
-              {
-                "key": "USE_ITEM",
-                "name": "Use Item",
-                "description": "Called when an item is used (double-click or Enter)",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "item",
-                    "type": "object",
-                    "properties": [
-                      {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "type",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "quantity",
-                        "type": "number",
-                        "required": true
-                      },
-                      {
-                        "name": "sprite",
-                        "type": "string"
-                      },
-                      {
-                        "name": "name",
-                        "type": "string"
-                      },
-                      {
-                        "name": "description",
-                        "type": "string"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "key": "DROP_ITEM",
-                "name": "Drop Item",
-                "description": "Called when an item is dropped",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "item",
-                    "type": "object",
-                    "properties": [
-                      {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "type",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "quantity",
-                        "type": "number",
-                        "required": true
-                      },
-                      {
-                        "name": "sprite",
-                        "type": "string"
-                      },
-                      {
-                        "name": "name",
-                        "type": "string"
-                      },
-                      {
-                        "name": "description",
-                        "type": "string"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "onUseItem": "USE_ITEM",
-                      "slotSize": "@config.slotSize",
-                      "selectSlotEvent": "SELECT_SLOT",
-                      "dropItemEvent": "DROP_ITEM",
-                      "showTooltips": "@config.showTooltips",
-                      "type": "inventory-panel",
-                      "columns": "@config.columns",
-                      "slots": "@config.slots",
-                      "useItemEvent": "USE_ITEM",
-                      "onDropItem": "DROP_ITEM",
-                      "onSelectSlot": "SELECT_SLOT",
-                      "selectedSlot": "@config.selectedSlot",
-                      "items": "@config.items"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Optional className",
-              "tier": "presentation"
-            },
-            "slots": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Slots",
-              "description": "Total number of slots",
-              "tier": "presentation"
-            },
-            "columns": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Columns",
-              "description": "Number of columns in grid",
-              "tier": "presentation"
-            },
-            "items": {
-              "type": "[InventoryPanelItemsItem]",
-              "default": [
-                {
-                  "description": "Description",
-                  "name": "Name",
-                  "type": "Type",
-                  "id": "Id",
-                  "quantity": 1.0,
-                  "sprite": "Sprite"
-                }
-              ],
-              "label": "Items",
-              "description": "Array of items in inventory",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "sprite": {
-                    "name": "sprite",
-                    "type": "string",
-                    "required": false
-                  },
-                  "quantity": {
-                    "name": "quantity",
-                    "type": "number",
-                    "required": true
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": true
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "selectedSlot": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Selected Slot",
-              "description": "Currently selected slot index",
-              "tier": "presentation"
-            },
-            "slotSize": {
-              "type": "number",
-              "default": 48.0,
-              "label": "Slot Size",
-              "description": "Slot size in pixels",
-              "tier": "presentation"
-            },
-            "showTooltips": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Tooltips",
-              "description": "Show item tooltips on hover",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "InventoryPanelOrbital",
       "pages": [
         {
           "name": "InventoryPanelPage",
@@ -367,7 +25,349 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Optional className",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "columns": {
+              "default": 0.0,
+              "description": "Number of columns in grid",
+              "label": "Columns",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "items": {
+              "default": [
+                {
+                  "description": "Description",
+                  "id": "Id",
+                  "name": "Name",
+                  "quantity": 1.0,
+                  "sprite": "Sprite",
+                  "type": "Type"
+                }
+              ],
+              "description": "Array of items in inventory",
+              "items": {
+                "properties": {
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "name": "quantity",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Items",
+              "tier": "presentation",
+              "type": "[InventoryPanelItemsItem]"
+            },
+            "selectedSlot": {
+              "default": 0.0,
+              "description": "Currently selected slot index",
+              "label": "Selected Slot",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "showTooltips": {
+              "default": true,
+              "description": "Show item tooltips on hover",
+              "label": "Show Tooltips",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "slotSize": {
+              "default": 48.0,
+              "description": "Slot size in pixels",
+              "label": "Slot Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "slots": {
+              "default": 0.0,
+              "description": "Total number of slots",
+              "label": "Slots",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Called when a slot is selected",
+              "event": "SELECT_SLOT",
+              "payloadSchema": [
+                {
+                  "name": "index",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Called when an item is used (double-click or Enter)",
+              "event": "USE_ITEM",
+              "payloadSchema": [
+                {
+                  "name": "item",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "type",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "quantity",
+                      "required": true,
+                      "type": "number"
+                    },
+                    {
+                      "name": "sprite",
+                      "type": "string"
+                    },
+                    {
+                      "name": "name",
+                      "type": "string"
+                    },
+                    {
+                      "name": "description",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Called when an item is dropped",
+              "event": "DROP_ITEM",
+              "payloadSchema": [
+                {
+                  "name": "item",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "type",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "quantity",
+                      "required": true,
+                      "type": "number"
+                    },
+                    {
+                      "name": "sprite",
+                      "type": "string"
+                    },
+                    {
+                      "name": "name",
+                      "type": "string"
+                    },
+                    {
+                      "name": "description",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "InventoryPanelItem",
+          "name": "InventoryPanelRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Called when a slot is selected",
+                "key": "SELECT_SLOT",
+                "name": "Select Slot",
+                "payloadSchema": [
+                  {
+                    "name": "index",
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Called when an item is used (double-click or Enter)",
+                "key": "USE_ITEM",
+                "name": "Use Item",
+                "payloadSchema": [
+                  {
+                    "name": "item",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "type",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "quantity",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "sprite",
+                        "type": "string"
+                      },
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "description",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Called when an item is dropped",
+                "key": "DROP_ITEM",
+                "name": "Drop Item",
+                "payloadSchema": [
+                  {
+                    "name": "item",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "type",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "quantity",
+                        "required": true,
+                        "type": "number"
+                      },
+                      {
+                        "name": "sprite",
+                        "type": "string"
+                      },
+                      {
+                        "name": "name",
+                        "type": "string"
+                      },
+                      {
+                        "name": "description",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "columns": "@config.columns",
+                      "dropItemEvent": "DROP_ITEM",
+                      "items": "@config.items",
+                      "onDropItem": "DROP_ITEM",
+                      "onSelectSlot": "SELECT_SLOT",
+                      "onUseItem": "USE_ITEM",
+                      "selectSlotEvent": "SELECT_SLOT",
+                      "selectedSlot": "@config.selectedSlot",
+                      "showTooltips": "@config.showTooltips",
+                      "slotSize": "@config.slotSize",
+                      "slots": "@config.slots",
+                      "type": "inventory-panel",
+                      "useItemEvent": "USE_ITEM"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

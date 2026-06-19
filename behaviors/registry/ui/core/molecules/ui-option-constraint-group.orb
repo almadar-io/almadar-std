@@ -1,195 +1,20 @@
 {
-  "name": "ui-option-constraint-group",
-  "version": "1.0.0",
   "description": "OptionConstraintGroup — UI factory (1:1 with the @almadar/ui option-constraint-group pattern).",
+  "name": "ui-option-constraint-group",
   "orbitals": [
     {
-      "name": "OptionConstraintGroupOrbital",
       "entity": {
-        "name": "OptionConstraintGroupItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "OptionConstraintGroupItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "OptionConstraintGroupRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "OptionConstraintGroupItem",
-          "emits": [
-            {
-              "event": "CHANGE",
-              "description": "onChange prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "selected",
-                  "type": "[object]"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CHANGE",
-                "name": "Change",
-                "description": "onChange prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "selected",
-                    "type": "[object]"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "title": "@config.title",
-                      "onChange": "CHANGE",
-                      "groupId": "@config.groupId",
-                      "className": "@config.className",
-                      "options": "@config.options",
-                      "type": "option-constraint-group",
-                      "description": "@config.description",
-                      "changeEvent": "CHANGE",
-                      "size": "@config.size",
-                      "selected": "@config.selected"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "options": {
-              "type": "[OptionConstraintGroupOptionsItem]",
-              "default": [
-                {
-                  "priceDelta": 1.0,
-                  "outOfStock": false,
-                  "id": "Id",
-                  "disabled": false,
-                  "label": "Label"
-                }
-              ],
-              "label": "Options",
-              "description": "options prop",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "priceDelta": {
-                    "name": "priceDelta",
-                    "type": "number",
-                    "required": false
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "outOfStock": {
-                    "name": "outOfStock",
-                    "type": "boolean",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "groupId": {
-              "type": "string",
-              "default": "Group Id",
-              "label": "Group Id",
-              "description": "groupId prop",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "title prop",
-              "tier": "presentation"
-            },
-            "description": {
-              "type": "string",
-              "default": "Description",
-              "label": "Description",
-              "description": "description prop",
-              "tier": "presentation"
-            },
-            "selected": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected",
-              "description": "selected prop",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "size prop",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "OptionConstraintGroupOrbital",
       "pages": [
         {
           "name": "OptionConstraintGroupPage",
@@ -200,7 +25,182 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "description": {
+              "default": "Description",
+              "description": "description prop",
+              "label": "Description",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "groupId": {
+              "default": "Group Id",
+              "description": "groupId prop",
+              "label": "Group Id",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "options": {
+              "default": [
+                {
+                  "disabled": false,
+                  "id": "Id",
+                  "label": "Label",
+                  "outOfStock": false,
+                  "priceDelta": 1.0
+                }
+              ],
+              "description": "options prop",
+              "items": {
+                "properties": {
+                  "disabled": {
+                    "name": "disabled",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "outOfStock": {
+                    "name": "outOfStock",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "priceDelta": {
+                    "name": "priceDelta",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Options",
+              "tier": "presentation",
+              "type": "[OptionConstraintGroupOptionsItem]"
+            },
+            "selected": {
+              "default": [],
+              "description": "selected prop",
+              "items": {
+                "type": "string"
+              },
+              "label": "Selected",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "size": {
+              "default": "md",
+              "description": "size prop",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md"
+              ]
+            },
+            "title": {
+              "default": "Title",
+              "description": "title prop",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "onChange prop",
+              "event": "CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "selected",
+                  "type": "[object]"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "OptionConstraintGroupItem",
+          "name": "OptionConstraintGroupRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "onChange prop",
+                "key": "CHANGE",
+                "name": "Change",
+                "payloadSchema": [
+                  {
+                    "name": "selected",
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "changeEvent": "CHANGE",
+                      "className": "@config.className",
+                      "description": "@config.description",
+                      "groupId": "@config.groupId",
+                      "onChange": "CHANGE",
+                      "options": "@config.options",
+                      "selected": "@config.selected",
+                      "size": "@config.size",
+                      "title": "@config.title",
+                      "type": "option-constraint-group"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

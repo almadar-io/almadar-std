@@ -1,181 +1,20 @@
 {
-  "name": "ui-crafting-recipe",
-  "version": "1.0.0",
   "description": "CraftingRecipe — UI factory (1:1 with the @almadar/ui crafting-recipe pattern).",
+  "name": "ui-crafting-recipe",
   "orbitals": [
     {
-      "name": "CraftingRecipeOrbital",
       "entity": {
-        "name": "CraftingRecipeItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "CraftingRecipeItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "CraftingRecipeRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "CraftingRecipeItem",
-          "emits": [
-            {
-              "event": "CRAFT",
-              "description": "Callback when the craft button is clicked",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "output",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CRAFT",
-                "name": "Craft",
-                "description": "Callback when the craft button is clicked",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "output",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "inputs": "@config.inputs",
-                      "canCraft": "@config.canCraft",
-                      "className": "@config.className",
-                      "onCraft": "CRAFT",
-                      "type": "crafting-recipe",
-                      "craftEvent": "CRAFT",
-                      "output": "@config.output"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "canCraft": {
-              "type": "boolean",
-              "default": false,
-              "label": "Can Craft",
-              "description": "Whether the player has enough ingredients to craft",
-              "tier": "presentation"
-            },
-            "output": {
-              "type": "CraftingRecipeOutput",
-              "default": {
-                "icon": "circle",
-                "label": "Label",
-                "rarity": "Rarity"
-              },
-              "label": "Output",
-              "description": "Output item produced by the recipe",
-              "tier": "presentation",
-              "properties": {
-                "rarity": {
-                  "name": "rarity",
-                  "type": "string",
-                  "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "inputs": {
-              "type": "[CraftingRecipeInputsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "required": 1.0,
-                  "icon": "circle",
-                  "available": 1.0
-                }
-              ],
-              "label": "Inputs",
-              "description": "Input ingredients for the recipe",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "required": {
-                    "name": "required",
-                    "type": "number",
-                    "required": true
-                  },
-                  "available": {
-                    "name": "available",
-                    "type": "number",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "CraftingRecipeOrbital",
       "pages": [
         {
           "name": "CraftingRecipePage",
@@ -186,7 +25,168 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "canCraft": {
+              "default": false,
+              "description": "Whether the player has enough ingredients to craft",
+              "label": "Can Craft",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "inputs": {
+              "default": [
+                {
+                  "available": 1.0,
+                  "icon": "circle",
+                  "label": "Label",
+                  "required": 1.0
+                }
+              ],
+              "description": "Input ingredients for the recipe",
+              "items": {
+                "properties": {
+                  "available": {
+                    "name": "available",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "required": {
+                    "name": "required",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Inputs",
+              "tier": "presentation",
+              "type": "[CraftingRecipeInputsItem]"
+            },
+            "output": {
+              "default": {
+                "icon": "circle",
+                "label": "Label",
+                "rarity": "Rarity"
+              },
+              "description": "Output item produced by the recipe",
+              "label": "Output",
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "rarity": {
+                  "name": "rarity",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "CraftingRecipeOutput"
+            }
+          },
+          "emits": [
+            {
+              "description": "Callback when the craft button is clicked",
+              "event": "CRAFT",
+              "payloadSchema": [
+                {
+                  "name": "output",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "CraftingRecipeItem",
+          "name": "CraftingRecipeRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Callback when the craft button is clicked",
+                "key": "CRAFT",
+                "name": "Craft",
+                "payloadSchema": [
+                  {
+                    "name": "output",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "canCraft": "@config.canCraft",
+                      "className": "@config.className",
+                      "craftEvent": "CRAFT",
+                      "inputs": "@config.inputs",
+                      "onCraft": "CRAFT",
+                      "output": "@config.output",
+                      "type": "crafting-recipe"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

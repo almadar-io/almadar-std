@@ -1,90 +1,20 @@
 {
-  "name": "ui-loading-state",
-  "version": "1.0.0",
   "description": "LoadingState — UI factory (1:1 with the @almadar/ui loading-state pattern).",
+  "name": "ui-loading-state",
   "orbitals": [
     {
-      "name": "LoadingStateOrbital",
       "entity": {
-        "name": "LoadingStateItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "LoadingStateItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "LoadingStateRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "LoadingStateItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "title": "@config.title",
-                      "message": "@config.message",
-                      "className": "@config.className",
-                      "type": "loading-state"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "title prop",
-              "tier": "presentation"
-            },
-            "message": {
-              "type": "string",
-              "default": "Message",
-              "label": "Message",
-              "description": "message prop",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "LoadingStateOrbital",
       "pages": [
         {
           "name": "LoadingStatePage",
@@ -95,7 +25,77 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "message": {
+              "default": "Message",
+              "description": "message prop",
+              "label": "Message",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Title",
+              "description": "title prop",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "LoadingStateItem",
+          "name": "LoadingStateRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "message": "@config.message",
+                      "title": "@config.title",
+                      "type": "loading-state"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

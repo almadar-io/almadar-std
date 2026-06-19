@@ -1,227 +1,110 @@
 {
+  "description": "NegotiatorBoard — game-theory payoff gameplay state machine (1:1 with the @almadar/ui negotiator-board pattern).",
   "name": "ui-negotiator-board",
-  "version": "1.0.0",
-  "description": "NegotiatorBoard — UI factory (1:1 with the @almadar/ui negotiator-board pattern).",
   "orbitals": [
     {
-      "name": "NegotiatorBoardOrbital",
       "entity": {
-        "name": "NegotiatorBoardItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          }
-        ]
-      },
-      "traits": [
-        {
-          "name": "NegotiatorBoardRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
+            "required": true,
+            "type": "string"
           },
-          "category": "interaction",
-          "linkedEntity": "NegotiatorBoardItem",
-          "emits": [
-            {
-              "event": "COMPLETE",
-              "description": "completeEvent prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "success",
-                  "type": "boolean",
-                  "required": true
-                },
-                {
-                  "name": "score",
-                  "type": "number",
-                  "required": true
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "COMPLETE",
-                "name": "Complete",
-                "description": "completeEvent prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "success",
-                    "type": "boolean",
-                    "required": true
-                  },
-                  {
-                    "name": "score",
-                    "type": "number",
-                    "required": true
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "NegotiatorBoardItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "negotiator-board",
-                      "sortDirection": "@config.sortDirection",
-                      "className": "@config.className",
-                      "error": "@config.error",
-                      "page": "@config.pageProp",
-                      "sortBy": "@config.sortBy",
-                      "isLoading": "@config.isLoading",
-                      "selectedIds": "@config.selectedIds",
-                      "completeEvent": "COMPLETE",
-                      "entity": "@entity",
-                      "activeFilters": "@config.activeFilters",
-                      "pageSize": "@config.pageSize",
-                      "searchValue": "@config.searchValue",
-                      "totalCount": "@config.totalCount"
-                    }
-                  ]
-                ]
-              }
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "round",
+            "type": "number"
+          },
+          {
+            "default": 10.0,
+            "name": "targetScore",
+            "type": "number"
+          },
+          {
+            "default": 5.0,
+            "name": "maxRounds",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "win",
+              "lose"
             ]
           },
-          "config": {
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "searchValue": {
-              "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
-              "tier": "presentation"
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "NegotiatorBoardError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            }
+          {
+            "default": "tit-for-tat",
+            "name": "opponentStrategy",
+            "type": "string"
           },
-          "scope": "instance"
-        }
-      ],
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "actions",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "opponentAction": {
+                  "name": "opponentAction",
+                  "required": true,
+                  "type": "string"
+                },
+                "opponentPayoff": {
+                  "name": "opponentPayoff",
+                  "required": true,
+                  "type": "number"
+                },
+                "playerAction": {
+                  "name": "playerAction",
+                  "required": true,
+                  "type": "string"
+                },
+                "playerPayoff": {
+                  "name": "playerPayoff",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "payoffMatrix",
+            "type": "array"
+          }
+        ],
+        "name": "NegotiatorBoardItem",
+        "persistence": "runtime"
+      },
+      "name": "NegotiatorBoardOrbital",
       "pages": [
         {
           "name": "NegotiatorBoardPage",
@@ -232,7 +115,609 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actions": {
+              "default": [],
+              "description": "Selectable round actions (id/label/description).",
+              "items": {
+                "properties": {
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Actions",
+              "tier": "domain",
+              "type": "[NegotiatorBoardActionsItem]"
+            },
+            "activeFilters": {
+              "description": "Active filters",
+              "label": "Active Filters",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state (UiError)",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "NegotiatorBoardError"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "maxRounds": {
+              "default": 5.0,
+              "description": "Number of negotiation rounds before the game finishes.",
+              "label": "Max Rounds",
+              "tier": "domain",
+              "type": "number"
+            },
+            "opponentStrategy": {
+              "default": "tit-for-tat",
+              "description": "AI opponent strategy (always-cooperate | always-defect | tit-for-tat | random).",
+              "label": "Opponent Strategy",
+              "tier": "domain",
+              "type": "string"
+            },
+            "pageProp": {
+              "default": 0.0,
+              "description": "Current page number",
+              "label": "Page",
+              "synonyms": "page",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageSize": {
+              "default": 0.0,
+              "description": "Number of items per page",
+              "label": "Page Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "payoffMatrix": {
+              "default": [],
+              "description": "Payoff-matrix cells (playerAction/opponentAction/playerPayoff/opponentPayoff).",
+              "items": {
+                "properties": {
+                  "opponentAction": {
+                    "name": "opponentAction",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "opponentPayoff": {
+                    "name": "opponentPayoff",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "playerAction": {
+                    "name": "playerAction",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "playerPayoff": {
+                    "name": "playerPayoff",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Payoff Matrix",
+              "tier": "domain",
+              "type": "[NegotiatorBoardPayoffItem]"
+            },
+            "searchValue": {
+              "default": "Search Value",
+              "description": "Current search query value",
+              "label": "Search Value",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "selectedIds": {
+              "default": [],
+              "description": "Currently selected item IDs",
+              "items": {
+                "type": "string"
+              },
+              "label": "Selected Ids",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "sortBy": {
+              "default": "Sort By",
+              "description": "Current sort field",
+              "label": "Sort By",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "sortDirection": {
+              "default": "asc",
+              "description": "Current sort direction",
+              "label": "Sort Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "targetScore": {
+              "default": 10.0,
+              "description": "Total payoff the player must reach to win.",
+              "label": "Target Score",
+              "tier": "domain",
+              "type": "number"
+            },
+            "totalCount": {
+              "default": 0.0,
+              "description": "Total number of items",
+              "label": "Total Count",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Emits one negotiation round; the UI resolves the payoff before emitting.",
+              "event": "PLAY_ROUND",
+              "payloadSchema": [
+                {
+                  "name": "playerAction",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "payoff",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits when all rounds are spent; routes to win/lose by score vs target.",
+              "event": "FINISH",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "completeEvent prop",
+              "event": "COMPLETE",
+              "payloadSchema": [
+                {
+                  "name": "success",
+                  "required": true,
+                  "type": "boolean"
+                },
+                {
+                  "name": "score",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "actions",
+              "maxRounds",
+              "opponentStrategy",
+              "payoffMatrix",
+              "result",
+              "round",
+              "score",
+              "targetScore"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "NegotiatorBoardItem",
+          "name": "NegotiatorBoardRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "description": "Emits one negotiation round; the UI resolves the payoff before emitting.",
+                "key": "PLAY_ROUND",
+                "name": "Play Round",
+                "payloadSchema": [
+                  {
+                    "name": "playerAction",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "payoff",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits when all rounds are spent; routes to win/lose by score vs target.",
+                "key": "FINISH",
+                "name": "Finish",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "completeEvent prop",
+                "key": "COMPLETE",
+                "name": "Complete",
+                "payloadSchema": [
+                  {
+                    "name": "success",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "score",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "menu"
+              },
+              {
+                "name": "playing"
+              },
+              {
+                "name": "complete"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "NegotiatorBoardItem",
+                    {}
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.round",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.targetScore",
+                    "@config.targetScore"
+                  ],
+                  [
+                    "set",
+                    "@entity.maxRounds",
+                    "@config.maxRounds"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.opponentStrategy",
+                    "@config.opponentStrategy"
+                  ],
+                  [
+                    "set",
+                    "@entity.actions",
+                    "@config.actions"
+                  ],
+                  [
+                    "set",
+                    "@entity.payoffMatrix",
+                    "@config.payoffMatrix"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "activeFilters": "@config.activeFilters",
+                      "className": "@config.className",
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "searchValue": "@config.searchValue",
+                      "selectedIds": "@config.selectedIds",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "totalCount": "@config.totalCount",
+                      "type": "negotiator-board"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "menu",
+                "to": "menu"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.round",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.targetScore",
+                    "@config.targetScore"
+                  ],
+                  [
+                    "set",
+                    "@entity.maxRounds",
+                    "@config.maxRounds"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "negotiator-board"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "from": "menu",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.score",
+                    [
+                      "+",
+                      "@entity.score",
+                      [
+                        "if",
+                        [
+                          ">=",
+                          "@payload.payoff",
+                          0.0
+                        ],
+                        "@payload.payoff",
+                        0.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.round",
+                    [
+                      "+",
+                      "@entity.round",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "negotiator-board"
+                    }
+                  ]
+                ],
+                "event": "PLAY_ROUND",
+                "from": "playing",
+                "guard": [
+                  "<",
+                  "@entity.round",
+                  "@entity.maxRounds"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "win"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "negotiator-board"
+                    }
+                  ]
+                ],
+                "event": "FINISH",
+                "from": "playing",
+                "guard": [
+                  ">=",
+                  "@entity.score",
+                  "@entity.targetScore"
+                ],
+                "to": "complete"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "lose"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "negotiator-board"
+                    }
+                  ]
+                ],
+                "event": "FINISH",
+                "from": "playing",
+                "guard": [
+                  "<",
+                  "@entity.score",
+                  "@entity.targetScore"
+                ],
+                "to": "complete"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.round",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "negotiator-board"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "complete",
+                "to": "menu"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

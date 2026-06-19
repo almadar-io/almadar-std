@@ -1,128 +1,20 @@
 {
-  "name": "ui-score-display",
-  "version": "1.0.0",
   "description": "ScoreDisplay — UI factory (1:1 with the @almadar/ui score-display pattern).",
+  "name": "ui-score-display",
   "orbitals": [
     {
-      "name": "ScoreDisplayOrbital",
       "entity": {
-        "name": "ScoreDisplayItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ScoreDisplayItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ScoreDisplayRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ScoreDisplayItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "locale": "@config.locale",
-                      "label": "@config.label",
-                      "type": "score-display",
-                      "value": "@config.value",
-                      "icon": "@config.icon",
-                      "animated": "@config.animated",
-                      "size": "@config.size"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "animated": {
-              "type": "boolean",
-              "default": true,
-              "label": "Animated",
-              "description": "Animation on value change",
-              "tier": "presentation"
-            },
-            "locale": {
-              "type": "string",
-              "default": "en-US",
-              "label": "Locale",
-              "description": "Number formatting locale",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg",
-                "xl"
-              ]
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Label to display before score",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Value",
-              "description": "Current score value",
-              "tier": "presentation"
-            },
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Icon component or emoji",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ScoreDisplayOrbital",
       "pages": [
         {
           "name": "ScoreDisplayPage",
@@ -133,7 +25,115 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "animated": {
+              "default": true,
+              "description": "Animation on value change",
+              "label": "Animated",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Icon component or emoji",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Label to display before score",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "locale": {
+              "default": "en-US",
+              "description": "Number formatting locale",
+              "label": "Locale",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            },
+            "value": {
+              "default": 0.0,
+              "description": "Current score value",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ScoreDisplayItem",
+          "name": "ScoreDisplayRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animated": "@config.animated",
+                      "className": "@config.className",
+                      "icon": "@config.icon",
+                      "label": "@config.label",
+                      "locale": "@config.locale",
+                      "size": "@config.size",
+                      "type": "score-display",
+                      "value": "@config.value"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

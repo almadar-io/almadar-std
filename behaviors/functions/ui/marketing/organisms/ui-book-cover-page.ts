@@ -39,18 +39,18 @@ export type StdUiBookCoverPageEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookCoverPageConfig {
+  /** Default: `"Author"` */
+  author?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  coverImageUrl?: unknown;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
   /** Default: `"Subtitle"` */
   subtitle?: string;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Author"` */
-  author?: string;
   /** Default: `"Title"` */
   title?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  coverImageUrl?: unknown;
 }
 
 /**
@@ -111,8 +111,8 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -123,99 +123,99 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'BookCoverPageRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'BookCoverPageItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'transitions': [
-            {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'type': 'book-cover-page',
-                    'title': '@config.title',
-                    'className': '@config.className',
-                    'author': '@config.author',
-                    'coverImageUrl': '@config.coverImageUrl',
-                    'direction': '@config.direction',
-                    'subtitle': '@config.subtitle',
-                  },
-                ],
-              ],
-            },
-          ],
-        },
         'config': {
-          'direction': {
-            'type': 'string',
-            'default': 'rtl',
-            'label': 'Direction',
-            'description': 'direction prop',
+          'author': {
+            'default': 'Author',
+            'description': 'author prop',
+            'label': 'Author',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'coverImageUrl': {
+            'default': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
+            'description': 'coverImageUrl prop',
+            'label': 'Cover Image Url',
+            'tier': 'presentation',
+            'type': 'asset',
+          },
+          'direction': {
+            'default': 'rtl',
+            'description': 'direction prop',
+            'label': 'Direction',
+            'tier': 'presentation',
+            'type': 'string',
             'values': [
               'rtl',
               'ltr',
             ],
           },
           'subtitle': {
-            'type': 'string',
             'default': 'Subtitle',
-            'label': 'Subtitle',
             'description': 'subtitle prop',
+            'label': 'Subtitle',
             'tier': 'presentation',
-          },
-          'className': {
             'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'author': {
-            'type': 'string',
-            'default': 'Author',
-            'label': 'Author',
-            'description': 'author prop',
-            'tier': 'presentation',
           },
           'title': {
-            'type': 'string',
             'default': 'Title',
-            'label': 'Title',
             'description': 'title prop',
+            'label': 'Title',
             'tier': 'presentation',
-          },
-          'coverImageUrl': {
-            'type': 'asset',
-            'default': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
-            'label': 'Cover Image Url',
-            'description': 'coverImageUrl prop',
-            'tier': 'presentation',
+            'type': 'string',
           },
         },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'BookCoverPageItem',
+        'name': 'BookCoverPageRender',
         'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'author': '@config.author',
+                    'className': '@config.className',
+                    'coverImageUrl': '@config.coverImageUrl',
+                    'direction': '@config.direction',
+                    'subtitle': '@config.subtitle',
+                    'title': '@config.title',
+                    'type': 'book-cover-page',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
       } as never, 'BookCoverPageItem', canonicalName) as never,
     ],
     pages: [

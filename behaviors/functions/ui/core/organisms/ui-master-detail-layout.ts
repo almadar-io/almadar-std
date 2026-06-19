@@ -39,17 +39,17 @@ export type StdUiMasterDetailLayoutEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMasterDetailLayoutConfig {
-  emptyDetail?: unknown;
-  /** Default: `"Detail Class Name"` */
-  detailClassName?: string;
-  /** Default: `"350px"` */
-  masterWidth?: string;
-  /** Default: `false` */
-  hasSelection?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Detail Class Name"` */
+  detailClassName?: string;
+  emptyDetail?: unknown;
+  /** Default: `false` */
+  hasSelection?: boolean;
   /** Default: `"Master Class Name"` */
   masterClassName?: string;
+  /** Default: `"350px"` */
+  masterWidth?: string;
 }
 
 /**
@@ -110,8 +110,8 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -122,106 +122,106 @@ export function stdUiMasterDetailLayoutMasterDetailLayoutOrbital(params: StdUiMa
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'MasterDetailLayoutRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'detailClassName': {
+            'default': 'Detail Class Name',
+            'description': 'Class for detail pane',
+            'label': 'Detail Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'emptyDetail': {
+            'description': 'Content shown when nothing is selected',
+            'label': 'Empty Detail',
+            'tier': 'presentation',
+            'type': 'node',
+          },
+          'hasSelection': {
+            'default': false,
+            'description': 'Whether an item is currently selected',
+            'label': 'Has Selection',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'masterClassName': {
+            'default': 'Master Class Name',
+            'description': 'Class for master pane',
+            'label': 'Master Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'masterWidth': {
+            'default': '350px',
+            'description': 'Width of master panel (e.g., \'350px\', \'30%\')',
+            'label': 'Master Width',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
         'linkedEntity': 'MasterDetailLayoutItem',
+        'name': 'MasterDetailLayoutRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
                     'className': '@config.className',
-                    'masterClassName': '@config.masterClassName',
-                    'type': 'master-detail-layout',
-                    'master': [
-                      {
-                        'content': 'Master',
-                        'type': 'typography',
-                      },
-                    ],
-                    'masterWidth': '@config.masterWidth',
-                    'hasSelection': '@config.hasSelection',
-                    'detailClassName': '@config.detailClassName',
-                    'emptyDetail': '@config.emptyDetail',
                     'detail': [
                       {
                         'content': 'Detail',
                         'type': 'typography',
                       },
                     ],
+                    'detailClassName': '@config.detailClassName',
+                    'emptyDetail': '@config.emptyDetail',
+                    'hasSelection': '@config.hasSelection',
+                    'master': [
+                      {
+                        'content': 'Master',
+                        'type': 'typography',
+                      },
+                    ],
+                    'masterClassName': '@config.masterClassName',
+                    'masterWidth': '@config.masterWidth',
+                    'type': 'master-detail-layout',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'emptyDetail': {
-            'type': 'node',
-            'label': 'Empty Detail',
-            'description': 'Content shown when nothing is selected',
-            'tier': 'presentation',
-          },
-          'detailClassName': {
-            'type': 'string',
-            'default': 'Detail Class Name',
-            'label': 'Detail Class Name',
-            'description': 'Class for detail pane',
-            'tier': 'presentation',
-          },
-          'masterWidth': {
-            'type': 'string',
-            'default': '350px',
-            'label': 'Master Width',
-            'description': 'Width of master panel (e.g., \'350px\', \'30%\')',
-            'tier': 'presentation',
-          },
-          'hasSelection': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Has Selection',
-            'description': 'Whether an item is currently selected',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'masterClassName': {
-            'type': 'string',
-            'default': 'Master Class Name',
-            'label': 'Master Class Name',
-            'description': 'Class for master pane',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'MasterDetailLayoutItem', canonicalName) as never,
     ],
     pages: [

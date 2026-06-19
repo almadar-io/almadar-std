@@ -1,96 +1,20 @@
 {
-  "name": "ui-spinner",
-  "version": "1.0.0",
   "description": "Spinner — UI factory (1:1 with the @almadar/ui spinner pattern).",
+  "name": "ui-spinner",
   "orbitals": [
     {
-      "name": "SpinnerOrbital",
       "entity": {
-        "name": "SpinnerItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "SpinnerItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "SpinnerRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "SpinnerItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "@config.size",
-                      "className": "@config.className",
-                      "type": "spinner",
-                      "overlay": "@config.overlay"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "overlay": {
-              "type": "boolean",
-              "default": false,
-              "label": "Overlay",
-              "description": "Renders a centered overlay backdrop instead of inline.",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "size prop",
-              "tier": "presentation",
-              "values": [
-                "xs",
-                "sm",
-                "md",
-                "lg"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "SpinnerOrbital",
       "pages": [
         {
           "name": "SpinnerPage",
@@ -101,7 +25,83 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the root element.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "overlay": {
+              "default": false,
+              "description": "Renders a centered overlay backdrop instead of inline.",
+              "label": "Overlay",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "size": {
+              "default": "md",
+              "description": "size prop",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "xs",
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SpinnerItem",
+          "name": "SpinnerRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "overlay": "@config.overlay",
+                      "size": "@config.size",
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

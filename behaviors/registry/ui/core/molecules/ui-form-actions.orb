@@ -1,261 +1,20 @@
 {
-  "name": "ui-form-actions",
-  "version": "1.0.0",
   "description": "FormActions — UI factory (1:1 with the @almadar/ui form-actions pattern).",
+  "name": "ui-form-actions",
   "orbitals": [
     {
-      "name": "FormActionsOrbital",
       "entity": {
-        "name": "FormActionsItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "FormActionsItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "FormActionsRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "FormActionsItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "FormActionsItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "secondary": "@config.secondary",
-                      "children": [
-                        {
-                          "content": "Sample content",
-                          "type": "typography"
-                        }
-                      ],
-                      "variant": "@config.variant",
-                      "primary": "@config.primary",
-                      "type": "form-actions",
-                      "orientation": "@config.orientation",
-                      "look": "@config.look",
-                      "className": "@config.className",
-                      "entity": "FormActionsItem",
-                      "filters": "@config.filters"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Variant",
-              "description": "Visual variant",
-              "tier": "presentation",
-              "values": [
-                "default",
-                "segmented",
-                "toggle"
-              ]
-            },
-            "secondary": {
-              "type": "[FormActionsSecondaryItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "variant": "Variant",
-                  "navigatesTo": "Navigates To",
-                  "actionType": "Action Type"
-                }
-              ],
-              "label": "Secondary",
-              "description": "Secondary action buttons config (for form-actions pattern) Accepts readonly array for compatibility with generated const arrays",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "actionType": {
-                    "name": "actionType",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "look": {
-              "type": "string",
-              "default": "right-aligned-buttons",
-              "label": "Look",
-              "description": "Layer 2 visual treatment for the action-cluster (form-actions) pattern.",
-              "tier": "presentation",
-              "values": [
-                "right-aligned-buttons",
-                "floating-bar",
-                "inline-row",
-                "dropdown-menu",
-                "command-palette-trigger"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "primary": {
-              "type": "FormActionsPrimary",
-              "default": {
-                "variant": "Variant",
-                "label": "Label",
-                "actionType": "Action Type",
-                "navigatesTo": "Navigates To"
-              },
-              "label": "Primary",
-              "description": "Primary action button config (for form-actions pattern) Accepts Readonly for compatibility with generated const objects",
-              "tier": "presentation",
-              "properties": {
-                "event": {
-                  "name": "event",
-                  "type": "string",
-                  "required": false
-                },
-                "actionType": {
-                  "name": "actionType",
-                  "type": "string",
-                  "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "variant": {
-                  "name": "variant",
-                  "type": "string",
-                  "required": false
-                },
-                "navigatesTo": {
-                  "name": "navigatesTo",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "filters": {
-              "type": "[FormActionsFiltersItem]",
-              "default": [
-                {
-                  "type": "checkbox",
-                  "label": "Label",
-                  "field": "Field",
-                  "options": [
-                    "Item"
-                  ]
-                }
-              ],
-              "label": "Filters",
-              "description": "Filter definitions for filter-group pattern",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": true
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "checkbox",
-                      "select",
-                      "toggle"
-                    ]
-                  },
-                  "options": {
-                    "name": "options",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            },
-            "orientation": {
-              "type": "string",
-              "default": "horizontal",
-              "label": "Orientation",
-              "description": "Orientation",
-              "tier": "presentation",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "FormActionsOrbital",
       "pages": [
         {
           "name": "FormActionsPage",
@@ -266,7 +25,248 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "filters": {
+              "default": [
+                {
+                  "field": "Field",
+                  "label": "Label",
+                  "options": [
+                    "Item"
+                  ],
+                  "type": "checkbox"
+                }
+              ],
+              "description": "Filter definitions for filter-group pattern",
+              "items": {
+                "properties": {
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "options": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "options",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "checkbox",
+                      "select",
+                      "toggle"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Filters",
+              "tier": "presentation",
+              "type": "[FormActionsFiltersItem]"
+            },
+            "look": {
+              "default": "right-aligned-buttons",
+              "description": "Layer 2 visual treatment for the action-cluster (form-actions) pattern.",
+              "label": "Look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "right-aligned-buttons",
+                "floating-bar",
+                "inline-row",
+                "dropdown-menu",
+                "command-palette-trigger"
+              ]
+            },
+            "orientation": {
+              "default": "horizontal",
+              "description": "Orientation",
+              "label": "Orientation",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "primary": {
+              "default": {
+                "actionType": "Action Type",
+                "label": "Label",
+                "navigatesTo": "Navigates To",
+                "variant": "Variant"
+              },
+              "description": "Primary action button config (for form-actions pattern) Accepts Readonly for compatibility with generated const objects",
+              "label": "Primary",
+              "properties": {
+                "actionType": {
+                  "name": "actionType",
+                  "required": false,
+                  "type": "string"
+                },
+                "event": {
+                  "name": "event",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "navigatesTo": {
+                  "name": "navigatesTo",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "FormActionsPrimary"
+            },
+            "secondary": {
+              "default": [
+                {
+                  "actionType": "Action Type",
+                  "label": "Label",
+                  "navigatesTo": "Navigates To",
+                  "variant": "Variant"
+                }
+              ],
+              "description": "Secondary action buttons config (for form-actions pattern) Accepts readonly array for compatibility with generated const arrays",
+              "items": {
+                "properties": {
+                  "actionType": {
+                    "name": "actionType",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Secondary",
+              "tier": "presentation",
+              "type": "[FormActionsSecondaryItem]"
+            },
+            "variant": {
+              "default": "default",
+              "description": "Visual variant",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "default",
+                "segmented",
+                "toggle"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FormActionsItem",
+          "name": "FormActionsRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "FormActionsItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "entity": "FormActionsItem",
+                      "filters": "@config.filters",
+                      "look": "@config.look",
+                      "orientation": "@config.orientation",
+                      "primary": "@config.primary",
+                      "secondary": "@config.secondary",
+                      "type": "form-actions",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

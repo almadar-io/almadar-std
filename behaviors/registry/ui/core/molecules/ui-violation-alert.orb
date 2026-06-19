@@ -1,224 +1,20 @@
 {
-  "name": "ui-violation-alert",
-  "version": "1.0.0",
   "description": "ViolationAlert — UI factory (1:1 with the @almadar/ui violation-alert pattern).",
+  "name": "ui-violation-alert",
   "orbitals": [
     {
-      "name": "ViolationAlertOrbital",
       "entity": {
-        "name": "ViolationAlertItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ViolationAlertItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ViolationAlertRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ViolationAlertItem",
-          "emits": [
-            {
-              "event": "DISMISS",
-              "description": "Dismiss handler",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "NAVIGATE_TO_FIELD",
-              "description": "Navigate to the field that caused violation",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "fieldId",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "DISMISS",
-                "name": "Dismiss",
-                "description": "Dismiss handler",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "NAVIGATE_TO_FIELD",
-                "name": "Navigate To Field",
-                "description": "Navigate to the field that caused violation",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "fieldId",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "dismissible": "@config.dismissible",
-                      "onDismiss": "DISMISS",
-                      "severity": "@config.severity",
-                      "compact": "@config.compact",
-                      "violation": "@config.violation",
-                      "type": "violation-alert",
-                      "onNavigateToField": "NAVIGATE_TO_FIELD"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "compact": {
-              "type": "boolean",
-              "default": false,
-              "label": "Compact",
-              "description": "Compact display mode",
-              "tier": "presentation"
-            },
-            "violation": {
-              "type": "ViolationAlertViolation",
-              "default": {
-                "article": "Article",
-                "actionType": "measure",
-                "fieldId": "Field Id",
-                "id": "Id",
-                "law": "Law",
-                "adminAction": "Admin Action",
-                "message": "Message",
-                "penaltyAction": "Penalty Action",
-                "tabId": "Tab Id"
-              },
-              "label": "Violation",
-              "description": "Violation data",
-              "tier": "presentation",
-              "properties": {
-                "article": {
-                  "name": "article",
-                  "type": "string",
-                  "required": true
-                },
-                "adminAction": {
-                  "name": "adminAction",
-                  "type": "string",
-                  "required": false
-                },
-                "actionType": {
-                  "name": "actionType",
-                  "type": "string",
-                  "required": true,
-                  "values": [
-                    "measure",
-                    "admin",
-                    "penalty"
-                  ]
-                },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "fieldId": {
-                  "name": "fieldId",
-                  "type": "string",
-                  "required": false
-                },
-                "penaltyAction": {
-                  "name": "penaltyAction",
-                  "type": "string",
-                  "required": false
-                },
-                "law": {
-                  "name": "law",
-                  "type": "string",
-                  "required": true
-                },
-                "tabId": {
-                  "name": "tabId",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "dismissible": {
-              "type": "boolean",
-              "default": false,
-              "label": "Dismissible",
-              "description": "Dismissible alert",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "severity": {
-              "type": "string",
-              "default": "warning",
-              "label": "Severity",
-              "description": "Visual severity (derived from actionType if not specified)",
-              "tier": "presentation",
-              "values": [
-                "warning",
-                "error"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ViolationAlertOrbital",
       "pages": [
         {
           "name": "ViolationAlertPage",
@@ -229,7 +25,211 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "compact": {
+              "default": false,
+              "description": "Compact display mode",
+              "label": "Compact",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "dismissible": {
+              "default": false,
+              "description": "Dismissible alert",
+              "label": "Dismissible",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "severity": {
+              "default": "warning",
+              "description": "Visual severity (derived from actionType if not specified)",
+              "label": "Severity",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "warning",
+                "error"
+              ]
+            },
+            "violation": {
+              "default": {
+                "actionType": "measure",
+                "adminAction": "Admin Action",
+                "article": "Article",
+                "fieldId": "Field Id",
+                "id": "Id",
+                "law": "Law",
+                "message": "Message",
+                "penaltyAction": "Penalty Action",
+                "tabId": "Tab Id"
+              },
+              "description": "Violation data",
+              "label": "Violation",
+              "properties": {
+                "actionType": {
+                  "name": "actionType",
+                  "required": true,
+                  "type": "string",
+                  "values": [
+                    "measure",
+                    "admin",
+                    "penalty"
+                  ]
+                },
+                "adminAction": {
+                  "name": "adminAction",
+                  "required": false,
+                  "type": "string"
+                },
+                "article": {
+                  "name": "article",
+                  "required": true,
+                  "type": "string"
+                },
+                "fieldId": {
+                  "name": "fieldId",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "law": {
+                  "name": "law",
+                  "required": true,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "penaltyAction": {
+                  "name": "penaltyAction",
+                  "required": false,
+                  "type": "string"
+                },
+                "tabId": {
+                  "name": "tabId",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "ViolationAlertViolation"
+            }
+          },
+          "emits": [
+            {
+              "description": "Dismiss handler",
+              "event": "DISMISS",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Navigate to the field that caused violation",
+              "event": "NAVIGATE_TO_FIELD",
+              "payloadSchema": [
+                {
+                  "name": "fieldId",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ViolationAlertItem",
+          "name": "ViolationAlertRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Dismiss handler",
+                "key": "DISMISS",
+                "name": "Dismiss",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Navigate to the field that caused violation",
+                "key": "NAVIGATE_TO_FIELD",
+                "name": "Navigate To Field",
+                "payloadSchema": [
+                  {
+                    "name": "fieldId",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "compact": "@config.compact",
+                      "dismissible": "@config.dismissible",
+                      "onDismiss": "DISMISS",
+                      "onNavigateToField": "NAVIGATE_TO_FIELD",
+                      "severity": "@config.severity",
+                      "type": "violation-alert",
+                      "violation": "@config.violation"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

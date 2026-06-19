@@ -1,227 +1,68 @@
 {
+  "description": "DebuggerBoard — flag every bug line and no clean line to win (1:1 with the @almadar/ui debugger-board pattern).",
   "name": "ui-debugger-board",
-  "version": "1.0.0",
-  "description": "DebuggerBoard — UI factory (1:1 with the @almadar/ui debugger-board pattern).",
   "orbitals": [
     {
-      "name": "DebuggerBoardOrbital",
       "entity": {
-        "name": "DebuggerBoardItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          }
-        ]
-      },
-      "traits": [
-        {
-          "name": "DebuggerBoardRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
+            "required": true,
+            "type": "string"
           },
-          "category": "interaction",
-          "linkedEntity": "DebuggerBoardItem",
-          "emits": [
-            {
-              "event": "COMPLETE",
-              "description": "completeEvent prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "success",
-                  "type": "boolean",
-                  "required": true
-                },
-                {
-                  "name": "attempts",
-                  "type": "number",
-                  "required": true
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "COMPLETE",
-                "name": "Complete",
-                "description": "completeEvent prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "success",
-                    "type": "boolean",
-                    "required": true
-                  },
-                  {
-                    "name": "attempts",
-                    "type": "number",
-                    "required": true
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "DebuggerBoardItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "page": "@config.pageProp",
-                      "entity": "@entity",
-                      "activeFilters": "@config.activeFilters",
-                      "completeEvent": "COMPLETE",
-                      "error": "@config.error",
-                      "className": "@config.className",
-                      "totalCount": "@config.totalCount",
-                      "selectedIds": "@config.selectedIds",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "type": "debugger-board",
-                      "searchValue": "@config.searchValue",
-                      "pageSize": "@config.pageSize",
-                      "isLoading": "@config.isLoading"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
-              "tier": "presentation"
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "searchValue": {
-              "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "DebuggerBoardError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
+          {
+            "items": {
               "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
+                "content": {
+                  "name": "content",
+                  "required": false,
+                  "type": "string"
                 },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
+                "explanation": {
+                  "name": "explanation",
+                  "required": false,
+                  "type": "string"
                 },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
                 },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
+                "isBug": {
+                  "name": "isBug",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "isFlagged": {
+                  "name": "isFlagged",
+                  "required": false,
+                  "type": "boolean"
                 }
-              }
+              },
+              "type": "object"
             },
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
-            }
+            "name": "lines",
+            "type": "array"
           },
-          "scope": "instance"
-        }
-      ],
+          {
+            "default": 0.0,
+            "name": "attempts",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "win"
+            ]
+          }
+        ],
+        "name": "DebuggerBoardItem",
+        "persistence": "runtime"
+      },
+      "name": "DebuggerBoardOrbital",
       "pages": [
         {
           "name": "DebuggerBoardPage",
@@ -232,7 +73,684 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "activeFilters": {
+              "description": "Active filters",
+              "label": "Active Filters",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state (UiError)",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "DebuggerBoardError"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "lines": {
+              "default": [
+                {
+                  "content": "function add(a, b) {",
+                  "id": "l1",
+                  "isBug": false,
+                  "isFlagged": false
+                },
+                {
+                  "content": "  return a - b;",
+                  "explanation": "Should be a + b for an add function.",
+                  "id": "l2",
+                  "isBug": true,
+                  "isFlagged": false
+                },
+                {
+                  "content": "}",
+                  "id": "l3",
+                  "isBug": false,
+                  "isFlagged": false
+                },
+                {
+                  "content": "const total = add(2, 3);",
+                  "id": "l4",
+                  "isBug": false,
+                  "isFlagged": false
+                },
+                {
+                  "content": "console.log(totl);",
+                  "explanation": "Typo: 'totl' should be 'total'.",
+                  "id": "l5",
+                  "isBug": true,
+                  "isFlagged": false
+                }
+              ],
+              "description": "Direct code-line data — takes priority over entity-derived lines.",
+              "items": {
+                "properties": {
+                  "content": {
+                    "name": "content",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "explanation": {
+                    "name": "explanation",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "isBug": {
+                    "name": "isBug",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "isFlagged": {
+                    "name": "isFlagged",
+                    "required": false,
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Lines",
+              "tier": "presentation",
+              "type": "[DebuggerBoardLinesItem]"
+            },
+            "pageProp": {
+              "default": 0.0,
+              "description": "Current page number",
+              "label": "Page",
+              "synonyms": "page",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageSize": {
+              "default": 0.0,
+              "description": "Number of items per page",
+              "label": "Page Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "searchValue": {
+              "default": "Search Value",
+              "description": "Current search query value",
+              "label": "Search Value",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "selectedIds": {
+              "default": [],
+              "description": "Currently selected item IDs",
+              "items": {
+                "type": "string"
+              },
+              "label": "Selected Ids",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "sortBy": {
+              "default": "Sort By",
+              "description": "Current sort field",
+              "label": "Sort By",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "sortDirection": {
+              "default": "asc",
+              "description": "Current sort direction",
+              "label": "Sort Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "totalCount": {
+              "default": 0.0,
+              "description": "Total number of items",
+              "label": "Total Count",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "completeEvent prop",
+              "event": "COMPLETE",
+              "payloadSchema": [
+                {
+                  "name": "success",
+                  "required": true,
+                  "type": "boolean"
+                },
+                {
+                  "name": "attempts",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Flip the flag on a reviewed code line",
+              "event": "TOGGLE_FLAG",
+              "payloadSchema": [
+                {
+                  "name": "lineId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Submit the current flag set for scoring",
+              "event": "CHECK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Reset the puzzle and play again",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "attempts",
+              "lines",
+              "result"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DebuggerBoardItem",
+          "name": "DebuggerBoardRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "description": "Flip the flag on a reviewed code line",
+                "key": "TOGGLE_FLAG",
+                "name": "Toggle Flag",
+                "payloadSchema": [
+                  {
+                    "name": "lineId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Submit the current flag set for scoring",
+                "key": "CHECK",
+                "name": "Check",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Reset the puzzle and play again",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "completeEvent prop",
+                "key": "COMPLETE",
+                "name": "Complete",
+                "payloadSchema": [
+                  {
+                    "name": "success",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "attempts",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "menu"
+              },
+              {
+                "name": "playing"
+              },
+              {
+                "name": "complete"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lines",
+                    "@config.lines"
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "activeFilters": "@config.activeFilters",
+                      "className": "@config.className",
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "searchValue": "@config.searchValue",
+                      "selectedIds": "@config.selectedIds",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "totalCount": "@config.totalCount",
+                      "type": "debugger-board"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "menu",
+                "to": "menu"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lines",
+                    "@config.lines"
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "debugger-board"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "from": "menu",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lines",
+                    [
+                      "array/map",
+                      "@entity.lines",
+                      [
+                        "fn",
+                        "l",
+                        [
+                          "if",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "l",
+                              "id"
+                            ],
+                            "@payload.lineId"
+                          ],
+                          [
+                            "object/merge",
+                            "l",
+                            {
+                              "isFlagged": [
+                                "not",
+                                [
+                                  "object/get",
+                                  "l",
+                                  "isFlagged"
+                                ]
+                              ]
+                            }
+                          ],
+                          "l"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "debugger-board"
+                    }
+                  ]
+                ],
+                "event": "TOGGLE_FLAG",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.attempts",
+                    [
+                      "+",
+                      "@entity.attempts",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "win"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "debugger-board"
+                    }
+                  ]
+                ],
+                "event": "CHECK",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.lines",
+                        [
+                          "fn",
+                          "l",
+                          [
+                            "and",
+                            [
+                              "object/get",
+                              "l",
+                              "isBug"
+                            ],
+                            [
+                              "not",
+                              [
+                                "object/get",
+                                "l",
+                                "isFlagged"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    0.0
+                  ],
+                  [
+                    "==",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.lines",
+                        [
+                          "fn",
+                          "l",
+                          [
+                            "and",
+                            [
+                              "not",
+                              [
+                                "object/get",
+                                "l",
+                                "isBug"
+                              ]
+                            ],
+                            [
+                              "object/get",
+                              "l",
+                              "isFlagged"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    0.0
+                  ]
+                ],
+                "to": "complete"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.attempts",
+                    [
+                      "+",
+                      "@entity.attempts",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "debugger-board"
+                    }
+                  ]
+                ],
+                "event": "CHECK",
+                "from": "playing",
+                "guard": [
+                  "or",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.lines",
+                        [
+                          "fn",
+                          "l",
+                          [
+                            "and",
+                            [
+                              "object/get",
+                              "l",
+                              "isBug"
+                            ],
+                            [
+                              "not",
+                              [
+                                "object/get",
+                                "l",
+                                "isFlagged"
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    0.0
+                  ],
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.lines",
+                        [
+                          "fn",
+                          "l",
+                          [
+                            "and",
+                            [
+                              "not",
+                              [
+                                "object/get",
+                                "l",
+                                "isBug"
+                              ]
+                            ],
+                            [
+                              "object/get",
+                              "l",
+                              "isFlagged"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    0.0
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lines",
+                    "@config.lines"
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "debugger-board"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "complete",
+                "to": "menu"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

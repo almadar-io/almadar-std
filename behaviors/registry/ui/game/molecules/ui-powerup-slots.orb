@@ -1,122 +1,20 @@
 {
-  "name": "ui-powerup-slots",
-  "version": "1.0.0",
   "description": "PowerupSlots — UI factory (1:1 with the @almadar/ui powerup-slots pattern).",
+  "name": "ui-powerup-slots",
   "orbitals": [
     {
-      "name": "PowerupSlotsOrbital",
       "entity": {
-        "name": "PowerupSlotsItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "PowerupSlotsItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "PowerupSlotsRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "PowerupSlotsItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "active": "@config.active",
-                      "maxSlots": "@config.maxSlots",
-                      "type": "powerup-slots"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "maxSlots": {
-              "type": "number",
-              "default": 4.0,
-              "label": "Max Slots",
-              "description": "Maximum number of powerup slots",
-              "tier": "presentation"
-            },
-            "active": {
-              "type": "[PowerupSlotsActiveItem]",
-              "default": [
-                {
-                  "remainingTime": 1.0,
-                  "id": "Id",
-                  "label": "Label",
-                  "icon": "circle"
-                }
-              ],
-              "label": "Active",
-              "description": "Array of active powerups",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "remainingTime": {
-                    "name": "remainingTime",
-                    "type": "number",
-                    "required": false
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "PowerupSlotsOrbital",
       "pages": [
         {
           "name": "PowerupSlotsPage",
@@ -127,7 +25,109 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "active": {
+              "default": [
+                {
+                  "icon": "circle",
+                  "id": "Id",
+                  "label": "Label",
+                  "remainingTime": 1.0
+                }
+              ],
+              "description": "Array of active powerups",
+              "items": {
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "remainingTime": {
+                    "name": "remainingTime",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Active",
+              "tier": "presentation",
+              "type": "[PowerupSlotsActiveItem]"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "maxSlots": {
+              "default": 4.0,
+              "description": "Maximum number of powerup slots",
+              "label": "Max Slots",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "PowerupSlotsItem",
+          "name": "PowerupSlotsRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "active": "@config.active",
+                      "className": "@config.className",
+                      "maxSlots": "@config.maxSlots",
+                      "type": "powerup-slots"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

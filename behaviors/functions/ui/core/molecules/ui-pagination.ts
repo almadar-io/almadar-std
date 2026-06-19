@@ -54,26 +54,26 @@ export interface StdUiPaginationPageSizeChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPaginationConfig {
+  /** Default: `""` */
+  className?: string;
   /** Default: `0` */
-  totalItems?: number;
-  /** Default: `false` */
-  showTotal?: boolean;
-  /** Default: `false` */
-  showPageSize?: boolean;
+  currentPage?: number;
+  /** Default: `7` */
+  maxVisiblePages?: number;
+  /** Default: `0` */
+  pageSize?: number;
   /** Default: `[]` */
   pageSizeOptions?: number[];
   /** Default: `false` */
   showJumpToPage?: boolean;
-  /** Default: `7` */
-  maxVisiblePages?: number;
+  /** Default: `false` */
+  showPageSize?: boolean;
+  /** Default: `false` */
+  showTotal?: boolean;
+  /** Default: `0` */
+  totalItems?: number;
   /** Default: `0` */
   totalPages?: number;
-  /** Default: `0` */
-  currentPage?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `0` */
-  pageSize?: number;
 }
 
 /**

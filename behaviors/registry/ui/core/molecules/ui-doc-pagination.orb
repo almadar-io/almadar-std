@@ -1,49 +1,122 @@
 {
-  "name": "ui-doc-pagination",
-  "version": "1.0.0",
   "description": "DocPagination — UI factory (1:1 with the @almadar/ui doc-pagination pattern).",
+  "name": "ui-doc-pagination",
   "orbitals": [
     {
-      "name": "DocPaginationOrbital",
       "entity": {
-        "name": "DocPaginationItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "DocPaginationItem",
+        "persistence": "runtime"
       },
+      "name": "DocPaginationOrbital",
+      "pages": [
+        {
+          "name": "DocPaginationPage",
+          "path": "/doc-pagination",
+          "traits": [
+            {
+              "ref": "DocPaginationRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "DocPaginationRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional class names",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "next": {
+              "default": {
+                "category": "Category",
+                "href": "Href",
+                "label": "Label"
+              },
+              "description": "Next page link",
+              "label": "Next",
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "href": {
+                  "name": "href",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "DocPaginationNext"
+            },
+            "prev": {
+              "default": {
+                "category": "Category",
+                "href": "Href",
+                "label": "Label"
+              },
+              "description": "Previous page link",
+              "label": "Prev",
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "href": {
+                  "name": "href",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "DocPaginationPrev"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
           "linkedEntity": "DocPaginationItem",
+          "name": "DocPaginationRender",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
@@ -55,89 +128,16 @@
                       "type": "doc-pagination"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "prev": {
-              "type": "DocPaginationPrev",
-              "default": {
-                "href": "Href",
-                "category": "Category",
-                "label": "Label"
-              },
-              "label": "Prev",
-              "description": "Previous page link",
-              "tier": "presentation",
-              "properties": {
-                "category": {
-                  "name": "category",
-                  "type": "string",
-                  "required": false
-                },
-                "href": {
-                  "name": "href",
-                  "type": "string",
-                  "required": true
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "next": {
-              "type": "DocPaginationNext",
-              "default": {
-                "href": "Href",
-                "category": "Category",
-                "label": "Label"
-              },
-              "label": "Next",
-              "description": "Next page link",
-              "tier": "presentation",
-              "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "category": {
-                  "name": "category",
-                  "type": "string",
-                  "required": false
-                },
-                "href": {
-                  "name": "href",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional class names",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "DocPaginationPage",
-          "path": "/doc-pagination",
-          "traits": [
-            {
-              "ref": "DocPaginationRender"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

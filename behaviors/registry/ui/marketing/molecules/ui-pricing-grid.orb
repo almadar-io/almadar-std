@@ -1,158 +1,20 @@
 {
-  "name": "ui-pricing-grid",
-  "version": "1.0.0",
   "description": "PricingGrid — UI factory (1:1 with the @almadar/ui pricing-grid pattern).",
+  "name": "ui-pricing-grid",
   "orbitals": [
     {
-      "name": "PricingGridOrbital",
       "entity": {
-        "name": "PricingGridItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "PricingGridItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "PricingGridRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "PricingGridItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "plans": "@config.plans",
-                      "type": "pricing-grid",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "plans": {
-              "type": "[PricingGridPlansItem]",
-              "default": [
-                {
-                  "name": "Name",
-                  "badge": "Badge",
-                  "description": "Description",
-                  "highlighted": false,
-                  "className": "Class Name",
-                  "action": {
-                    "label": "Label",
-                    "href": "Href"
-                  },
-                  "features": [
-                    "Item"
-                  ],
-                  "price": "Price"
-                }
-              ],
-              "label": "Plans",
-              "description": "plans prop",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "features": {
-                    "name": "features",
-                    "type": "array",
-                    "required": true,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "price": {
-                    "name": "price",
-                    "type": "string",
-                    "required": true
-                  },
-                  "action": {
-                    "name": "action",
-                    "type": "object",
-                    "required": true,
-                    "properties": {
-                      "label": {
-                        "name": "label",
-                        "type": "string",
-                        "required": true
-                      },
-                      "href": {
-                        "name": "href",
-                        "type": "string",
-                        "required": true
-                      }
-                    }
-                  },
-                  "highlighted": {
-                    "name": "highlighted",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "className": {
-                    "name": "className",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "PricingGridOrbital",
       "pages": [
         {
           "name": "PricingGridPage",
@@ -163,7 +25,145 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "plans": {
+              "default": [
+                {
+                  "action": {
+                    "href": "Href",
+                    "label": "Label"
+                  },
+                  "badge": "Badge",
+                  "className": "Class Name",
+                  "description": "Description",
+                  "features": [
+                    "Item"
+                  ],
+                  "highlighted": false,
+                  "name": "Name",
+                  "price": "Price"
+                }
+              ],
+              "description": "plans prop",
+              "items": {
+                "properties": {
+                  "action": {
+                    "name": "action",
+                    "properties": {
+                      "href": {
+                        "name": "href",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "required": true,
+                    "type": "object"
+                  },
+                  "badge": {
+                    "name": "badge",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "className": {
+                    "name": "className",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "features": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "features",
+                    "required": true,
+                    "type": "array"
+                  },
+                  "highlighted": {
+                    "name": "highlighted",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "price": {
+                    "name": "price",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Plans",
+              "tier": "presentation",
+              "type": "[PricingGridPlansItem]"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "PricingGridItem",
+          "name": "PricingGridRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "plans": "@config.plans",
+                      "type": "pricing-grid"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

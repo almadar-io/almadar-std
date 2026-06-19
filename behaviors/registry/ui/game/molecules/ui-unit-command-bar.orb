@@ -1,127 +1,20 @@
 {
-  "name": "ui-unit-command-bar",
-  "version": "1.0.0",
   "description": "UnitCommandBar — UI factory (1:1 with the @almadar/ui unit-command-bar pattern).",
+  "name": "ui-unit-command-bar",
   "orbitals": [
     {
-      "name": "UnitCommandBarOrbital",
       "entity": {
-        "name": "UnitCommandBarItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "UnitCommandBarItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "UnitCommandBarRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "UnitCommandBarItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "commands": "@config.commands",
-                      "className": "@config.className",
-                      "type": "unit-command-bar",
-                      "selectedUnitId": "@config.selectedUnitId"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "selectedUnitId": {
-              "type": "string",
-              "default": "Selected Unit Id",
-              "label": "Selected Unit Id",
-              "description": "ID of the currently selected unit",
-              "tier": "presentation"
-            },
-            "commands": {
-              "type": "[UnitCommandBarCommandsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "disabled": false,
-                  "icon": "circle",
-                  "hotkey": "Hotkey"
-                }
-              ],
-              "label": "Commands",
-              "description": "Available commands",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "hotkey": {
-                    "name": "hotkey",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "UnitCommandBarOrbital",
       "pages": [
         {
           "name": "UnitCommandBarPage",
@@ -132,7 +25,114 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "commands": {
+              "default": [
+                {
+                  "disabled": false,
+                  "hotkey": "Hotkey",
+                  "icon": "circle",
+                  "label": "Label"
+                }
+              ],
+              "description": "Available commands",
+              "items": {
+                "properties": {
+                  "disabled": {
+                    "name": "disabled",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "hotkey": {
+                    "name": "hotkey",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Commands",
+              "tier": "presentation",
+              "type": "[UnitCommandBarCommandsItem]"
+            },
+            "selectedUnitId": {
+              "default": "Selected Unit Id",
+              "description": "ID of the currently selected unit",
+              "label": "Selected Unit Id",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "UnitCommandBarItem",
+          "name": "UnitCommandBarRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "commands": "@config.commands",
+                      "selectedUnitId": "@config.selectedUnitId",
+                      "type": "unit-command-bar"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

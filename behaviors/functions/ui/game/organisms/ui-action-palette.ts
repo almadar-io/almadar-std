@@ -39,18 +39,18 @@ export type StdUiActionPaletteEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionPaletteConfig {
-  /** Default: `[{"name":"Name","description":"Description","iconEmoji":"Icon Emoji","category":"Category","stateMachine":{"transitions":[{"to":"To","event":"Event","guardHint":"Guard Hint","from":"From"}],"states":["Item"],"currentState":"Current State","name":"Name","description":"Description"},"id":"Id"}]` */
+  /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name","stateMachine":{"currentState":"Current State","description":"Description","name":"Name","states":["Item"],"transitions":[{"event":"Event","from":"From","guardHint":"Guard Hint","to":"To"}]}}]` */
   actions?: EntityRow[];
-  /** Default: `{}` */
-  categoryColors?: unknown;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `true` */
   allowDuplicates?: boolean;
-  /** Default: `"Label"` */
-  label?: string;
+  /** Default: `{}` */
+  categoryColors?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
   /** Default: `[]` */
   usedActionIds?: string[];
 }
@@ -113,8 +113,8 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -125,245 +125,245 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'ActionPaletteRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'ActionPaletteItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'transitions': [
-            {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'size': '@config.size',
-                    'usedActionIds': '@config.usedActionIds',
-                    'label': '@config.label',
-                    'allowDuplicates': '@config.allowDuplicates',
-                    'actions': '@config.actions',
-                    'categoryColors': '@config.categoryColors',
-                    'className': '@config.className',
-                    'type': 'action-palette',
-                  },
-                ],
-              ],
-            },
-          ],
-        },
         'config': {
           'actions': {
-            'type': '[ActionPaletteActionsItem]',
             'default': [
               {
-                'name': 'Name',
+                'category': 'Category',
                 'description': 'Description',
                 'iconEmoji': 'Icon Emoji',
-                'category': 'Category',
+                'id': 'Id',
+                'name': 'Name',
                 'stateMachine': {
-                  'transitions': [
-                    {
-                      'to': 'To',
-                      'event': 'Event',
-                      'guardHint': 'Guard Hint',
-                      'from': 'From',
-                    },
-                  ],
+                  'currentState': 'Current State',
+                  'description': 'Description',
+                  'name': 'Name',
                   'states': [
                     'Item',
                   ],
-                  'currentState': 'Current State',
-                  'name': 'Name',
-                  'description': 'Description',
+                  'transitions': [
+                    {
+                      'event': 'Event',
+                      'from': 'From',
+                      'guardHint': 'Guard Hint',
+                      'to': 'To',
+                    },
+                  ],
                 },
-                'id': 'Id',
               },
             ],
-            'label': 'Actions',
             'description': 'Available actions',
-            'tier': 'presentation',
             'items': {
-              'type': 'object',
               'properties': {
-                'stateMachine': {
-                  'name': 'stateMachine',
-                  'type': 'object',
-                  'required': false,
-                  'properties': {
-                    'states': {
-                      'name': 'states',
-                      'type': 'array',
-                      'required': true,
-                      'items': {
-                        'type': 'string',
-                      },
-                    },
-                    'transitions': {
-                      'name': 'transitions',
-                      'type': 'array',
-                      'required': true,
-                      'items': {
-                        'type': 'object',
-                        'properties': {
-                          'guardHint': {
-                            'name': 'guardHint',
-                            'type': 'string',
-                            'required': false,
-                          },
-                          'event': {
-                            'name': 'event',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'from': {
-                            'name': 'from',
-                            'type': 'string',
-                            'required': true,
-                          },
-                          'to': {
-                            'name': 'to',
-                            'type': 'string',
-                            'required': true,
-                          },
-                        },
-                      },
-                    },
-                    'description': {
-                      'name': 'description',
-                      'type': 'string',
-                      'required': false,
-                    },
-                    'name': {
-                      'name': 'name',
-                      'type': 'string',
-                      'required': true,
-                    },
-                    'currentState': {
-                      'name': 'currentState',
-                      'type': 'string',
-                      'required': true,
-                    },
-                  },
-                },
-                'id': {
-                  'name': 'id',
-                  'type': 'string',
-                  'required': true,
-                },
                 'category': {
                   'name': 'category',
-                  'type': 'string',
                   'required': true,
-                },
-                'iconEmoji': {
-                  'name': 'iconEmoji',
                   'type': 'string',
-                  'required': false,
                 },
                 'description': {
                   'name': 'description',
-                  'type': 'string',
                   'required': false,
+                  'type': 'string',
+                },
+                'iconEmoji': {
+                  'name': 'iconEmoji',
+                  'required': false,
+                  'type': 'string',
                 },
                 'iconUrl': {
                   'name': 'iconUrl',
-                  'type': 'string',
                   'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
                 },
                 'name': {
                   'name': 'name',
-                  'type': 'string',
                   'required': true,
+                  'type': 'string',
+                },
+                'stateMachine': {
+                  'name': 'stateMachine',
+                  'properties': {
+                    'currentState': {
+                      'name': 'currentState',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'description': {
+                      'name': 'description',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': true,
+                      'type': 'string',
+                    },
+                    'states': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'states',
+                      'required': true,
+                      'type': 'array',
+                    },
+                    'transitions': {
+                      'items': {
+                        'properties': {
+                          'event': {
+                            'name': 'event',
+                            'required': true,
+                            'type': 'string',
+                          },
+                          'from': {
+                            'name': 'from',
+                            'required': true,
+                            'type': 'string',
+                          },
+                          'guardHint': {
+                            'name': 'guardHint',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'to': {
+                            'name': 'to',
+                            'required': true,
+                            'type': 'string',
+                          },
+                        },
+                        'type': 'object',
+                      },
+                      'name': 'transitions',
+                      'required': true,
+                      'type': 'array',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
                 },
               },
+              'type': 'object',
             },
+            'label': 'Actions',
+            'tier': 'presentation',
+            'type': '[ActionPaletteActionsItem]',
+          },
+          'allowDuplicates': {
+            'default': true,
+            'description': 'Whether each action can be used multiple times',
+            'label': 'Allow Duplicates',
+            'tier': 'presentation',
+            'type': 'boolean',
           },
           'categoryColors': {
-            'type': 'Map<string,ActionPaletteCategoryColorsValue>',
             'default': {},
-            'label': 'Category Colors',
             'description': 'Category → color mapping',
-            'tier': 'presentation',
             'items': {
-              'type': 'object',
               'properties': {
                 'bg': {
                   'name': 'bg',
-                  'type': 'string',
                   'required': true,
+                  'type': 'string',
                 },
                 'border': {
                   'name': 'border',
-                  'type': 'string',
                   'required': true,
+                  'type': 'string',
                 },
               },
+              'type': 'object',
             },
+            'label': 'Category Colors',
+            'tier': 'presentation',
+            'type': 'Map<string,ActionPaletteCategoryColorsValue>',
+          },
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'label': {
+            'default': 'Label',
+            'description': 'Label above the palette',
+            'label': 'Label',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'size': {
-            'type': 'string',
             'default': 'md',
-            'label': 'Size',
             'description': 'Size variant',
+            'label': 'Size',
             'tier': 'presentation',
+            'type': 'string',
             'values': [
               'sm',
               'md',
               'lg',
             ],
           },
-          'allowDuplicates': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Allow Duplicates',
-            'description': 'Whether each action can be used multiple times',
-            'tier': 'presentation',
-          },
-          'label': {
-            'type': 'string',
-            'default': 'Label',
-            'label': 'Label',
-            'description': 'Label above the palette',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
           'usedActionIds': {
-            'type': '[string]',
             'default': [],
-            'label': 'Used Action Ids',
             'description': 'IDs of actions that are already used (shown as disabled)',
-            'tier': 'presentation',
             'items': {
               'type': 'string',
             },
+            'label': 'Used Action Ids',
+            'tier': 'presentation',
+            'type': '[string]',
           },
         },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'ActionPaletteItem',
+        'name': 'ActionPaletteRender',
         'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'actions': '@config.actions',
+                    'allowDuplicates': '@config.allowDuplicates',
+                    'categoryColors': '@config.categoryColors',
+                    'className': '@config.className',
+                    'label': '@config.label',
+                    'size': '@config.size',
+                    'type': 'action-palette',
+                    'usedActionIds': '@config.usedActionIds',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
       } as never, 'ActionPaletteItem', canonicalName) as never,
     ],
     pages: [

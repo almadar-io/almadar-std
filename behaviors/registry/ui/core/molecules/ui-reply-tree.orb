@@ -1,230 +1,30 @@
 {
-  "name": "ui-reply-tree",
-  "version": "1.0.0",
   "description": "ReplyTree — UI factory (1:1 with the @almadar/ui reply-tree pattern).",
+  "name": "ui-reply-tree",
   "orbitals": [
     {
-      "name": "ReplyTreeOrbital",
       "entity": {
-        "name": "ReplyTreeItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
+            "default": "",
             "name": "authorName",
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           {
+            "default": "",
             "name": "content",
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ReplyTreeItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ReplyTreeRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ReplyTreeItem",
-          "emits": [
-            {
-              "event": "VOTE",
-              "description": "onVote prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "nodeId",
-                  "type": "string"
-                },
-                {
-                  "name": "vote",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "REPLY",
-              "description": "onReply prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "parentNodeId",
-                  "type": "string"
-                },
-                {
-                  "name": "content",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "FLAG",
-              "description": "onFlag prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "nodeId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "CONTINUE_THREAD",
-              "description": "onContinueThread prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "nodeId",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "VOTE",
-                "name": "Vote",
-                "description": "onVote prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "nodeId",
-                    "type": "string"
-                  },
-                  {
-                    "name": "vote",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "REPLY",
-                "name": "Reply",
-                "description": "onReply prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "parentNodeId",
-                    "type": "string"
-                  },
-                  {
-                    "name": "content",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "FLAG",
-                "name": "Flag",
-                "description": "onFlag prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "nodeId",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CONTINUE_THREAD",
-                "name": "Continue Thread",
-                "description": "onContinueThread prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "nodeId",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "ReplyTreeItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "onContinueThread": "CONTINUE_THREAD",
-                      "onVote": "VOTE",
-                      "voteEvent": "VOTE",
-                      "replyEvent": "REPLY",
-                      "flagEvent": "FLAG",
-                      "maxDepth": "@config.maxDepth",
-                      "showActions": "@config.showActions",
-                      "continueThreadEvent": "CONTINUE_THREAD",
-                      "className": "@config.className",
-                      "type": "reply-tree",
-                      "nodes": "@entity",
-                      "onReply": "REPLY",
-                      "onFlag": "FLAG"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "maxDepth": {
-              "type": "number",
-              "default": 6.0,
-              "label": "Max Depth",
-              "description": "maxDepth prop",
-              "tier": "presentation"
-            },
-            "showActions": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Actions",
-              "description": "showActions prop",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ReplyTreeOrbital",
       "pages": [
         {
           "name": "ReplyTreePage",
@@ -235,7 +35,207 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "maxDepth": {
+              "default": 6.0,
+              "description": "maxDepth prop",
+              "label": "Max Depth",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "showActions": {
+              "default": true,
+              "description": "showActions prop",
+              "label": "Show Actions",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "onVote prop",
+              "event": "VOTE",
+              "payloadSchema": [
+                {
+                  "name": "nodeId",
+                  "type": "string"
+                },
+                {
+                  "name": "vote",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "onReply prop",
+              "event": "REPLY",
+              "payloadSchema": [
+                {
+                  "name": "parentNodeId",
+                  "type": "string"
+                },
+                {
+                  "name": "content",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "onFlag prop",
+              "event": "FLAG",
+              "payloadSchema": [
+                {
+                  "name": "nodeId",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "onContinueThread prop",
+              "event": "CONTINUE_THREAD",
+              "payloadSchema": [
+                {
+                  "name": "nodeId",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ReplyTreeItem",
+          "name": "ReplyTreeRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "onVote prop",
+                "key": "VOTE",
+                "name": "Vote",
+                "payloadSchema": [
+                  {
+                    "name": "nodeId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "vote",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "onReply prop",
+                "key": "REPLY",
+                "name": "Reply",
+                "payloadSchema": [
+                  {
+                    "name": "parentNodeId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "content",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "onFlag prop",
+                "key": "FLAG",
+                "name": "Flag",
+                "payloadSchema": [
+                  {
+                    "name": "nodeId",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "onContinueThread prop",
+                "key": "CONTINUE_THREAD",
+                "name": "Continue Thread",
+                "payloadSchema": [
+                  {
+                    "name": "nodeId",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "ReplyTreeItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "continueThreadEvent": "CONTINUE_THREAD",
+                      "flagEvent": "FLAG",
+                      "maxDepth": "@config.maxDepth",
+                      "nodes": "@entity",
+                      "onContinueThread": "CONTINUE_THREAD",
+                      "onFlag": "FLAG",
+                      "onReply": "REPLY",
+                      "onVote": "VOTE",
+                      "replyEvent": "REPLY",
+                      "showActions": "@config.showActions",
+                      "type": "reply-tree",
+                      "voteEvent": "VOTE"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

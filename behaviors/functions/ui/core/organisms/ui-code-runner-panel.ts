@@ -39,14 +39,14 @@ export type StdUiCodeRunnerPanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeRunnerPanelConfig {
-  /** Default: `"Code"` */
-  code?: string;
-  /** Default: `"RUN_CODE"` */
-  runEvent?: string;
-  /** Default: `"Language"` */
-  language?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Code"` */
+  code?: string;
+  /** Default: `"Language"` */
+  language?: string;
+  /** Default: `"RUN_CODE"` */
+  runEvent?: string;
   /** Default: `true` */
   runnable?: boolean;
 }
@@ -109,8 +109,8 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -121,87 +121,87 @@ export function stdUiCodeRunnerPanelCodeRunnerPanelOrbital(params: StdUiCodeRunn
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'CodeRunnerPanelRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'code': {
+            'default': 'Code',
+            'description': 'Initial code content',
+            'label': 'Code',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'language': {
+            'default': 'Language',
+            'description': 'Programming language for syntax highlighting',
+            'label': 'Language',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'runEvent': {
+            'default': 'RUN_CODE',
+            'description': 'Event name to emit on run (emitted as `UI:<runEvent>`). Defaults to \'RUN_CODE\'.',
+            'label': 'Run Event',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'runnable': {
+            'default': true,
+            'description': 'Whether the panel allows running (false = read-only code block)',
+            'label': 'Runnable',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
         'linkedEntity': 'CodeRunnerPanelItem',
+        'name': 'CodeRunnerPanelRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'language': '@config.language',
-                    'type': 'code-runner-panel',
-                    'runEvent': '@config.runEvent',
                     'className': '@config.className',
-                    'runnable': '@config.runnable',
                     'code': '@config.code',
+                    'language': '@config.language',
+                    'runEvent': '@config.runEvent',
+                    'runnable': '@config.runnable',
+                    'type': 'code-runner-panel',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'code': {
-            'type': 'string',
-            'default': 'Code',
-            'label': 'Code',
-            'description': 'Initial code content',
-            'tier': 'presentation',
-          },
-          'runEvent': {
-            'type': 'string',
-            'default': 'RUN_CODE',
-            'label': 'Run Event',
-            'description': 'Event name to emit on run (emitted as `UI:<runEvent>`). Defaults to \'RUN_CODE\'.',
-            'tier': 'presentation',
-          },
-          'language': {
-            'type': 'string',
-            'default': 'Language',
-            'label': 'Language',
-            'description': 'Programming language for syntax highlighting',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'runnable': {
-            'type': 'boolean',
-            'default': true,
-            'label': 'Runnable',
-            'description': 'Whether the panel allows running (false = read-only code block)',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'CodeRunnerPanelItem', canonicalName) as never,
     ],
     pages: [

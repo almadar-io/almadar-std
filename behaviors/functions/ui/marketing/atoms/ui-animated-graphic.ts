@@ -39,32 +39,32 @@ export type StdUiAnimatedGraphicEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiAnimatedGraphicConfig {
-  /** Default: `1200` */
-  duration?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
-  easing?: string;
-  /** Default: `"Svg Content"` */
-  svgContent?: string;
-  /** Default: `0` */
-  delay?: number;
-  /** Default: `"Stroke Color"` */
-  strokeColor?: string;
   /** Default: `"Alt"` */
   alt?: string;
-  /** Default: `"Width"` */
-  width?: string;
-  /** Default: `"Height"` */
-  height?: string;
-  /** Default: `"Fill Color"` */
-  fillColor?: string;
   /** Default: `false` */
   animate?: boolean;
   /** Default: `"draw"` */
   animation?: 'draw' | 'fill' | 'pulse' | 'morph';
+  /** Default: `""` */
+  className?: string;
+  /** Default: `0` */
+  delay?: number;
+  /** Default: `1200` */
+  duration?: number;
+  /** Default: `"cubic-bezier(0.16, 1, 0.3, 1)"` */
+  easing?: string;
+  /** Default: `"Fill Color"` */
+  fillColor?: string;
+  /** Default: `"Height"` */
+  height?: string;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
   src?: unknown;
+  /** Default: `"Stroke Color"` */
+  strokeColor?: string;
+  /** Default: `"Svg Content"` */
+  svgContent?: string;
+  /** Default: `"Width"` */
+  width?: string;
 }
 
 /**

@@ -39,11 +39,11 @@ export type StdUiGameAudioToggleEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameAudioToggleConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg';
 }
@@ -106,8 +106,8 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -118,32 +118,86 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'GameAudioToggleRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'GameAudioToggleItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'error': {
+            'description': 'Error state (passed through)',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
             },
-          ],
+            'tier': 'presentation',
+            'type': 'GameAudioToggleError',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state (passed through)',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'size': {
+            'default': 'sm',
+            'description': 'Button size',
+            'label': 'Size',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'sm',
+              'md',
+              'lg',
+            ],
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'GameAudioToggleItem',
+        'name': 'GameAudioToggleRender',
+        'scope': 'instance',
+        'stateMachine': {
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -154,75 +208,21 @@ export function stdUiGameAudioToggleGameAudioToggleOrbital(params: StdUiGameAudi
                   'render-ui',
                   'main',
                   {
-                    'isLoading': '@config.isLoading',
-                    'entity': 'GameAudioToggleItem',
-                    'size': '@config.size',
                     'className': '@config.className',
+                    'entity': 'GameAudioToggleItem',
                     'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'size': '@config.size',
                     'type': 'game-audio-toggle',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state (passed through)',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'GameAudioToggleError',
-            'label': 'Error',
-            'description': 'Error state (passed through)',
-            'tier': 'presentation',
-            'properties': {
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'size': {
-            'type': 'string',
-            'default': 'sm',
-            'label': 'Size',
-            'description': 'Button size',
-            'tier': 'presentation',
-            'values': [
-              'sm',
-              'md',
-              'lg',
-            ],
-          },
-        },
-        'scope': 'instance',
       } as never, 'GameAudioToggleItem', canonicalName) as never,
     ],
     pages: [

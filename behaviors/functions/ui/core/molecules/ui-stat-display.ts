@@ -39,49 +39,49 @@ export type StdUiStatDisplayEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatDisplayConfig {
-  /** Default: `"Format"` */
-  format?: string;
-  /** Default: `"Prefix"` */
-  prefix?: string;
-  /** Default: `[]` */
-  sparklineData?: number[];
-  /** Default: `0` */
-  trend?: number;
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
-  error?: EntityRow;
-  /** Default: `"bg-muted"` */
-  iconBg?: string;
-  /** Default: `false` */
-  compact?: boolean;
-  /** Default: `"text-foreground"` */
-  iconColor?: string;
-  /** Default: `"Value"` */
-  value?: string;
-  /** Default: `"Click Event"` */
-  clickEvent?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"Suffix"` */
-  suffix?: string;
+  /** Default: `"Click Event"` */
+  clickEvent?: string;
+  /** Default: `false` */
+  compact?: boolean;
+  error?: EntityRow;
+  /** Default: `"Format"` */
+  format?: string;
   /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `"absolute"` */
-  trendFormat?: 'absolute' | 'percent';
-  /** Default: `0` */
-  target?: number;
-  /** Default: `"default"` */
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
-  /** Default: `0` */
-  max?: number;
-  /** Default: `"higher-is-better"` */
-  trendPolarity?: 'higher-is-better' | 'lower-is-better';
-  /** Default: `"elevated"` */
-  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `"Label"` */
-  label?: string;
+  /** Default: `"bg-muted"` */
+  iconBg?: string;
+  /** Default: `"text-foreground"` */
+  iconColor?: string;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `"Label"` */
+  label?: string;
+  /** Default: `"elevated"` */
+  look?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
+  /** Default: `0` */
+  max?: number;
+  /** Default: `"Prefix"` */
+  prefix?: string;
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `[]` */
+  sparklineData?: number[];
+  /** Default: `"Suffix"` */
+  suffix?: string;
+  /** Default: `0` */
+  target?: number;
+  /** Default: `0` */
+  trend?: number;
+  /** Default: `"absolute"` */
+  trendFormat?: 'absolute' | 'percent';
+  /** Default: `"higher-is-better"` */
+  trendPolarity?: 'higher-is-better' | 'lower-is-better';
+  /** Default: `"Value"` */
+  value?: string;
+  /** Default: `"default"` */
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 }
 
 /**

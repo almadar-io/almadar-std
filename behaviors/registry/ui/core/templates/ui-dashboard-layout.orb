@@ -1,410 +1,20 @@
 {
-  "name": "ui-dashboard-layout",
-  "version": "1.0.0",
   "description": "DashboardLayout — UI factory (1:1 with the @almadar/ui dashboard-layout pattern).",
+  "name": "ui-dashboard-layout",
   "orbitals": [
     {
-      "name": "DashboardLayoutOrbital",
       "entity": {
-        "name": "DashboardLayoutItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "DashboardLayoutItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "DashboardLayoutRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "DashboardLayoutItem",
-          "emits": [
-            {
-              "event": "SEARCH",
-              "description": "Declarative search event — fires `UI:{searchEvent}` on the bus when the user submits the search box (Enter key). Setting this implies `showSearch=true`. Use `onSearchSubmit` for direct React usage instead.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "SEARCH_SUBMIT",
-              "description": "React-side search submit callback. Used when the host wires the layout directly (not via render-ui pattern resolution).",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "NOTIFICATION_CLICK",
-              "description": "Declarative bell click event — fires `UI:{notificationClickEvent}` on the bus with an empty payload when the user clicks the bell.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "SIGN_OUT",
-              "description": "Callback when user clicks sign out (optional - uses auth context signOut if not provided)",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "SEARCH",
-                "name": "Search",
-                "description": "Declarative search event — fires `UI:{searchEvent}` on the bus when the user submits the search box (Enter key). Setting this implies `showSearch=true`. Use `onSearchSubmit` for direct React usage instead.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "SEARCH_SUBMIT",
-                "name": "Search Submit",
-                "description": "React-side search submit callback. Used when the host wires the layout directly (not via render-ui pattern resolution).",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "NOTIFICATION_CLICK",
-                "name": "Notification Click",
-                "description": "Declarative bell click event — fires `UI:{notificationClickEvent}` on the bus with an empty payload when the user clicks the bell.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SIGN_OUT",
-                "name": "Sign Out",
-                "description": "Callback when user clicks sign out (optional - uses auth context signOut if not provided)",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "showThemeToggle": "@config.showThemeToggle",
-                      "logo": [
-                        {
-                          "type": "typography",
-                          "content": "Logo"
-                        }
-                      ],
-                      "user": "@config.user",
-                      "currentPath": "@config.currentPath",
-                      "notificationClickEvent": "NOTIFICATION_CLICK",
-                      "type": "dashboard-layout",
-                      "headerActions": "@config.headerActions",
-                      "appName": "@config.appName",
-                      "topBarActions": "@config.topBarActions",
-                      "sidebarFooter": "@config.sidebarFooter",
-                      "searchEvent": "SEARCH",
-                      "children": [
-                        {
-                          "content": "Sample content",
-                          "type": "typography"
-                        }
-                      ],
-                      "navItems": "@config.navItems",
-                      "onSearchSubmit": "SEARCH_SUBMIT",
-                      "notifications": "@config.notifications",
-                      "layoutMode": "@config.layoutMode",
-                      "showSearch": "@config.showSearch",
-                      "onSignOut": "SIGN_OUT",
-                      "onNotificationClick": "NOTIFICATION_CLICK"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "user": {
-              "type": "DashboardLayoutUser",
-              "default": {
-                "name": "Name",
-                "avatar": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
-                "email": "Email"
-              },
-              "label": "User",
-              "description": "Current user info (optional - auto-populated from auth context if not provided)",
-              "tier": "presentation",
-              "properties": {
-                "avatar": {
-                  "name": "avatar",
-                  "type": "string",
-                  "required": false
-                },
-                "email": {
-                  "name": "email",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "headerActions": {
-              "type": "node",
-              "label": "Header Actions",
-              "description": "Header actions (extra slots beyond bell/search/theme).",
-              "tier": "presentation"
-            },
-            "showSearch": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show Search",
-              "description": "Show the top-bar search box. Default `false` — opt in by setting `searchEvent` (any truthy value implies showSearch) or this flag.",
-              "tier": "presentation"
-            },
-            "topBarActions": {
-              "type": "[DashboardLayoutTopBarActionsItem]",
-              "default": [],
-              "label": "Top Bar Actions",
-              "description": "Generic top-bar action buttons rendered between the search bar and the notifications bell. Each entry: `{icon, label?, event, badge?, variant?}`. Domain-agnostic — consumers add a cart icon, profile button, help-bubble, or any other top-bar action by appending entries. Empty array (default) renders nothing.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": true
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "default",
-                      "primary",
-                      "danger"
-                    ]
-                  }
-                }
-              }
-            },
-            "showThemeToggle": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Theme Toggle",
-              "description": "Show the theme toggle button in the header. Default `true` — universally useful for a11y / dark mode.",
-              "tier": "presentation"
-            },
-            "notifications": {
-              "type": "[DashboardLayoutNotificationsItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "createdAt": "Created At",
-                  "read": false,
-                  "description": "Description",
-                  "message": "Message"
-                }
-              ],
-              "label": "Notifications",
-              "description": "Notification list. Pass an empty array to show the bell with no badge; omit / pass null to hide the bell entirely.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "message": {
-                    "name": "message",
-                    "type": "string",
-                    "required": true
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "createdAt": {
-                    "name": "createdAt",
-                    "type": "string",
-                    "required": false
-                  },
-                  "read": {
-                    "name": "read",
-                    "type": "boolean",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "navItems": {
-              "type": "[DashboardLayoutNavItemsItem]",
-              "default": [
-                {
-                  "children": [],
-                  "label": "Label",
-                  "badge": "Badge",
-                  "icon": "circle",
-                  "href": "Href"
-                }
-              ],
-              "label": "Nav Items",
-              "description": "Navigation items. Apps that need a Settings page should add it as a navItems entry, not depend on baked-in chrome.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "children": {
-                    "name": "children",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "badge": {
-                    "name": "badge",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "currentPath": {
-              "type": "string",
-              "default": "Current Path",
-              "label": "Current Path",
-              "description": "Active path used to highlight the matching nav item. Falls back to `useCurrentPagePath()` (set by `CurrentPagePathProvider`), then to `useLocation().pathname`. Production deploys can omit it; the studio preview passes the in-frame `?page=` value so highlighting works inside the embedded playground where `pathname` would be the studio route.",
-              "tier": "presentation"
-            },
-            "layoutMode": {
-              "type": "string",
-              "default": "sidebar",
-              "label": "Layout Mode",
-              "description": "Layout mode. Default `'sidebar'`. - `sidebar`: Left sidebar nav + top header (classic dashboard) - `topnav`: Horizontal nav in header, no sidebar - `bottomnav`: Bottom tab bar, no sidebar - `minimal`: No nav chrome, content only",
-              "tier": "presentation",
-              "values": [
-                "sidebar",
-                "topnav",
-                "bottomnav",
-                "minimal"
-              ]
-            },
-            "sidebarFooter": {
-              "type": "node",
-              "label": "Sidebar Footer",
-              "description": "Custom sidebar footer (optional). When omitted, the sidebar has no footer — apps that need Settings/etc. add them via navItems.",
-              "tier": "presentation"
-            },
-            "appName": {
-              "type": "string",
-              "default": "{{APP_TITLE}}",
-              "label": "App Name",
-              "description": "App name shown in sidebar",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "DashboardLayoutOrbital",
       "pages": [
         {
           "name": "DashboardLayoutPage",
@@ -415,7 +25,397 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "appName": {
+              "default": "{{APP_TITLE}}",
+              "description": "App name shown in sidebar",
+              "label": "App Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "currentPath": {
+              "default": "Current Path",
+              "description": "Active path used to highlight the matching nav item. Falls back to `useCurrentPagePath()` (set by `CurrentPagePathProvider`), then to `useLocation().pathname`. Production deploys can omit it; the studio preview passes the in-frame `?page=` value so highlighting works inside the embedded playground where `pathname` would be the studio route.",
+              "label": "Current Path",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "headerActions": {
+              "description": "Header actions (extra slots beyond bell/search/theme).",
+              "label": "Header Actions",
+              "tier": "presentation",
+              "type": "node"
+            },
+            "layoutMode": {
+              "default": "sidebar",
+              "description": "Layout mode. Default `'sidebar'`. - `sidebar`: Left sidebar nav + top header (classic dashboard) - `topnav`: Horizontal nav in header, no sidebar - `bottomnav`: Bottom tab bar, no sidebar - `minimal`: No nav chrome, content only",
+              "label": "Layout Mode",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sidebar",
+                "topnav",
+                "bottomnav",
+                "minimal"
+              ]
+            },
+            "navItems": {
+              "default": [
+                {
+                  "badge": "Badge",
+                  "children": [],
+                  "href": "Href",
+                  "icon": "circle",
+                  "label": "Label"
+                }
+              ],
+              "description": "Navigation items. Apps that need a Settings page should add it as a navItems entry, not depend on baked-in chrome.",
+              "items": {
+                "properties": {
+                  "badge": {
+                    "name": "badge",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "children": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "children",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "href": {
+                    "name": "href",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Nav Items",
+              "tier": "presentation",
+              "type": "[DashboardLayoutNavItemsItem]"
+            },
+            "notifications": {
+              "default": [
+                {
+                  "createdAt": "Created At",
+                  "description": "Description",
+                  "id": "Id",
+                  "message": "Message",
+                  "read": false
+                }
+              ],
+              "description": "Notification list. Pass an empty array to show the bell with no badge; omit / pass null to hide the bell entirely.",
+              "items": {
+                "properties": {
+                  "createdAt": {
+                    "name": "createdAt",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "message": {
+                    "name": "message",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "read": {
+                    "name": "read",
+                    "required": false,
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Notifications",
+              "tier": "presentation",
+              "type": "[DashboardLayoutNotificationsItem]"
+            },
+            "showSearch": {
+              "default": false,
+              "description": "Show the top-bar search box. Default `false` — opt in by setting `searchEvent` (any truthy value implies showSearch) or this flag.",
+              "label": "Show Search",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showThemeToggle": {
+              "default": true,
+              "description": "Show the theme toggle button in the header. Default `true` — universally useful for a11y / dark mode.",
+              "label": "Show Theme Toggle",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "sidebarFooter": {
+              "description": "Custom sidebar footer (optional). When omitted, the sidebar has no footer — apps that need Settings/etc. add them via navItems.",
+              "label": "Sidebar Footer",
+              "tier": "presentation",
+              "type": "node"
+            },
+            "topBarActions": {
+              "default": [],
+              "description": "Generic top-bar action buttons rendered between the search bar and the notifications bell. Each entry: `{icon, label?, event, badge?, variant?}`. Domain-agnostic — consumers add a cart icon, profile button, help-bubble, or any other top-bar action by appending entries. Empty array (default) renders nothing.",
+              "items": {
+                "properties": {
+                  "badge": {
+                    "name": "badge",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "event": {
+                    "name": "event",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "default",
+                      "primary",
+                      "danger"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Top Bar Actions",
+              "tier": "presentation",
+              "type": "[DashboardLayoutTopBarActionsItem]"
+            },
+            "user": {
+              "default": {
+                "avatar": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+                "email": "Email",
+                "name": "Name"
+              },
+              "description": "Current user info (optional - auto-populated from auth context if not provided)",
+              "label": "User",
+              "properties": {
+                "avatar": {
+                  "name": "avatar",
+                  "required": false,
+                  "type": "string"
+                },
+                "email": {
+                  "name": "email",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "DashboardLayoutUser"
+            }
+          },
+          "emits": [
+            {
+              "description": "Declarative search event — fires `UI:{searchEvent}` on the bus when the user submits the search box (Enter key). Setting this implies `showSearch=true`. Use `onSearchSubmit` for direct React usage instead.",
+              "event": "SEARCH",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "React-side search submit callback. Used when the host wires the layout directly (not via render-ui pattern resolution).",
+              "event": "SEARCH_SUBMIT",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Declarative bell click event — fires `UI:{notificationClickEvent}` on the bus with an empty payload when the user clicks the bell.",
+              "event": "NOTIFICATION_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Callback when user clicks sign out (optional - uses auth context signOut if not provided)",
+              "event": "SIGN_OUT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DashboardLayoutItem",
+          "name": "DashboardLayoutRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Declarative search event — fires `UI:{searchEvent}` on the bus when the user submits the search box (Enter key). Setting this implies `showSearch=true`. Use `onSearchSubmit` for direct React usage instead.",
+                "key": "SEARCH",
+                "name": "Search",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "React-side search submit callback. Used when the host wires the layout directly (not via render-ui pattern resolution).",
+                "key": "SEARCH_SUBMIT",
+                "name": "Search Submit",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Declarative bell click event — fires `UI:{notificationClickEvent}` on the bus with an empty payload when the user clicks the bell.",
+                "key": "NOTIFICATION_CLICK",
+                "name": "Notification Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Callback when user clicks sign out (optional - uses auth context signOut if not provided)",
+                "key": "SIGN_OUT",
+                "name": "Sign Out",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "@config.appName",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "currentPath": "@config.currentPath",
+                      "headerActions": "@config.headerActions",
+                      "layoutMode": "@config.layoutMode",
+                      "logo": [
+                        {
+                          "content": "Logo",
+                          "type": "typography"
+                        }
+                      ],
+                      "navItems": "@config.navItems",
+                      "notificationClickEvent": "NOTIFICATION_CLICK",
+                      "notifications": "@config.notifications",
+                      "onNotificationClick": "NOTIFICATION_CLICK",
+                      "onSearchSubmit": "SEARCH_SUBMIT",
+                      "onSignOut": "SIGN_OUT",
+                      "searchEvent": "SEARCH",
+                      "showSearch": "@config.showSearch",
+                      "showThemeToggle": "@config.showThemeToggle",
+                      "sidebarFooter": "@config.sidebarFooter",
+                      "topBarActions": "@config.topBarActions",
+                      "type": "dashboard-layout",
+                      "user": "@config.user"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

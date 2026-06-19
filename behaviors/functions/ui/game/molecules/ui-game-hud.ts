@@ -39,20 +39,20 @@ export type StdUiGameHudEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameHudConfig {
-  /** Default: `[{"bind":"Bind","max":1,"value":"Value","label":"Label","icon":"circle","type":"Type","format":"Format","position":"Position"}]` */
-  elements?: EntityRow[];
-  /** Default: `"md"` */
-  size?: 'sm' | 'md' | 'lg';
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"source":"Source","field":"Field"}]` */
+  /** Default: `[{"bind":"Bind","format":"Format","icon":"circle","label":"Label","max":1,"position":"Position","type":"Type","value":"Value"}]` */
+  elements?: EntityRow[];
+  /** Default: `[{"field":"Field","source":"Source"}]` */
+  items?: EntityRow[];
+  /** Default: `"top"` */
+  position?: 'top' | 'bottom' | 'corners';
+  /** Default: `"md"` */
+  size?: 'sm' | 'md' | 'lg';
+  /** Default: `[{"field":"Field","source":"Source"}]` */
   stats?: EntityRow[];
   /** Default: `true` */
   transparent?: boolean;
-  /** Default: `"top"` */
-  position?: 'top' | 'bottom' | 'corners';
-  /** Default: `[{"source":"Source","field":"Field"}]` */
-  items?: EntityRow[];
 }
 
 /**

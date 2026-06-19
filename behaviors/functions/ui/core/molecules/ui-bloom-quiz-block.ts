@@ -39,20 +39,20 @@ export type StdUiBloomQuizBlockEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBloomQuizBlockConfig {
-  /** Default: `"Question"` */
-  question?: string;
-  /** Default: `"remember"` */
-  level?: 'remember' | 'understand' | 'apply' | 'analyze' | 'evaluate' | 'create';
+  /** Default: `"Answer"` */
+  answer?: string;
   /** Default: `"ANSWER_BLOOM"` */
   answerEvent?: string;
-  /** Default: `false` */
-  isAnswered?: boolean;
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
   index?: number;
-  /** Default: `"Answer"` */
-  answer?: string;
+  /** Default: `false` */
+  isAnswered?: boolean;
+  /** Default: `"remember"` */
+  level?: 'remember' | 'understand' | 'apply' | 'analyze' | 'evaluate' | 'create';
+  /** Default: `"Question"` */
+  question?: string;
 }
 
 /**

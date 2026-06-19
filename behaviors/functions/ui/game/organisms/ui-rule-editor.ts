@@ -53,16 +53,16 @@ export interface StdUiRuleEditorRemovePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRuleEditorConfig {
-  /** Default: `[{"value":"Value","label":"Label"}]` */
+  /** Default: `[{"label":"Label","value":"Value"}]` */
+  availableActions?: EntityRow[];
+  /** Default: `[{"label":"Label","value":"Value"}]` */
   availableEvents?: EntityRow[];
-  /** Default: `{"id":"Id","thenAction":"Then Action","whenEvent":"When Event"}` */
-  rule?: EntityRow;
-  /** Default: `false` */
-  disabled?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"value":"Value","label":"Label"}]` */
-  availableActions?: EntityRow[];
+  /** Default: `false` */
+  disabled?: boolean;
+  /** Default: `{"id":"Id","thenAction":"Then Action","whenEvent":"When Event"}` */
+  rule?: EntityRow;
 }
 
 /**
@@ -123,8 +123,8 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -135,234 +135,234 @@ export function stdUiRuleEditorRuleEditorOrbital(params: StdUiRuleEditorRuleEdit
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'RuleEditorRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'RuleEditorItem',
+        'config': {
+          'availableActions': {
+            'default': [
+              {
+                'label': 'Label',
+                'value': 'Value',
+              },
+            ],
+            'description': 'Available actions to perform',
+            'items': {
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'value': {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Available Actions',
+            'tier': 'presentation',
+            'type': '[RuleEditorAvailableActionsItem]',
+          },
+          'availableEvents': {
+            'default': [
+              {
+                'label': 'Label',
+                'value': 'Value',
+              },
+            ],
+            'description': 'Available event triggers to listen for',
+            'items': {
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'value': {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Available Events',
+            'tier': 'presentation',
+            'type': '[RuleEditorAvailableEventsItem]',
+          },
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'disabled': {
+            'default': false,
+            'description': 'Whether editing is disabled (during playback)',
+            'label': 'Disabled',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'rule': {
+            'default': {
+              'id': 'Id',
+              'thenAction': 'Then Action',
+              'whenEvent': 'When Event',
+            },
+            'description': 'The current rule',
+            'label': 'Rule',
+            'properties': {
+              'id': {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              'thenAction': {
+                'name': 'thenAction',
+                'required': true,
+                'type': 'string',
+              },
+              'whenEvent': {
+                'name': 'whenEvent',
+                'required': true,
+                'type': 'string',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'RuleEditorRule',
+          },
+        },
         'emits': [
           {
-            'event': 'CHANGE',
             'description': 'Called when rule changes',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'CHANGE',
             'payloadSchema': [
               {
                 'name': 'rule',
-                'type': 'object',
                 'properties': [
                   {
                     'name': 'id',
-                    'type': 'string',
                     'required': true,
+                    'type': 'string',
                   },
                   {
                     'name': 'whenEvent',
-                    'type': 'string',
                     'required': true,
+                    'type': 'string',
                   },
                   {
                     'name': 'thenAction',
-                    'type': 'string',
                     'required': true,
+                    'type': 'string',
                   },
                 ],
+                'type': 'object',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
           {
-            'event': 'REMOVE',
             'description': 'Called when rule is removed',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'REMOVE',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
         ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'RuleEditorItem',
+        'name': 'RuleEditorRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Called when rule changes',
               'key': 'CHANGE',
               'name': 'Change',
-              'description': 'Called when rule changes',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'rule',
-                  'type': 'object',
                   'properties': [
                     {
                       'name': 'id',
-                      'type': 'string',
                       'required': true,
+                      'type': 'string',
                     },
                     {
                       'name': 'whenEvent',
-                      'type': 'string',
                       'required': true,
+                      'type': 'string',
                     },
                     {
                       'name': 'thenAction',
-                      'type': 'string',
                       'required': true,
+                      'type': 'string',
                     },
                   ],
+                  'type': 'object',
                 },
               ],
+              'tier': 'essential',
             },
             {
+              'description': 'Called when rule is removed',
               'key': 'REMOVE',
               'name': 'Remove',
-              'description': 'Called when rule is removed',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'onRemove': 'REMOVE',
-                    'className': '@config.className',
+                    'availableActions': '@config.availableActions',
                     'availableEvents': '@config.availableEvents',
-                    'rule': '@config.rule',
-                    'type': 'rule-editor',
+                    'className': '@config.className',
                     'disabled': '@config.disabled',
                     'onChange': 'CHANGE',
-                    'availableActions': '@config.availableActions',
+                    'onRemove': 'REMOVE',
+                    'rule': '@config.rule',
+                    'type': 'rule-editor',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'availableEvents': {
-            'type': '[RuleEditorAvailableEventsItem]',
-            'default': [
-              {
-                'value': 'Value',
-                'label': 'Label',
-              },
-            ],
-            'label': 'Available Events',
-            'description': 'Available event triggers to listen for',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-                'value': {
-                  'name': 'value',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
-            },
-          },
-          'rule': {
-            'type': 'RuleEditorRule',
-            'default': {
-              'id': 'Id',
-              'thenAction': 'Then Action',
-              'whenEvent': 'When Event',
-            },
-            'label': 'Rule',
-            'description': 'The current rule',
-            'tier': 'presentation',
-            'properties': {
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'whenEvent': {
-                'name': 'whenEvent',
-                'type': 'string',
-                'required': true,
-              },
-              'thenAction': {
-                'name': 'thenAction',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
-          'disabled': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Disabled',
-            'description': 'Whether editing is disabled (during playback)',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'availableActions': {
-            'type': '[RuleEditorAvailableActionsItem]',
-            'default': [
-              {
-                'value': 'Value',
-                'label': 'Label',
-              },
-            ],
-            'label': 'Available Actions',
-            'description': 'Available actions to perform',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'value': {
-                  'name': 'value',
-                  'type': 'string',
-                  'required': true,
-                },
-                'label': {
-                  'name': 'label',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
-            },
-          },
-        },
-        'scope': 'instance',
       } as never, 'RuleEditorItem', canonicalName) as never,
     ],
     pages: [

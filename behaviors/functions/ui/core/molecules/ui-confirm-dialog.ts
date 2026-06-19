@@ -60,29 +60,29 @@ export interface StdUiConfirmDialogOpenPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiConfirmDialogConfig {
-  /** Default: `"danger"` */
-  variant?: 'danger' | 'warning' | 'info' | 'default';
-  error?: EntityRow;
-  message?: unknown;
+  /** Default: `"Cancel Label"` */
+  cancelLabel?: string;
+  /** Default: `"Cancel Text"` */
+  cancelText?: string;
+  /** Default: `""` */
+  className?: string;
   /** Default: `"Confirm Label"` */
   confirmLabel?: string;
   /** Default: `"Confirm Text"` */
   confirmText?: string;
-  /** Default: `true` */
-  isOpen?: boolean;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"Cancel Label"` */
-  cancelLabel?: string;
+  description?: unknown;
+  error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `""` */
-  className?: string;
-  description?: unknown;
+  /** Default: `true` */
+  isOpen?: boolean;
+  message?: unknown;
   /** Default: `"sm"` */
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
-  /** Default: `"Cancel Text"` */
-  cancelText?: string;
+  /** Default: `"Title"` */
+  title?: string;
+  /** Default: `"danger"` */
+  variant?: 'danger' | 'warning' | 'info' | 'default';
 }
 
 /**

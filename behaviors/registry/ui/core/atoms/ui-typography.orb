@@ -1,97 +1,126 @@
 {
-  "name": "ui-typography",
-  "version": "1.0.0",
   "description": "Typography — UI factory (1:1 with the @almadar/ui typography pattern).",
+  "name": "ui-typography",
   "orbitals": [
     {
-      "name": "TypographyOrbital",
       "entity": {
-        "name": "TypographyItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "TypographyItem",
+        "persistence": "runtime"
       },
+      "name": "TypographyOrbital",
+      "pages": [
+        {
+          "name": "TypographyPage",
+          "path": "/typography",
+          "traits": [
+            {
+              "ref": "TypographyRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "TypographyRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "TypographyItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "content": [
-                        {
-                          "content": "Content",
-                          "type": "typography"
-                        }
-                      ],
-                      "align": "@config.align",
-                      "children": [
-                        {
-                          "content": "Sample content",
-                          "type": "typography"
-                        }
-                      ],
-                      "className": "@config.className",
-                      "level": "@config.level",
-                      "style": "@config.style",
-                      "type": "typography",
-                      "color": "@config.color",
-                      "truncate": "@config.truncate",
-                      "size": "@config.size",
-                      "weight": "@config.weight",
-                      "variant": "@config.variant",
-                      "overflow": "@config.overflow"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
           "config": {
-            "className": {
+            "align": {
+              "default": "left",
+              "description": "Text alignment",
+              "label": "Align",
+              "tier": "presentation",
               "type": "string",
+              "values": [
+                "left",
+                "center",
+                "right"
+              ]
+            },
+            "className": {
               "default": "",
-              "label": "Class Name",
               "description": "Additional class names",
-              "tier": "presentation"
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "color": {
+              "default": "primary",
+              "description": "Text color",
+              "label": "Color",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "primary",
+                "secondary",
+                "muted",
+                "error",
+                "success",
+                "warning",
+                "inherit"
+              ]
+            },
+            "level": {
+              "default": 1.0,
+              "description": "Heading level (1-6) - alternative to variant for headings",
+              "label": "Level",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "overflow": {
+              "default": "visible",
+              "description": "Overflow handling mode",
+              "label": "Overflow",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "visible",
+                "hidden",
+                "wrap",
+                "clamp-2",
+                "clamp-3"
+              ]
+            },
+            "size": {
+              "default": "xs",
+              "description": "Font size override",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "3xl"
+              ]
+            },
+            "style": {
+              "description": "Inline style",
+              "label": "Style",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "truncate": {
+              "default": false,
+              "description": "Truncate with ellipsis (single line)",
+              "label": "Truncate",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "variant": {
-              "type": "string",
               "default": "h1",
-              "label": "Variant",
               "description": "Typography variant",
+              "label": "Variant",
               "tier": "presentation",
+              "type": "string",
               "values": [
                 "h1",
                 "h2",
@@ -111,19 +140,12 @@
                 "label"
               ]
             },
-            "level": {
-              "type": "number",
-              "default": 1.0,
-              "label": "Level",
-              "description": "Heading level (1-6) - alternative to variant for headings",
-              "tier": "presentation"
-            },
             "weight": {
-              "type": "string",
               "default": "light",
-              "label": "Weight",
               "description": "Font weight override",
+              "label": "Weight",
               "tier": "presentation",
+              "type": "string",
               "values": [
                 "light",
                 "normal",
@@ -131,93 +153,71 @@
                 "semibold",
                 "bold"
               ]
-            },
-            "size": {
-              "type": "string",
-              "default": "xs",
-              "label": "Size",
-              "description": "Font size override",
-              "tier": "presentation",
-              "values": [
-                "xs",
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "2xl",
-                "3xl"
-              ]
-            },
-            "overflow": {
-              "type": "string",
-              "default": "visible",
-              "label": "Overflow",
-              "description": "Overflow handling mode",
-              "tier": "presentation",
-              "values": [
-                "visible",
-                "hidden",
-                "wrap",
-                "clamp-2",
-                "clamp-3"
-              ]
-            },
-            "color": {
-              "type": "string",
-              "default": "primary",
-              "label": "Color",
-              "description": "Text color",
-              "tier": "presentation",
-              "values": [
-                "primary",
-                "secondary",
-                "muted",
-                "error",
-                "success",
-                "warning",
-                "inherit"
-              ]
-            },
-            "align": {
-              "type": "string",
-              "default": "left",
-              "label": "Align",
-              "description": "Text alignment",
-              "tier": "presentation",
-              "values": [
-                "left",
-                "center",
-                "right"
-              ]
-            },
-            "truncate": {
-              "type": "boolean",
-              "default": false,
-              "label": "Truncate",
-              "description": "Truncate with ellipsis (single line)",
-              "tier": "presentation"
-            },
-            "style": {
-              "type": "json",
-              "label": "Style",
-              "description": "Inline style",
-              "tier": "presentation"
             }
           },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "TypographyPage",
-          "path": "/typography",
-          "traits": [
-            {
-              "ref": "TypographyRender"
-            }
-          ]
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TypographyItem",
+          "name": "TypographyRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "@config.align",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "color": "@config.color",
+                      "content": [
+                        {
+                          "content": "Content",
+                          "type": "typography"
+                        }
+                      ],
+                      "level": "@config.level",
+                      "overflow": "@config.overflow",
+                      "size": "@config.size",
+                      "style": "@config.style",
+                      "truncate": "@config.truncate",
+                      "type": "typography",
+                      "variant": "@config.variant",
+                      "weight": "@config.weight"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

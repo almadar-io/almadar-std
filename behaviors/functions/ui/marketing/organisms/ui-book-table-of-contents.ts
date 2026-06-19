@@ -39,10 +39,10 @@ export type StdUiBookTableOfContentsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookTableOfContentsConfig {
-  /** Default: `"Current Chapter Id"` */
-  currentChapterId?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Current Chapter Id"` */
+  currentChapterId?: string;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
 }
@@ -105,8 +105,8 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -117,32 +117,57 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'BookTableOfContentsRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'currentChapterId': {
+            'default': 'Current Chapter Id',
+            'description': 'currentChapterId prop',
+            'label': 'Current Chapter Id',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'direction': {
+            'default': 'rtl',
+            'description': 'direction prop',
+            'label': 'Direction',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'rtl',
+              'ltr',
+            ],
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
         'linkedEntity': 'BookTableOfContentsItem',
+        'name': 'BookTableOfContentsRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -153,45 +178,20 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                   'render-ui',
                   'main',
                   {
-                    'currentChapterId': '@config.currentChapterId',
                     'className': '@config.className',
+                    'currentChapterId': '@config.currentChapterId',
                     'direction': '@config.direction',
-                    'type': 'book-table-of-contents',
                     'parts': '@entity',
+                    'type': 'book-table-of-contents',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'currentChapterId': {
-            'type': 'string',
-            'default': 'Current Chapter Id',
-            'label': 'Current Chapter Id',
-            'description': 'currentChapterId prop',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'direction': {
-            'type': 'string',
-            'default': 'rtl',
-            'label': 'Direction',
-            'description': 'direction prop',
-            'tier': 'presentation',
-            'values': [
-              'rtl',
-              'ltr',
-            ],
-          },
-        },
-        'scope': 'instance',
       } as never, 'BookTableOfContentsItem', canonicalName) as never,
     ],
     pages: [

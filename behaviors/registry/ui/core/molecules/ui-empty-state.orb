@@ -1,179 +1,20 @@
 {
-  "name": "ui-empty-state",
-  "version": "1.0.0",
   "description": "EmptyState — UI factory (1:1 with the @almadar/ui empty-state pattern).",
+  "name": "ui-empty-state",
   "orbitals": [
     {
-      "name": "EmptyStateOrbital",
       "entity": {
-        "name": "EmptyStateItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "EmptyStateItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "EmptyStateRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "EmptyStateItem",
-          "emits": [
-            {
-              "event": "ACTION",
-              "description": "onAction prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "onAction prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "empty-state",
-                      "description": "@config.description",
-                      "variant": "@config.variant",
-                      "onAction": "ACTION",
-                      "destructive": "@config.destructive",
-                      "actionEvent": "ACTION",
-                      "title": "@config.title",
-                      "actionLabel": "@config.actionLabel",
-                      "className": "@config.className",
-                      "look": "@config.look",
-                      "icon": "@config.icon",
-                      "message": "@config.message"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "actionLabel": {
-              "type": "string",
-              "default": "Action Label",
-              "label": "Action Label",
-              "description": "actionLabel prop",
-              "tier": "presentation"
-            },
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Icon to display. Accepts either: - A Lucide icon component (LucideIcon) - A string icon name (e.g., 'check-circle', 'x-circle')",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Primary text to display - use title or message (message is alias for backwards compat)",
-              "tier": "presentation"
-            },
-            "description": {
-              "type": "string",
-              "default": "Description",
-              "label": "Description",
-              "description": "description prop",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Variant",
-              "description": "Variant for color styling",
-              "tier": "presentation",
-              "values": [
-                "default",
-                "success",
-                "error",
-                "warning",
-                "info"
-              ]
-            },
-            "message": {
-              "type": "string",
-              "default": "Message",
-              "label": "Message",
-              "description": "Alias for title - used by schema patterns",
-              "tier": "presentation"
-            },
-            "look": {
-              "type": "string",
-              "default": "icon-only",
-              "label": "Look",
-              "description": "Layer 2 visual treatment — orthogonal to the semantic variant (which carries status color).",
-              "tier": "presentation",
-              "values": [
-                "illustrated",
-                "icon-only",
-                "text-only",
-                "mascot"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "destructive": {
-              "type": "boolean",
-              "default": false,
-              "label": "Destructive",
-              "description": "Destructive styling for confirmation dialogs",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "EmptyStateOrbital",
       "pages": [
         {
           "name": "EmptyStatePage",
@@ -184,7 +25,166 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actionLabel": {
+              "default": "Action Label",
+              "description": "actionLabel prop",
+              "label": "Action Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "description": {
+              "default": "Description",
+              "description": "description prop",
+              "label": "Description",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "destructive": {
+              "default": false,
+              "description": "Destructive styling for confirmation dialogs",
+              "label": "Destructive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Icon to display. Accepts either: - A Lucide icon component (LucideIcon) - A string icon name (e.g., 'check-circle', 'x-circle')",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "look": {
+              "default": "icon-only",
+              "description": "Layer 2 visual treatment — orthogonal to the semantic variant (which carries status color).",
+              "label": "Look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "illustrated",
+                "icon-only",
+                "text-only",
+                "mascot"
+              ]
+            },
+            "message": {
+              "default": "Message",
+              "description": "Alias for title - used by schema patterns",
+              "label": "Message",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Title",
+              "description": "Primary text to display - use title or message (message is alias for backwards compat)",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "variant": {
+              "default": "default",
+              "description": "Variant for color styling",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "default",
+                "success",
+                "error",
+                "warning",
+                "info"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "onAction prop",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "EmptyStateItem",
+          "name": "EmptyStateRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "onAction prop",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actionEvent": "ACTION",
+                      "actionLabel": "@config.actionLabel",
+                      "className": "@config.className",
+                      "description": "@config.description",
+                      "destructive": "@config.destructive",
+                      "icon": "@config.icon",
+                      "look": "@config.look",
+                      "message": "@config.message",
+                      "onAction": "ACTION",
+                      "title": "@config.title",
+                      "type": "empty-state",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

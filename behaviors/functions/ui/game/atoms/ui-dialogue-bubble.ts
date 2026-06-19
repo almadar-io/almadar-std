@@ -43,12 +43,12 @@ export interface StdUiDialogueBubbleConfig {
   className?: string;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/04_hero.png"` */
   portrait?: unknown;
-  /** Default: `"Text"` */
-  text?: string;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
   /** Default: `"Speaker"` */
   speaker?: string;
+  /** Default: `"Text"` */
+  text?: string;
 }
 
 /**

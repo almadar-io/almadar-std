@@ -1,98 +1,20 @@
 {
-  "name": "ui-confetti-effect",
-  "version": "1.0.0",
   "description": "ConfettiEffect — UI factory (1:1 with the @almadar/ui confetti-effect pattern).",
+  "name": "ui-confetti-effect",
   "orbitals": [
     {
-      "name": "ConfettiEffectOrbital",
       "entity": {
-        "name": "ConfettiEffectItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ConfettiEffectItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ConfettiEffectRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ConfettiEffectItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "confetti-effect",
-                      "particleCount": "@config.particleCount",
-                      "trigger": "@config.trigger",
-                      "duration": "@config.duration",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "trigger": {
-              "type": "boolean",
-              "default": false,
-              "label": "Trigger",
-              "description": "When this changes from false to true, a burst of particles is spawned",
-              "tier": "presentation"
-            },
-            "particleCount": {
-              "type": "number",
-              "default": 30.0,
-              "label": "Particle Count",
-              "description": "Number of particles to spawn",
-              "tier": "presentation"
-            },
-            "duration": {
-              "type": "number",
-              "default": 2000.0,
-              "label": "Duration",
-              "description": "How long the animation lasts in milliseconds",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional class names",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ConfettiEffectOrbital",
       "pages": [
         {
           "name": "ConfettiEffectPage",
@@ -103,7 +25,85 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional class names",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "duration": {
+              "default": 2000.0,
+              "description": "How long the animation lasts in milliseconds",
+              "label": "Duration",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "particleCount": {
+              "default": 30.0,
+              "description": "Number of particles to spawn",
+              "label": "Particle Count",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "trigger": {
+              "default": false,
+              "description": "When this changes from false to true, a burst of particles is spawned",
+              "label": "Trigger",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ConfettiEffectItem",
+          "name": "ConfettiEffectRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "duration": "@config.duration",
+                      "particleCount": "@config.particleCount",
+                      "trigger": "@config.trigger",
+                      "type": "confetti-effect"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

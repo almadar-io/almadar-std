@@ -1,110 +1,20 @@
 {
-  "name": "ui-dialogue-bubble",
-  "version": "1.0.0",
   "description": "DialogueBubble — UI factory (1:1 with the @almadar/ui dialogue-bubble pattern).",
+  "name": "ui-dialogue-bubble",
   "orbitals": [
     {
-      "name": "DialogueBubbleOrbital",
       "entity": {
-        "name": "DialogueBubbleItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "DialogueBubbleItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "DialogueBubbleRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "DialogueBubbleItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "text": "@config.text",
-                      "className": "@config.className",
-                      "portrait": "@config.portrait",
-                      "speaker": "@config.speaker",
-                      "position": "@config.position",
-                      "type": "dialogue-bubble"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "portrait": {
-              "type": "asset",
-              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/04_hero.png",
-              "label": "Portrait",
-              "description": "URL for the speaker portrait image",
-              "tier": "presentation"
-            },
-            "text": {
-              "type": "string",
-              "default": "Text",
-              "label": "Text",
-              "description": "Dialogue text content",
-              "tier": "presentation"
-            },
-            "position": {
-              "type": "string",
-              "default": "bottom",
-              "label": "Position",
-              "description": "Position of the bubble on screen",
-              "tier": "presentation",
-              "values": [
-                "top",
-                "bottom"
-              ]
-            },
-            "speaker": {
-              "type": "string",
-              "default": "Speaker",
-              "label": "Speaker",
-              "description": "Speaker name displayed at the top",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "DialogueBubbleOrbital",
       "pages": [
         {
           "name": "DialogueBubblePage",
@@ -115,7 +25,97 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "portrait": {
+              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/04_hero.png",
+              "description": "URL for the speaker portrait image",
+              "label": "Portrait",
+              "tier": "presentation",
+              "type": "asset"
+            },
+            "position": {
+              "default": "bottom",
+              "description": "Position of the bubble on screen",
+              "label": "Position",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "top",
+                "bottom"
+              ]
+            },
+            "speaker": {
+              "default": "Speaker",
+              "description": "Speaker name displayed at the top",
+              "label": "Speaker",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "text": {
+              "default": "Text",
+              "description": "Dialogue text content",
+              "label": "Text",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DialogueBubbleItem",
+          "name": "DialogueBubbleRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "portrait": "@config.portrait",
+                      "position": "@config.position",
+                      "speaker": "@config.speaker",
+                      "text": "@config.text",
+                      "type": "dialogue-bubble"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

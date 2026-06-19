@@ -1,233 +1,20 @@
 {
-  "name": "ui-floating-action-button",
-  "version": "1.0.0",
   "description": "FloatingActionButton — UI factory (1:1 with the @almadar/ui floating-action-button pattern).",
+  "name": "ui-floating-action-button",
   "orbitals": [
     {
-      "name": "FloatingActionButtonOrbital",
       "entity": {
-        "name": "FloatingActionButtonItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "FloatingActionButtonItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "FloatingActionButtonRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "FloatingActionButtonItem",
-          "emits": [
-            {
-              "event": "ACTION",
-              "description": "Declarative event name. When set, clicking the FAB emits `UI:{action}` via the event bus and (if also provided) calls `onClick`. Mirrors the Button atom's `action` prop so schemas can write `{ type: 'floating-action-button', action: 'INIT' }` uniformly.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "CLICK",
-              "description": "Optional direct click handler. Runs after the action emit when both are present.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event name. When set, clicking the FAB emits `UI:{action}` via the event bus and (if also provided) calls `onClick`. Mirrors the Button atom's `action` prop so schemas can write `{ type: 'floating-action-button', action: 'INIT' }` uniformly.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CLICK",
-                "name": "Click",
-                "description": "Optional direct click handler. Runs after the action emit when both are present.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "actions": "@config.actions",
-                      "action": "ACTION",
-                      "icon": "@config.icon",
-                      "type": "floating-action-button",
-                      "position": "@config.position",
-                      "actionPayload": "@config.actionPayload",
-                      "onClick": "CLICK",
-                      "className": "@config.className",
-                      "label": "@config.label",
-                      "variant": "@config.variant"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "actionPayload": {
-              "type": "json",
-              "default": {},
-              "label": "Action Payload",
-              "description": "Payload to include with the dispatched action event.",
-              "tier": "presentation"
-            },
-            "actions": {
-              "type": "[FloatingActionButtonActionsItem]",
-              "default": [
-                {
-                  "variant": "primary",
-                  "id": "Id",
-                  "label": "Label",
-                  "icon": "circle"
-                }
-              ],
-              "label": "Actions",
-              "description": "Multiple actions. When provided, the button expands to show all of them.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "success",
-                      "danger",
-                      "warning"
-                    ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": true
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "position": {
-              "type": "string",
-              "default": "bottom-right",
-              "label": "Position",
-              "description": "Button position",
-              "tier": "presentation",
-              "values": [
-                "bottom-right",
-                "bottom-left",
-                "bottom-center",
-                "top-right",
-                "top-left",
-                "top-center"
-              ]
-            },
-            "variant": {
-              "type": "string",
-              "default": "primary",
-              "label": "Variant",
-              "description": "Visual variant.",
-              "tier": "presentation",
-              "values": [
-                "primary",
-                "secondary",
-                "success",
-                "danger",
-                "warning"
-              ]
-            },
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Icon: a canonical icon name string (resolved by Button) or a Lucide component.",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Optional label shown via `aria-label` (visually hidden in single-action mode; rendered as a tooltip beside expanded actions in multi-action mode).",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "FloatingActionButtonOrbital",
       "pages": [
         {
           "name": "FloatingActionButtonPage",
@@ -238,7 +25,220 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actionPayload": {
+              "default": {},
+              "description": "Payload to include with the dispatched action event.",
+              "label": "Action Payload",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "actions": {
+              "default": [
+                {
+                  "icon": "circle",
+                  "id": "Id",
+                  "label": "Label",
+                  "variant": "primary"
+                }
+              ],
+              "description": "Multiple actions. When provided, the button expands to show all of them.",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "success",
+                      "danger",
+                      "warning"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Actions",
+              "tier": "presentation",
+              "type": "[FloatingActionButtonActionsItem]"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Icon: a canonical icon name string (resolved by Button) or a Lucide component.",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Optional label shown via `aria-label` (visually hidden in single-action mode; rendered as a tooltip beside expanded actions in multi-action mode).",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "position": {
+              "default": "bottom-right",
+              "description": "Button position",
+              "label": "Position",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "bottom-right",
+                "bottom-left",
+                "bottom-center",
+                "top-right",
+                "top-left",
+                "top-center"
+              ]
+            },
+            "variant": {
+              "default": "primary",
+              "description": "Visual variant.",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "primary",
+                "secondary",
+                "success",
+                "danger",
+                "warning"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Declarative event name. When set, clicking the FAB emits `UI:{action}` via the event bus and (if also provided) calls `onClick`. Mirrors the Button atom's `action` prop so schemas can write `{ type: 'floating-action-button', action: 'INIT' }` uniformly.",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Optional direct click handler. Runs after the action emit when both are present.",
+              "event": "CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FloatingActionButtonItem",
+          "name": "FloatingActionButtonRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Declarative event name. When set, clicking the FAB emits `UI:{action}` via the event bus and (if also provided) calls `onClick`. Mirrors the Button atom's `action` prop so schemas can write `{ type: 'floating-action-button', action: 'INIT' }` uniformly.",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Optional direct click handler. Runs after the action emit when both are present.",
+                "key": "CLICK",
+                "name": "Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "actionPayload": "@config.actionPayload",
+                      "actions": "@config.actions",
+                      "className": "@config.className",
+                      "icon": "@config.icon",
+                      "label": "@config.label",
+                      "onClick": "CLICK",
+                      "position": "@config.position",
+                      "type": "floating-action-button",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

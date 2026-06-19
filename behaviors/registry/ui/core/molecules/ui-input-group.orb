@@ -1,88 +1,20 @@
 {
-  "name": "ui-input-group",
-  "version": "1.0.0",
   "description": "InputGroup — UI factory (1:1 with the @almadar/ui input-group pattern).",
+  "name": "ui-input-group",
   "orbitals": [
     {
-      "name": "InputGroupOrbital",
       "entity": {
-        "name": "InputGroupItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "InputGroupItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "InputGroupRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "InputGroupItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "rightAddon": "@config.rightAddon",
-                      "leftAddon": "@config.leftAddon",
-                      "className": "@config.className",
-                      "type": "input-group"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "leftAddon": {
-              "type": "node",
-              "label": "Left Addon",
-              "description": "Left addon (icon, button, or text)",
-              "tier": "presentation"
-            },
-            "rightAddon": {
-              "type": "node",
-              "label": "Right Addon",
-              "description": "Right addon (icon, button, or text)",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "InputGroupOrbital",
       "pages": [
         {
           "name": "InputGroupPage",
@@ -93,7 +25,75 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "leftAddon": {
+              "description": "Left addon (icon, button, or text)",
+              "label": "Left Addon",
+              "tier": "presentation",
+              "type": "node"
+            },
+            "rightAddon": {
+              "description": "Right addon (icon, button, or text)",
+              "label": "Right Addon",
+              "tier": "presentation",
+              "type": "node"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "InputGroupItem",
+          "name": "InputGroupRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "leftAddon": "@config.leftAddon",
+                      "rightAddon": "@config.rightAddon",
+                      "type": "input-group"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -39,26 +39,26 @@ export type StdUiFlexEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFlexConfig {
-  /** Default: `"row"` */
-  direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
   /** Default: `"stretch"` */
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
+  /** Default: `"Basis"` */
+  basis?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"row"` */
+  direction?: 'row' | 'row-reverse' | 'col' | 'col-reverse';
+  /** Default: `"none"` */
+  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `0` */
+  grow?: number;
   /** Default: `false` */
   inline?: boolean;
   /** Default: `"start"` */
   justify?: 'start' | 'center' | 'end' | 'between' | 'around' | 'evenly';
   /** Default: `0` */
-  grow?: number;
+  shrink?: number;
   /** Default: `"nowrap"` */
   wrap?: 'nowrap' | 'wrap' | 'wrap-reverse';
-  /** Default: `0` */
-  shrink?: number;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `"Basis"` */
-  basis?: string;
-  /** Default: `"none"` */
-  gap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 }
 
 /**

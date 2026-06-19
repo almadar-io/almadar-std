@@ -1,101 +1,20 @@
 {
-  "name": "ui-article-section",
-  "version": "1.0.0",
   "description": "ArticleSection — UI factory (1:1 with the @almadar/ui article-section pattern).",
+  "name": "ui-article-section",
   "orbitals": [
     {
-      "name": "ArticleSectionOrbital",
       "entity": {
-        "name": "ArticleSectionItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ArticleSectionItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ArticleSectionRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ArticleSectionItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "title": "@config.title",
-                      "maxWidth": "@config.maxWidth",
-                      "className": "@config.className",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Sample content"
-                        }
-                      ],
-                      "type": "article-section"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Section title",
-              "tier": "presentation"
-            },
-            "maxWidth": {
-              "type": "string",
-              "default": "md",
-              "label": "Max Width",
-              "description": "Maximum width constraint",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional class names",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ArticleSectionOrbital",
       "pages": [
         {
           "name": "ArticleSectionPage",
@@ -106,7 +25,88 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional class names",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "maxWidth": {
+              "default": "md",
+              "description": "Maximum width constraint",
+              "label": "Max Width",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "title": {
+              "default": "Title",
+              "description": "Section title",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ArticleSectionItem",
+          "name": "ArticleSectionRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "maxWidth": "@config.maxWidth",
+                      "title": "@config.title",
+                      "type": "article-section"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

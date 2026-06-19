@@ -1,132 +1,20 @@
 {
-  "name": "ui-trend-indicator",
-  "version": "1.0.0",
   "description": "TrendIndicator — UI factory (1:1 with the @almadar/ui trend-indicator pattern).",
+  "name": "ui-trend-indicator",
   "orbitals": [
     {
-      "name": "TrendIndicatorOrbital",
       "entity": {
-        "name": "TrendIndicatorItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "TrendIndicatorItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "TrendIndicatorRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "TrendIndicatorItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "direction": "@config.direction",
-                      "invert": "@config.invert",
-                      "type": "trend-indicator",
-                      "size": "@config.size",
-                      "value": "@config.value",
-                      "showValue": "@config.showValue",
-                      "label": "@config.label"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size of the indicator",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "showValue": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Value",
-              "description": "Show the formatted value text next to the arrow",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Accessible label override",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Value",
-              "description": "Numeric value to display (e.g., 12.5 for +12.5%)",
-              "tier": "presentation"
-            },
-            "direction": {
-              "type": "string",
-              "default": "up",
-              "label": "Direction",
-              "description": "Override automatic direction detection (positive=up, negative=down, zero=flat)",
-              "tier": "presentation",
-              "values": [
-                "up",
-                "down",
-                "flat"
-              ]
-            },
-            "invert": {
-              "type": "boolean",
-              "default": false,
-              "label": "Invert",
-              "description": "Invert color logic (for metrics where down is good, e.g., error rate, bounce rate)",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "TrendIndicatorOrbital",
       "pages": [
         {
           "name": "TrendIndicatorPage",
@@ -137,7 +25,119 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the root element.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "direction": {
+              "default": "up",
+              "description": "Override automatic direction detection (positive=up, negative=down, zero=flat)",
+              "label": "Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "up",
+                "down",
+                "flat"
+              ]
+            },
+            "invert": {
+              "default": false,
+              "description": "Invert color logic (for metrics where down is good, e.g., error rate, bounce rate)",
+              "label": "Invert",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Accessible label override",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "showValue": {
+              "default": true,
+              "description": "Show the formatted value text next to the arrow",
+              "label": "Show Value",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size of the indicator",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "value": {
+              "default": 0.0,
+              "description": "Numeric value to display (e.g., 12.5 for +12.5%)",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TrendIndicatorItem",
+          "name": "TrendIndicatorRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "direction": "@config.direction",
+                      "invert": "@config.invert",
+                      "label": "@config.label",
+                      "showValue": "@config.showValue",
+                      "size": "@config.size",
+                      "type": "trend-indicator",
+                      "value": "@config.value"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -111,8 +111,8 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -123,20 +123,27 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'ObjectRulePanelRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'ObjectRulePanelItem',
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'disabled': {
+            'default': false,
+            'description': 'Whether editing is disabled',
+            'label': 'Disabled',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+        },
         'emits': [
           {
-            'event': 'RULES_CHANGE',
             'description': 'Called when rules change',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'RULES_CHANGE',
             'payloadSchema': [
               {
                 'name': 'objectId',
@@ -147,25 +154,28 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                 'type': '[object]',
               },
             ],
+            'scope': 'external',
+            'tier': 'essential',
           },
         ],
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'ObjectRulePanelItem',
+        'name': 'ObjectRulePanelRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Called when rules change',
               'key': 'RULES_CHANGE',
               'name': 'Rules Change',
-              'description': 'Called when rules change',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'objectId',
@@ -176,13 +186,17 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                   'type': '[object]',
                 },
               ],
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -193,34 +207,20 @@ export function stdUiObjectRulePanelObjectRulePanelOrbital(params: StdUiObjectRu
                   'render-ui',
                   'main',
                   {
+                    'className': '@config.className',
+                    'disabled': '@config.disabled',
+                    'object': '@entity',
                     'onRulesChange': 'RULES_CHANGE',
                     'type': 'object-rule-panel',
-                    'className': '@config.className',
-                    'object': '@entity',
-                    'disabled': '@config.disabled',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'disabled': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Disabled',
-            'description': 'Whether editing is disabled',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'ObjectRulePanelItem', canonicalName) as never,
     ],
     pages: [

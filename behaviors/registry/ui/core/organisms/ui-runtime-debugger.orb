@@ -1,124 +1,20 @@
 {
-  "name": "ui-runtime-debugger",
-  "version": "1.0.0",
   "description": "RuntimeDebugger — UI factory (1:1 with the @almadar/ui runtime-debugger pattern).",
+  "name": "ui-runtime-debugger",
   "orbitals": [
     {
-      "name": "RuntimeDebuggerOrbital",
       "entity": {
-        "name": "RuntimeDebuggerItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "RuntimeDebuggerItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "RuntimeDebuggerRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "RuntimeDebuggerItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "defaultCollapsed": "@config.defaultCollapsed",
-                      "mode": "@config.mode",
-                      "position": "@config.position",
-                      "schema": "@config.schema",
-                      "type": "runtime-debugger",
-                      "className": "@config.className",
-                      "defaultTab": "@config.defaultTab"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "defaultCollapsed": {
-              "type": "boolean",
-              "default": true,
-              "label": "Default Collapsed",
-              "description": "Initial collapsed state",
-              "tier": "presentation"
-            },
-            "position": {
-              "type": "string",
-              "default": "bottom-right",
-              "label": "Position",
-              "description": "Initial position",
-              "tier": "presentation",
-              "values": [
-                "bottom-right",
-                "bottom-left",
-                "top-right",
-                "top-left"
-              ]
-            },
-            "defaultTab": {
-              "type": "string",
-              "default": "Default Tab",
-              "label": "Default Tab",
-              "description": "Default active tab id",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "mode": {
-              "type": "string",
-              "default": "floating",
-              "label": "Mode",
-              "description": "Display mode: floating (fixed overlay), inline (block element), or verify (always-visible compact overlay for verification runs)",
-              "tier": "presentation",
-              "values": [
-                "floating",
-                "inline",
-                "verify"
-              ]
-            },
-            "schema": {
-              "type": "json",
-              "label": "Schema",
-              "description": "Raw schema for EventDispatcherTab payload extraction",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "RuntimeDebuggerOrbital",
       "pages": [
         {
           "name": "RuntimeDebuggerPage",
@@ -129,7 +25,111 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "defaultCollapsed": {
+              "default": true,
+              "description": "Initial collapsed state",
+              "label": "Default Collapsed",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "defaultTab": {
+              "default": "Default Tab",
+              "description": "Default active tab id",
+              "label": "Default Tab",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "mode": {
+              "default": "floating",
+              "description": "Display mode: floating (fixed overlay), inline (block element), or verify (always-visible compact overlay for verification runs)",
+              "label": "Mode",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "floating",
+                "inline",
+                "verify"
+              ]
+            },
+            "position": {
+              "default": "bottom-right",
+              "description": "Initial position",
+              "label": "Position",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "bottom-right",
+                "bottom-left",
+                "top-right",
+                "top-left"
+              ]
+            },
+            "schema": {
+              "description": "Raw schema for EventDispatcherTab payload extraction",
+              "label": "Schema",
+              "tier": "presentation",
+              "type": "json"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "RuntimeDebuggerItem",
+          "name": "RuntimeDebuggerRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "defaultCollapsed": "@config.defaultCollapsed",
+                      "defaultTab": "@config.defaultTab",
+                      "mode": "@config.mode",
+                      "position": "@config.position",
+                      "schema": "@config.schema",
+                      "type": "runtime-debugger"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,49 +1,66 @@
 {
-  "name": "ui-feature-detail-page-template",
-  "version": "1.0.0",
   "description": "FeatureDetailPageTemplate — UI factory (1:1 with the @almadar/ui feature-detail-page-template pattern).",
+  "name": "ui-feature-detail-page-template",
   "orbitals": [
     {
-      "name": "FeatureDetailPageTemplateOrbital",
       "entity": {
-        "name": "FeatureDetailPageTemplateItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "FeatureDetailPageTemplateItem",
+        "persistence": "runtime"
       },
+      "name": "FeatureDetailPageTemplateOrbital",
+      "pages": [
+        {
+          "name": "FeatureDetailPageTemplatePage",
+          "path": "/feature-detail-page-template",
+          "traits": [
+            {
+              "ref": "FeatureDetailPageTemplateRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "FeatureDetailPageTemplateRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "External styling override",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
           "linkedEntity": "FeatureDetailPageTemplateItem",
+          "name": "FeatureDetailPageTemplateRender",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -59,33 +76,16 @@
                       "type": "feature-detail-page-template"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "External styling override",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "FeatureDetailPageTemplatePage",
-          "path": "/feature-detail-page-template",
-          "traits": [
-            {
-              "ref": "FeatureDetailPageTemplateRender"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

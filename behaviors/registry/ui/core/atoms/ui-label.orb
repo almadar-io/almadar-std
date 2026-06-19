@@ -1,98 +1,20 @@
 {
-  "name": "ui-label",
-  "version": "1.0.0",
   "description": "Label — UI factory (1:1 with the @almadar/ui label pattern).",
+  "name": "ui-label",
   "orbitals": [
     {
-      "name": "LabelOrbital",
       "entity": {
-        "name": "LabelItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "LabelItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "LabelRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "LabelItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "text": "@config.text",
-                      "required": "@config.required",
-                      "type": "label",
-                      "htmlFor": "@config.htmlFor"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "htmlFor": {
-              "type": "string",
-              "default": "Html For",
-              "label": "Html For",
-              "description": "Associated input element ID",
-              "tier": "presentation"
-            },
-            "text": {
-              "type": "string",
-              "default": "Text",
-              "label": "Text",
-              "description": "Label text content",
-              "tier": "presentation"
-            },
-            "required": {
-              "type": "boolean",
-              "default": false,
-              "label": "Required",
-              "description": "Show required indicator",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "LabelOrbital",
       "pages": [
         {
           "name": "LabelPage",
@@ -103,7 +25,85 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the root element.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "htmlFor": {
+              "default": "Html For",
+              "description": "Associated input element ID",
+              "label": "Html For",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "required": {
+              "default": false,
+              "description": "Show required indicator",
+              "label": "Required",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "text": {
+              "default": "Text",
+              "description": "Label text content",
+              "label": "Text",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "LabelItem",
+          "name": "LabelRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "htmlFor": "@config.htmlFor",
+                      "required": "@config.required",
+                      "text": "@config.text",
+                      "type": "label"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

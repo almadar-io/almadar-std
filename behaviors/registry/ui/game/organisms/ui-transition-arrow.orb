@@ -1,173 +1,20 @@
 {
-  "name": "ui-transition-arrow",
-  "version": "1.0.0",
   "description": "TransitionArrow — UI factory (1:1 with the @almadar/ui transition-arrow pattern).",
+  "name": "ui-transition-arrow",
   "orbitals": [
     {
-      "name": "TransitionArrowOrbital",
       "entity": {
-        "name": "TransitionArrowItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "TransitionArrowItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "TransitionArrowRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "TransitionArrowItem",
-          "emits": [
-            {
-              "event": "CLICK",
-              "description": "Click handler",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CLICK",
-                "name": "Click",
-                "description": "Click handler",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "transition-arrow",
-                      "from": "@config.fromProp",
-                      "isActive": "@config.isActive",
-                      "guardHint": "@config.guardHint",
-                      "onClick": "CLICK",
-                      "className": "@config.className",
-                      "to": "@config.toProp",
-                      "eventLabel": "@config.eventLabel"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "guardHint": {
-              "type": "string",
-              "default": "Guard Hint",
-              "label": "Guard Hint",
-              "description": "Guard hint shown below event",
-              "tier": "presentation"
-            },
-            "isActive": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Active",
-              "description": "Whether this transition is currently active",
-              "tier": "presentation"
-            },
-            "toProp": {
-              "type": "TransitionArrowTo",
-              "default": {
-                "y": 1.0,
-                "x": 1.0
-              },
-              "label": "To",
-              "description": "End position (center of to-node)",
-              "synonyms": "to",
-              "tier": "presentation",
-              "properties": {
-                "y": {
-                  "name": "y",
-                  "type": "number",
-                  "required": true
-                },
-                "x": {
-                  "name": "x",
-                  "type": "number",
-                  "required": true
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes for the SVG group",
-              "tier": "presentation"
-            },
-            "eventLabel": {
-              "type": "string",
-              "default": "Event Label",
-              "label": "Event Label",
-              "description": "Event label shown on the arrow",
-              "tier": "presentation"
-            },
-            "fromProp": {
-              "type": "TransitionArrowFrom",
-              "default": {
-                "x": 1.0,
-                "y": 1.0
-              },
-              "label": "From",
-              "description": "Start position (center of from-node)",
-              "synonyms": "from",
-              "tier": "presentation",
-              "properties": {
-                "x": {
-                  "name": "x",
-                  "type": "number",
-                  "required": true
-                },
-                "y": {
-                  "name": "y",
-                  "type": "number",
-                  "required": true
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "TransitionArrowOrbital",
       "pages": [
         {
           "name": "TransitionArrowPage",
@@ -178,7 +25,160 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes for the SVG group",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "eventLabel": {
+              "default": "Event Label",
+              "description": "Event label shown on the arrow",
+              "label": "Event Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "fromProp": {
+              "default": {
+                "x": 1.0,
+                "y": 1.0
+              },
+              "description": "Start position (center of from-node)",
+              "label": "From",
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "synonyms": "from",
+              "tier": "presentation",
+              "type": "TransitionArrowFrom"
+            },
+            "guardHint": {
+              "default": "Guard Hint",
+              "description": "Guard hint shown below event",
+              "label": "Guard Hint",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "isActive": {
+              "default": false,
+              "description": "Whether this transition is currently active",
+              "label": "Is Active",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "toProp": {
+              "default": {
+                "x": 1.0,
+                "y": 1.0
+              },
+              "description": "End position (center of to-node)",
+              "label": "To",
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "synonyms": "to",
+              "tier": "presentation",
+              "type": "TransitionArrowTo"
+            }
+          },
+          "emits": [
+            {
+              "description": "Click handler",
+              "event": "CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TransitionArrowItem",
+          "name": "TransitionArrowRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Click handler",
+                "key": "CLICK",
+                "name": "Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "eventLabel": "@config.eventLabel",
+                      "from": "@config.fromProp",
+                      "guardHint": "@config.guardHint",
+                      "isActive": "@config.isActive",
+                      "onClick": "CLICK",
+                      "to": "@config.toProp",
+                      "type": "transition-arrow"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

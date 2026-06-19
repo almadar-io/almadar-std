@@ -57,14 +57,14 @@ export interface StdUiPositionedCanvasMovePayload {
 export interface StdUiPositionedCanvasConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `800` */
-  width?: number;
+  /** Default: `false` */
+  editable?: boolean;
   /** Default: `600` */
   height?: number;
   /** Default: `""` */
   selectedId?: string;
-  /** Default: `false` */
-  editable?: boolean;
+  /** Default: `800` */
+  width?: number;
 }
 
 /**

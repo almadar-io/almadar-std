@@ -53,42 +53,42 @@ export interface StdUiBoxHoverPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiBoxConfig {
+  /** Default: `{}` */
+  actionPayload?: unknown;
   /** Default: `"transparent"` */
   bg?: 'transparent' | 'primary' | 'secondary' | 'muted' | 'accent' | 'surface' | 'overlay';
-  /** Default: `"none"` */
-  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `"none"` */
-  paddingY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"none"` */
-  padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `false` */
   border?: boolean;
-  /** Default: `"none"` */
-  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
-  /** Default: `"Max Width"` */
-  maxWidth?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"block"` */
+  display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
+  /** Default: `false` */
+  fullHeight?: boolean;
   /** Default: `false` */
   fullWidth?: boolean;
   /** Default: `"none"` */
-  paddingX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  /** Default: `"block"` */
-  display?: 'block' | 'inline' | 'inline-block' | 'flex' | 'inline-flex' | 'grid';
-  /** Default: `"none"` */
   margin?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
-  /** Default: `"auto"` */
-  overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';
-  /** Default: `false` */
-  fullHeight?: boolean;
+  /** Default: `"none"` */
+  marginX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
   /** Default: `"none"` */
   marginY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
+  /** Default: `"Max Width"` */
+  maxWidth?: string;
+  /** Default: `"auto"` */
+  overflow?: 'auto' | 'hidden' | 'visible' | 'scroll';
+  /** Default: `"none"` */
+  padding?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"none"` */
+  paddingX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  /** Default: `"none"` */
+  paddingY?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `"relative"` */
   position?: 'relative' | 'absolute' | 'fixed' | 'sticky';
   /** Default: `"none"` */
-  marginX?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'auto';
-  /** Default: `{}` */
-  actionPayload?: unknown;
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  /** Default: `"none"` */
+  shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
 }
 
 /**

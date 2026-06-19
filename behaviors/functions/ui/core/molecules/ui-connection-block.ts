@@ -39,10 +39,10 @@ export type StdUiConnectionBlockEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiConnectionBlockConfig {
-  /** Default: `"Content"` */
-  content?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Content"` */
+  content?: string;
 }
 
 /**

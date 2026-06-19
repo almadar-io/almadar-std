@@ -1,106 +1,20 @@
 {
-  "name": "ui-reflection-block",
-  "version": "1.0.0",
   "description": "ReflectionBlock — UI factory (1:1 with the @almadar/ui reflection-block pattern).",
+  "name": "ui-reflection-block",
   "orbitals": [
     {
-      "name": "ReflectionBlockOrbital",
       "entity": {
-        "name": "ReflectionBlockItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ReflectionBlockItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ReflectionBlockRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ReflectionBlockItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "index": "@config.index",
-                      "savedNote": "@config.savedNote",
-                      "saveEvent": "@config.saveEvent",
-                      "className": "@config.className",
-                      "prompt": "@config.prompt",
-                      "type": "reflection-block"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "prompt": {
-              "type": "string",
-              "default": "Prompt",
-              "label": "Prompt",
-              "description": "The reflection prompt",
-              "tier": "presentation"
-            },
-            "saveEvent": {
-              "type": "string",
-              "default": "SAVE_REFLECTION",
-              "label": "Save Event",
-              "description": "Event name emitted on save (as `UI:<saveEvent>`). Defaults to 'SAVE_REFLECTION'.",
-              "tier": "presentation"
-            },
-            "index": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Index",
-              "description": "Zero-based index of this block (used in the emitted event payload)",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "savedNote": {
-              "type": "string",
-              "default": "Saved Note",
-              "label": "Saved Note",
-              "description": "Pre-filled note from saved state",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ReflectionBlockOrbital",
       "pages": [
         {
           "name": "ReflectionBlockPage",
@@ -111,7 +25,93 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "index": {
+              "default": 0.0,
+              "description": "Zero-based index of this block (used in the emitted event payload)",
+              "label": "Index",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "prompt": {
+              "default": "Prompt",
+              "description": "The reflection prompt",
+              "label": "Prompt",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "saveEvent": {
+              "default": "SAVE_REFLECTION",
+              "description": "Event name emitted on save (as `UI:<saveEvent>`). Defaults to 'SAVE_REFLECTION'.",
+              "label": "Save Event",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "savedNote": {
+              "default": "Saved Note",
+              "description": "Pre-filled note from saved state",
+              "label": "Saved Note",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ReflectionBlockItem",
+          "name": "ReflectionBlockRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "index": "@config.index",
+                      "prompt": "@config.prompt",
+                      "saveEvent": "@config.saveEvent",
+                      "savedNote": "@config.savedNote",
+                      "type": "reflection-block"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

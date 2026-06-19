@@ -41,15 +41,15 @@ export type StdUiGameAudioProviderEventKey = 'INIT';
 export interface StdUiGameAudioProviderConfig {
   /** Default: `"Base Url"` */
   baseUrl?: string;
+  /** Default: `""` */
+  className?: string;
   error?: EntityRow;
+  /** Default: `false` */
+  initialMuted?: boolean;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `{}` */
   manifest?: unknown;
-  /** Default: `false` */
-  initialMuted?: boolean;
-  /** Default: `""` */
-  className?: string;
 }
 
 /**
@@ -110,8 +110,8 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -122,32 +122,138 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'GameAudioProviderRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'GameAudioProviderItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
+        'config': {
+          'baseUrl': {
+            'default': 'Base Url',
+            'description': 'Base URL prepended to all sound paths (default \'\')',
+            'label': 'Base Url',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'className': {
+            'default': '',
+            'description': 'Closed-circuit props (unused, accepted for runtime compatibility)',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'error': {
+            'description': 'error prop',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
             },
-          ],
+            'tier': 'presentation',
+            'type': 'GameAudioProviderError',
+          },
+          'initialMuted': {
+            'default': false,
+            'description': 'Initial muted state',
+            'label': 'Initial Muted',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'isLoading prop',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'manifest': {
+            'default': {},
+            'description': 'Sound manifest — keys mapped to SoundEntry definitions',
+            'items': {
+              'properties': {
+                'autostart': {
+                  'name': 'autostart',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'crossfade': {
+                  'name': 'crossfade',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'crossfadeDurationMs': {
+                  'name': 'crossfadeDurationMs',
+                  'required': false,
+                  'type': 'number',
+                },
+                'loop': {
+                  'name': 'loop',
+                  'required': false,
+                  'type': 'boolean',
+                },
+                'path': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'path',
+                  'required': true,
+                  'type': 'array',
+                },
+                'poolSize': {
+                  'name': 'poolSize',
+                  'required': false,
+                  'type': 'number',
+                },
+                'volume': {
+                  'name': 'volume',
+                  'required': false,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Manifest',
+            'tier': 'presentation',
+            'type': 'Map<string,GameAudioProviderManifestValue>',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'GameAudioProviderItem',
+        'name': 'GameAudioProviderRender',
+        'scope': 'instance',
+        'stateMachine': {
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -158,135 +264,29 @@ export function stdUiGameAudioProviderGameAudioProviderOrbital(params: StdUiGame
                   'render-ui',
                   'main',
                   {
-                    'initialMuted': '@config.initialMuted',
-                    'className': '@config.className',
+                    'baseUrl': '@config.baseUrl',
                     'children': [
                       {
-                        'type': 'typography',
                         'content': 'Sample content',
+                        'type': 'typography',
                       },
                     ],
+                    'className': '@config.className',
                     'entity': 'GameAudioProviderItem',
-                    'type': 'game-audio-provider',
                     'error': '@config.error',
+                    'initialMuted': '@config.initialMuted',
                     'isLoading': '@config.isLoading',
                     'manifest': '@config.manifest',
-                    'baseUrl': '@config.baseUrl',
+                    'type': 'game-audio-provider',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'baseUrl': {
-            'type': 'string',
-            'default': 'Base Url',
-            'label': 'Base Url',
-            'description': 'Base URL prepended to all sound paths (default \'\')',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'GameAudioProviderError',
-            'label': 'Error',
-            'description': 'error prop',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'isLoading prop',
-            'tier': 'presentation',
-          },
-          'manifest': {
-            'type': 'Map<string,GameAudioProviderManifestValue>',
-            'default': {},
-            'label': 'Manifest',
-            'description': 'Sound manifest — keys mapped to SoundEntry definitions',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'poolSize': {
-                  'name': 'poolSize',
-                  'type': 'number',
-                  'required': false,
-                },
-                'volume': {
-                  'name': 'volume',
-                  'type': 'number',
-                  'required': false,
-                },
-                'loop': {
-                  'name': 'loop',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'autostart': {
-                  'name': 'autostart',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'path': {
-                  'name': 'path',
-                  'type': 'array',
-                  'required': true,
-                  'items': {
-                    'type': 'string',
-                  },
-                },
-                'crossfade': {
-                  'name': 'crossfade',
-                  'type': 'boolean',
-                  'required': false,
-                },
-                'crossfadeDurationMs': {
-                  'name': 'crossfadeDurationMs',
-                  'type': 'number',
-                  'required': false,
-                },
-              },
-            },
-          },
-          'initialMuted': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Initial Muted',
-            'description': 'Initial muted state',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Closed-circuit props (unused, accepted for runtime compatibility)',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'GameAudioProviderItem', canonicalName) as never,
     ],
     pages: [

@@ -1,227 +1,59 @@
 {
+  "description": "SimulatorBoard — parameter-tuning puzzle: adjust params until output is within tolerance of target.",
   "name": "ui-simulator-board",
-  "version": "1.0.0",
-  "description": "SimulatorBoard — UI factory (1:1 with the @almadar/ui simulator-board pattern).",
   "orbitals": [
     {
-      "name": "SimulatorBoardOrbital",
       "entity": {
-        "name": "SimulatorBoardItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "paramA",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "paramB",
+            "type": "number"
+          },
+          {
+            "default": 10.0,
+            "name": "target",
+            "type": "number"
+          },
+          {
+            "default": 1.0,
+            "name": "tolerance",
+            "type": "number"
+          },
+          {
+            "intrinsic": true,
+            "name": "output",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "attempts",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
             "type": "string",
-            "required": true
-          }
-        ]
-      },
-      "traits": [
-        {
-          "name": "SimulatorBoardRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "SimulatorBoardItem",
-          "emits": [
-            {
-              "event": "COMPLETE",
-              "description": "completeEvent prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "success",
-                  "type": "boolean",
-                  "required": true
-                },
-                {
-                  "name": "attempts",
-                  "type": "number",
-                  "required": true
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "COMPLETE",
-                "name": "Complete",
-                "description": "completeEvent prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "success",
-                    "type": "boolean",
-                    "required": true
-                  },
-                  {
-                    "name": "attempts",
-                    "type": "number",
-                    "required": true
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "SimulatorBoardItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "totalCount": "@config.totalCount",
-                      "activeFilters": "@config.activeFilters",
-                      "sortBy": "@config.sortBy",
-                      "entity": "@entity",
-                      "error": "@config.error",
-                      "selectedIds": "@config.selectedIds",
-                      "pageSize": "@config.pageSize",
-                      "completeEvent": "COMPLETE",
-                      "type": "simulator-board",
-                      "searchValue": "@config.searchValue",
-                      "isLoading": "@config.isLoading",
-                      "className": "@config.className",
-                      "sortDirection": "@config.sortDirection",
-                      "page": "@config.pageProp"
-                    }
-                  ]
-                ]
-              }
+            "values": [
+              "none",
+              "win"
             ]
-          },
-          "config": {
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
-              "tier": "presentation"
-            },
-            "searchValue": {
-              "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
-            },
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "SimulatorBoardError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+          }
+        ],
+        "name": "SimulatorBoardItem",
+        "persistence": "runtime"
+      },
+      "name": "SimulatorBoardOrbital",
       "pages": [
         {
           "name": "SimulatorBoardPage",
@@ -232,7 +64,559 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "activeFilters": {
+              "description": "Active filters",
+              "label": "Active Filters",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state (UiError)",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "SimulatorBoardError"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "pageProp": {
+              "default": 0.0,
+              "description": "Current page number",
+              "label": "Page",
+              "synonyms": "page",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageSize": {
+              "default": 0.0,
+              "description": "Number of items per page",
+              "label": "Page Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "searchValue": {
+              "default": "Search Value",
+              "description": "Current search query value",
+              "label": "Search Value",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "selectedIds": {
+              "default": [],
+              "description": "Currently selected item IDs",
+              "items": {
+                "type": "string"
+              },
+              "label": "Selected Ids",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "sortBy": {
+              "default": "Sort By",
+              "description": "Current sort field",
+              "label": "Sort By",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "sortDirection": {
+              "default": "asc",
+              "description": "Current sort direction",
+              "label": "Sort Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "totalCount": {
+              "default": 0.0,
+              "description": "Total number of items",
+              "label": "Total Count",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "completeEvent prop",
+              "event": "COMPLETE",
+              "payloadSchema": [
+                {
+                  "name": "success",
+                  "required": true,
+                  "type": "boolean"
+                },
+                {
+                  "name": "attempts",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Sets parameter A from { value } during play.",
+              "event": "SET_A",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Sets parameter B from { value } during play.",
+              "event": "SET_B",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Evaluates output vs target/tolerance; wins or retries.",
+              "event": "CHECK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Resets the puzzle back to the menu.",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "attempts",
+              "paramA",
+              "paramB",
+              "result",
+              "target",
+              "tolerance"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SimulatorBoardItem",
+          "name": "SimulatorBoardRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "START",
+                "name": "Start"
+              },
+              {
+                "description": "Sets parameter A from { value } during play.",
+                "key": "SET_A",
+                "name": "Set A",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Sets parameter B from { value } during play.",
+                "key": "SET_B",
+                "name": "Set B",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Evaluates output vs target/tolerance; wins or retries.",
+                "key": "CHECK",
+                "name": "Check",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Resets the puzzle back to the menu.",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "completeEvent prop",
+                "key": "COMPLETE",
+                "name": "Complete",
+                "payloadSchema": [
+                  {
+                    "name": "success",
+                    "required": true,
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "attempts",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "menu"
+              },
+              {
+                "name": "playing"
+              },
+              {
+                "name": "complete"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.paramA",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.paramB",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.target",
+                    10.0
+                  ],
+                  [
+                    "set",
+                    "@entity.tolerance",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "activeFilters": "@config.activeFilters",
+                      "className": "@config.className",
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "searchValue": "@config.searchValue",
+                      "selectedIds": "@config.selectedIds",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "totalCount": "@config.totalCount",
+                      "type": "simulator-board"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "menu",
+                "to": "menu"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.paramA",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.paramB",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "simulator-board"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "from": "menu",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.paramA",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "simulator-board"
+                    }
+                  ]
+                ],
+                "event": "SET_A",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.paramB",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "simulator-board"
+                    }
+                  ]
+                ],
+                "event": "SET_B",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.attempts",
+                    [
+                      "+",
+                      "@entity.attempts",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "win"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "simulator-board"
+                    }
+                  ]
+                ],
+                "event": "CHECK",
+                "from": "playing",
+                "guard": [
+                  "<=",
+                  [
+                    "math/abs",
+                    [
+                      "-",
+                      "@entity.output",
+                      "@entity.target"
+                    ]
+                  ],
+                  "@entity.tolerance"
+                ],
+                "to": "complete"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.attempts",
+                    [
+                      "+",
+                      "@entity.attempts",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "simulator-board"
+                    }
+                  ]
+                ],
+                "event": "CHECK",
+                "from": "playing",
+                "guard": [
+                  ">",
+                  [
+                    "math/abs",
+                    [
+                      "-",
+                      "@entity.output",
+                      "@entity.target"
+                    ]
+                  ],
+                  "@entity.tolerance"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.paramA",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.paramB",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "type": "simulator-board"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "complete",
+                "to": "menu"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

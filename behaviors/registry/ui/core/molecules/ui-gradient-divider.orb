@@ -1,90 +1,20 @@
 {
-  "name": "ui-gradient-divider",
-  "version": "1.0.0",
   "description": "GradientDivider — UI factory (1:1 with the @almadar/ui gradient-divider pattern).",
+  "name": "ui-gradient-divider",
   "orbitals": [
     {
-      "name": "GradientDividerOrbital",
       "entity": {
-        "name": "GradientDividerItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "GradientDividerItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "GradientDividerRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "GradientDividerItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "gradient-divider",
-                      "color": "@config.color",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional class names",
-              "tier": "presentation"
-            },
-            "color": {
-              "type": "string",
-              "default": "primary",
-              "label": "Color",
-              "description": "Semantic palette token or a raw CSS color value. Defaults to 'primary'.",
-              "tier": "presentation",
-              "values": [
-                "primary",
-                "secondary",
-                "success",
-                "warning",
-                "error",
-                "muted"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "GradientDividerOrbital",
       "pages": [
         {
           "name": "GradientDividerPage",
@@ -95,7 +25,77 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional class names",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "color": {
+              "default": "primary",
+              "description": "Semantic palette token or a raw CSS color value. Defaults to 'primary'.",
+              "label": "Color",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "primary",
+                "secondary",
+                "success",
+                "warning",
+                "error",
+                "muted"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "GradientDividerItem",
+          "name": "GradientDividerRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "color": "@config.color",
+                      "type": "gradient-divider"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

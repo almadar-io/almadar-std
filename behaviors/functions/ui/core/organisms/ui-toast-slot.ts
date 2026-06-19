@@ -39,17 +39,17 @@ export type StdUiToastSlotEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiToastSlotConfig {
-  /** Default: `5000` */
-  duration?: number;
-  /** Default: `"success"` */
-  variant?: 'success' | 'error' | 'info' | 'warning';
-  /** Default: `false` */
-  isLoading?: boolean;
-  error?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `5000` */
+  duration?: number;
+  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `"Title"` */
   title?: string;
+  /** Default: `"success"` */
+  variant?: 'success' | 'error' | 'info' | 'warning';
 }
 
 /**
@@ -110,8 +110,8 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -122,32 +122,101 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'ToastSlotRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'ToastSlotItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Custom class name',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'duration': {
+            'default': 5000,
+            'description': 'Auto-dismiss duration in ms (0 = no auto-dismiss)',
+            'label': 'Duration',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'error': {
+            'description': 'Error state',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
             },
-          ],
+            'tier': 'presentation',
+            'type': 'ToastSlotError',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'title': {
+            'default': 'Title',
+            'description': 'Toast title',
+            'label': 'Title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'variant': {
+            'default': 'success',
+            'description': 'Toast variant',
+            'label': 'Variant',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'success',
+              'error',
+              'info',
+              'warning',
+            ],
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'ToastSlotItem',
+        'name': 'ToastSlotRender',
+        'scope': 'instance',
+        'stateMachine': {
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -158,98 +227,29 @@ export function stdUiToastSlotToastSlotOrbital(params: StdUiToastSlotToastSlotOr
                   'render-ui',
                   'main',
                   {
-                    'title': '@config.title',
-                    'entity': 'ToastSlotItem',
-                    'type': 'toast-slot',
                     'children': [
                       {
                         'content': 'Sample content',
                         'type': 'typography',
                       },
                     ],
-                    'duration': '@config.duration',
-                    'isLoading': '@config.isLoading',
                     'className': '@config.className',
-                    'variant': '@config.variant',
+                    'duration': '@config.duration',
+                    'entity': 'ToastSlotItem',
                     'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'title': '@config.title',
+                    'type': 'toast-slot',
+                    'variant': '@config.variant',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'duration': {
-            'type': 'number',
-            'default': 5000,
-            'label': 'Duration',
-            'description': 'Auto-dismiss duration in ms (0 = no auto-dismiss)',
-            'tier': 'presentation',
-          },
-          'variant': {
-            'type': 'string',
-            'default': 'success',
-            'label': 'Variant',
-            'description': 'Toast variant',
-            'tier': 'presentation',
-            'values': [
-              'success',
-              'error',
-              'info',
-              'warning',
-            ],
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'ToastSlotError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Custom class name',
-            'tier': 'presentation',
-          },
-          'title': {
-            'type': 'string',
-            'default': 'Title',
-            'label': 'Title',
-            'description': 'Toast title',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'ToastSlotItem', canonicalName) as never,
     ],
     pages: [

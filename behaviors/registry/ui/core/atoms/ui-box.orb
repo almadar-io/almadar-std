@@ -1,370 +1,20 @@
 {
-  "name": "ui-box",
-  "version": "1.0.0",
   "description": "Box — UI factory (1:1 with the @almadar/ui box pattern).",
+  "name": "ui-box",
   "orbitals": [
     {
-      "name": "BoxOrbital",
       "entity": {
-        "name": "BoxItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "BoxItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "BoxRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "BoxItem",
-          "emits": [
-            {
-              "event": "ACTION",
-              "description": "Declarative event name — emits UI:{action} via eventBus on click",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "HOVER",
-              "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false } on mouseEnter/mouseLeave",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event name — emits UI:{action} via eventBus on click",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "HOVER",
-                "name": "Hover",
-                "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false } on mouseEnter/mouseLeave",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "box",
-                      "fullHeight": "@config.fullHeight",
-                      "action": "ACTION",
-                      "rounded": "@config.rounded",
-                      "hoverEvent": "HOVER",
-                      "overflow": "@config.overflow",
-                      "paddingY": "@config.paddingY",
-                      "position": "@config.position",
-                      "shadow": "@config.shadow",
-                      "children": [
-                        {
-                          "content": "Sample content",
-                          "type": "typography"
-                        }
-                      ],
-                      "padding": "@config.padding",
-                      "margin": "@config.margin",
-                      "bg": "@config.bg",
-                      "className": "@config.className",
-                      "fullWidth": "@config.fullWidth",
-                      "maxWidth": "@config.maxWidth",
-                      "marginX": "@config.marginX",
-                      "display": "@config.display",
-                      "marginY": "@config.marginY",
-                      "paddingX": "@config.paddingX",
-                      "border": "@config.border",
-                      "actionPayload": "@config.actionPayload"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "bg": {
-              "type": "string",
-              "default": "transparent",
-              "label": "Bg",
-              "description": "Background color",
-              "tier": "presentation",
-              "values": [
-                "transparent",
-                "primary",
-                "secondary",
-                "muted",
-                "accent",
-                "surface",
-                "overlay"
-              ]
-            },
-            "shadow": {
-              "type": "string",
-              "default": "none",
-              "label": "Shadow",
-              "description": "Box shadow",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "sm",
-                "md",
-                "lg",
-                "xl"
-              ]
-            },
-            "paddingY": {
-              "type": "string",
-              "default": "none",
-              "label": "Padding Y",
-              "description": "Vertical padding (overrides padding for y-axis)",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "xs",
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "2xl"
-              ]
-            },
-            "padding": {
-              "type": "string",
-              "default": "none",
-              "label": "Padding",
-              "description": "Padding on all sides",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "xs",
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "2xl"
-              ]
-            },
-            "border": {
-              "type": "boolean",
-              "default": false,
-              "label": "Border",
-              "description": "Show border",
-              "tier": "presentation"
-            },
-            "rounded": {
-              "type": "string",
-              "default": "none",
-              "label": "Rounded",
-              "description": "Border radius",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "2xl",
-                "full"
-              ]
-            },
-            "maxWidth": {
-              "type": "string",
-              "default": "Max Width",
-              "label": "Max Width",
-              "description": "Maximum width (CSS value, e.g., '550px', '80rem')",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "fullWidth": {
-              "type": "boolean",
-              "default": false,
-              "label": "Full Width",
-              "description": "Fill available width",
-              "tier": "presentation"
-            },
-            "paddingX": {
-              "type": "string",
-              "default": "none",
-              "label": "Padding X",
-              "description": "Horizontal padding (overrides padding for x-axis)",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "xs",
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "2xl"
-              ]
-            },
-            "display": {
-              "type": "string",
-              "default": "block",
-              "label": "Display",
-              "description": "Display type",
-              "tier": "presentation",
-              "values": [
-                "block",
-                "inline",
-                "inline-block",
-                "flex",
-                "inline-flex",
-                "grid"
-              ]
-            },
-            "margin": {
-              "type": "string",
-              "default": "none",
-              "label": "Margin",
-              "description": "Margin on all sides",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "xs",
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "2xl",
-                "auto"
-              ]
-            },
-            "overflow": {
-              "type": "string",
-              "default": "auto",
-              "label": "Overflow",
-              "description": "Overflow behavior",
-              "tier": "presentation",
-              "values": [
-                "auto",
-                "hidden",
-                "visible",
-                "scroll"
-              ]
-            },
-            "fullHeight": {
-              "type": "boolean",
-              "default": false,
-              "label": "Full Height",
-              "description": "Fill available height",
-              "tier": "presentation"
-            },
-            "marginY": {
-              "type": "string",
-              "default": "none",
-              "label": "Margin Y",
-              "description": "Vertical margin",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "xs",
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "2xl",
-                "auto"
-              ]
-            },
-            "position": {
-              "type": "string",
-              "default": "relative",
-              "label": "Position",
-              "description": "Position",
-              "tier": "presentation",
-              "values": [
-                "relative",
-                "absolute",
-                "fixed",
-                "sticky"
-              ]
-            },
-            "marginX": {
-              "type": "string",
-              "default": "none",
-              "label": "Margin X",
-              "description": "Horizontal margin",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "xs",
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "2xl",
-                "auto"
-              ]
-            },
-            "actionPayload": {
-              "type": "json",
-              "default": {},
-              "label": "Action Payload",
-              "description": "Payload to include with the action event",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "BoxOrbital",
       "pages": [
         {
           "name": "BoxPage",
@@ -375,7 +25,357 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actionPayload": {
+              "default": {},
+              "description": "Payload to include with the action event",
+              "label": "Action Payload",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "bg": {
+              "default": "transparent",
+              "description": "Background color",
+              "label": "Bg",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "transparent",
+                "primary",
+                "secondary",
+                "muted",
+                "accent",
+                "surface",
+                "overlay"
+              ]
+            },
+            "border": {
+              "default": false,
+              "description": "Show border",
+              "label": "Border",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the root element.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "display": {
+              "default": "block",
+              "description": "Display type",
+              "label": "Display",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "block",
+                "inline",
+                "inline-block",
+                "flex",
+                "inline-flex",
+                "grid"
+              ]
+            },
+            "fullHeight": {
+              "default": false,
+              "description": "Fill available height",
+              "label": "Full Height",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "fullWidth": {
+              "default": false,
+              "description": "Fill available width",
+              "label": "Full Width",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "margin": {
+              "default": "none",
+              "description": "Margin on all sides",
+              "label": "Margin",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "auto"
+              ]
+            },
+            "marginX": {
+              "default": "none",
+              "description": "Horizontal margin",
+              "label": "Margin X",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "auto"
+              ]
+            },
+            "marginY": {
+              "default": "none",
+              "description": "Vertical margin",
+              "label": "Margin Y",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "auto"
+              ]
+            },
+            "maxWidth": {
+              "default": "Max Width",
+              "description": "Maximum width (CSS value, e.g., '550px', '80rem')",
+              "label": "Max Width",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "overflow": {
+              "default": "auto",
+              "description": "Overflow behavior",
+              "label": "Overflow",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "auto",
+                "hidden",
+                "visible",
+                "scroll"
+              ]
+            },
+            "padding": {
+              "default": "none",
+              "description": "Padding on all sides",
+              "label": "Padding",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl"
+              ]
+            },
+            "paddingX": {
+              "default": "none",
+              "description": "Horizontal padding (overrides padding for x-axis)",
+              "label": "Padding X",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl"
+              ]
+            },
+            "paddingY": {
+              "default": "none",
+              "description": "Vertical padding (overrides padding for y-axis)",
+              "label": "Padding Y",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl"
+              ]
+            },
+            "position": {
+              "default": "relative",
+              "description": "Position",
+              "label": "Position",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "relative",
+                "absolute",
+                "fixed",
+                "sticky"
+              ]
+            },
+            "rounded": {
+              "default": "none",
+              "description": "Border radius",
+              "label": "Rounded",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "full"
+              ]
+            },
+            "shadow": {
+              "default": "none",
+              "description": "Box shadow",
+              "label": "Shadow",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg",
+                "xl"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Declarative event name — emits UI:{action} via eventBus on click",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false } on mouseEnter/mouseLeave",
+              "event": "HOVER",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "BoxItem",
+          "name": "BoxRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Declarative event name — emits UI:{action} via eventBus on click",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Declarative hover event — emits UI:{hoverEvent} with { hovered: true/false } on mouseEnter/mouseLeave",
+                "key": "HOVER",
+                "name": "Hover",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "actionPayload": "@config.actionPayload",
+                      "bg": "@config.bg",
+                      "border": "@config.border",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "display": "@config.display",
+                      "fullHeight": "@config.fullHeight",
+                      "fullWidth": "@config.fullWidth",
+                      "hoverEvent": "HOVER",
+                      "margin": "@config.margin",
+                      "marginX": "@config.marginX",
+                      "marginY": "@config.marginY",
+                      "maxWidth": "@config.maxWidth",
+                      "overflow": "@config.overflow",
+                      "padding": "@config.padding",
+                      "paddingX": "@config.paddingX",
+                      "paddingY": "@config.paddingY",
+                      "position": "@config.position",
+                      "rounded": "@config.rounded",
+                      "shadow": "@config.shadow",
+                      "type": "box"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

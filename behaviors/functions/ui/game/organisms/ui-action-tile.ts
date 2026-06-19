@@ -39,34 +39,34 @@ export type StdUiActionTileEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionTileConfig {
-  /** Default: `0` */
-  pageProp?: number;
+  /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name","stateMachine":{"currentState":"Current State","description":"Description","name":"Name","states":["Item"],"transitions":[{"event":"Event","from":"From","guardHint":"Guard Hint","to":"To"}]}}` */
+  action?: EntityRow;
+  activeFilters?: unknown;
   /** Default: `{}` */
   categoryColors?: unknown;
-  error?: EntityRow;
-  /** Default: `[]` */
-  selectedIds?: string[];
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  disabled?: boolean;
+  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
+  /** Default: `"Sort By"` */
+  sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
   /** Default: `0` */
-  pageSize?: number;
-  /** Default: `0` */
   totalCount?: number;
-  /** Default: `"Sort By"` */
-  sortBy?: string;
-  /** Default: `false` */
-  disabled?: boolean;
-  /** Default: `false` */
-  isLoading?: boolean;
-  /** Default: `{"id":"Id","category":"Category","description":"Description","iconEmoji":"Icon Emoji","name":"Name","stateMachine":{"currentState":"Current State","states":["Item"],"name":"Name","transitions":[{"guardHint":"Guard Hint","event":"Event","to":"To","from":"From"}],"description":"Description"}}` */
-  action?: EntityRow;
-  activeFilters?: unknown;
-  /** Default: `"Search Value"` */
-  searchValue?: string;
 }
 
 /**
@@ -127,8 +127,8 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -139,329 +139,329 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'ActionTileRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'ActionTileItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'transitions': [
-            {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
+        'config': {
+          'action': {
+            'default': {
+              'category': 'Category',
+              'description': 'Description',
+              'iconEmoji': 'Icon Emoji',
+              'id': 'Id',
+              'name': 'Name',
+              'stateMachine': {
+                'currentState': 'Current State',
+                'description': 'Description',
+                'name': 'Name',
+                'states': [
+                  'Item',
+                ],
+                'transitions': [
                   {
-                    'page': '@config.pageProp',
-                    'sortDirection': '@config.sortDirection',
-                    'activeFilters': '@config.activeFilters',
-                    'searchValue': '@config.searchValue',
-                    'pageSize': '@config.pageSize',
-                    'selectedIds': '@config.selectedIds',
-                    'totalCount': '@config.totalCount',
-                    'action': '@config.action',
-                    'error': '@config.error',
-                    'sortBy': '@config.sortBy',
-                    'size': '@config.size',
-                    'className': '@config.className',
-                    'type': 'action-tile',
-                    'disabled': '@config.disabled',
-                    'categoryColors': '@config.categoryColors',
-                    'isLoading': '@config.isLoading',
+                    'event': 'Event',
+                    'from': 'From',
+                    'guardHint': 'Guard Hint',
+                    'to': 'To',
                   },
                 ],
-              ],
+              },
             },
-          ],
-        },
-        'config': {
-          'pageProp': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page',
-            'description': 'Current page number',
-            'synonyms': 'page',
+            'description': 'The action data',
+            'label': 'Action',
+            'properties': {
+              'category': {
+                'name': 'category',
+                'required': true,
+                'type': 'string',
+              },
+              'description': {
+                'name': 'description',
+                'required': false,
+                'type': 'string',
+              },
+              'iconEmoji': {
+                'name': 'iconEmoji',
+                'required': false,
+                'type': 'string',
+              },
+              'iconUrl': {
+                'name': 'iconUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'id': {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': true,
+                'type': 'string',
+              },
+              'stateMachine': {
+                'name': 'stateMachine',
+                'properties': {
+                  'currentState': {
+                    'name': 'currentState',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  'description': {
+                    'name': 'description',
+                    'required': false,
+                    'type': 'string',
+                  },
+                  'name': {
+                    'name': 'name',
+                    'required': true,
+                    'type': 'string',
+                  },
+                  'states': {
+                    'items': {
+                      'type': 'string',
+                    },
+                    'name': 'states',
+                    'required': true,
+                    'type': 'array',
+                  },
+                  'transitions': {
+                    'items': {
+                      'properties': {
+                        'event': {
+                          'name': 'event',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'from': {
+                          'name': 'from',
+                          'required': true,
+                          'type': 'string',
+                        },
+                        'guardHint': {
+                          'name': 'guardHint',
+                          'required': false,
+                          'type': 'string',
+                        },
+                        'to': {
+                          'name': 'to',
+                          'required': true,
+                          'type': 'string',
+                        },
+                      },
+                      'type': 'object',
+                    },
+                    'name': 'transitions',
+                    'required': true,
+                    'type': 'array',
+                  },
+                },
+                'required': false,
+                'type': 'object',
+              },
+            },
             'tier': 'presentation',
+            'type': 'ActionTileAction',
+          },
+          'activeFilters': {
+            'description': 'Active filters',
+            'label': 'Active Filters',
+            'tier': 'presentation',
+            'type': 'json',
           },
           'categoryColors': {
-            'type': 'Map<string,ActionTileCategoryColorsValue>',
             'default': {},
-            'label': 'Category Colors',
             'description': 'Category → color mapping',
-            'tier': 'presentation',
             'items': {
-              'type': 'object',
               'properties': {
                 'bg': {
                   'name': 'bg',
-                  'type': 'string',
                   'required': true,
+                  'type': 'string',
                 },
                 'border': {
                   'name': 'border',
-                  'type': 'string',
                   'required': true,
+                  'type': 'string',
                 },
               },
+              'type': 'object',
             },
+            'label': 'Category Colors',
+            'tier': 'presentation',
+            'type': 'Map<string,ActionTileCategoryColorsValue>',
+          },
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'disabled': {
+            'default': false,
+            'description': 'Whether the tile is disabled / already used',
+            'label': 'Disabled',
+            'tier': 'presentation',
+            'type': 'boolean',
           },
           'error': {
-            'type': 'ActionTileError',
-            'label': 'Error',
             'description': 'Error state (UiError)',
-            'tier': 'presentation',
+            'label': 'Error',
             'properties': {
-              'name': {
-                'name': 'name',
-                'type': 'string',
+              'code': {
+                'name': 'code',
                 'required': false,
+                'type': 'string',
               },
               'message': {
                 'name': 'message',
-                'type': 'string',
                 'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
               },
               'stack': {
                 'name': 'stack',
-                'type': 'string',
                 'required': false,
-              },
-              'code': {
-                'name': 'code',
                 'type': 'string',
-                'required': false,
               },
             },
+            'tier': 'presentation',
+            'type': 'ActionTileError',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'pageProp': {
+            'default': 0,
+            'description': 'Current page number',
+            'label': 'Page',
+            'synonyms': 'page',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'pageSize': {
+            'default': 0,
+            'description': 'Number of items per page',
+            'label': 'Page Size',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'searchValue': {
+            'default': 'Search Value',
+            'description': 'Current search query value',
+            'label': 'Search Value',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'selectedIds': {
-            'type': '[string]',
             'default': [],
-            'label': 'Selected Ids',
             'description': 'Currently selected item IDs',
-            'tier': 'presentation',
             'items': {
               'type': 'string',
             },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'label': 'Selected Ids',
             'tier': 'presentation',
+            'type': '[string]',
           },
           'size': {
-            'type': 'string',
             'default': 'md',
-            'label': 'Size',
             'description': 'Size variant',
+            'label': 'Size',
             'tier': 'presentation',
+            'type': 'string',
             'values': [
               'sm',
               'md',
               'lg',
             ],
           },
-          'sortDirection': {
-            'type': 'string',
-            'default': 'asc',
-            'label': 'Sort Direction',
-            'description': 'Current sort direction',
+          'sortBy': {
+            'default': 'Sort By',
+            'description': 'Current sort field',
+            'label': 'Sort By',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'sortDirection': {
+            'default': 'asc',
+            'description': 'Current sort direction',
+            'label': 'Sort Direction',
+            'tier': 'presentation',
+            'type': 'string',
             'values': [
               'asc',
               'desc',
             ],
           },
-          'pageSize': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Page Size',
-            'description': 'Number of items per page',
-            'tier': 'presentation',
-          },
           'totalCount': {
-            'type': 'number',
             'default': 0,
-            'label': 'Total Count',
             'description': 'Total number of items',
+            'label': 'Total Count',
             'tier': 'presentation',
-          },
-          'sortBy': {
-            'type': 'string',
-            'default': 'Sort By',
-            'label': 'Sort By',
-            'description': 'Current sort field',
-            'tier': 'presentation',
-          },
-          'disabled': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Disabled',
-            'description': 'Whether the tile is disabled / already used',
-            'tier': 'presentation',
-          },
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'action': {
-            'type': 'ActionTileAction',
-            'default': {
-              'id': 'Id',
-              'category': 'Category',
-              'description': 'Description',
-              'iconEmoji': 'Icon Emoji',
-              'name': 'Name',
-              'stateMachine': {
-                'currentState': 'Current State',
-                'states': [
-                  'Item',
-                ],
-                'name': 'Name',
-                'transitions': [
-                  {
-                    'guardHint': 'Guard Hint',
-                    'event': 'Event',
-                    'to': 'To',
-                    'from': 'From',
-                  },
-                ],
-                'description': 'Description',
-              },
-            },
-            'label': 'Action',
-            'description': 'The action data',
-            'tier': 'presentation',
-            'properties': {
-              'iconEmoji': {
-                'name': 'iconEmoji',
-                'type': 'string',
-                'required': false,
-              },
-              'category': {
-                'name': 'category',
-                'type': 'string',
-                'required': true,
-              },
-              'id': {
-                'name': 'id',
-                'type': 'string',
-                'required': true,
-              },
-              'description': {
-                'name': 'description',
-                'type': 'string',
-                'required': false,
-              },
-              'iconUrl': {
-                'name': 'iconUrl',
-                'type': 'string',
-                'required': false,
-              },
-              'stateMachine': {
-                'name': 'stateMachine',
-                'type': 'object',
-                'required': false,
-                'properties': {
-                  'name': {
-                    'name': 'name',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'currentState': {
-                    'name': 'currentState',
-                    'type': 'string',
-                    'required': true,
-                  },
-                  'description': {
-                    'name': 'description',
-                    'type': 'string',
-                    'required': false,
-                  },
-                  'transitions': {
-                    'name': 'transitions',
-                    'type': 'array',
-                    'required': true,
-                    'items': {
-                      'type': 'object',
-                      'properties': {
-                        'to': {
-                          'name': 'to',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'event': {
-                          'name': 'event',
-                          'type': 'string',
-                          'required': true,
-                        },
-                        'guardHint': {
-                          'name': 'guardHint',
-                          'type': 'string',
-                          'required': false,
-                        },
-                        'from': {
-                          'name': 'from',
-                          'type': 'string',
-                          'required': true,
-                        },
-                      },
-                    },
-                  },
-                  'states': {
-                    'name': 'states',
-                    'type': 'array',
-                    'required': true,
-                    'items': {
-                      'type': 'string',
-                    },
-                  },
-                },
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': true,
-              },
-            },
-          },
-          'activeFilters': {
-            'type': 'json',
-            'label': 'Active Filters',
-            'description': 'Active filters',
-            'tier': 'presentation',
-          },
-          'searchValue': {
-            'type': 'string',
-            'default': 'Search Value',
-            'label': 'Search Value',
-            'description': 'Current search query value',
-            'tier': 'presentation',
+            'type': 'number',
           },
         },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'ActionTileItem',
+        'name': 'ActionTileRender',
         'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'action': '@config.action',
+                    'activeFilters': '@config.activeFilters',
+                    'categoryColors': '@config.categoryColors',
+                    'className': '@config.className',
+                    'disabled': '@config.disabled',
+                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'size': '@config.size',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'action-tile',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
       } as never, 'ActionTileItem', canonicalName) as never,
     ],
     pages: [

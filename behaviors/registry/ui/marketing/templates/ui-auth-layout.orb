@@ -1,103 +1,20 @@
 {
-  "name": "ui-auth-layout",
-  "version": "1.0.0",
   "description": "AuthLayout — UI factory (1:1 with the @almadar/ui auth-layout pattern).",
+  "name": "ui-auth-layout",
   "orbitals": [
     {
-      "name": "AuthLayoutOrbital",
       "entity": {
-        "name": "AuthLayoutItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "AuthLayoutItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "AuthLayoutRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "AuthLayoutItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "auth-layout",
-                      "backgroundImage": "@config.backgroundImage",
-                      "appName": "@config.appName",
-                      "brandingContent": "@config.brandingContent",
-                      "logo": [
-                        {
-                          "type": "typography",
-                          "content": "Logo"
-                        }
-                      ],
-                      "showBranding": "@config.showBranding"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "brandingContent": {
-              "type": "node",
-              "label": "Branding Content",
-              "description": "Branding panel content",
-              "tier": "presentation"
-            },
-            "backgroundImage": {
-              "type": "asset",
-              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
-              "label": "Background Image",
-              "description": "Background image URL",
-              "tier": "presentation"
-            },
-            "showBranding": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Branding",
-              "description": "Show branding panel on the side",
-              "tier": "presentation"
-            },
-            "appName": {
-              "type": "string",
-              "default": "My App",
-              "label": "App Name",
-              "description": "App name",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "AuthLayoutOrbital",
       "pages": [
         {
           "name": "AuthLayoutPage",
@@ -108,7 +25,90 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "appName": {
+              "default": "My App",
+              "description": "App name",
+              "label": "App Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "backgroundImage": {
+              "default": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png",
+              "description": "Background image URL",
+              "label": "Background Image",
+              "tier": "presentation",
+              "type": "asset"
+            },
+            "brandingContent": {
+              "description": "Branding panel content",
+              "label": "Branding Content",
+              "tier": "presentation",
+              "type": "node"
+            },
+            "showBranding": {
+              "default": true,
+              "description": "Show branding panel on the side",
+              "label": "Show Branding",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AuthLayoutItem",
+          "name": "AuthLayoutRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "@config.appName",
+                      "backgroundImage": "@config.backgroundImage",
+                      "brandingContent": "@config.brandingContent",
+                      "logo": [
+                        {
+                          "content": "Logo",
+                          "type": "typography"
+                        }
+                      ],
+                      "showBranding": "@config.showBranding",
+                      "type": "auth-layout"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

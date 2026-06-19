@@ -1,179 +1,25 @@
 {
-  "name": "ui-switch",
-  "version": "1.0.0",
   "description": "Switch — UI factory (1:1 with the @almadar/ui switch pattern).",
+  "name": "ui-switch",
   "orbitals": [
     {
-      "name": "SwitchOrbital",
       "entity": {
-        "name": "SwitchItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
+            "default": false,
             "name": "checked",
-            "type": "boolean",
-            "default": false
+            "type": "boolean"
           }
-        ]
+        ],
+        "name": "SwitchItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "SwitchRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "checked"
-            ]
-          },
-          "category": "interaction",
-          "linkedEntity": "SwitchItem",
-          "emits": [
-            {
-              "event": "CHANGE",
-              "description": "onChange prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "checked",
-                  "type": "boolean"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CHANGE",
-                "name": "Change",
-                "description": "onChange prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "checked",
-                    "type": "boolean"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.checked",
-                    "@config.checked"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "name": "@config.name",
-                      "label": "@config.label",
-                      "className": "@config.className",
-                      "checked": "@entity.checked",
-                      "type": "switch",
-                      "disabled": "@config.disabled",
-                      "onChange": "CHANGE",
-                      "defaultChecked": "@config.defaultChecked"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "CHANGE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.checked",
-                    "@payload.checked"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "name": "@config.name",
-                      "className": "@config.className",
-                      "onChange": "CHANGE",
-                      "type": "switch",
-                      "disabled": "@config.disabled",
-                      "checked": "@entity.checked",
-                      "defaultChecked": "@config.defaultChecked",
-                      "label": "@config.label"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "label prop",
-              "tier": "presentation"
-            },
-            "name": {
-              "type": "string",
-              "default": "Name",
-              "label": "Name",
-              "description": "name prop",
-              "tier": "presentation"
-            },
-            "checked": {
-              "type": "boolean",
-              "default": false,
-              "label": "Checked",
-              "description": "checked prop",
-              "tier": "presentation"
-            },
-            "defaultChecked": {
-              "type": "boolean",
-              "default": false,
-              "label": "Default Checked",
-              "description": "defaultChecked prop",
-              "tier": "presentation"
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "disabled prop",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "SwitchOrbital",
       "pages": [
         {
           "name": "SwitchPage",
@@ -184,7 +30,161 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "checked": {
+              "default": false,
+              "description": "checked prop",
+              "label": "Checked",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "defaultChecked": {
+              "default": false,
+              "description": "defaultChecked prop",
+              "label": "Default Checked",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "disabled": {
+              "default": false,
+              "description": "disabled prop",
+              "label": "Disabled",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "label": {
+              "default": "Label",
+              "description": "label prop",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "name": {
+              "default": "Name",
+              "description": "name prop",
+              "label": "Name",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "onChange prop",
+              "event": "CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "checked",
+                  "type": "boolean"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "checked"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SwitchItem",
+          "name": "SwitchRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "onChange prop",
+                "key": "CHANGE",
+                "name": "Change",
+                "payloadSchema": [
+                  {
+                    "name": "checked",
+                    "type": "boolean"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.checked",
+                    "@config.checked"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "checked": "@entity.checked",
+                      "className": "@config.className",
+                      "defaultChecked": "@config.defaultChecked",
+                      "disabled": "@config.disabled",
+                      "label": "@config.label",
+                      "name": "@config.name",
+                      "onChange": "CHANGE",
+                      "type": "switch"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.checked",
+                    "@payload.checked"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "checked": "@entity.checked",
+                      "className": "@config.className",
+                      "defaultChecked": "@config.defaultChecked",
+                      "disabled": "@config.disabled",
+                      "label": "@config.label",
+                      "name": "@config.name",
+                      "onChange": "CHANGE",
+                      "type": "switch"
+                    }
+                  ]
+                ],
+                "event": "CHANGE",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

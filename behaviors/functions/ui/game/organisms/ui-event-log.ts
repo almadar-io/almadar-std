@@ -39,12 +39,12 @@ export type StdUiEventLogEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiEventLogConfig {
-  /** Default: `"Label"` */
-  label?: string;
-  /** Default: `[{"message":"Message","id":"Id","icon":"circle","status":"pending","timestamp":1}]` */
-  entries?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"icon":"circle","id":"Id","message":"Message","status":"pending","timestamp":1}]` */
+  entries?: EntityRow[];
+  /** Default: `"Label"` */
+  label?: string;
   /** Default: `200` */
   maxHeight?: number;
 }
@@ -107,8 +107,8 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -119,82 +119,47 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'EventLogRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'EventLogItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
-          'events': [
-            {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-          ],
-          'transitions': [
-            {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
-              'effects': [
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'label': '@config.label',
-                    'entries': '@config.entries',
-                    'maxHeight': '@config.maxHeight',
-                    'type': 'event-log',
-                    'className': '@config.className',
-                  },
-                ],
-              ],
-            },
-          ],
-        },
         'config': {
-          'label': {
-            'type': 'string',
-            'default': 'Label',
-            'label': 'Label',
-            'description': 'Title label',
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
             'tier': 'presentation',
+            'type': 'string',
           },
           'entries': {
-            'type': '[EventLogEntriesItem]',
             'default': [
               {
-                'message': 'Message',
-                'id': 'Id',
                 'icon': 'circle',
+                'id': 'Id',
+                'message': 'Message',
                 'status': 'pending',
                 'timestamp': 1,
               },
             ],
-            'label': 'Entries',
             'description': 'Log entries',
-            'tier': 'presentation',
             'items': {
-              'type': 'object',
               'properties': {
+                'icon': {
+                  'name': 'icon',
+                  'required': true,
+                  'type': 'string',
+                },
                 'id': {
                   'name': 'id',
-                  'type': 'string',
                   'required': true,
+                  'type': 'string',
+                },
+                'message': {
+                  'name': 'message',
+                  'required': true,
+                  'type': 'string',
                 },
                 'status': {
                   'name': 'status',
-                  'type': 'string',
                   'required': true,
+                  'type': 'string',
                   'values': [
                     'pending',
                     'active',
@@ -202,40 +167,75 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                     'error',
                   ],
                 },
-                'message': {
-                  'name': 'message',
-                  'type': 'string',
-                  'required': true,
-                },
-                'icon': {
-                  'name': 'icon',
-                  'type': 'string',
-                  'required': true,
-                },
                 'timestamp': {
                   'name': 'timestamp',
-                  'type': 'number',
                   'required': true,
+                  'type': 'number',
                 },
               },
+              'type': 'object',
             },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
+            'label': 'Entries',
             'tier': 'presentation',
+            'type': '[EventLogEntriesItem]',
+          },
+          'label': {
+            'default': 'Label',
+            'description': 'Title label',
+            'label': 'Label',
+            'tier': 'presentation',
+            'type': 'string',
           },
           'maxHeight': {
-            'type': 'number',
             'default': 200,
-            'label': 'Max Height',
             'description': 'Max visible height before scroll',
+            'label': 'Max Height',
             'tier': 'presentation',
+            'type': 'number',
           },
         },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'EventLogItem',
+        'name': 'EventLogRender',
         'scope': 'instance',
+        'stateMachine': {
+          'events': [
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
+          'transitions': [
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': '@config.className',
+                    'entries': '@config.entries',
+                    'label': '@config.label',
+                    'maxHeight': '@config.maxHeight',
+                    'type': 'event-log',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+          ],
+        },
       } as never, 'EventLogItem', canonicalName) as never,
     ],
     pages: [

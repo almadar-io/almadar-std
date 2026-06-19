@@ -1,294 +1,20 @@
 {
-  "name": "ui-stat-display",
-  "version": "1.0.0",
   "description": "StatDisplay — UI factory (1:1 with the @almadar/ui stat-display pattern).",
+  "name": "ui-stat-display",
   "orbitals": [
     {
-      "name": "StatDisplayOrbital",
       "entity": {
-        "name": "StatDisplayItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "StatDisplayItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "StatDisplayRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "StatDisplayItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "iconColor": "@config.iconColor",
-                      "sparklineData": "@config.sparklineData",
-                      "target": "@config.target",
-                      "format": "@config.format",
-                      "label": "@config.label",
-                      "clickEvent": "@config.clickEvent",
-                      "className": "@config.className",
-                      "type": "stat-display",
-                      "iconBg": "@config.iconBg",
-                      "trend": "@config.trend",
-                      "prefix": "@config.prefix",
-                      "variant": "@config.variant",
-                      "trendFormat": "@config.trendFormat",
-                      "compact": "@config.compact",
-                      "error": "@config.error",
-                      "icon": "@config.icon",
-                      "look": "@config.look",
-                      "suffix": "@config.suffix",
-                      "trendPolarity": "@config.trendPolarity",
-                      "value": "@config.value",
-                      "size": "@config.size",
-                      "max": "@config.max",
-                      "isLoading": "@config.isLoading"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "format": {
-              "type": "string",
-              "default": "Format",
-              "label": "Format",
-              "description": "Display format: 'number', 'currency', 'percent'",
-              "tier": "presentation"
-            },
-            "prefix": {
-              "type": "string",
-              "default": "Prefix",
-              "label": "Prefix",
-              "description": "Prefix prepended to the formatted value (e.g. '≈ ').",
-              "tier": "presentation"
-            },
-            "sparklineData": {
-              "type": "[number]",
-              "default": [],
-              "label": "Sparkline Data",
-              "description": "Optional inline sparkline data appended to the trend row. Length < 2 renders nothing.",
-              "tier": "presentation",
-              "items": {
-                "type": "number"
-              }
-            },
-            "trend": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Trend",
-              "description": "Signed delta vs previous period. >0 renders ↑ green, <0 renders ↓ red, 0 hides. Polarity reversal via `trendPolarity`.",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "error": {
-              "type": "StatDisplayError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "iconBg": {
-              "type": "string",
-              "default": "bg-muted",
-              "label": "Icon Bg",
-              "description": "Icon background color class",
-              "tier": "presentation"
-            },
-            "compact": {
-              "type": "boolean",
-              "default": false,
-              "label": "Compact",
-              "description": "Compact mode (inline, no card wrapper)",
-              "tier": "presentation"
-            },
-            "iconColor": {
-              "type": "string",
-              "default": "text-foreground",
-              "label": "Icon Color",
-              "description": "Icon color class",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "string",
-              "default": "Value",
-              "label": "Value",
-              "description": "Primary value (number or formatted string)",
-              "tier": "presentation"
-            },
-            "clickEvent": {
-              "type": "string",
-              "default": "Click Event",
-              "label": "Click Event",
-              "description": "Event name emitted as `UI:{clickEvent}` with `{ metricLabel }` when the card is clicked.",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "suffix": {
-              "type": "string",
-              "default": "Suffix",
-              "label": "Suffix",
-              "description": "Suffix appended to the formatted value (e.g. ' /mo', ' ms').",
-              "tier": "presentation"
-            },
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Lucide icon name or component",
-              "tier": "presentation"
-            },
-            "trendFormat": {
-              "type": "string",
-              "default": "absolute",
-              "label": "Trend Format",
-              "description": "When `'percent'`, renders trend with a `%` suffix (e.g. `↓ 3.3%`); default is `'absolute'`.",
-              "tier": "presentation",
-              "values": [
-                "absolute",
-                "percent"
-              ]
-            },
-            "target": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Target",
-              "description": "Optional progress target. >0 renders a progress bar at value/target.",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Variant",
-              "description": "Color variant",
-              "tier": "presentation",
-              "values": [
-                "default",
-                "primary",
-                "success",
-                "warning",
-                "error",
-                "info"
-              ]
-            },
-            "max": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max",
-              "description": "Optional denominator. >0 renders 'value / max'; 0 or omitted hides the divider.",
-              "tier": "presentation"
-            },
-            "trendPolarity": {
-              "type": "string",
-              "default": "higher-is-better",
-              "label": "Trend Polarity",
-              "description": "Controls whether `trend > 0` is 'good' (default) or 'bad'. `lower-is-better` inverts the color logic.",
-              "tier": "presentation",
-              "values": [
-                "higher-is-better",
-                "lower-is-better"
-              ]
-            },
-            "look": {
-              "type": "string",
-              "default": "elevated",
-              "label": "Look",
-              "description": "Layer 2 visual treatment.",
-              "tier": "presentation",
-              "values": [
-                "elevated",
-                "flat",
-                "progress-backed",
-                "gauge",
-                "sparkline"
-              ]
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Display label (e.g., 'Total', 'Remaining')",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "StatDisplayOrbital",
       "pages": [
         {
           "name": "StatDisplayPage",
@@ -299,7 +25,281 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "clickEvent": {
+              "default": "Click Event",
+              "description": "Event name emitted as `UI:{clickEvent}` with `{ metricLabel }` when the card is clicked.",
+              "label": "Click Event",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "compact": {
+              "default": false,
+              "description": "Compact mode (inline, no card wrapper)",
+              "label": "Compact",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "error": {
+              "description": "Error state",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "StatDisplayError"
+            },
+            "format": {
+              "default": "Format",
+              "description": "Display format: 'number', 'currency', 'percent'",
+              "label": "Format",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Lucide icon name or component",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "iconBg": {
+              "default": "bg-muted",
+              "description": "Icon background color class",
+              "label": "Icon Bg",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "iconColor": {
+              "default": "text-foreground",
+              "description": "Icon color class",
+              "label": "Icon Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Display label (e.g., 'Total', 'Remaining')",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "look": {
+              "default": "elevated",
+              "description": "Layer 2 visual treatment.",
+              "label": "Look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "elevated",
+                "flat",
+                "progress-backed",
+                "gauge",
+                "sparkline"
+              ]
+            },
+            "max": {
+              "default": 0.0,
+              "description": "Optional denominator. >0 renders 'value / max'; 0 or omitted hides the divider.",
+              "label": "Max",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "prefix": {
+              "default": "Prefix",
+              "description": "Prefix prepended to the formatted value (e.g. '≈ ').",
+              "label": "Prefix",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "sparklineData": {
+              "default": [],
+              "description": "Optional inline sparkline data appended to the trend row. Length < 2 renders nothing.",
+              "items": {
+                "type": "number"
+              },
+              "label": "Sparkline Data",
+              "tier": "presentation",
+              "type": "[number]"
+            },
+            "suffix": {
+              "default": "Suffix",
+              "description": "Suffix appended to the formatted value (e.g. ' /mo', ' ms').",
+              "label": "Suffix",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "target": {
+              "default": 0.0,
+              "description": "Optional progress target. >0 renders a progress bar at value/target.",
+              "label": "Target",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "trend": {
+              "default": 0.0,
+              "description": "Signed delta vs previous period. >0 renders ↑ green, <0 renders ↓ red, 0 hides. Polarity reversal via `trendPolarity`.",
+              "label": "Trend",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "trendFormat": {
+              "default": "absolute",
+              "description": "When `'percent'`, renders trend with a `%` suffix (e.g. `↓ 3.3%`); default is `'absolute'`.",
+              "label": "Trend Format",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "absolute",
+                "percent"
+              ]
+            },
+            "trendPolarity": {
+              "default": "higher-is-better",
+              "description": "Controls whether `trend > 0` is 'good' (default) or 'bad'. `lower-is-better` inverts the color logic.",
+              "label": "Trend Polarity",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "higher-is-better",
+                "lower-is-better"
+              ]
+            },
+            "value": {
+              "default": "Value",
+              "description": "Primary value (number or formatted string)",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "variant": {
+              "default": "default",
+              "description": "Color variant",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "default",
+                "primary",
+                "success",
+                "warning",
+                "error",
+                "info"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "StatDisplayItem",
+          "name": "StatDisplayRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "clickEvent": "@config.clickEvent",
+                      "compact": "@config.compact",
+                      "error": "@config.error",
+                      "format": "@config.format",
+                      "icon": "@config.icon",
+                      "iconBg": "@config.iconBg",
+                      "iconColor": "@config.iconColor",
+                      "isLoading": "@config.isLoading",
+                      "label": "@config.label",
+                      "look": "@config.look",
+                      "max": "@config.max",
+                      "prefix": "@config.prefix",
+                      "size": "@config.size",
+                      "sparklineData": "@config.sparklineData",
+                      "suffix": "@config.suffix",
+                      "target": "@config.target",
+                      "trend": "@config.trend",
+                      "trendFormat": "@config.trendFormat",
+                      "trendPolarity": "@config.trendPolarity",
+                      "type": "stat-display",
+                      "value": "@config.value",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

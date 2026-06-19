@@ -1,101 +1,20 @@
 {
-  "name": "ui-landing-page-template",
-  "version": "1.0.0",
   "description": "LandingPageTemplate — UI factory (1:1 with the @almadar/ui landing-page-template pattern).",
+  "name": "ui-landing-page-template",
   "orbitals": [
     {
-      "name": "LandingPageTemplateOrbital",
       "entity": {
-        "name": "LandingPageTemplateItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "LandingPageTemplateItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "LandingPageTemplateRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "LandingPageTemplateItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "LandingPageTemplateItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "@config.variant",
-                      "type": "landing-page-template",
-                      "className": "@config.className",
-                      "featureColumns": "@config.featureColumns",
-                      "entity": "@entity"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "variant": {
-              "type": "string",
-              "default": "product",
-              "label": "Variant",
-              "description": "variant prop",
-              "tier": "presentation",
-              "values": [
-                "product",
-                "service",
-                "platform"
-              ]
-            },
-            "featureColumns": {
-              "type": "number",
-              "default": 3.0,
-              "label": "Feature Columns",
-              "description": "featureColumns prop",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "External styling override",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "LandingPageTemplateOrbital",
       "pages": [
         {
           "name": "LandingPageTemplatePage",
@@ -106,7 +25,88 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "External styling override",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "featureColumns": {
+              "default": 3.0,
+              "description": "featureColumns prop",
+              "label": "Feature Columns",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "variant": {
+              "default": "product",
+              "description": "variant prop",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "product",
+                "service",
+                "platform"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "LandingPageTemplateItem",
+          "name": "LandingPageTemplateRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "LandingPageTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "entity": "@entity",
+                      "featureColumns": "@config.featureColumns",
+                      "type": "landing-page-template",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

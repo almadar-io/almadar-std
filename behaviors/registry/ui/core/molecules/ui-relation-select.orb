@@ -1,265 +1,25 @@
 {
-  "name": "ui-relation-select",
-  "version": "1.0.0",
   "description": "RelationSelect — UI factory (1:1 with the @almadar/ui relation-select pattern).",
+  "name": "ui-relation-select",
   "orbitals": [
     {
-      "name": "RelationSelectOrbital",
       "entity": {
-        "name": "RelationSelectItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
+            "default": "Value",
             "name": "value",
-            "type": "string",
-            "default": "Value"
+            "type": "string"
           }
-        ]
+        ],
+        "name": "RelationSelectItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "RelationSelectRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "value"
-            ]
-          },
-          "category": "interaction",
-          "linkedEntity": "RelationSelectItem",
-          "emits": [
-            {
-              "event": "CHANGE",
-              "description": "Callback when value changes",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CHANGE",
-                "name": "Change",
-                "description": "Callback when value changes",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.value",
-                    "@config.value"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "relation-select",
-                      "placeholder": "@config.placeholder",
-                      "isLoading": "@config.isLoading",
-                      "onChange": "CHANGE",
-                      "options": "@config.options",
-                      "error": "@config.error",
-                      "name": "@config.name",
-                      "searchPlaceholder": "@config.searchPlaceholder",
-                      "emptyMessage": "@config.emptyMessage",
-                      "disabled": "@config.disabled",
-                      "required": "@config.required",
-                      "value": "@entity.value",
-                      "clearable": "@config.clearable",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "CHANGE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.value",
-                    "@payload.value"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "disabled": "@config.disabled",
-                      "options": "@config.options",
-                      "placeholder": "@config.placeholder",
-                      "name": "@config.name",
-                      "searchPlaceholder": "@config.searchPlaceholder",
-                      "emptyMessage": "@config.emptyMessage",
-                      "required": "@config.required",
-                      "value": "@entity.value",
-                      "type": "relation-select",
-                      "className": "@config.className",
-                      "error": "@config.error",
-                      "isLoading": "@config.isLoading",
-                      "clearable": "@config.clearable",
-                      "onChange": "CHANGE"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "searchPlaceholder": {
-              "type": "string",
-              "default": "Search Placeholder",
-              "label": "Search Placeholder",
-              "description": "Search placeholder",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "string",
-              "default": "",
-              "label": "Error",
-              "description": "Error message",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "clearable": {
-              "type": "boolean",
-              "default": true,
-              "label": "Clearable",
-              "description": "Allow clearing the selection",
-              "tier": "presentation"
-            },
-            "options": {
-              "type": "[RelationSelectOptionsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "disabled": false,
-                  "value": "Value",
-                  "description": "Description"
-                }
-              ],
-              "label": "Options",
-              "description": "Available options - accepts readonly for compatibility with generated const arrays",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "description": {
-                    "name": "description",
-                    "type": "string",
-                    "required": false
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  },
-                  "disabled": {
-                    "name": "disabled",
-                    "type": "boolean",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Whether the field is disabled",
-              "tier": "presentation"
-            },
-            "emptyMessage": {
-              "type": "string",
-              "default": "Empty Message",
-              "label": "Empty Message",
-              "description": "Empty state message",
-              "tier": "presentation"
-            },
-            "placeholder": {
-              "type": "string",
-              "default": "Placeholder",
-              "label": "Placeholder",
-              "description": "Placeholder text",
-              "tier": "presentation"
-            },
-            "required": {
-              "type": "boolean",
-              "default": false,
-              "label": "Required",
-              "description": "Whether the field is required",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Whether data is loading",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "string",
-              "default": "Value",
-              "label": "Value",
-              "description": "Current value (ID)",
-              "tier": "presentation"
-            },
-            "name": {
-              "type": "string",
-              "default": "Name",
-              "label": "Name",
-              "description": "Name attribute for forms",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "RelationSelectOrbital",
       "pages": [
         {
           "name": "RelationSelectPage",
@@ -270,7 +30,247 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "clearable": {
+              "default": true,
+              "description": "Allow clearing the selection",
+              "label": "Clearable",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "disabled": {
+              "default": false,
+              "description": "Whether the field is disabled",
+              "label": "Disabled",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "emptyMessage": {
+              "default": "Empty Message",
+              "description": "Empty state message",
+              "label": "Empty Message",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "default": "",
+              "description": "Error message",
+              "label": "Error",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Whether data is loading",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "name": {
+              "default": "Name",
+              "description": "Name attribute for forms",
+              "label": "Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "options": {
+              "default": [
+                {
+                  "description": "Description",
+                  "disabled": false,
+                  "label": "Label",
+                  "value": "Value"
+                }
+              ],
+              "description": "Available options - accepts readonly for compatibility with generated const arrays",
+              "items": {
+                "properties": {
+                  "description": {
+                    "name": "description",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "disabled": {
+                    "name": "disabled",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Options",
+              "tier": "presentation",
+              "type": "[RelationSelectOptionsItem]"
+            },
+            "placeholder": {
+              "default": "Placeholder",
+              "description": "Placeholder text",
+              "label": "Placeholder",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "required": {
+              "default": false,
+              "description": "Whether the field is required",
+              "label": "Required",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "searchPlaceholder": {
+              "default": "Search Placeholder",
+              "description": "Search placeholder",
+              "label": "Search Placeholder",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "value": {
+              "default": "Value",
+              "description": "Current value (ID)",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Callback when value changes",
+              "event": "CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "value"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "RelationSelectItem",
+          "name": "RelationSelectRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Callback when value changes",
+                "key": "CHANGE",
+                "name": "Change",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@config.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "clearable": "@config.clearable",
+                      "disabled": "@config.disabled",
+                      "emptyMessage": "@config.emptyMessage",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "name": "@config.name",
+                      "onChange": "CHANGE",
+                      "options": "@config.options",
+                      "placeholder": "@config.placeholder",
+                      "required": "@config.required",
+                      "searchPlaceholder": "@config.searchPlaceholder",
+                      "type": "relation-select",
+                      "value": "@entity.value"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "clearable": "@config.clearable",
+                      "disabled": "@config.disabled",
+                      "emptyMessage": "@config.emptyMessage",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "name": "@config.name",
+                      "onChange": "CHANGE",
+                      "options": "@config.options",
+                      "placeholder": "@config.placeholder",
+                      "required": "@config.required",
+                      "searchPlaceholder": "@config.searchPlaceholder",
+                      "type": "relation-select",
+                      "value": "@entity.value"
+                    }
+                  ]
+                ],
+                "event": "CHANGE",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

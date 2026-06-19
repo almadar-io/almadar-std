@@ -136,6 +136,36 @@ export const MODULE_DESCRIPTIONS: Record<StdModule, ModuleInfo> = {
         description: 'Compile-time operators for composing N orbitals into a single application schema.',
         icon: '🧩',
     },
+    vec: {
+        name: 'Vec',
+        displayName: 'Vector Math',
+        description: '2D/3D vector arithmetic, normalization, projection, and rotation.',
+        icon: '➡️',
+    },
+    geo: {
+        name: 'Geo',
+        displayName: 'Geometry & Collision',
+        description: 'Rect/circle/point/segment overlap, containment, reflection, and intersection.',
+        icon: '📐',
+    },
+    grid: {
+        name: 'Grid',
+        displayName: 'Grid & Tiles',
+        description: 'Tile/cell coordinate conversions, distances, neighborhoods, and line traversal.',
+        icon: '🔲',
+    },
+    anim: {
+        name: 'Anim',
+        displayName: 'Sprite Animation',
+        description: 'Frame selection, sprite-sheet rects, and facing direction from movement delta.',
+        icon: '🎞️',
+    },
+    ease: {
+        name: 'Ease',
+        displayName: 'Easing Curves',
+        description: 'Penner easing curves and smoothstep interpolation.',
+        icon: '〽️',
+    },
 };
 
 /**

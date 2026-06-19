@@ -1,205 +1,20 @@
 {
-  "name": "ui-matrix-question",
-  "version": "1.0.0",
   "description": "MatrixQuestion — UI factory (1:1 with the @almadar/ui matrix-question pattern).",
+  "name": "ui-matrix-question",
   "orbitals": [
     {
-      "name": "MatrixQuestionOrbital",
       "entity": {
-        "name": "MatrixQuestionItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "MatrixQuestionItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "MatrixQuestionRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "MatrixQuestionItem",
-          "emits": [
-            {
-              "event": "CHANGE",
-              "description": "Change handler invoked with rowId and selected column value",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "rowId",
-                  "type": "string"
-                },
-                {
-                  "name": "value",
-                  "type": "number"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CHANGE",
-                "name": "Change",
-                "description": "Change handler invoked with rowId and selected column value",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "rowId",
-                    "type": "string"
-                  },
-                  {
-                    "name": "value",
-                    "type": "number"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "title": "@config.title",
-                      "values": "@config.values",
-                      "onChange": "CHANGE",
-                      "columns": "@config.columns",
-                      "size": "@config.size",
-                      "type": "matrix-question",
-                      "rows": "@config.rows",
-                      "disabled": "@config.disabled",
-                      "changeEvent": "CHANGE"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "columns": {
-              "type": "[MatrixQuestionColumnsItem]",
-              "default": [
-                {
-                  "value": "Value",
-                  "label": "Label"
-                }
-              ],
-              "label": "Columns",
-              "description": "Column definitions; defaults to 5-point Likert",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "value": {
-                    "name": "value",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "values": {
-              "type": "Map<string,string>",
-              "default": {},
-              "label": "Values",
-              "description": "Selected value per row, keyed by rowId",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Optional title rendered above the matrix",
-              "tier": "presentation"
-            },
-            "rows": {
-              "type": "[MatrixQuestionRowsItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "label": "Label"
-                }
-              ],
-              "label": "Rows",
-              "description": "Question rows",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Visual size",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md"
-              ]
-            },
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disable all inputs",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "MatrixQuestionOrbital",
       "pages": [
         {
           "name": "MatrixQuestionPage",
@@ -210,7 +25,192 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "columns": {
+              "default": [
+                {
+                  "label": "Label",
+                  "value": "Value"
+                }
+              ],
+              "description": "Column definitions; defaults to 5-point Likert",
+              "items": {
+                "properties": {
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Columns",
+              "tier": "presentation",
+              "type": "[MatrixQuestionColumnsItem]"
+            },
+            "disabled": {
+              "default": false,
+              "description": "Disable all inputs",
+              "label": "Disabled",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "rows": {
+              "default": [
+                {
+                  "id": "Id",
+                  "label": "Label"
+                }
+              ],
+              "description": "Question rows",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Rows",
+              "tier": "presentation",
+              "type": "[MatrixQuestionRowsItem]"
+            },
+            "size": {
+              "default": "md",
+              "description": "Visual size",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md"
+              ]
+            },
+            "title": {
+              "default": "Title",
+              "description": "Optional title rendered above the matrix",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "values": {
+              "default": {},
+              "description": "Selected value per row, keyed by rowId",
+              "items": {
+                "type": "string"
+              },
+              "label": "Values",
+              "tier": "presentation",
+              "type": "Map<string,string>"
+            }
+          },
+          "emits": [
+            {
+              "description": "Change handler invoked with rowId and selected column value",
+              "event": "CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "rowId",
+                  "type": "string"
+                },
+                {
+                  "name": "value",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MatrixQuestionItem",
+          "name": "MatrixQuestionRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Change handler invoked with rowId and selected column value",
+                "key": "CHANGE",
+                "name": "Change",
+                "payloadSchema": [
+                  {
+                    "name": "rowId",
+                    "type": "string"
+                  },
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "changeEvent": "CHANGE",
+                      "className": "@config.className",
+                      "columns": "@config.columns",
+                      "disabled": "@config.disabled",
+                      "onChange": "CHANGE",
+                      "rows": "@config.rows",
+                      "size": "@config.size",
+                      "title": "@config.title",
+                      "type": "matrix-question",
+                      "values": "@config.values"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

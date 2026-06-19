@@ -1,230 +1,20 @@
 {
-  "name": "ui-stack",
-  "version": "1.0.0",
   "description": "Stack — UI factory (1:1 with the @almadar/ui stack pattern).",
+  "name": "ui-stack",
   "orbitals": [
     {
-      "name": "StackOrbital",
       "entity": {
-        "name": "StackItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "StackItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "StackRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "StackItem",
-          "emits": [
-            {
-              "event": "ACTION",
-              "description": "Declarative event name — emits UI:{action} via eventBus on click",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event name — emits UI:{action} via eventBus on click",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "style": "@config.style",
-                      "action": "ACTION",
-                      "actionPayload": "@config.actionPayload",
-                      "flex": "@config.flex",
-                      "gap": "@config.gap",
-                      "wrap": "@config.wrap",
-                      "justify": "@config.justify",
-                      "children": [
-                        {
-                          "content": "Sample content",
-                          "type": "typography"
-                        }
-                      ],
-                      "role": "@config.role",
-                      "align": "@config.align",
-                      "responsive": "@config.responsive",
-                      "tabIndex": "@config.tabIndex",
-                      "type": "stack",
-                      "direction": "@config.direction",
-                      "className": "@config.className",
-                      "reverse": "@config.reverse"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Custom class name",
-              "tier": "presentation"
-            },
-            "align": {
-              "type": "string",
-              "default": "stretch",
-              "label": "Align",
-              "description": "Align items on the cross axis",
-              "tier": "presentation",
-              "values": [
-                "start",
-                "center",
-                "end",
-                "stretch",
-                "baseline"
-              ]
-            },
-            "style": {
-              "type": "json",
-              "label": "Style",
-              "description": "Inline styles",
-              "tier": "presentation"
-            },
-            "direction": {
-              "type": "string",
-              "default": "vertical",
-              "label": "Direction",
-              "description": "Stack direction",
-              "tier": "presentation",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
-            },
-            "flex": {
-              "type": "boolean",
-              "default": false,
-              "label": "Flex",
-              "description": "Fill available space (flex: 1)",
-              "tier": "presentation"
-            },
-            "role": {
-              "type": "string",
-              "default": "Role",
-              "label": "Role",
-              "description": "Role for accessibility",
-              "tier": "presentation"
-            },
-            "tabIndex": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Tab Index",
-              "description": "Tab index for focus management",
-              "tier": "presentation"
-            },
-            "actionPayload": {
-              "type": "json",
-              "default": {},
-              "label": "Action Payload",
-              "description": "Payload to include with the action event",
-              "tier": "presentation"
-            },
-            "responsive": {
-              "type": "boolean",
-              "default": false,
-              "label": "Responsive",
-              "description": "When true, horizontal stacks flip to vertical below the md breakpoint (768px)",
-              "tier": "presentation"
-            },
-            "justify": {
-              "type": "string",
-              "default": "start",
-              "label": "Justify",
-              "description": "Justify items on the main axis",
-              "tier": "presentation",
-              "values": [
-                "start",
-                "center",
-                "end",
-                "between",
-                "around",
-                "evenly"
-              ]
-            },
-            "wrap": {
-              "type": "boolean",
-              "default": false,
-              "label": "Wrap",
-              "description": "Allow items to wrap",
-              "tier": "presentation"
-            },
-            "gap": {
-              "type": "string",
-              "default": "md",
-              "label": "Gap",
-              "description": "Gap between children",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "xs",
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "2xl"
-              ]
-            },
-            "reverse": {
-              "type": "boolean",
-              "default": false,
-              "label": "Reverse",
-              "description": "Reverse the order of children",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "StackOrbital",
       "pages": [
         {
           "name": "StackPage",
@@ -235,7 +25,217 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actionPayload": {
+              "default": {},
+              "description": "Payload to include with the action event",
+              "label": "Action Payload",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "align": {
+              "default": "stretch",
+              "description": "Align items on the cross axis",
+              "label": "Align",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "start",
+                "center",
+                "end",
+                "stretch",
+                "baseline"
+              ]
+            },
+            "className": {
+              "default": "",
+              "description": "Custom class name",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "direction": {
+              "default": "vertical",
+              "description": "Stack direction",
+              "label": "Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "flex": {
+              "default": false,
+              "description": "Fill available space (flex: 1)",
+              "label": "Flex",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "gap": {
+              "default": "md",
+              "description": "Gap between children",
+              "label": "Gap",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl"
+              ]
+            },
+            "justify": {
+              "default": "start",
+              "description": "Justify items on the main axis",
+              "label": "Justify",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "start",
+                "center",
+                "end",
+                "between",
+                "around",
+                "evenly"
+              ]
+            },
+            "responsive": {
+              "default": false,
+              "description": "When true, horizontal stacks flip to vertical below the md breakpoint (768px)",
+              "label": "Responsive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "reverse": {
+              "default": false,
+              "description": "Reverse the order of children",
+              "label": "Reverse",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "role": {
+              "default": "Role",
+              "description": "Role for accessibility",
+              "label": "Role",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "style": {
+              "description": "Inline styles",
+              "label": "Style",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "tabIndex": {
+              "default": 0.0,
+              "description": "Tab index for focus management",
+              "label": "Tab Index",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "wrap": {
+              "default": false,
+              "description": "Allow items to wrap",
+              "label": "Wrap",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "Declarative event name — emits UI:{action} via eventBus on click",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "StackItem",
+          "name": "StackRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Declarative event name — emits UI:{action} via eventBus on click",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "actionPayload": "@config.actionPayload",
+                      "align": "@config.align",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "direction": "@config.direction",
+                      "flex": "@config.flex",
+                      "gap": "@config.gap",
+                      "justify": "@config.justify",
+                      "responsive": "@config.responsive",
+                      "reverse": "@config.reverse",
+                      "role": "@config.role",
+                      "style": "@config.style",
+                      "tabIndex": "@config.tabIndex",
+                      "type": "stack",
+                      "wrap": "@config.wrap"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

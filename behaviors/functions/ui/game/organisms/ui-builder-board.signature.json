@@ -7,7 +7,28 @@
     "entities": [
       {
         "name": "BuilderBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "components",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "slots",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -15,7 +36,10 @@
       {
         "name": "BuilderBoardRender",
         "emittedEvents": [
-          "COMPLETE"
+          "COMPLETE",
+          "PLACE",
+          "CHECK",
+          "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
@@ -26,7 +50,29 @@
             "tier": "essential"
           },
           {
+            "name": "PLACE",
+            "direction": "emit",
+            "description": "Emits UI:{placeEvent} with { slotId, componentId } on component placement",
+            "tier": "essential"
+          },
+          {
+            "name": "CHECK",
+            "direction": "emit",
+            "description": "Emits UI:{checkEvent} with {} when the player checks the build",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "essential"
+          },
+          {
             "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "START",
             "direction": "listen"
           }
         ],
@@ -47,20 +93,82 @@
             "tier": "presentation"
           },
           {
+            "key": "components",
+            "type": "[BuilderBoardComponentsItem]",
+            "default": [
+              {
+                "description": "User-facing layer",
+                "iconEmoji": "🖥️",
+                "id": "comp-a",
+                "label": "Frontend"
+              },
+              {
+                "description": "Service boundary",
+                "iconEmoji": "🔌",
+                "id": "comp-b",
+                "label": "API"
+              },
+              {
+                "description": "Persistence layer",
+                "iconEmoji": "🗄️",
+                "id": "comp-c",
+                "label": "Database"
+              }
+            ],
+            "label": "Components",
+            "description": "Draggable build components the player snaps into slots.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "iconEmoji": {
+                  "name": "iconEmoji",
+                  "required": false,
+                  "type": "string"
+                },
+                "iconUrl": {
+                  "name": "iconUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "error",
             "type": "BuilderBoardError",
             "label": "Error",
             "description": "Error state (UiError)",
             "tier": "presentation",
             "properties": {
-              "stack": {
-                "name": "stack",
-                "required": false,
-                "type": "string"
-              },
               "code": {
                 "name": "code",
                 "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
                 "type": "string"
               },
               "name": {
@@ -68,9 +176,9 @@
                 "required": false,
                 "type": "string"
               },
-              "message": {
-                "name": "message",
-                "required": true,
+              "stack": {
+                "name": "stack",
+                "required": false,
                 "type": "string"
               }
             }
@@ -120,6 +228,47 @@
             }
           },
           {
+            "key": "slots",
+            "type": "[BuilderBoardSlotsItem]",
+            "default": [
+              {
+                "id": "slot-1",
+                "requiredComponentId": "comp-a"
+              },
+              {
+                "id": "slot-2",
+                "requiredComponentId": "comp-b"
+              },
+              {
+                "id": "slot-3",
+                "requiredComponentId": "comp-c"
+              }
+            ],
+            "label": "Slots",
+            "description": "Blueprint slots; each requires a specific component for a win.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "placedComponentId": {
+                  "name": "placedComponentId",
+                  "required": false,
+                  "type": "string"
+                },
+                "requiredComponentId": {
+                  "name": "requiredComponentId",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
             "key": "sortBy",
             "type": "string",
             "default": "Sort By",
@@ -152,7 +301,12 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "attempts",
+            "components",
+            "result",
+            "slots"
+          ]
         }
       }
     ],
@@ -164,7 +318,10 @@
       }
     ],
     "emittedEvents": [
-      "COMPLETE"
+      "CHECK",
+      "COMPLETE",
+      "PLACE",
+      "PLAY_AGAIN"
     ],
     "listenedEvents": []
   }

@@ -1,232 +1,25 @@
 {
-  "name": "ui-star-rating",
-  "version": "1.0.0",
   "description": "StarRating — UI factory (1:1 with the @almadar/ui star-rating pattern).",
+  "name": "ui-star-rating",
   "orbitals": [
     {
-      "name": "StarRatingOrbital",
       "entity": {
-        "name": "StarRatingItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
+            "default": 0.0,
             "name": "value",
-            "type": "number",
-            "default": 0.0
+            "type": "number"
           }
-        ]
+        ],
+        "name": "StarRatingItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "StarRatingRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "value"
-            ]
-          },
-          "category": "interaction",
-          "linkedEntity": "StarRatingItem",
-          "emits": [
-            {
-              "event": "ACTION",
-              "description": "Declarative event name for rating changes",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "CHANGE",
-              "description": "Direct onChange callback",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "value",
-                  "type": "number"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CHANGE",
-                "name": "Change",
-                "description": "Direct onChange callback",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "value",
-                    "type": "number"
-                  }
-                ]
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event name for rating changes",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.value",
-                    "@config.value"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "onChange": "CHANGE",
-                      "max": "@config.max",
-                      "precision": "@config.precision",
-                      "readOnly": "@config.readOnly",
-                      "action": "ACTION",
-                      "className": "@config.className",
-                      "value": "@entity.value",
-                      "size": "@config.size",
-                      "label": "@config.label",
-                      "type": "star-rating",
-                      "actionPayload": "@config.actionPayload"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "CHANGE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.value",
-                    "@payload.value"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "readOnly": "@config.readOnly",
-                      "size": "@config.size",
-                      "action": "ACTION",
-                      "actionPayload": "@config.actionPayload",
-                      "onChange": "CHANGE",
-                      "precision": "@config.precision",
-                      "type": "star-rating",
-                      "label": "@config.label",
-                      "max": "@config.max",
-                      "value": "@entity.value"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "precision": {
-              "type": "string",
-              "default": "full",
-              "label": "Precision",
-              "description": "Full or half-star precision",
-              "tier": "presentation",
-              "values": [
-                "full",
-                "half"
-              ]
-            },
-            "value": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Value",
-              "description": "Current rating value",
-              "tier": "presentation"
-            },
-            "readOnly": {
-              "type": "boolean",
-              "default": false,
-              "label": "Read Only",
-              "description": "Read-only display mode",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "max": {
-              "type": "number",
-              "default": 5.0,
-              "label": "Max",
-              "description": "Maximum number of stars",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Accessible label",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Star size",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "actionPayload": {
-              "type": "json",
-              "default": {},
-              "label": "Action Payload",
-              "description": "Payload to include with the action event",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "StarRatingOrbital",
       "pages": [
         {
           "name": "StarRatingPage",
@@ -237,7 +30,214 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actionPayload": {
+              "default": {},
+              "description": "Payload to include with the action event",
+              "label": "Action Payload",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Accessible label",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "max": {
+              "default": 5.0,
+              "description": "Maximum number of stars",
+              "label": "Max",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "precision": {
+              "default": "full",
+              "description": "Full or half-star precision",
+              "label": "Precision",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "full",
+                "half"
+              ]
+            },
+            "readOnly": {
+              "default": false,
+              "description": "Read-only display mode",
+              "label": "Read Only",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "size": {
+              "default": "md",
+              "description": "Star size",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "value": {
+              "default": 0.0,
+              "description": "Current rating value",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Declarative event name for rating changes",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Direct onChange callback",
+              "event": "CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "value",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "value"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "StarRatingItem",
+          "name": "StarRatingRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Direct onChange callback",
+                "key": "CHANGE",
+                "name": "Change",
+                "payloadSchema": [
+                  {
+                    "name": "value",
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Declarative event name for rating changes",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@config.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "actionPayload": "@config.actionPayload",
+                      "className": "@config.className",
+                      "label": "@config.label",
+                      "max": "@config.max",
+                      "onChange": "CHANGE",
+                      "precision": "@config.precision",
+                      "readOnly": "@config.readOnly",
+                      "size": "@config.size",
+                      "type": "star-rating",
+                      "value": "@entity.value"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.value",
+                    "@payload.value"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "actionPayload": "@config.actionPayload",
+                      "className": "@config.className",
+                      "label": "@config.label",
+                      "max": "@config.max",
+                      "onChange": "CHANGE",
+                      "precision": "@config.precision",
+                      "readOnly": "@config.readOnly",
+                      "size": "@config.size",
+                      "type": "star-rating",
+                      "value": "@entity.value"
+                    }
+                  ]
+                ],
+                "event": "CHANGE",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,166 +1,20 @@
 {
-  "name": "ui-health-panel",
-  "version": "1.0.0",
   "description": "HealthPanel — UI factory (1:1 with the @almadar/ui health-panel pattern).",
+  "name": "ui-health-panel",
   "orbitals": [
     {
-      "name": "HealthPanelOrbital",
       "entity": {
-        "name": "HealthPanelItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "HealthPanelItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "HealthPanelRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "HealthPanelItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "max": "@config.max",
-                      "shield": "@config.shield",
-                      "className": "@config.className",
-                      "showNumbers": "@config.showNumbers",
-                      "size": "@config.size",
-                      "type": "health-panel",
-                      "effects": "@config.effects",
-                      "current": "@config.current",
-                      "label": "@config.label"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "effects": {
-              "type": "[HealthPanelEffectsItem]",
-              "default": [
-                {
-                  "variant": "buff",
-                  "label": "Label",
-                  "icon": "circle"
-                }
-              ],
-              "label": "Effects",
-              "description": "Active status effects displayed as small badges",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "buff",
-                      "debuff",
-                      "neutral"
-                    ]
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Label shown above the bar",
-              "tier": "presentation"
-            },
-            "max": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max",
-              "description": "Maximum health value",
-              "tier": "presentation"
-            },
-            "shield": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Shield",
-              "description": "Shield/armor points",
-              "tier": "presentation"
-            },
-            "current": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current",
-              "description": "Current health value",
-              "tier": "presentation"
-            },
-            "showNumbers": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Numbers",
-              "description": "Whether to display numeric HP values",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "HealthPanelOrbital",
       "pages": [
         {
           "name": "HealthPanelPage",
@@ -171,7 +25,153 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "current": {
+              "default": 0.0,
+              "description": "Current health value",
+              "label": "Current",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "effects": {
+              "default": [
+                {
+                  "icon": "circle",
+                  "label": "Label",
+                  "variant": "buff"
+                }
+              ],
+              "description": "Active status effects displayed as small badges",
+              "items": {
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "buff",
+                      "debuff",
+                      "neutral"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Effects",
+              "tier": "presentation",
+              "type": "[HealthPanelEffectsItem]"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Label shown above the bar",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "max": {
+              "default": 0.0,
+              "description": "Maximum health value",
+              "label": "Max",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "shield": {
+              "default": 0.0,
+              "description": "Shield/armor points",
+              "label": "Shield",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "showNumbers": {
+              "default": true,
+              "description": "Whether to display numeric HP values",
+              "label": "Show Numbers",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "HealthPanelItem",
+          "name": "HealthPanelRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "current": "@config.current",
+                      "effects": "@config.effects",
+                      "label": "@config.label",
+                      "max": "@config.max",
+                      "shield": "@config.shield",
+                      "showNumbers": "@config.showNumbers",
+                      "size": "@config.size",
+                      "type": "health-panel"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

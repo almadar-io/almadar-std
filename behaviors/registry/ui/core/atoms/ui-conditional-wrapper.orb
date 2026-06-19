@@ -1,126 +1,20 @@
 {
-  "name": "ui-conditional-wrapper",
-  "version": "1.0.0",
   "description": "ConditionalWrapper — UI factory (1:1 with the @almadar/ui conditional-wrapper pattern).",
+  "name": "ui-conditional-wrapper",
   "orbitals": [
     {
-      "name": "ConditionalWrapperOrbital",
       "entity": {
-        "name": "ConditionalWrapperItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ConditionalWrapperItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ConditionalWrapperRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ConditionalWrapperItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "condition": "@config.condition",
-                      "children": [
-                        {
-                          "content": "Sample content",
-                          "type": "typography"
-                        }
-                      ],
-                      "context": "@config.context",
-                      "type": "conditional-wrapper",
-                      "fallback": [
-                        {
-                          "type": "typography",
-                          "content": "Fallback"
-                        }
-                      ],
-                      "animate": "@config.animate"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "context": {
-              "type": "ConditionalWrapperContext",
-              "default": {
-                "globalVariables": {},
-                "formValues": {}
-              },
-              "label": "Context",
-              "description": "Context for evaluating the condition",
-              "tier": "presentation",
-              "properties": {
-                "globalVariables": {
-                  "name": "globalVariables",
-                  "type": "string",
-                  "required": true
-                },
-                "localVariables": {
-                  "name": "localVariables",
-                  "type": "string",
-                  "required": false
-                },
-                "formValues": {
-                  "name": "formValues",
-                  "type": "string",
-                  "required": true
-                },
-                "entity": {
-                  "name": "entity",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "animate": {
-              "type": "boolean",
-              "default": false,
-              "label": "Animate",
-              "description": "Whether to animate the transition (uses CSS transitions)",
-              "tier": "presentation"
-            },
-            "condition": {
-              "type": "SExpr",
-              "label": "Condition",
-              "description": "The S-expression condition to evaluate",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ConditionalWrapperOrbital",
       "pages": [
         {
           "name": "ConditionalWrapperPage",
@@ -131,7 +25,113 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "animate": {
+              "default": false,
+              "description": "Whether to animate the transition (uses CSS transitions)",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "condition": {
+              "description": "The S-expression condition to evaluate",
+              "label": "Condition",
+              "tier": "presentation",
+              "type": "SExpr"
+            },
+            "context": {
+              "default": {
+                "formValues": {},
+                "globalVariables": {}
+              },
+              "description": "Context for evaluating the condition",
+              "label": "Context",
+              "properties": {
+                "entity": {
+                  "name": "entity",
+                  "required": false,
+                  "type": "string"
+                },
+                "formValues": {
+                  "name": "formValues",
+                  "required": true,
+                  "type": "string"
+                },
+                "globalVariables": {
+                  "name": "globalVariables",
+                  "required": true,
+                  "type": "string"
+                },
+                "localVariables": {
+                  "name": "localVariables",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "ConditionalWrapperContext"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ConditionalWrapperItem",
+          "name": "ConditionalWrapperRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animate": "@config.animate",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "condition": "@config.condition",
+                      "context": "@config.context",
+                      "fallback": [
+                        {
+                          "content": "Fallback",
+                          "type": "typography"
+                        }
+                      ],
+                      "type": "conditional-wrapper"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

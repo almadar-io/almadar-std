@@ -1,271 +1,20 @@
 {
-  "name": "ui-meter",
-  "version": "1.0.0",
   "description": "Meter — UI factory (1:1 with the @almadar/ui meter pattern).",
+  "name": "ui-meter",
   "orbitals": [
     {
-      "name": "MeterOrbital",
       "entity": {
-        "name": "MeterItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "MeterItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "MeterRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "MeterItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "thresholds": "@config.thresholds",
-                      "isLoading": "@config.isLoading",
-                      "label": "@config.label",
-                      "min": "@config.min",
-                      "actions": "@config.actions",
-                      "showValue": "@config.showValue",
-                      "className": "@config.className",
-                      "max": "@config.max",
-                      "size": "@config.size",
-                      "value": "@config.value",
-                      "variant": "@config.variant",
-                      "type": "meter",
-                      "segments": "@config.segments",
-                      "error": "@config.error",
-                      "unit": "@config.unit"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "thresholds": {
-              "type": "[MeterThresholdsItem]",
-              "default": [
-                {
-                  "value": 1.0,
-                  "label": "Label",
-                  "color": "Color"
-                }
-              ],
-              "label": "Thresholds",
-              "description": "Color thresholds",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "number",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "segments": {
-              "type": "number",
-              "default": 5.0,
-              "label": "Segments",
-              "description": "Number of segments (for segmented variant)",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Value",
-              "description": "Current value",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size (for radial variant)",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "min": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Min",
-              "description": "Minimum value",
-              "tier": "presentation"
-            },
-            "max": {
-              "type": "number",
-              "default": 100.0,
-              "label": "Max",
-              "description": "Maximum value",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Display label",
-              "tier": "presentation"
-            },
-            "showValue": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Value",
-              "description": "Show value text",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            },
-            "unit": {
-              "type": "string",
-              "default": "Unit",
-              "label": "Unit",
-              "description": "Unit suffix (e.g., '%', 'MB', 'credits')",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "MeterError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "variant": {
-              "type": "string",
-              "default": "linear",
-              "label": "Variant",
-              "description": "Display variant",
-              "tier": "presentation",
-              "values": [
-                "linear",
-                "radial",
-                "segmented"
-              ]
-            },
-            "actions": {
-              "type": "[MeterActionsItem]",
-              "default": [
-                {
-                  "navigatesTo": "Navigates To",
-                  "variant": "primary",
-                  "label": "Label"
-                }
-              ],
-              "label": "Actions",
-              "description": "Actions",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": false
-                  },
-                  "navigatesTo": {
-                    "name": "navigatesTo",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost"
-                    ]
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "MeterOrbital",
       "pages": [
         {
           "name": "MeterPage",
@@ -276,7 +25,258 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actions": {
+              "default": [
+                {
+                  "label": "Label",
+                  "navigatesTo": "Navigates To",
+                  "variant": "primary"
+                }
+              ],
+              "description": "Actions",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "navigatesTo": {
+                    "name": "navigatesTo",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Actions",
+              "tier": "presentation",
+              "type": "[MeterActionsItem]"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "MeterError"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Display label",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "max": {
+              "default": 100.0,
+              "description": "Maximum value",
+              "label": "Max",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "min": {
+              "default": 0.0,
+              "description": "Minimum value",
+              "label": "Min",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "segments": {
+              "default": 5.0,
+              "description": "Number of segments (for segmented variant)",
+              "label": "Segments",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "showValue": {
+              "default": true,
+              "description": "Show value text",
+              "label": "Show Value",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size (for radial variant)",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "thresholds": {
+              "default": [
+                {
+                  "color": "Color",
+                  "label": "Label",
+                  "value": 1.0
+                }
+              ],
+              "description": "Color thresholds",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "value": {
+                    "name": "value",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Thresholds",
+              "tier": "presentation",
+              "type": "[MeterThresholdsItem]"
+            },
+            "unit": {
+              "default": "Unit",
+              "description": "Unit suffix (e.g., '%', 'MB', 'credits')",
+              "label": "Unit",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "value": {
+              "default": 0.0,
+              "description": "Current value",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "variant": {
+              "default": "linear",
+              "description": "Display variant",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "linear",
+                "radial",
+                "segmented"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MeterItem",
+          "name": "MeterRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": "@config.actions",
+                      "className": "@config.className",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "label": "@config.label",
+                      "max": "@config.max",
+                      "min": "@config.min",
+                      "segments": "@config.segments",
+                      "showValue": "@config.showValue",
+                      "size": "@config.size",
+                      "thresholds": "@config.thresholds",
+                      "type": "meter",
+                      "unit": "@config.unit",
+                      "value": "@config.value",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

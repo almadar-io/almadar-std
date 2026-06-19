@@ -1,101 +1,20 @@
 {
-  "name": "ui-game-shell",
-  "version": "1.0.0",
   "description": "GameShell — UI factory (1:1 with the @almadar/ui game-shell pattern).",
+  "name": "ui-game-shell",
   "orbitals": [
     {
-      "name": "GameShellOrbital",
       "entity": {
-        "name": "GameShellItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "GameShellItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "GameShellRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "GameShellItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "appName": "@config.appName",
-                      "hud": [
-                        {
-                          "content": "Hud",
-                          "type": "typography"
-                        }
-                      ],
-                      "showTopBar": "@config.showTopBar",
-                      "children": [
-                        {
-                          "type": "game-canvas-2d"
-                        }
-                      ],
-                      "type": "game-shell",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "showTopBar": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Top Bar",
-              "description": "Whether to show the minimal top bar (default: true)",
-              "tier": "presentation"
-            },
-            "appName": {
-              "type": "string",
-              "default": "Game",
-              "label": "App Name",
-              "description": "Application / game title shown in the HUD bar",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Extra class name on the root container",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "GameShellOrbital",
       "pages": [
         {
           "name": "GameShellPage",
@@ -106,7 +25,88 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "appName": {
+              "default": "Game",
+              "description": "Application / game title shown in the HUD bar",
+              "label": "App Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "Extra class name on the root container",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "showTopBar": {
+              "default": true,
+              "description": "Whether to show the minimal top bar (default: true)",
+              "label": "Show Top Bar",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "GameShellItem",
+          "name": "GameShellRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "appName": "@config.appName",
+                      "children": [
+                        {
+                          "type": "game-canvas-2d"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "hud": [
+                        {
+                          "content": "Hud",
+                          "type": "typography"
+                        }
+                      ],
+                      "showTopBar": "@config.showTopBar",
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

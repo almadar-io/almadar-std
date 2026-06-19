@@ -55,12 +55,12 @@ export interface StdUiTextareaChangePayload {
 export interface StdUiTextareaConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
-  rows?: number;
-  /** Default: `"Placeholder"` */
-  placeholder?: string;
   /** Default: `""` */
   error?: string;
+  /** Default: `"Placeholder"` */
+  placeholder?: string;
+  /** Default: `0` */
+  rows?: number;
 }
 
 /**

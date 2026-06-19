@@ -53,20 +53,20 @@ export interface StdUiNotificationActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiNotificationConfig {
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"Message"` */
-  message?: string;
   /** Default: `"Action Label"` */
   actionLabel?: string;
-  /** Default: `true` */
-  dismissible?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `5000` */
-  duration?: number;
   /** Default: `"Badge"` */
   badge?: string;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `true` */
+  dismissible?: boolean;
+  /** Default: `5000` */
+  duration?: number;
+  /** Default: `"Message"` */
+  message?: string;
+  /** Default: `"Title"` */
+  title?: string;
   /** Default: `"info"` */
   variant?: 'success' | 'error' | 'info' | 'warning';
 }

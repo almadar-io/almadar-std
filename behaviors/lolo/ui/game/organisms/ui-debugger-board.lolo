@@ -1,5 +1,5 @@
 app ui-debugger-board "1.0.0"
-"DebuggerBoard — UI factory (1:1 with the @almadar/ui debugger-board pattern)."
+"DebuggerBoard — flag every bug line and no clean line to win (1:1 with the @almadar/ui debugger-board pattern)."
 orbital DebuggerBoardOrbital {
   type DebuggerBoardError = {
     message : string!
@@ -7,17 +7,29 @@ orbital DebuggerBoardOrbital {
     code : string
     stack : string
   }
+  type DebuggerBoardLinesItem = {
+    id : string!
+    content : string
+    isBug : boolean
+    isFlagged : boolean
+    explanation : string
+  }
 
   entity DebuggerBoardItem [runtime] {
     id : string!
+    lines : [DebuggerBoardLinesItem]
+    attempts : number = 0
+    result : "none" | "win" = none
   }
 
   trait DebuggerBoardRender -> @rebindable DebuggerBoardItem [interaction, instance] {
-    initial: idle
+    initial: menu
 
-    state idle {
-      INIT -> idle
-        (fetch DebuggerBoardItem {})
+    state menu {
+      INIT -> menu
+        (set @entity.lines @config.lines)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -34,6 +46,54 @@ orbital DebuggerBoardOrbital {
           completeEvent: COMPLETE
           type: debugger-board
         })
+      START -> playing
+        (set @entity.lines @config.lines)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: debugger-board
+        })
+    }
+
+    state playing {
+      TOGGLE_FLAG -> playing
+        (set @entity.lines (array/map @entity.lines (fn l (if (== (object/get l id) ?lineId) (object/merge l { isFlagged: (not (object/get l isFlagged)) }) l))))
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: debugger-board
+        })
+
+      CHECK -> complete when (and (== (array/len (array/filter @entity.lines (fn l (and (object/get l isBug) (not (object/get l isFlagged)))))) 0) (== (array/len (array/filter @entity.lines (fn l (and (not (object/get l isBug)) (object/get l isFlagged))))) 0))
+        (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.result "win")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: debugger-board
+        })
+
+      CHECK -> playing when (or (> (array/len (array/filter @entity.lines (fn l (and (object/get l isBug) (not (object/get l isFlagged)))))) 0) (> (array/len (array/filter @entity.lines (fn l (and (not (object/get l isBug)) (object/get l isFlagged))))) 0))
+        (set @entity.attempts (+ @entity.attempts 1))
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: debugger-board
+        })
+    }
+
+    state complete {
+      PLAY_AGAIN -> menu
+        (set @entity.lines @config.lines)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          type: debugger-board
+        })
     }
 
     emits {
@@ -42,6 +102,21 @@ orbital DebuggerBoardOrbital {
         attempts : number!
       }
         @description "completeEvent prop"
+        @tier "essential"
+      TOGGLE_FLAG -> external {
+        lineId : string!
+      }
+        @description "Flip the flag on a reviewed code line"
+        @tier "essential"
+      CHECK -> external {
+        id : string
+      }
+        @description "Submit the current flag set for scoring"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Reset the puzzle and play again"
         @tier "essential"
     }
 
@@ -90,6 +165,10 @@ orbital DebuggerBoardOrbital {
       selectedIds : [string] = []
         @label "Selected Ids"
         @description "Currently selected item IDs"
+        @tier "presentation"
+      lines : [DebuggerBoardLinesItem] = [{ id: "l1", content: "function add(a, b) {", isBug: false, isFlagged: false }, { id: "l2", content: "  return a - b;", isBug: true, isFlagged: false, explanation: "Should be a + b for an add function." }, { id: "l3", content: "}", isBug: false, isFlagged: false }, { id: "l4", content: "const total = add(2, 3);", isBug: false, isFlagged: false }, { id: "l5", content: "console.log(totl);", isBug: true, isFlagged: false, explanation: "Typo: 'totl' should be 'total'." }]
+        @label "Lines"
+        @description "Direct code-line data — takes priority over entity-derived lines."
         @tier "presentation"
     }
   }

@@ -1,108 +1,20 @@
 {
-  "name": "ui-service-catalog",
-  "version": "1.0.0",
   "description": "ServiceCatalog — UI factory (1:1 with the @almadar/ui service-catalog pattern).",
+  "name": "ui-service-catalog",
   "orbitals": [
     {
-      "name": "ServiceCatalogOrbital",
       "entity": {
-        "name": "ServiceCatalogItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ServiceCatalogItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ServiceCatalogRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ServiceCatalogItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "service-catalog",
-                      "services": "@config.services",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional class names",
-              "tier": "presentation"
-            },
-            "services": {
-              "type": "[ServiceCatalogServicesItem]",
-              "default": [
-                {
-                  "name": "Name",
-                  "layer": "Layer",
-                  "layerColor": "Layer Color"
-                }
-              ],
-              "label": "Services",
-              "description": "List of services to display",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "layerColor": {
-                    "name": "layerColor",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "layer": {
-                    "name": "layer",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ServiceCatalogOrbital",
       "pages": [
         {
           "name": "ServiceCatalogPage",
@@ -113,7 +25,95 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional class names",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "services": {
+              "default": [
+                {
+                  "layer": "Layer",
+                  "layerColor": "Layer Color",
+                  "name": "Name"
+                }
+              ],
+              "description": "List of services to display",
+              "items": {
+                "properties": {
+                  "layer": {
+                    "name": "layer",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "layerColor": {
+                    "name": "layerColor",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Services",
+              "tier": "presentation",
+              "type": "[ServiceCatalogServicesItem]"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ServiceCatalogItem",
+          "name": "ServiceCatalogRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "services": "@config.services",
+                      "type": "service-catalog"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

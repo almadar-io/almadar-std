@@ -7,7 +7,23 @@
     "entities": [
       {
         "name": "ClassifierBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "items",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -15,7 +31,10 @@
       {
         "name": "ClassifierBoardRender",
         "emittedEvents": [
-          "COMPLETE"
+          "COMPLETE",
+          "ASSIGN",
+          "CHECK",
+          "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
@@ -26,7 +45,29 @@
             "tier": "essential"
           },
           {
+            "name": "ASSIGN",
+            "direction": "emit",
+            "description": "Emits UI:{assignEvent} with { itemId, categoryId } when an item is dropped into a category",
+            "tier": "essential"
+          },
+          {
+            "name": "CHECK",
+            "direction": "emit",
+            "description": "Emits UI:{checkEvent} with {} when the player submits their assignments",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "essential"
+          },
+          {
             "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "START",
             "direction": "listen"
           }
         ],
@@ -37,6 +78,43 @@
             "label": "Active Filters",
             "description": "Active filters",
             "tier": "presentation"
+          },
+          {
+            "key": "categories",
+            "type": "[ClassifierBoardCategoriesItem]",
+            "default": [
+              {
+                "id": "fruit",
+                "label": "Fruit"
+              },
+              {
+                "id": "vegetable",
+                "label": "Vegetable"
+              }
+            ],
+            "label": "Categories",
+            "description": "Category buckets the player sorts items into.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "className",
@@ -53,6 +131,11 @@
             "description": "Error state (UiError)",
             "tier": "presentation",
             "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
               "message": {
                 "name": "message",
                 "required": true,
@@ -67,11 +150,6 @@
                 "name": "stack",
                 "required": false,
                 "type": "string"
-              },
-              "code": {
-                "name": "code",
-                "required": false,
-                "type": "string"
               }
             }
           },
@@ -82,6 +160,64 @@
             "label": "Is Loading",
             "description": "Loading state indicator",
             "tier": "presentation"
+          },
+          {
+            "key": "items",
+            "type": "[ClassifierBoardItemsItem]",
+            "default": [
+              {
+                "assignedCategory": "",
+                "correctCategory": "fruit",
+                "id": "i1",
+                "label": "Apple"
+              },
+              {
+                "assignedCategory": "",
+                "correctCategory": "vegetable",
+                "id": "i2",
+                "label": "Carrot"
+              },
+              {
+                "assignedCategory": "",
+                "correctCategory": "fruit",
+                "id": "i3",
+                "label": "Banana"
+              },
+              {
+                "assignedCategory": "",
+                "correctCategory": "vegetable",
+                "id": "i4",
+                "label": "Potato"
+              }
+            ],
+            "label": "Items",
+            "description": "Sortable items — each carries its correct category and the player's current assignment.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "assignedCategory": {
+                  "name": "assignedCategory",
+                  "required": false,
+                  "type": "string"
+                },
+                "correctCategory": {
+                  "name": "correctCategory",
+                  "required": true,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "pageProp",
@@ -152,7 +288,11 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "attempts",
+            "items",
+            "result"
+          ]
         }
       }
     ],
@@ -164,7 +304,10 @@
       }
     ],
     "emittedEvents": [
-      "COMPLETE"
+      "ASSIGN",
+      "CHECK",
+      "COMPLETE",
+      "PLAY_AGAIN"
     ],
     "listenedEvents": []
   }

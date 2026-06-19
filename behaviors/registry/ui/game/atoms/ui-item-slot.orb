@@ -1,169 +1,20 @@
 {
-  "name": "ui-item-slot",
-  "version": "1.0.0",
   "description": "ItemSlot — UI factory (1:1 with the @almadar/ui item-slot pattern).",
+  "name": "ui-item-slot",
   "orbitals": [
     {
-      "name": "ItemSlotOrbital",
       "entity": {
-        "name": "ItemSlotItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ItemSlotItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ItemSlotRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ItemSlotItem",
-          "emits": [
-            {
-              "event": "CLICK",
-              "description": "Click handler",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CLICK",
-                "name": "Click",
-                "description": "Click handler",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "size": "@config.size",
-                      "icon": "@config.icon",
-                      "rarity": "@config.rarity",
-                      "empty": "@config.empty",
-                      "onClick": "CLICK",
-                      "label": "@config.label",
-                      "quantity": "@config.quantity",
-                      "className": "@config.className",
-                      "type": "item-slot",
-                      "selected": "@config.selected"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Item label",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "quantity": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Quantity",
-              "description": "Stack quantity",
-              "tier": "presentation"
-            },
-            "empty": {
-              "type": "boolean",
-              "default": false,
-              "label": "Empty",
-              "description": "Whether the slot is empty",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "selected": {
-              "type": "boolean",
-              "default": false,
-              "label": "Selected",
-              "description": "Whether the slot is selected",
-              "tier": "presentation"
-            },
-            "rarity": {
-              "type": "string",
-              "default": "common",
-              "label": "Rarity",
-              "description": "Rarity tier affecting border color",
-              "tier": "presentation",
-              "values": [
-                "common",
-                "uncommon",
-                "rare",
-                "epic",
-                "legendary"
-              ]
-            },
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Icon component or emoji",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ItemSlotOrbital",
       "pages": [
         {
           "name": "ItemSlotPage",
@@ -174,7 +25,156 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "empty": {
+              "default": false,
+              "description": "Whether the slot is empty",
+              "label": "Empty",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Icon component or emoji",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Item label",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "quantity": {
+              "default": 0.0,
+              "description": "Stack quantity",
+              "label": "Quantity",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "rarity": {
+              "default": "common",
+              "description": "Rarity tier affecting border color",
+              "label": "Rarity",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "common",
+                "uncommon",
+                "rare",
+                "epic",
+                "legendary"
+              ]
+            },
+            "selected": {
+              "default": false,
+              "description": "Whether the slot is selected",
+              "label": "Selected",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Click handler",
+              "event": "CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ItemSlotItem",
+          "name": "ItemSlotRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Click handler",
+                "key": "CLICK",
+                "name": "Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "empty": "@config.empty",
+                      "icon": "@config.icon",
+                      "label": "@config.label",
+                      "onClick": "CLICK",
+                      "quantity": "@config.quantity",
+                      "rarity": "@config.rarity",
+                      "selected": "@config.selected",
+                      "size": "@config.size",
+                      "type": "item-slot"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

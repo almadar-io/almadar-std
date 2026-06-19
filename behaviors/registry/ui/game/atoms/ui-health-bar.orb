@@ -1,124 +1,20 @@
 {
-  "name": "ui-health-bar",
-  "version": "1.0.0",
   "description": "HealthBar — UI factory (1:1 with the @almadar/ui health-bar pattern).",
+  "name": "ui-health-bar",
   "orbitals": [
     {
-      "name": "HealthBarOrbital",
       "entity": {
-        "name": "HealthBarItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "HealthBarItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "HealthBarRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "HealthBarItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "animated": "@config.animated",
-                      "type": "health-bar",
-                      "className": "@config.className",
-                      "current": "@config.current",
-                      "format": "@config.format",
-                      "max": "@config.max",
-                      "size": "@config.size"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "format": {
-              "type": "string",
-              "default": "hearts",
-              "label": "Format",
-              "description": "Display format",
-              "tier": "presentation",
-              "values": [
-                "hearts",
-                "bar",
-                "numeric"
-              ]
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size variant",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "current": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Current",
-              "description": "Current health value",
-              "tier": "presentation"
-            },
-            "animated": {
-              "type": "boolean",
-              "default": true,
-              "label": "Animated",
-              "description": "Animation on change",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "max": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max",
-              "description": "Maximum health value",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "HealthBarOrbital",
       "pages": [
         {
           "name": "HealthBarPage",
@@ -129,7 +25,111 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "animated": {
+              "default": true,
+              "description": "Animation on change",
+              "label": "Animated",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "current": {
+              "default": 0.0,
+              "description": "Current health value",
+              "label": "Current",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "format": {
+              "default": "hearts",
+              "description": "Display format",
+              "label": "Format",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "hearts",
+                "bar",
+                "numeric"
+              ]
+            },
+            "max": {
+              "default": 0.0,
+              "description": "Maximum health value",
+              "label": "Max",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size variant",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "HealthBarItem",
+          "name": "HealthBarRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "animated": "@config.animated",
+                      "className": "@config.className",
+                      "current": "@config.current",
+                      "format": "@config.format",
+                      "max": "@config.max",
+                      "size": "@config.size",
+                      "type": "health-bar"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,81 +1,55 @@
 {
-  "name": "ui-geometric-pattern",
-  "version": "1.0.0",
   "description": "GeometricPattern — UI factory (1:1 with the @almadar/ui geometric-pattern pattern).",
+  "name": "ui-geometric-pattern",
   "orbitals": [
     {
-      "name": "GeometricPatternOrbital",
       "entity": {
-        "name": "GeometricPatternItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "GeometricPatternItem",
+        "persistence": "runtime"
       },
+      "name": "GeometricPatternOrbital",
+      "pages": [
+        {
+          "name": "GeometricPatternPage",
+          "path": "/geometric-pattern",
+          "traits": [
+            {
+              "ref": "GeometricPatternRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "GeometricPatternRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "GeometricPatternItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "mode": "@config.mode",
-                      "variant": "@config.variant",
-                      "children": [
-                        {
-                          "content": "Sample content",
-                          "type": "typography"
-                        }
-                      ],
-                      "type": "geometric-pattern",
-                      "color": "@config.color",
-                      "opacity": "@config.opacity",
-                      "scale": "@config.scale",
-                      "strokeWidth": "@config.strokeWidth"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
           "config": {
-            "mode": {
-              "type": "string",
-              "default": "background",
-              "label": "Mode",
-              "description": "Layout mode",
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
               "tier": "presentation",
+              "type": "string"
+            },
+            "color": {
+              "default": "var(--color-primary)",
+              "description": "Stroke color passed to PatternTile",
+              "label": "Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "mode": {
+              "default": "background",
+              "description": "Layout mode",
+              "label": "Mode",
+              "tier": "presentation",
+              "type": "string",
               "values": [
                 "background",
                 "left",
@@ -85,33 +59,33 @@
                 "frame"
               ]
             },
-            "color": {
-              "type": "string",
-              "default": "var(--color-primary)",
-              "label": "Color",
-              "description": "Stroke color passed to PatternTile",
-              "tier": "presentation"
+            "opacity": {
+              "default": 0.06,
+              "description": "Overall opacity (default: 0.06)",
+              "label": "Opacity",
+              "tier": "presentation",
+              "type": "number"
             },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
+            "scale": {
+              "default": 1.0,
+              "description": "Tile scale multiplier (default: 1)",
+              "label": "Scale",
+              "tier": "presentation",
+              "type": "number"
             },
             "strokeWidth": {
-              "type": "number",
               "default": 0.5,
-              "label": "Stroke Width",
               "description": "Stroke width passed to PatternTile",
-              "tier": "presentation"
+              "label": "Stroke Width",
+              "tier": "presentation",
+              "type": "number"
             },
             "variant": {
-              "type": "string",
               "default": "star8",
-              "label": "Variant",
               "description": "Which geometric tile design",
+              "label": "Variant",
               "tier": "presentation",
+              "type": "string",
               "values": [
                 "star8",
                 "star6",
@@ -128,36 +102,62 @@
                 "arabesque-vine",
                 "arabesque-net"
               ]
-            },
-            "scale": {
-              "type": "number",
-              "default": 1.0,
-              "label": "Scale",
-              "description": "Tile scale multiplier (default: 1)",
-              "tier": "presentation"
-            },
-            "opacity": {
-              "type": "number",
-              "default": 0.06,
-              "label": "Opacity",
-              "description": "Overall opacity (default: 0.06)",
-              "tier": "presentation"
             }
           },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "GeometricPatternPage",
-          "path": "/geometric-pattern",
-          "traits": [
-            {
-              "ref": "GeometricPatternRender"
-            }
-          ]
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "GeometricPatternItem",
+          "name": "GeometricPatternRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "color": "@config.color",
+                      "mode": "@config.mode",
+                      "opacity": "@config.opacity",
+                      "scale": "@config.scale",
+                      "strokeWidth": "@config.strokeWidth",
+                      "type": "geometric-pattern",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

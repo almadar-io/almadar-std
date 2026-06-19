@@ -46,16 +46,16 @@ export interface StdUiWizardProgressStepClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiWizardProgressConfig {
-  /** Default: `false` */
-  compact?: boolean;
-  /** Default: `""` */
-  className?: string;
-  /** Default: `[{"description":"Description","title":"Title","id":"Id"}]` */
-  steps?: EntityRow[];
   /** Default: `true` */
   allowNavigation?: boolean;
+  /** Default: `""` */
+  className?: string;
+  /** Default: `false` */
+  compact?: boolean;
   /** Default: `0` */
   currentStep?: number;
+  /** Default: `[{"description":"Description","id":"Id","title":"Title"}]` */
+  steps?: EntityRow[];
 }
 
 /**

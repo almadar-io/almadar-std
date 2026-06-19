@@ -39,19 +39,19 @@ export type StdUiUiSlotRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiUiSlotRendererConfig {
-  /** Default: `false` */
-  isLoading?: boolean;
   /** Default: `""` */
   className?: string;
+  error?: EntityRow;
+  /** Default: `"fixed"` */
+  hudMode?: 'fixed' | 'inline';
   /** Default: `false` */
   includeFloating?: boolean;
   /** Default: `false` */
   includeHud?: boolean;
-  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
   /** Default: `{"enabled":false}` */
   suspense?: EntityRow;
-  /** Default: `"fixed"` */
-  hudMode?: 'fixed' | 'inline';
 }
 
 /**
@@ -112,8 +112,8 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -124,32 +124,123 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'UiSlotRendererRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'UiSlotRendererItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional class name for the container',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'error': {
+            'description': 'Error state',
+            'label': 'Error',
+            'properties': {
+              'code': {
+                'name': 'code',
+                'required': false,
+                'type': 'string',
+              },
+              'message': {
+                'name': 'message',
+                'required': true,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'stack': {
+                'name': 'stack',
+                'required': false,
+                'type': 'string',
+              },
             },
-          ],
+            'tier': 'presentation',
+            'type': 'UiSlotRendererError',
+          },
+          'hudMode': {
+            'default': 'fixed',
+            'description': 'HUD positioning mode: \'fixed\' (default, viewport-relative) or \'inline\' (container-relative, uses sticky)',
+            'label': 'Hud Mode',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'fixed',
+              'inline',
+            ],
+          },
+          'includeFloating': {
+            'default': false,
+            'description': 'Include floating slot',
+            'label': 'Include Floating',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'includeHud': {
+            'default': false,
+            'description': 'Include HUD slots',
+            'label': 'Include Hud',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'isLoading': {
+            'default': false,
+            'description': 'Loading state indicator',
+            'label': 'Is Loading',
+            'tier': 'presentation',
+            'type': 'boolean',
+          },
+          'suspense': {
+            'default': {
+              'enabled': false,
+            },
+            'description': 'Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works.',
+            'label': 'Suspense',
+            'properties': {
+              'enabled': {
+                'name': 'enabled',
+                'required': true,
+                'type': 'boolean',
+              },
+              'slotFallbacks': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'slotFallbacks',
+                'required': false,
+                'type': 'object',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'UiSlotRendererSuspense',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'UiSlotRendererItem',
+        'name': 'UiSlotRendererRender',
+        'scope': 'instance',
+        'stateMachine': {
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -160,115 +251,24 @@ export function stdUiUiSlotRendererUiSlotRendererOrbital(params: StdUiUiSlotRend
                   'render-ui',
                   'main',
                   {
-                    'suspense': '@config.suspense',
-                    'includeHud': '@config.includeHud',
-                    'hudMode': '@config.hudMode',
-                    'type': 'ui-slot-renderer',
-                    'includeFloating': '@config.includeFloating',
                     'className': '@config.className',
                     'entity': 'UiSlotRendererItem',
                     'error': '@config.error',
+                    'hudMode': '@config.hudMode',
+                    'includeFloating': '@config.includeFloating',
+                    'includeHud': '@config.includeHud',
                     'isLoading': '@config.isLoading',
+                    'suspense': '@config.suspense',
+                    'type': 'ui-slot-renderer',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'isLoading': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Is Loading',
-            'description': 'Loading state indicator',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional class name for the container',
-            'tier': 'presentation',
-          },
-          'includeFloating': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Include Floating',
-            'description': 'Include floating slot',
-            'tier': 'presentation',
-          },
-          'includeHud': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Include Hud',
-            'description': 'Include HUD slots',
-            'tier': 'presentation',
-          },
-          'error': {
-            'type': 'UiSlotRendererError',
-            'label': 'Error',
-            'description': 'Error state',
-            'tier': 'presentation',
-            'properties': {
-              'code': {
-                'name': 'code',
-                'type': 'string',
-                'required': false,
-              },
-              'message': {
-                'name': 'message',
-                'type': 'string',
-                'required': true,
-              },
-              'name': {
-                'name': 'name',
-                'type': 'string',
-                'required': false,
-              },
-              'stack': {
-                'name': 'stack',
-                'type': 'string',
-                'required': false,
-              },
-            },
-          },
-          'suspense': {
-            'type': 'UiSlotRendererSuspense',
-            'default': {
-              'enabled': false,
-            },
-            'label': 'Suspense',
-            'description': 'Enable Suspense boundaries around each slot. When true, each inline slot is wrapped in `<ErrorBoundary><Suspense>` with Skeleton fallbacks. Opt-in — existing isLoading prop pattern still works.',
-            'tier': 'presentation',
-            'properties': {
-              'enabled': {
-                'name': 'enabled',
-                'type': 'boolean',
-                'required': true,
-              },
-              'slotFallbacks': {
-                'name': 'slotFallbacks',
-                'type': 'object',
-                'required': false,
-                'items': {
-                  'type': 'string',
-                },
-              },
-            },
-          },
-          'hudMode': {
-            'type': 'string',
-            'default': 'fixed',
-            'label': 'Hud Mode',
-            'description': 'HUD positioning mode: \'fixed\' (default, viewport-relative) or \'inline\' (container-relative, uses sticky)',
-            'tier': 'presentation',
-            'values': [
-              'fixed',
-              'inline',
-            ],
-          },
-        },
-        'scope': 'instance',
       } as never, 'UiSlotRendererItem', canonicalName) as never,
     ],
     pages: [

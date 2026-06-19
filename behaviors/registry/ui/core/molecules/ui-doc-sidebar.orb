@@ -1,117 +1,20 @@
 {
-  "name": "ui-doc-sidebar",
-  "version": "1.0.0",
   "description": "DocSidebar — UI factory (1:1 with the @almadar/ui doc-sidebar pattern).",
+  "name": "ui-doc-sidebar",
   "orbitals": [
     {
-      "name": "DocSidebarOrbital",
       "entity": {
-        "name": "DocSidebarItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "DocSidebarItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "DocSidebarRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "DocSidebarItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "type": "doc-sidebar",
-                      "items": "@config.items"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "items": {
-              "type": "[DocSidebarItemsItem]",
-              "default": [
-                {
-                  "href": "Href",
-                  "label": "Label",
-                  "items": [],
-                  "active": false
-                }
-              ],
-              "label": "Items",
-              "description": "Sidebar navigation items",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "items": {
-                    "name": "items",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  },
-                  "active": {
-                    "name": "active",
-                    "type": "boolean",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "DocSidebarOrbital",
       "pages": [
         {
           "name": "DocSidebarPage",
@@ -122,7 +25,104 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "items": {
+              "default": [
+                {
+                  "active": false,
+                  "href": "Href",
+                  "items": [],
+                  "label": "Label"
+                }
+              ],
+              "description": "Sidebar navigation items",
+              "items": {
+                "properties": {
+                  "active": {
+                    "name": "active",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "href": {
+                    "name": "href",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "items": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "items",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Items",
+              "tier": "presentation",
+              "type": "[DocSidebarItemsItem]"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DocSidebarItem",
+          "name": "DocSidebarRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "items": "@config.items",
+                      "type": "doc-sidebar"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

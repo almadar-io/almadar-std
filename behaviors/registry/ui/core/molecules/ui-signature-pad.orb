@@ -1,252 +1,20 @@
 {
-  "name": "ui-signature-pad",
-  "version": "1.0.0",
   "description": "SignaturePad — UI factory (1:1 with the @almadar/ui signature-pad pattern).",
+  "name": "ui-signature-pad",
   "orbitals": [
     {
-      "name": "SignaturePadOrbital",
       "entity": {
-        "name": "SignaturePadItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "SignaturePadItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "SignaturePadRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "SignaturePadItem",
-          "emits": [
-            {
-              "event": "CHANGE",
-              "description": "Callback when signature changes",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "dataUrl",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "SIGN",
-              "description": "Event to emit on sign",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "signature",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "CLEAR",
-              "description": "Event to emit on clear",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CHANGE",
-                "name": "Change",
-                "description": "Callback when signature changes",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "dataUrl",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SIGN",
-                "name": "Sign",
-                "description": "Event to emit on sign",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "signature",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CLEAR",
-                "name": "Clear",
-                "description": "Event to emit on clear",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "SignaturePadItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "error": "@config.error",
-                      "signEvent": "SIGN",
-                      "clearEvent": "CLEAR",
-                      "onChange": "CHANGE",
-                      "helperText": "@config.helperText",
-                      "strokeWidth": "@config.strokeWidth",
-                      "entity": "SignaturePadItem",
-                      "height": "@config.height",
-                      "type": "signature-pad",
-                      "value": "@config.value",
-                      "readOnly": "@config.readOnly",
-                      "isLoading": "@config.isLoading",
-                      "className": "@config.className",
-                      "label": "@config.label",
-                      "strokeColor": "@config.strokeColor"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "strokeColor": {
-              "type": "string",
-              "default": "Stroke Color",
-              "label": "Stroke Color",
-              "description": "Stroke color",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "SignaturePadError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "helperText": {
-              "type": "string",
-              "default": "Helper Text",
-              "label": "Helper Text",
-              "description": "Helper text",
-              "tier": "presentation"
-            },
-            "height": {
-              "type": "number",
-              "default": 200.0,
-              "label": "Height",
-              "description": "Pad height",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "readOnly": {
-              "type": "boolean",
-              "default": false,
-              "label": "Read Only",
-              "description": "Whether the pad is read-only",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "string",
-              "default": "Value",
-              "label": "Value",
-              "description": "Existing signature image URL",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Label above the pad",
-              "tier": "presentation"
-            },
-            "strokeWidth": {
-              "type": "number",
-              "default": 2.0,
-              "label": "Stroke Width",
-              "description": "Stroke width",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "SignaturePadOrbital",
       "pages": [
         {
           "name": "SignaturePadPage",
@@ -257,7 +25,239 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "SignaturePadError"
+            },
+            "height": {
+              "default": 200.0,
+              "description": "Pad height",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "helperText": {
+              "default": "Helper Text",
+              "description": "Helper text",
+              "label": "Helper Text",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Label above the pad",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "readOnly": {
+              "default": false,
+              "description": "Whether the pad is read-only",
+              "label": "Read Only",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "strokeColor": {
+              "default": "Stroke Color",
+              "description": "Stroke color",
+              "label": "Stroke Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "strokeWidth": {
+              "default": 2.0,
+              "description": "Stroke width",
+              "label": "Stroke Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "value": {
+              "default": "Value",
+              "description": "Existing signature image URL",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Callback when signature changes",
+              "event": "CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "dataUrl",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Event to emit on sign",
+              "event": "SIGN",
+              "payloadSchema": [
+                {
+                  "name": "signature",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Event to emit on clear",
+              "event": "CLEAR",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SignaturePadItem",
+          "name": "SignaturePadRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Callback when signature changes",
+                "key": "CHANGE",
+                "name": "Change",
+                "payloadSchema": [
+                  {
+                    "name": "dataUrl",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event to emit on sign",
+                "key": "SIGN",
+                "name": "Sign",
+                "payloadSchema": [
+                  {
+                    "name": "signature",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event to emit on clear",
+                "key": "CLEAR",
+                "name": "Clear",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "SignaturePadItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "clearEvent": "CLEAR",
+                      "entity": "SignaturePadItem",
+                      "error": "@config.error",
+                      "height": "@config.height",
+                      "helperText": "@config.helperText",
+                      "isLoading": "@config.isLoading",
+                      "label": "@config.label",
+                      "onChange": "CHANGE",
+                      "readOnly": "@config.readOnly",
+                      "signEvent": "SIGN",
+                      "strokeColor": "@config.strokeColor",
+                      "strokeWidth": "@config.strokeWidth",
+                      "type": "signature-pad",
+                      "value": "@config.value"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

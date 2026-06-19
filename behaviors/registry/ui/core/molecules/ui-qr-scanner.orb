@@ -1,186 +1,20 @@
 {
-  "name": "ui-qr-scanner",
-  "version": "1.0.0",
   "description": "QrScanner — UI factory (1:1 with the @almadar/ui qr-scanner pattern).",
+  "name": "ui-qr-scanner",
   "orbitals": [
     {
-      "name": "QrScannerOrbital",
       "entity": {
-        "name": "QrScannerItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "QrScannerItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "QrScannerRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "QrScannerItem",
-          "emits": [
-            {
-              "event": "SCAN",
-              "description": "onScan prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "result",
-                  "type": "object",
-                  "properties": [
-                    {
-                      "name": "text",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "format",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "timestamp",
-                      "type": "number",
-                      "required": true
-                    }
-                  ]
-                },
-                {
-                  "name": "_payload",
-                  "type": "object"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "SCAN",
-                "name": "Scan",
-                "description": "onScan prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "result",
-                    "type": "object",
-                    "properties": [
-                      {
-                        "name": "text",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "format",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "timestamp",
-                        "type": "number",
-                        "required": true
-                      }
-                    ]
-                  },
-                  {
-                    "name": "_payload",
-                    "type": "object"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "showOverlay": "@config.showOverlay",
-                      "facingMode": "@config.facingMode",
-                      "scanEvent": "SCAN",
-                      "showCameraControls": "@config.showCameraControls",
-                      "className": "@config.className",
-                      "onScan": "SCAN",
-                      "type": "qr-scanner",
-                      "fallback": [
-                        {
-                          "content": "Fallback",
-                          "type": "typography"
-                        }
-                      ],
-                      "paused": "@config.paused"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "facingMode": {
-              "type": "string",
-              "default": "environment",
-              "label": "Facing Mode",
-              "description": "facingMode prop",
-              "tier": "presentation",
-              "values": [
-                "environment",
-                "user"
-              ]
-            },
-            "showOverlay": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Overlay",
-              "description": "showOverlay prop",
-              "tier": "presentation"
-            },
-            "showCameraControls": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show Camera Controls",
-              "description": "showCameraControls prop",
-              "tier": "presentation"
-            },
-            "paused": {
-              "type": "boolean",
-              "default": false,
-              "label": "Paused",
-              "description": "paused prop",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "QrScannerOrbital",
       "pages": [
         {
           "name": "QrScannerPage",
@@ -191,7 +25,173 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "facingMode": {
+              "default": "environment",
+              "description": "facingMode prop",
+              "label": "Facing Mode",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "environment",
+                "user"
+              ]
+            },
+            "paused": {
+              "default": false,
+              "description": "paused prop",
+              "label": "Paused",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showCameraControls": {
+              "default": true,
+              "description": "showCameraControls prop",
+              "label": "Show Camera Controls",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showOverlay": {
+              "default": true,
+              "description": "showOverlay prop",
+              "label": "Show Overlay",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "onScan prop",
+              "event": "SCAN",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "properties": [
+                    {
+                      "name": "text",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "format",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "timestamp",
+                      "required": true,
+                      "type": "number"
+                    }
+                  ],
+                  "type": "object"
+                },
+                {
+                  "name": "_payload",
+                  "type": "object"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "QrScannerItem",
+          "name": "QrScannerRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "onScan prop",
+                "key": "SCAN",
+                "name": "Scan",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "properties": [
+                      {
+                        "name": "text",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "format",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "timestamp",
+                        "required": true,
+                        "type": "number"
+                      }
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "name": "_payload",
+                    "type": "object"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "facingMode": "@config.facingMode",
+                      "fallback": [
+                        {
+                          "content": "Fallback",
+                          "type": "typography"
+                        }
+                      ],
+                      "onScan": "SCAN",
+                      "paused": "@config.paused",
+                      "scanEvent": "SCAN",
+                      "showCameraControls": "@config.showCameraControls",
+                      "showOverlay": "@config.showOverlay",
+                      "type": "qr-scanner"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

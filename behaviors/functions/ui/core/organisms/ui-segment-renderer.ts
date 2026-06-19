@@ -39,14 +39,14 @@ export type StdUiSegmentRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSegmentRendererConfig {
-  /** Default: `"Container Class Name"` */
-  containerClassName?: string;
-  /** Default: `[{"type":"Type","content":"Content"}]` */
-  segments?: EntityRow[];
-  /** Default: `{"reflectionNotes":["Item"],"activationResponse":"Activation Response"}` */
-  userProgress?: EntityRow;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Container Class Name"` */
+  containerClassName?: string;
+  /** Default: `[{"content":"Content","type":"Type"}]` */
+  segments?: EntityRow[];
+  /** Default: `{"activationResponse":"Activation Response","reflectionNotes":["Item"]}` */
+  userProgress?: EntityRow;
 }
 
 /**
@@ -107,8 +107,8 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -119,127 +119,127 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'SegmentRendererRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'SegmentRendererItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes for the root container',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'containerClassName': {
+            'default': 'Container Class Name',
+            'description': 'CSS classes for the outer wrapping div',
+            'label': 'Container Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'segments': {
+            'default': [
+              {
+                'content': 'Content',
+                'type': 'Type',
+              },
+            ],
+            'description': 'Parsed lesson segments (see `parseLessonSegments`)',
+            'items': {
+              'properties': {
+                'content': {
+                  'name': 'content',
+                  'required': true,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
             },
-          ],
+            'label': 'Segments',
+            'tier': 'presentation',
+            'type': '[SegmentRendererSegmentsItem]',
+          },
+          'userProgress': {
+            'default': {
+              'activationResponse': 'Activation Response',
+              'reflectionNotes': [
+                'Item',
+              ],
+            },
+            'description': 'User progress for restoring activation/reflection state',
+            'label': 'User Progress',
+            'properties': {
+              'activationResponse': {
+                'name': 'activationResponse',
+                'required': false,
+                'type': 'string',
+              },
+              'bloomAnswered': {
+                'items': {
+                  'type': 'boolean',
+                },
+                'name': 'bloomAnswered',
+                'required': false,
+                'type': 'object',
+              },
+              'reflectionNotes': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'reflectionNotes',
+                'required': false,
+                'type': 'array',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'SegmentRendererUserProgress',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'SegmentRendererItem',
+        'name': 'SegmentRendererRender',
+        'scope': 'instance',
+        'stateMachine': {
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'type': 'segment-renderer',
                     'className': '@config.className',
-                    'segments': '@config.segments',
                     'containerClassName': '@config.containerClassName',
+                    'segments': '@config.segments',
+                    'type': 'segment-renderer',
                     'userProgress': '@config.userProgress',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'containerClassName': {
-            'type': 'string',
-            'default': 'Container Class Name',
-            'label': 'Container Class Name',
-            'description': 'CSS classes for the outer wrapping div',
-            'tier': 'presentation',
-          },
-          'segments': {
-            'type': '[SegmentRendererSegmentsItem]',
-            'default': [
-              {
-                'type': 'Type',
-                'content': 'Content',
-              },
-            ],
-            'label': 'Segments',
-            'description': 'Parsed lesson segments (see `parseLessonSegments`)',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'content': {
-                  'name': 'content',
-                  'type': 'string',
-                  'required': true,
-                },
-                'type': {
-                  'name': 'type',
-                  'type': 'string',
-                  'required': true,
-                },
-              },
-            },
-          },
-          'userProgress': {
-            'type': 'SegmentRendererUserProgress',
-            'default': {
-              'reflectionNotes': [
-                'Item',
-              ],
-              'activationResponse': 'Activation Response',
-            },
-            'label': 'User Progress',
-            'description': 'User progress for restoring activation/reflection state',
-            'tier': 'presentation',
-            'properties': {
-              'activationResponse': {
-                'name': 'activationResponse',
-                'type': 'string',
-                'required': false,
-              },
-              'reflectionNotes': {
-                'name': 'reflectionNotes',
-                'type': 'array',
-                'required': false,
-                'items': {
-                  'type': 'string',
-                },
-              },
-              'bloomAnswered': {
-                'name': 'bloomAnswered',
-                'type': 'object',
-                'required': false,
-                'items': {
-                  'type': 'boolean',
-                },
-              },
-            },
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes for the root container',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'SegmentRendererItem', canonicalName) as never,
     ],
     pages: [

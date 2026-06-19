@@ -1,192 +1,20 @@
 {
-  "name": "ui-button",
-  "version": "1.0.0",
   "description": "Button — UI factory (1:1 with the @almadar/ui button pattern).",
+  "name": "ui-button",
   "orbitals": [
     {
-      "name": "ButtonOrbital",
       "entity": {
-        "name": "ButtonItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ButtonItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ButtonRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ButtonItem",
-          "emits": [
-            {
-              "event": "ACTION",
-              "description": "Declarative event name — emits UI:{action} via eventBus on click",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event name — emits UI:{action} via eventBus on click",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "leftIcon": "@config.leftIcon",
-                      "rightIcon": "@config.rightIcon",
-                      "icon": "@config.icon",
-                      "action": "ACTION",
-                      "actionPayload": "@config.actionPayload",
-                      "label": "@config.label",
-                      "type": "button",
-                      "size": "@config.size",
-                      "isLoading": "@config.isLoading",
-                      "className": "@config.className",
-                      "iconRight": "@config.iconRight",
-                      "disabled": "@config.disabled",
-                      "variant": "@config.variant"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "disabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Disabled",
-              "description": "Disable the button (greys out, blocks click events)",
-              "tier": "presentation"
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Button label text (alternative to children for schema-driven rendering)",
-              "tier": "presentation"
-            },
-            "icon": {
-              "type": "icon",
-              "default": "circle",
-              "label": "Icon",
-              "description": "Alias for leftIcon",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "size prop",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "isLoading prop",
-              "tier": "presentation"
-            },
-            "actionPayload": {
-              "type": "json",
-              "default": {},
-              "label": "Action Payload",
-              "description": "Payload to include with the action event",
-              "tier": "presentation"
-            },
-            "rightIcon": {
-              "type": "icon",
-              "label": "Right Icon",
-              "description": "Right icon: a Lucide component or a canonical icon name string.",
-              "tier": "presentation"
-            },
-            "leftIcon": {
-              "type": "icon",
-              "label": "Left Icon",
-              "description": "Left icon: a Lucide component or a canonical icon name string (e.g. 'plus', 'trash').",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "primary",
-              "label": "Variant",
-              "description": "variant prop",
-              "tier": "presentation",
-              "values": [
-                "primary",
-                "secondary",
-                "ghost",
-                "danger",
-                "success",
-                "warning",
-                "default"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "iconRight": {
-              "type": "icon",
-              "label": "Icon Right",
-              "description": "Alias for rightIcon",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ButtonOrbital",
       "pages": [
         {
           "name": "ButtonPage",
@@ -197,7 +25,179 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "actionPayload": {
+              "default": {},
+              "description": "Payload to include with the action event",
+              "label": "Action Payload",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the root element.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "disabled": {
+              "default": false,
+              "description": "Disable the button (greys out, blocks click events)",
+              "label": "Disabled",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "icon": {
+              "default": "circle",
+              "description": "Alias for leftIcon",
+              "label": "Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "iconRight": {
+              "description": "Alias for rightIcon",
+              "label": "Icon Right",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "isLoading prop",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Button label text (alternative to children for schema-driven rendering)",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "leftIcon": {
+              "description": "Left icon: a Lucide component or a canonical icon name string (e.g. 'plus', 'trash').",
+              "label": "Left Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "rightIcon": {
+              "description": "Right icon: a Lucide component or a canonical icon name string.",
+              "label": "Right Icon",
+              "tier": "presentation",
+              "type": "icon"
+            },
+            "size": {
+              "default": "md",
+              "description": "size prop",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "variant": {
+              "default": "primary",
+              "description": "variant prop",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "primary",
+                "secondary",
+                "ghost",
+                "danger",
+                "success",
+                "warning",
+                "default"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Declarative event name — emits UI:{action} via eventBus on click",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ButtonItem",
+          "name": "ButtonRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Declarative event name — emits UI:{action} via eventBus on click",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "actionPayload": "@config.actionPayload",
+                      "className": "@config.className",
+                      "disabled": "@config.disabled",
+                      "icon": "@config.icon",
+                      "iconRight": "@config.iconRight",
+                      "isLoading": "@config.isLoading",
+                      "label": "@config.label",
+                      "leftIcon": "@config.leftIcon",
+                      "rightIcon": "@config.rightIcon",
+                      "size": "@config.size",
+                      "type": "button",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

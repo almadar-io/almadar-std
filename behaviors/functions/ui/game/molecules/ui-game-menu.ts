@@ -46,20 +46,20 @@ export interface StdUiGameMenuSelectPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameMenuConfig {
-  /** Default: `[{"disabled":false,"navigatesTo":"Navigates To","id":"Id","subLabel":"Sub Label","variant":"primary","action":"Action","label":"Label"}]` */
-  menuItems?: EntityRow[];
-  /** Default: `"Logo"` */
-  logo?: string;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
   /** Default: `"Background"` */
   background?: string;
-  /** Default: `"Title"` */
-  title?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"variant":"primary","navigatesTo":"Navigates To","subLabel":"Sub Label","label":"Label","id":"Id","action":"Action","disabled":false}]` */
+  /** Default: `"Logo"` */
+  logo?: string;
+  /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"}]` */
+  menuItems?: EntityRow[];
+  /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"}]` */
   options?: EntityRow[];
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**

@@ -1,206 +1,20 @@
 {
-  "name": "ui-branching-logic-builder",
-  "version": "1.0.0",
   "description": "BranchingLogicBuilder — UI factory (1:1 with the @almadar/ui branching-logic-builder pattern).",
+  "name": "ui-branching-logic-builder",
   "orbitals": [
     {
-      "name": "BranchingLogicBuilderOrbital",
       "entity": {
-        "name": "BranchingLogicBuilderItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "BranchingLogicBuilderItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "BranchingLogicBuilderRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "BranchingLogicBuilderItem",
-          "emits": [
-            {
-              "event": "RULES_CHANGE",
-              "description": "onRulesChange prop",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "rules",
-                  "type": "[object]"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "RULES_CHANGE",
-                "name": "Rules Change",
-                "description": "onRulesChange prop",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "rules",
-                    "type": "[object]"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "rulesChangeEvent": "RULES_CHANGE",
-                      "questions": "@config.questions",
-                      "onRulesChange": "RULES_CHANGE",
-                      "type": "branching-logic-builder",
-                      "readOnly": "@config.readOnly",
-                      "rules": "@config.rules",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "questions": {
-              "type": "[BranchingLogicBuilderQuestionsItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "optionValues": [
-                    "Item"
-                  ],
-                  "label": "Label"
-                }
-              ],
-              "label": "Questions",
-              "description": "questions prop",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "optionValues": {
-                    "name": "optionValues",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "readOnly": {
-              "type": "boolean",
-              "default": false,
-              "label": "Read Only",
-              "description": "readOnly prop",
-              "tier": "presentation"
-            },
-            "rules": {
-              "type": "[BranchingLogicBuilderRulesItem]",
-              "default": [
-                {
-                  "id": "Id",
-                  "sourceQuestionId": "Source Question Id",
-                  "operator": "equals",
-                  "value": [
-                    "Item"
-                  ],
-                  "targetQuestionId": "Target Question Id"
-                }
-              ],
-              "label": "Rules",
-              "description": "Rules. Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.data`). Narrowed to `[]` internally when the value isn't an array.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "operator": {
-                    "name": "operator",
-                    "type": "string",
-                    "required": true,
-                    "values": [
-                      "equals",
-                      "not-equals",
-                      "contains",
-                      "in"
-                    ]
-                  },
-                  "value": {
-                    "name": "value",
-                    "type": "array",
-                    "required": true,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "targetQuestionId": {
-                    "name": "targetQuestionId",
-                    "type": "string",
-                    "required": true
-                  },
-                  "sourceQuestionId": {
-                    "name": "sourceQuestionId",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "BranchingLogicBuilderOrbital",
       "pages": [
         {
           "name": "BranchingLogicBuilderPage",
@@ -211,7 +25,193 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "questions": {
+              "default": [
+                {
+                  "id": "Id",
+                  "label": "Label",
+                  "optionValues": [
+                    "Item"
+                  ]
+                }
+              ],
+              "description": "questions prop",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "optionValues": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "optionValues",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Questions",
+              "tier": "presentation",
+              "type": "[BranchingLogicBuilderQuestionsItem]"
+            },
+            "readOnly": {
+              "default": false,
+              "description": "readOnly prop",
+              "label": "Read Only",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "rules": {
+              "default": [
+                {
+                  "id": "Id",
+                  "operator": "equals",
+                  "sourceQuestionId": "Source Question Id",
+                  "targetQuestionId": "Target Question Id",
+                  "value": [
+                    "Item"
+                  ]
+                }
+              ],
+              "description": "Rules. Accepts either a typed array (direct consumers) or the runtime payload shape from a render-ui binding (`@payload.data`). Narrowed to `[]` internally when the value isn't an array.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "operator": {
+                    "name": "operator",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "equals",
+                      "not-equals",
+                      "contains",
+                      "in"
+                    ]
+                  },
+                  "sourceQuestionId": {
+                    "name": "sourceQuestionId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "targetQuestionId": {
+                    "name": "targetQuestionId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "value": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "value",
+                    "required": true,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Rules",
+              "tier": "presentation",
+              "type": "[BranchingLogicBuilderRulesItem]"
+            }
+          },
+          "emits": [
+            {
+              "description": "onRulesChange prop",
+              "event": "RULES_CHANGE",
+              "payloadSchema": [
+                {
+                  "name": "rules",
+                  "type": "[object]"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "BranchingLogicBuilderItem",
+          "name": "BranchingLogicBuilderRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "onRulesChange prop",
+                "key": "RULES_CHANGE",
+                "name": "Rules Change",
+                "payloadSchema": [
+                  {
+                    "name": "rules",
+                    "type": "[object]"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "onRulesChange": "RULES_CHANGE",
+                      "questions": "@config.questions",
+                      "readOnly": "@config.readOnly",
+                      "rules": "@config.rules",
+                      "rulesChangeEvent": "RULES_CHANGE",
+                      "type": "branching-logic-builder"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

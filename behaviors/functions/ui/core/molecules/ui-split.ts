@@ -39,25 +39,25 @@ export type StdUiSplitEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSplitConfig {
+  /** Default: `"stretch"` */
+  align?: 'start' | 'center' | 'end' | 'stretch';
   /** Default: `""` */
   className?: string;
+  error?: EntityRow;
   /** Default: `"md"` */
-  stackBreakpoint?: 'sm' | 'md' | 'lg' | 'xl';
+  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `false` */
   isLoading?: boolean;
-  error?: EntityRow;
+  /** Default: `"Left Class Name"` */
+  leftClassName?: string;
+  /** Default: `"1:1"` */
+  ratio?: '1:1' | '1:2' | '2:1' | '1:3' | '3:1' | '1:4' | '4:1' | '2:3' | '3:2';
+  /** Default: `false` */
+  reverse?: boolean;
   /** Default: `"Right Class Name"` */
   rightClassName?: string;
   /** Default: `"md"` */
-  gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `"1:1"` */
-  ratio?: '1:1' | '1:2' | '2:1' | '1:3' | '3:1' | '1:4' | '4:1' | '2:3' | '3:2';
-  /** Default: `"Left Class Name"` */
-  leftClassName?: string;
-  /** Default: `"stretch"` */
-  align?: 'start' | 'center' | 'end' | 'stretch';
-  /** Default: `false` */
-  reverse?: boolean;
+  stackBreakpoint?: 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `true` */
   stackOnMobile?: boolean;
 }

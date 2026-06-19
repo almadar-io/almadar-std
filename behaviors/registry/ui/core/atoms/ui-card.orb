@@ -1,190 +1,20 @@
 {
-  "name": "ui-card",
-  "version": "1.0.0",
   "description": "Card — UI factory (1:1 with the @almadar/ui card pattern).",
+  "name": "ui-card",
   "orbitals": [
     {
-      "name": "CardOrbital",
       "entity": {
-        "name": "CardItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "CardItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "CardRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "CardItem",
-          "emits": [
-            {
-              "event": "ACTION",
-              "description": "Declarative event key emitted on click for trait dispatch",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event key emitted on click for trait dispatch",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "variant": "@config.variant",
-                      "shadow": "@config.shadow",
-                      "loading": "@config.loading",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Sample content"
-                        }
-                      ],
-                      "subtitle": "@config.subtitle",
-                      "className": "@config.className",
-                      "look": "@config.look",
-                      "action": "ACTION",
-                      "padding": "@config.padding",
-                      "type": "card",
-                      "title": "@config.title"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "variant": {
-              "type": "string",
-              "default": "bordered",
-              "label": "Variant",
-              "description": "variant prop",
-              "tier": "presentation",
-              "values": [
-                "default",
-                "bordered",
-                "elevated",
-                "interactive"
-              ]
-            },
-            "subtitle": {
-              "type": "string",
-              "default": "Subtitle",
-              "label": "Subtitle",
-              "description": "Card subtitle - renders below title",
-              "tier": "presentation"
-            },
-            "padding": {
-              "type": "string",
-              "default": "md",
-              "label": "Padding",
-              "description": "padding prop",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "look": {
-              "type": "string",
-              "default": "elevated",
-              "label": "Look",
-              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
-              "tier": "presentation",
-              "values": [
-                "elevated",
-                "flat-bordered",
-                "borderless-divider",
-                "ticket",
-                "invoice",
-                "chip",
-                "tile-image-first"
-              ]
-            },
-            "shadow": {
-              "type": "string",
-              "default": "none",
-              "label": "Shadow",
-              "description": "Shadow size override",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "loading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Loading",
-              "description": "Shows a skeleton/spinner overlay while true.",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Title",
-              "label": "Title",
-              "description": "Card title - renders in header if provided",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "CardOrbital",
       "pages": [
         {
           "name": "CardPage",
@@ -195,7 +25,177 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the root element.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "loading": {
+              "default": false,
+              "description": "Shows a skeleton/spinner overlay while true.",
+              "label": "Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "look": {
+              "default": "elevated",
+              "description": "Layer 2 visual treatment — orthogonal to the semantic variant.",
+              "label": "Look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "elevated",
+                "flat-bordered",
+                "borderless-divider",
+                "ticket",
+                "invoice",
+                "chip",
+                "tile-image-first"
+              ]
+            },
+            "padding": {
+              "default": "md",
+              "description": "padding prop",
+              "label": "Padding",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "shadow": {
+              "default": "none",
+              "description": "Shadow size override",
+              "label": "Shadow",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "subtitle": {
+              "default": "Subtitle",
+              "description": "Card subtitle - renders below title",
+              "label": "Subtitle",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Title",
+              "description": "Card title - renders in header if provided",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "variant": {
+              "default": "bordered",
+              "description": "variant prop",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "default",
+                "bordered",
+                "elevated",
+                "interactive"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Declarative event key emitted on click for trait dispatch",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "CardItem",
+          "name": "CardRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Declarative event key emitted on click for trait dispatch",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "loading": "@config.loading",
+                      "look": "@config.look",
+                      "padding": "@config.padding",
+                      "shadow": "@config.shadow",
+                      "subtitle": "@config.subtitle",
+                      "title": "@config.title",
+                      "type": "card",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

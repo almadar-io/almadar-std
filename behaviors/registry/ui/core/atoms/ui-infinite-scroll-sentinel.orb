@@ -1,133 +1,20 @@
 {
-  "name": "ui-infinite-scroll-sentinel",
-  "version": "1.0.0",
   "description": "InfiniteScrollSentinel — UI factory (1:1 with the @almadar/ui infinite-scroll-sentinel pattern).",
+  "name": "ui-infinite-scroll-sentinel",
   "orbitals": [
     {
-      "name": "InfiniteScrollSentinelOrbital",
       "entity": {
-        "name": "InfiniteScrollSentinelItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "InfiniteScrollSentinelItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "InfiniteScrollSentinelRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "InfiniteScrollSentinelItem",
-          "emits": [
-            {
-              "event": "LOAD_MORE",
-              "description": "Event name to emit when load-more is triggered (emitted as UI:{loadMoreEvent})",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "LOAD_MORE",
-                "name": "Load More",
-                "description": "Event name to emit when load-more is triggered (emitted as UI:{loadMoreEvent})",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "hasMore": "@config.hasMore",
-                      "loadMoreEvent": "LOAD_MORE",
-                      "threshold": "@config.threshold",
-                      "className": "@config.className",
-                      "type": "infinite-scroll-sentinel",
-                      "loadMorePayload": "@config.loadMorePayload",
-                      "isLoading": "@config.isLoading"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "loadMorePayload": {
-              "type": "json",
-              "default": {},
-              "label": "Load More Payload",
-              "description": "Optional payload to include with the load-more event",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional class names",
-              "tier": "presentation"
-            },
-            "hasMore": {
-              "type": "boolean",
-              "default": true,
-              "label": "Has More",
-              "description": "Whether there are more items to load",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Whether a load operation is currently in progress",
-              "tier": "presentation"
-            },
-            "threshold": {
-              "type": "string",
-              "default": "200px",
-              "label": "Threshold",
-              "description": "IntersectionObserver rootMargin for early trigger",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "InfiniteScrollSentinelOrbital",
       "pages": [
         {
           "name": "InfiniteScrollSentinelPage",
@@ -138,7 +25,120 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional class names",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "hasMore": {
+              "default": true,
+              "description": "Whether there are more items to load",
+              "label": "Has More",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Whether a load operation is currently in progress",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "loadMorePayload": {
+              "default": {},
+              "description": "Optional payload to include with the load-more event",
+              "label": "Load More Payload",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "threshold": {
+              "default": "200px",
+              "description": "IntersectionObserver rootMargin for early trigger",
+              "label": "Threshold",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Event name to emit when load-more is triggered (emitted as UI:{loadMoreEvent})",
+              "event": "LOAD_MORE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "InfiniteScrollSentinelItem",
+          "name": "InfiniteScrollSentinelRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Event name to emit when load-more is triggered (emitted as UI:{loadMoreEvent})",
+                "key": "LOAD_MORE",
+                "name": "Load More",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "hasMore": "@config.hasMore",
+                      "isLoading": "@config.isLoading",
+                      "loadMoreEvent": "LOAD_MORE",
+                      "loadMorePayload": "@config.loadMorePayload",
+                      "threshold": "@config.threshold",
+                      "type": "infinite-scroll-sentinel"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

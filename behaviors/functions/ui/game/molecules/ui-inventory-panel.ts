@@ -63,17 +63,17 @@ export interface StdUiInventoryPanelConfig {
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
-  slots?: number;
-  /** Default: `0` */
   columns?: number;
-  /** Default: `[{"description":"Description","name":"Name","type":"Type","id":"Id","quantity":1,"sprite":"Sprite"}]` */
+  /** Default: `[{"description":"Description","id":"Id","name":"Name","quantity":1,"sprite":"Sprite","type":"Type"}]` */
   items?: EntityRow[];
   /** Default: `0` */
   selectedSlot?: number;
-  /** Default: `48` */
-  slotSize?: number;
   /** Default: `true` */
   showTooltips?: boolean;
+  /** Default: `48` */
+  slotSize?: number;
+  /** Default: `0` */
+  slots?: number;
 }
 
 /**

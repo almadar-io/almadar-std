@@ -1,157 +1,20 @@
 {
-  "name": "ui-radio",
-  "version": "1.0.0",
   "description": "Radio — UI factory (1:1 with the @almadar/ui radio pattern).",
+  "name": "ui-radio",
   "orbitals": [
     {
-      "name": "RadioOrbital",
       "entity": {
-        "name": "RadioItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "RadioItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "RadioRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "RadioItem",
-          "emits": [
-            {
-              "event": "ACTION",
-              "description": "Declarative event name for trait dispatch",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ACTION",
-                "name": "Action",
-                "description": "Declarative event name for trait dispatch",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "options": "@config.options",
-                      "type": "radio",
-                      "helperText": "@config.helperText",
-                      "action": "ACTION",
-                      "error": "@config.error",
-                      "size": "@config.size",
-                      "className": "@config.className",
-                      "value": "@config.value",
-                      "label": "@config.label"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "error": {
-              "type": "string",
-              "default": "",
-              "label": "Error",
-              "description": "Error message displayed below the radio button",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "md",
-              "label": "Size",
-              "description": "Size of the radio button",
-              "tier": "presentation",
-              "values": [
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "options": {
-              "type": "[string]",
-              "default": [],
-              "label": "Options",
-              "description": "Radio options (string array or SelectOption array)",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "label": {
-              "type": "string",
-              "default": "Label",
-              "label": "Label",
-              "description": "Label text displayed next to the radio button",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes applied to the root element.",
-              "tier": "presentation"
-            },
-            "helperText": {
-              "type": "string",
-              "default": "Helper Text",
-              "label": "Helper Text",
-              "description": "Helper text displayed below the radio button",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "string",
-              "default": "Value",
-              "label": "Value",
-              "description": "Current selected value",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "RadioOrbital",
       "pages": [
         {
           "name": "RadioPage",
@@ -162,7 +25,144 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes applied to the root element.",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "default": "",
+              "description": "Error message displayed below the radio button",
+              "label": "Error",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "helperText": {
+              "default": "Helper Text",
+              "description": "Helper text displayed below the radio button",
+              "label": "Helper Text",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "label": {
+              "default": "Label",
+              "description": "Label text displayed next to the radio button",
+              "label": "Label",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "options": {
+              "default": [],
+              "description": "Radio options (string array or SelectOption array)",
+              "items": {
+                "type": "string"
+              },
+              "label": "Options",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "size": {
+              "default": "md",
+              "description": "Size of the radio button",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "value": {
+              "default": "Value",
+              "description": "Current selected value",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Declarative event name for trait dispatch",
+              "event": "ACTION",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "RadioItem",
+          "name": "RadioRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Declarative event name for trait dispatch",
+                "key": "ACTION",
+                "name": "Action",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "action": "ACTION",
+                      "className": "@config.className",
+                      "error": "@config.error",
+                      "helperText": "@config.helperText",
+                      "label": "@config.label",
+                      "options": "@config.options",
+                      "size": "@config.size",
+                      "type": "radio",
+                      "value": "@config.value"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

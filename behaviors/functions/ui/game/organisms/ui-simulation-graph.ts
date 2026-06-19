@@ -39,22 +39,22 @@ export type StdUiSimulationGraphEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSimulationGraphConfig {
-  /** Default: `[{"value":1,"time":1}]` */
+  /** Default: `""` */
+  className?: string;
+  /** Default: `"#e94560"` */
+  color?: string;
+  /** Default: `[{"time":1,"value":1}]` */
   data?: EntityRow[];
-  /** Default: `300` */
-  width?: number;
-  /** Default: `"Label"` */
-  label?: string;
   /** Default: `120` */
   height?: number;
+  /** Default: `"Label"` */
+  label?: string;
   /** Default: `200` */
   maxPoints?: number;
   /** Default: `"Unit"` */
   unit?: string;
-  /** Default: `"#e94560"` */
-  color?: string;
-  /** Default: `""` */
-  className?: string;
+  /** Default: `300` */
+  width?: number;
 }
 
 /**
@@ -115,8 +115,8 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -127,131 +127,131 @@ export function stdUiSimulationGraphSimulationGraphOrbital(params: StdUiSimulati
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'SimulationGraphRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
-        'linkedEntity': 'SimulationGraphItem',
-        'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'className prop',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'color': {
+            'default': '#e94560',
+            'description': 'color prop',
+            'label': 'Color',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'data': {
+            'default': [
+              {
+                'time': 1,
+                'value': 1,
+              },
+            ],
+            'description': 'data prop',
+            'items': {
+              'properties': {
+                'time': {
+                  'name': 'time',
+                  'required': true,
+                  'type': 'number',
+                },
+                'value': {
+                  'name': 'value',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
             },
-          ],
+            'label': 'Data',
+            'tier': 'presentation',
+            'type': '[SimulationGraphDataItem]',
+          },
+          'height': {
+            'default': 120,
+            'description': 'height prop',
+            'label': 'Height',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'label': {
+            'default': 'Label',
+            'description': 'label prop',
+            'label': 'Label',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'maxPoints': {
+            'default': 200,
+            'description': 'maxPoints prop',
+            'label': 'Max Points',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'unit': {
+            'default': 'Unit',
+            'description': 'unit prop',
+            'label': 'Unit',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'width': {
+            'default': 300,
+            'description': 'width prop',
+            'label': 'Width',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
+        'linkedEntity': 'SimulationGraphItem',
+        'name': 'SimulationGraphRender',
+        'scope': 'instance',
+        'stateMachine': {
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'className': '@config.className',
                     'color': '@config.color',
                     'data': '@config.data',
                     'height': '@config.height',
-                    'className': '@config.className',
-                    'width': '@config.width',
-                    'type': 'simulation-graph',
-                    'unit': '@config.unit',
                     'label': '@config.label',
                     'maxPoints': '@config.maxPoints',
+                    'type': 'simulation-graph',
+                    'unit': '@config.unit',
+                    'width': '@config.width',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'data': {
-            'type': '[SimulationGraphDataItem]',
-            'default': [
-              {
-                'value': 1,
-                'time': 1,
-              },
-            ],
-            'label': 'Data',
-            'description': 'data prop',
-            'tier': 'presentation',
-            'items': {
-              'type': 'object',
-              'properties': {
-                'value': {
-                  'name': 'value',
-                  'type': 'number',
-                  'required': true,
-                },
-                'time': {
-                  'name': 'time',
-                  'type': 'number',
-                  'required': true,
-                },
-              },
-            },
-          },
-          'width': {
-            'type': 'number',
-            'default': 300,
-            'label': 'Width',
-            'description': 'width prop',
-            'tier': 'presentation',
-          },
-          'label': {
-            'type': 'string',
-            'default': 'Label',
-            'label': 'Label',
-            'description': 'label prop',
-            'tier': 'presentation',
-          },
-          'height': {
-            'type': 'number',
-            'default': 120,
-            'label': 'Height',
-            'description': 'height prop',
-            'tier': 'presentation',
-          },
-          'maxPoints': {
-            'type': 'number',
-            'default': 200,
-            'label': 'Max Points',
-            'description': 'maxPoints prop',
-            'tier': 'presentation',
-          },
-          'unit': {
-            'type': 'string',
-            'default': 'Unit',
-            'label': 'Unit',
-            'description': 'unit prop',
-            'tier': 'presentation',
-          },
-          'color': {
-            'type': 'string',
-            'default': '#e94560',
-            'label': 'Color',
-            'description': 'color prop',
-            'tier': 'presentation',
-          },
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'className prop',
-            'tier': 'presentation',
-          },
-        },
-        'scope': 'instance',
       } as never, 'SimulationGraphItem', canonicalName) as never,
     ],
     pages: [

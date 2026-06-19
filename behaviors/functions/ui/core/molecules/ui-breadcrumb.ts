@@ -39,13 +39,13 @@ export type StdUiBreadcrumbEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBreadcrumbConfig {
-  /** Default: `0` */
-  maxItems?: number;
-  /** Default: `[{"icon":"circle","label":"Label","path":"Path","href":"Href","isCurrent":false}]` */
-  items?: EntityRow[];
-  separator?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `[{"href":"Href","icon":"circle","isCurrent":false,"label":"Label","path":"Path"}]` */
+  items?: EntityRow[];
+  /** Default: `0` */
+  maxItems?: number;
+  separator?: unknown;
 }
 
 /**

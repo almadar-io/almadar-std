@@ -1,115 +1,20 @@
 {
-  "name": "ui-flip-container",
-  "version": "1.0.0",
   "description": "FlipContainer — UI factory (1:1 with the @almadar/ui flip-container pattern).",
+  "name": "ui-flip-container",
   "orbitals": [
     {
-      "name": "FlipContainerOrbital",
       "entity": {
-        "name": "FlipContainerItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "FlipContainerItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "FlipContainerRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "FlipContainerItem",
-          "emits": [
-            {
-              "event": "CLICK",
-              "description": "Click handler on the outer wrapper",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "CLICK",
-                "name": "Click",
-                "description": "Click handler on the outer wrapper",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "flipped": "@config.flipped",
-                      "type": "flip-container",
-                      "children": [
-                        {
-                          "type": "typography",
-                          "content": "Sample content"
-                        }
-                      ],
-                      "onClick": "CLICK",
-                      "className": "@config.className"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Optional className for the outer wrapper",
-              "tier": "presentation"
-            },
-            "flipped": {
-              "type": "boolean",
-              "default": false,
-              "label": "Flipped",
-              "description": "Whether the container is flipped (rotateY 180deg)",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "FlipContainerOrbital",
       "pages": [
         {
           "name": "FlipContainerPage",
@@ -120,7 +25,102 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Optional className for the outer wrapper",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "flipped": {
+              "default": false,
+              "description": "Whether the container is flipped (rotateY 180deg)",
+              "label": "Flipped",
+              "tier": "presentation",
+              "type": "boolean"
+            }
+          },
+          "emits": [
+            {
+              "description": "Click handler on the outer wrapper",
+              "event": "CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FlipContainerItem",
+          "name": "FlipContainerRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Click handler on the outer wrapper",
+                "key": "CLICK",
+                "name": "Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "flipped": "@config.flipped",
+                      "onClick": "CLICK",
+                      "type": "flip-container"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

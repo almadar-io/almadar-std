@@ -39,19 +39,19 @@ export type StdUiSplitSectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSplitSectionConfig {
-  /** Default: `"right"` */
-  imagePosition?: 'left' | 'right';
-  /** Default: `{"src":{},"alt":"Alt"}` */
-  image?: EntityRow;
-  description?: unknown;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `[]` */
-  bullets?: string[];
   /** Default: `"default"` */
   background?: 'default' | 'alt';
+  /** Default: `[]` */
+  bullets?: string[];
   /** Default: `""` */
   className?: string;
+  description?: unknown;
+  /** Default: `{"alt":"Alt","src":{}}` */
+  image?: EntityRow;
+  /** Default: `"right"` */
+  imagePosition?: 'left' | 'right';
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**

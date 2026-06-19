@@ -62,22 +62,22 @@ export interface StdUiSelectValueChangePayload {
 export interface StdUiSelectConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"value":"Value","label":"Label"}]` */
-  options?: EntityRow[];
-  /** Default: `false` */
-  searchable?: boolean;
   /** Default: `false` */
   clearable?: boolean;
   /** Default: `""` */
   error?: string;
-  /** Default: `[]` */
-  value?: string[];
+  /** Default: `[{"label":"Label","options":[{"label":"Label","value":"Value"}]}]` */
+  groups?: EntityRow[];
+  /** Default: `false` */
+  multiple?: boolean;
+  /** Default: `[{"label":"Label","value":"Value"}]` */
+  options?: EntityRow[];
   /** Default: `"Placeholder"` */
   placeholder?: string;
   /** Default: `false` */
-  multiple?: boolean;
-  /** Default: `[{"options":[{"label":"Label","value":"Value"}],"label":"Label"}]` */
-  groups?: EntityRow[];
+  searchable?: boolean;
+  /** Default: `[]` */
+  value?: string[];
 }
 
 /**

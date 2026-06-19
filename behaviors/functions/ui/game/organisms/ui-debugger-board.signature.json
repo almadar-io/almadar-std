@@ -7,7 +7,23 @@
     "entities": [
       {
         "name": "DebuggerBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "lines",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -15,7 +31,10 @@
       {
         "name": "DebuggerBoardRender",
         "emittedEvents": [
-          "COMPLETE"
+          "COMPLETE",
+          "TOGGLE_FLAG",
+          "CHECK",
+          "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
@@ -26,7 +45,29 @@
             "tier": "essential"
           },
           {
+            "name": "TOGGLE_FLAG",
+            "direction": "emit",
+            "description": "Flip the flag on a reviewed code line",
+            "tier": "essential"
+          },
+          {
+            "name": "CHECK",
+            "direction": "emit",
+            "description": "Submit the current flag set for scoring",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Reset the puzzle and play again",
+            "tier": "essential"
+          },
+          {
             "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "START",
             "direction": "listen"
           }
         ],
@@ -53,6 +94,11 @@
             "description": "Error state (UiError)",
             "tier": "presentation",
             "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
               "message": {
                 "name": "message",
                 "required": true,
@@ -60,11 +106,6 @@
               },
               "name": {
                 "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "code": {
-                "name": "code",
                 "required": false,
                 "type": "string"
               },
@@ -82,6 +123,77 @@
             "label": "Is Loading",
             "description": "Loading state indicator",
             "tier": "presentation"
+          },
+          {
+            "key": "lines",
+            "type": "[DebuggerBoardLinesItem]",
+            "default": [
+              {
+                "content": "function add(a, b) {",
+                "id": "l1",
+                "isBug": false,
+                "isFlagged": false
+              },
+              {
+                "content": "  return a - b;",
+                "explanation": "Should be a + b for an add function.",
+                "id": "l2",
+                "isBug": true,
+                "isFlagged": false
+              },
+              {
+                "content": "}",
+                "id": "l3",
+                "isBug": false,
+                "isFlagged": false
+              },
+              {
+                "content": "const total = add(2, 3);",
+                "id": "l4",
+                "isBug": false,
+                "isFlagged": false
+              },
+              {
+                "content": "console.log(totl);",
+                "explanation": "Typo: 'totl' should be 'total'.",
+                "id": "l5",
+                "isBug": true,
+                "isFlagged": false
+              }
+            ],
+            "label": "Lines",
+            "description": "Direct code-line data — takes priority over entity-derived lines.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "content": {
+                  "name": "content",
+                  "required": false,
+                  "type": "string"
+                },
+                "explanation": {
+                  "name": "explanation",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "isBug": {
+                  "name": "isBug",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "isFlagged": {
+                  "name": "isFlagged",
+                  "required": false,
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "pageProp",
@@ -152,7 +264,11 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "attempts",
+            "lines",
+            "result"
+          ]
         }
       }
     ],
@@ -164,7 +280,10 @@
       }
     ],
     "emittedEvents": [
-      "COMPLETE"
+      "CHECK",
+      "COMPLETE",
+      "PLAY_AGAIN",
+      "TOGGLE_FLAG"
     ],
     "listenedEvents": []
   }

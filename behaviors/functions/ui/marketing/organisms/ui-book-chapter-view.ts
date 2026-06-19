@@ -103,8 +103,8 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -115,32 +115,50 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'BookChapterViewRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
+        'config': {
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'direction': {
+            'default': 'rtl',
+            'description': 'direction prop',
+            'label': 'Direction',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'rtl',
+              'ltr',
+            ],
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
         'linkedEntity': 'BookChapterViewItem',
+        'name': 'BookChapterViewRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'fetch',
@@ -151,37 +169,19 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                   'render-ui',
                   'main',
                   {
-                    'type': 'book-chapter-view',
                     'chapter': '@entity',
                     'className': '@config.className',
                     'direction': '@config.direction',
+                    'type': 'book-chapter-view',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'direction': {
-            'type': 'string',
-            'default': 'rtl',
-            'label': 'Direction',
-            'description': 'direction prop',
-            'tier': 'presentation',
-            'values': [
-              'rtl',
-              'ltr',
-            ],
-          },
-        },
-        'scope': 'instance',
       } as never, 'BookChapterViewItem', canonicalName) as never,
     ],
     pages: [

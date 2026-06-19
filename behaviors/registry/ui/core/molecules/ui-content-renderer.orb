@@ -1,236 +1,20 @@
 {
-  "name": "ui-content-renderer",
-  "version": "1.0.0",
   "description": "ContentRenderer — UI factory (1:1 with the @almadar/ui content-renderer pattern).",
+  "name": "ui-content-renderer",
   "orbitals": [
     {
-      "name": "ContentRendererOrbital",
       "entity": {
-        "name": "ContentRendererItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ContentRendererItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "ContentRendererRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ContentRendererItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "sortBy": "@config.sortBy",
-                      "page": "@config.pageProp",
-                      "selectedIds": "@config.selectedIds",
-                      "error": "@config.error",
-                      "content": "@config.content",
-                      "totalCount": "@config.totalCount",
-                      "sortDirection": "@config.sortDirection",
-                      "direction": "@config.direction",
-                      "type": "content-renderer",
-                      "activeFilters": "@config.activeFilters",
-                      "className": "@config.className",
-                      "isLoading": "@config.isLoading",
-                      "pageSize": "@config.pageSize",
-                      "searchValue": "@config.searchValue",
-                      "segments": "@config.segments"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "activeFilters": {
-              "type": "json",
-              "label": "Active Filters",
-              "description": "Active filters",
-              "tier": "presentation"
-            },
-            "sortDirection": {
-              "type": "string",
-              "default": "asc",
-              "label": "Sort Direction",
-              "description": "Current sort direction",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "ContentRendererError",
-              "label": "Error",
-              "description": "Error state (UiError)",
-              "tier": "presentation",
-              "properties": {
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                }
-              }
-            },
-            "sortBy": {
-              "type": "string",
-              "default": "Sort By",
-              "label": "Sort By",
-              "description": "Current sort field",
-              "tier": "presentation"
-            },
-            "pageProp": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page",
-              "description": "Current page number",
-              "synonyms": "page",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state indicator",
-              "tier": "presentation"
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Page Size",
-              "description": "Number of items per page",
-              "tier": "presentation"
-            },
-            "totalCount": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Total Count",
-              "description": "Total number of items",
-              "tier": "presentation"
-            },
-            "selectedIds": {
-              "type": "[string]",
-              "default": [],
-              "label": "Selected Ids",
-              "description": "Currently selected item IDs",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "searchValue": {
-              "type": "string",
-              "default": "Search Value",
-              "label": "Search Value",
-              "description": "Current search query value",
-              "tier": "presentation"
-            },
-            "content": {
-              "type": "string",
-              "default": "Content",
-              "label": "Content",
-              "description": "Raw content string — auto-parsed into segments",
-              "tier": "presentation"
-            },
-            "segments": {
-              "type": "[ContentRendererSegmentsItem]",
-              "default": [
-                {
-                  "content": "Content",
-                  "type": "markdown"
-                }
-              ],
-              "label": "Segments",
-              "description": "Pre-parsed segments (overrides content)",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "content": {
-                    "name": "content",
-                    "type": "string",
-                    "required": true
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": true,
-                    "values": [
-                      "markdown",
-                      "code",
-                      "orbital",
-                      "quiz"
-                    ]
-                  }
-                }
-              }
-            },
-            "direction": {
-              "type": "string",
-              "default": "rtl",
-              "label": "Direction",
-              "description": "Text direction for markdown",
-              "tier": "presentation",
-              "values": [
-                "rtl",
-                "ltr"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ContentRendererOrbital",
       "pages": [
         {
           "name": "ContentRendererPage",
@@ -241,7 +25,223 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "activeFilters": {
+              "description": "Active filters",
+              "label": "Active Filters",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "content": {
+              "default": "Content",
+              "description": "Raw content string — auto-parsed into segments",
+              "label": "Content",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "direction": {
+              "default": "rtl",
+              "description": "Text direction for markdown",
+              "label": "Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "rtl",
+                "ltr"
+              ]
+            },
+            "error": {
+              "description": "Error state (UiError)",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "ContentRendererError"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "pageProp": {
+              "default": 0.0,
+              "description": "Current page number",
+              "label": "Page",
+              "synonyms": "page",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageSize": {
+              "default": 0.0,
+              "description": "Number of items per page",
+              "label": "Page Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "searchValue": {
+              "default": "Search Value",
+              "description": "Current search query value",
+              "label": "Search Value",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "segments": {
+              "default": [
+                {
+                  "content": "Content",
+                  "type": "markdown"
+                }
+              ],
+              "description": "Pre-parsed segments (overrides content)",
+              "items": {
+                "properties": {
+                  "content": {
+                    "name": "content",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string",
+                    "values": [
+                      "markdown",
+                      "code",
+                      "orbital",
+                      "quiz"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Segments",
+              "tier": "presentation",
+              "type": "[ContentRendererSegmentsItem]"
+            },
+            "selectedIds": {
+              "default": [],
+              "description": "Currently selected item IDs",
+              "items": {
+                "type": "string"
+              },
+              "label": "Selected Ids",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "sortBy": {
+              "default": "Sort By",
+              "description": "Current sort field",
+              "label": "Sort By",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "sortDirection": {
+              "default": "asc",
+              "description": "Current sort direction",
+              "label": "Sort Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "totalCount": {
+              "default": 0.0,
+              "description": "Total number of items",
+              "label": "Total Count",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ContentRendererItem",
+          "name": "ContentRendererRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "activeFilters": "@config.activeFilters",
+                      "className": "@config.className",
+                      "content": "@config.content",
+                      "direction": "@config.direction",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "searchValue": "@config.searchValue",
+                      "segments": "@config.segments",
+                      "selectedIds": "@config.selectedIds",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "totalCount": "@config.totalCount",
+                      "type": "content-renderer"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

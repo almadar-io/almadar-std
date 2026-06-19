@@ -39,16 +39,16 @@ export type StdUiBookNavBarEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiBookNavBarConfig {
+  /** Default: `"Chapter Title"` */
+  chapterTitle?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `0` */
   currentPage?: number;
-  /** Default: `"Chapter Title"` */
-  chapterTitle?: string;
-  /** Default: `0` */
-  totalPages?: number;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
+  /** Default: `0` */
+  totalPages?: number;
 }
 
 /**
@@ -109,8 +109,8 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -121,91 +121,91 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
     } as Entity,
     traits: [
       rebindInlineTraitEntity({
-        'name': 'BookNavBarRender',
-        'entityRebindable': true,
-        'entityContract': {
-          'requires': [],
-          'provides': [],
-        },
         'category': 'interaction',
+        'config': {
+          'chapterTitle': {
+            'default': 'Chapter Title',
+            'description': 'chapterTitle prop',
+            'label': 'Chapter Title',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'className': {
+            'default': '',
+            'description': 'Additional CSS classes',
+            'label': 'Class Name',
+            'tier': 'presentation',
+            'type': 'string',
+          },
+          'currentPage': {
+            'default': 0,
+            'description': 'currentPage prop',
+            'label': 'Current Page',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+          'direction': {
+            'default': 'rtl',
+            'description': 'direction prop',
+            'label': 'Direction',
+            'tier': 'presentation',
+            'type': 'string',
+            'values': [
+              'rtl',
+              'ltr',
+            ],
+          },
+          'totalPages': {
+            'default': 0,
+            'description': 'totalPages prop',
+            'label': 'Total Pages',
+            'tier': 'presentation',
+            'type': 'number',
+          },
+        },
+        'entityContract': {
+          'provides': [],
+          'requires': [],
+        },
+        'entityRebindable': true,
         'linkedEntity': 'BookNavBarItem',
+        'name': 'BookNavBarRender',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
           ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
+            },
+          ],
           'transitions': [
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'totalPages': '@config.totalPages',
                     'chapterTitle': '@config.chapterTitle',
-                    'type': 'book-nav-bar',
-                    'currentPage': '@config.currentPage',
                     'className': '@config.className',
+                    'currentPage': '@config.currentPage',
                     'direction': '@config.direction',
+                    'totalPages': '@config.totalPages',
+                    'type': 'book-nav-bar',
                   },
                 ],
               ],
+              'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'className': {
-            'type': 'string',
-            'default': '',
-            'label': 'Class Name',
-            'description': 'Additional CSS classes',
-            'tier': 'presentation',
-          },
-          'currentPage': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Current Page',
-            'description': 'currentPage prop',
-            'tier': 'presentation',
-          },
-          'chapterTitle': {
-            'type': 'string',
-            'default': 'Chapter Title',
-            'label': 'Chapter Title',
-            'description': 'chapterTitle prop',
-            'tier': 'presentation',
-          },
-          'totalPages': {
-            'type': 'number',
-            'default': 0,
-            'label': 'Total Pages',
-            'description': 'totalPages prop',
-            'tier': 'presentation',
-          },
-          'direction': {
-            'type': 'string',
-            'default': 'rtl',
-            'label': 'Direction',
-            'description': 'direction prop',
-            'tier': 'presentation',
-            'values': [
-              'rtl',
-              'ltr',
-            ],
-          },
-        },
-        'scope': 'instance',
       } as never, 'BookNavBarItem', canonicalName) as never,
     ],
     pages: [

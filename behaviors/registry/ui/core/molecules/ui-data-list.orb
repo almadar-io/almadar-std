@@ -1,716 +1,20 @@
 {
-  "name": "ui-data-list",
-  "version": "1.0.0",
   "description": "DataList — UI factory (1:1 with the @almadar/ui data-list pattern).",
+  "name": "ui-data-list",
   "orbitals": [
     {
-      "name": "DataListOrbital",
       "entity": {
-        "name": "DataListItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "DataListItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "DataListRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "DataListItem",
-          "emits": [
-            {
-              "event": "REORDER",
-              "description": "Event emitted on reorder: UI:{reorderEvent} with { fromIndex, toIndex }",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "ITEM_CLICK",
-              "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win).",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "SWIPE_LEFT",
-              "description": "Event emitted on left swipe: UI:{swipeLeftEvent} with { row }",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "SWIPE_RIGHT",
-              "description": "Event emitted on right swipe: UI:{swipeRightEvent} with { row }",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "LONG_PRESS",
-              "description": "Event emitted on long press: UI:{longPressEvent} with { row }",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "LOAD_MORE",
-              "description": "Event emitted when more items needed: UI:{loadMoreEvent}",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "VIEW",
-              "description": "User opened a record from the list.",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
-                "description": "User opened a record from the list.",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "REORDER",
-                "name": "Reorder",
-                "description": "Event emitted on reorder: UI:{reorderEvent} with { fromIndex, toIndex }",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "ITEM_CLICK",
-                "name": "Item Click",
-                "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win).",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SWIPE_LEFT",
-                "name": "Swipe Left",
-                "description": "Event emitted on left swipe: UI:{swipeLeftEvent} with { row }",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SWIPE_RIGHT",
-                "name": "Swipe Right",
-                "description": "Event emitted on right swipe: UI:{swipeRightEvent} with { row }",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "LONG_PRESS",
-                "name": "Long Press",
-                "description": "Event emitted on long press: UI:{longPressEvent} with { row }",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "LOAD_MORE",
-                "name": "Load More",
-                "description": "Event emitted when more items needed: UI:{loadMoreEvent}",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "DataListItem",
-                    {}
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "@config.gap",
-                      "accepts": "@config.accepts",
-                      "maxInlineActions": "@config.maxInlineActions",
-                      "positionEvent": "@config.positionEvent",
-                      "dndItemIdField": "@config.dndItemIdField",
-                      "swipeRightActions": "@config.swipeRightActions",
-                      "groupBy": "@config.groupBy",
-                      "itemClickEvent": "ITEM_CLICK",
-                      "fields": "@config.fields",
-                      "sortable": "@config.sortable",
-                      "entity": "@entity",
-                      "dndRoot": "@config.dndRoot",
-                      "infiniteScroll": "@config.infiniteScroll",
-                      "look": "@config.look",
-                      "error": "@config.error",
-                      "columns": "@config.columns",
-                      "senderField": "@config.senderField",
-                      "reorderable": "@config.reorderable",
-                      "reorderEvent": "REORDER",
-                      "className": "@config.className",
-                      "dropEvent": "@config.dropEvent",
-                      "swipeRightEvent": "SWIPE_RIGHT",
-                      "type": "data-list",
-                      "variant": "@config.variant",
-                      "currentUser": "@config.currentUser",
-                      "hasMore": "@config.hasMore",
-                      "swipeLeftActions": "@config.swipeLeftActions",
-                      "dragGroup": "@config.dragGroup",
-                      "loadMoreEvent": "LOAD_MORE",
-                      "itemActions": [
-                        {
-                          "event": "VIEW",
-                          "label": "View"
-                        }
-                      ],
-                      "isLoading": "@config.isLoading",
-                      "swipeLeftEvent": "SWIPE_LEFT",
-                      "pageSize": "@config.pageSize",
-                      "longPressEvent": "LONG_PRESS"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "VIEW",
-                "effects": [
-                  [
-                    "emit",
-                    "VIEW",
-                    {}
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "currentUser": {
-              "type": "string",
-              "default": "Current User",
-              "label": "Current User",
-              "description": "Current user identifier; messages matching this value align right (used with variant: 'message')",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "swipeLeftActions": {
-              "type": "[DataListSwipeLeftActionsItem]",
-              "default": [
-                {
-                  "icon": "circle",
-                  "variant": "primary",
-                  "label": "Label"
-                }
-              ],
-              "label": "Swipe Left Actions",
-              "description": "Actions revealed on left swipe",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "danger",
-                      "ghost"
-                    ]
-                  }
-                }
-              }
-            },
-            "hasMore": {
-              "type": "boolean",
-              "default": false,
-              "label": "Has More",
-              "description": "Whether more items are available for infinite scroll",
-              "tier": "presentation"
-            },
-            "maxInlineActions": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Max Inline Actions",
-              "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
-              "tier": "presentation"
-            },
-            "groupBy": {
-              "type": "string",
-              "default": "Group By",
-              "label": "Group By",
-              "description": "Group items by a field value (renders section headers between groups)",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Variant",
-              "description": "Visual variant",
-              "tier": "presentation",
-              "values": [
-                "default",
-                "card",
-                "compact",
-                "message"
-              ]
-            },
-            "dndRoot": {
-              "type": "boolean",
-              "default": false,
-              "label": "Dnd Root",
-              "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
-              "tier": "presentation"
-            },
-            "sortable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Sortable",
-              "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
-              "tier": "presentation"
-            },
-            "dndItemIdField": {
-              "type": "string",
-              "default": "Dnd Item Id Field",
-              "label": "Dnd Item Id Field",
-              "description": "Row field used as the @dnd-kit draggable id (default 'id')",
-              "tier": "presentation"
-            },
-            "dragGroup": {
-              "type": "string",
-              "default": "Drag Group",
-              "label": "Drag Group",
-              "description": "When set, items in this container are draggable and announce this group as their source",
-              "tier": "presentation"
-            },
-            "pageSize": {
-              "type": "number",
-              "default": 5.0,
-              "label": "Page Size",
-              "description": "Max items to show before 'Show More' button. Defaults to 5. Set to 0 to disable.",
-              "tier": "presentation"
-            },
-            "senderField": {
-              "type": "string",
-              "default": "Sender Field",
-              "label": "Sender Field",
-              "description": "Field name identifying the sender (used with variant: 'message')",
-              "tier": "presentation"
-            },
-            "error": {
-              "type": "DataListError",
-              "label": "Error",
-              "description": "Error state",
-              "tier": "presentation",
-              "properties": {
-                "code": {
-                  "name": "code",
-                  "type": "string",
-                  "required": false
-                },
-                "stack": {
-                  "name": "stack",
-                  "type": "string",
-                  "required": false
-                },
-                "name": {
-                  "name": "name",
-                  "type": "string",
-                  "required": false
-                },
-                "message": {
-                  "name": "message",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "look": {
-              "type": "string",
-              "default": "dense",
-              "label": "Look",
-              "description": "Layer 2 visual treatment — mirrors the `entity-table` look enum so data-grid / data-list / entity-table share one knob name from authors.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            },
-            "columns": {
-              "type": "[DataListColumnsItem]",
-              "default": [
-                {
-                  "icon": "circle",
-                  "label": "Label",
-                  "format": "date",
-                  "name": "Name",
-                  "variant": "h3"
-                }
-              ],
-              "label": "Columns",
-              "description": "Alias for `fields` — the compiler emits `columns` for field defs.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "date",
-                      "currency",
-                      "number",
-                      "boolean",
-                      "percent"
-                    ]
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "h3",
-                      "h4",
-                      "body",
-                      "caption",
-                      "badge",
-                      "small",
-                      "progress"
-                    ]
-                  }
-                }
-              }
-            },
-            "accepts": {
-              "type": "string",
-              "default": "Accepts",
-              "label": "Accepts",
-              "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
-              "tier": "presentation"
-            },
-            "reorderable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Reorderable",
-              "description": "Enable drag-to-reorder with grip handles",
-              "tier": "presentation"
-            },
-            "dropEvent": {
-              "type": "string",
-              "default": "Drop Event",
-              "label": "Drop Event",
-              "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
-              "tier": "presentation"
-            },
-            "infiniteScroll": {
-              "type": "boolean",
-              "default": false,
-              "label": "Infinite Scroll",
-              "description": "Enable infinite scroll loading",
-              "tier": "presentation"
-            },
-            "positionEvent": {
-              "type": "string",
-              "default": "Position Event",
-              "label": "Position Event",
-              "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
-              "tier": "presentation"
-            },
-            "gap": {
-              "type": "string",
-              "default": "none",
-              "label": "Gap",
-              "description": "Gap between rows",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "sm",
-                "md",
-                "lg"
-              ]
-            },
-            "fields": {
-              "type": "[DataListFieldsItem]",
-              "default": [
-                {
-                  "format": "date",
-                  "icon": "circle",
-                  "name": "Name",
-                  "variant": "h3",
-                  "label": "Label"
-                }
-              ],
-              "label": "Fields",
-              "description": "Field definitions for rendering each row. The pattern contract in `@almadar/patterns` documents `columns` as the wire-format alias the compiler emits — both names resolve to the same shape here. Pass either.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "h3",
-                      "h4",
-                      "body",
-                      "caption",
-                      "badge",
-                      "small",
-                      "progress"
-                    ]
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "date",
-                      "currency",
-                      "number",
-                      "boolean",
-                      "percent"
-                    ]
-                  }
-                }
-              }
-            },
-            "swipeRightActions": {
-              "type": "[DataListSwipeRightActionsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "icon": "circle",
-                  "variant": "primary"
-                }
-              ],
-              "label": "Swipe Right Actions",
-              "description": "Actions revealed on right swipe",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "danger",
-                      "ghost"
-                    ]
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Loading state",
-              "tier": "presentation"
-            },
-            "itemActions": {
-              "type": "[DataListItemActionsItem]",
-              "default": [],
-              "label": "Item Actions",
-              "description": "Per-item action buttons",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "primary",
-                      "secondary",
-                      "ghost",
-                      "danger"
-                    ]
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "DataListOrbital",
       "pages": [
         {
           "name": "DataListPage",
@@ -721,7 +25,703 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "accepts": {
+              "default": "Accepts",
+              "description": "When set, the container accepts drops whose dragGroup matches this value (or '*' for any group)",
+              "label": "Accepts",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "columns": {
+              "default": [
+                {
+                  "format": "date",
+                  "icon": "circle",
+                  "label": "Label",
+                  "name": "Name",
+                  "variant": "h3"
+                }
+              ],
+              "description": "Alias for `fields` — the compiler emits `columns` for field defs.",
+              "items": {
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "date",
+                      "currency",
+                      "number",
+                      "boolean",
+                      "percent"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "h3",
+                      "h4",
+                      "body",
+                      "caption",
+                      "badge",
+                      "small",
+                      "progress"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Columns",
+              "tier": "presentation",
+              "type": "[DataListColumnsItem]"
+            },
+            "currentUser": {
+              "default": "Current User",
+              "description": "Current user identifier; messages matching this value align right (used with variant: 'message')",
+              "label": "Current User",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "dndItemIdField": {
+              "default": "Dnd Item Id Field",
+              "description": "Row field used as the @dnd-kit draggable id (default 'id')",
+              "label": "Dnd Item Id Field",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "dndRoot": {
+              "default": false,
+              "description": "Mark this container as the DnD root for its subtree — descendant zones share one DndContext (cross-container drag). Use on an outer container whose own items are not draggable.",
+              "label": "Dnd Root",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "dragGroup": {
+              "default": "Drag Group",
+              "description": "When set, items in this container are draggable and announce this group as their source",
+              "label": "Drag Group",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "dropEvent": {
+              "default": "Drop Event",
+              "description": "Bus event fired on cross-container drop. Payload: { id, sourceGroup, targetGroup, newIndex }",
+              "label": "Drop Event",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "DataListError"
+            },
+            "fields": {
+              "default": [
+                {
+                  "format": "date",
+                  "icon": "circle",
+                  "label": "Label",
+                  "name": "Name",
+                  "variant": "h3"
+                }
+              ],
+              "description": "Field definitions for rendering each row. The pattern contract in `@almadar/patterns` documents `columns` as the wire-format alias the compiler emits — both names resolve to the same shape here. Pass either.",
+              "items": {
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "date",
+                      "currency",
+                      "number",
+                      "boolean",
+                      "percent"
+                    ]
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "h3",
+                      "h4",
+                      "body",
+                      "caption",
+                      "badge",
+                      "small",
+                      "progress"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Fields",
+              "tier": "presentation",
+              "type": "[DataListFieldsItem]"
+            },
+            "gap": {
+              "default": "none",
+              "description": "Gap between rows",
+              "label": "Gap",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "sm",
+                "md",
+                "lg"
+              ]
+            },
+            "groupBy": {
+              "default": "Group By",
+              "description": "Group items by a field value (renders section headers between groups)",
+              "label": "Group By",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "hasMore": {
+              "default": false,
+              "description": "Whether more items are available for infinite scroll",
+              "label": "Has More",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "infiniteScroll": {
+              "default": false,
+              "description": "Enable infinite scroll loading",
+              "label": "Infinite Scroll",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "itemActions": {
+              "default": [],
+              "description": "Per-item action buttons",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "ghost",
+                      "danger"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Item Actions",
+              "tier": "presentation",
+              "type": "[DataListItemActionsItem]"
+            },
+            "look": {
+              "default": "dense",
+              "description": "Layer 2 visual treatment — mirrors the `entity-table` look enum so data-grid / data-list / entity-table share one knob name from authors.",
+              "label": "Look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "maxInlineActions": {
+              "default": 0.0,
+              "description": "Max inline action buttons before the rest collapse into a '⋯' overflow menu. Omit = all inline.",
+              "label": "Max Inline Actions",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageSize": {
+              "default": 5.0,
+              "description": "Max items to show before 'Show More' button. Defaults to 5. Set to 0 to disable.",
+              "label": "Page Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "positionEvent": {
+              "default": "Position Event",
+              "description": "Bus event fired N times per drop (one per item in affected zones) so the trait can persist new positions for the WHOLE zone, not just the moved item. Payload: { id, position }",
+              "label": "Position Event",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "reorderable": {
+              "default": false,
+              "description": "Enable drag-to-reorder with grip handles",
+              "label": "Reorderable",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "senderField": {
+              "default": "Sender Field",
+              "description": "Field name identifying the sender (used with variant: 'message')",
+              "label": "Sender Field",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "sortable": {
+              "default": false,
+              "description": "Enable in-container reorder; items can be dragged to new positions among siblings",
+              "label": "Sortable",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "swipeLeftActions": {
+              "default": [
+                {
+                  "icon": "circle",
+                  "label": "Label",
+                  "variant": "primary"
+                }
+              ],
+              "description": "Actions revealed on left swipe",
+              "items": {
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "danger",
+                      "ghost"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Swipe Left Actions",
+              "tier": "presentation",
+              "type": "[DataListSwipeLeftActionsItem]"
+            },
+            "swipeRightActions": {
+              "default": [
+                {
+                  "icon": "circle",
+                  "label": "Label",
+                  "variant": "primary"
+                }
+              ],
+              "description": "Actions revealed on right swipe",
+              "items": {
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "primary",
+                      "secondary",
+                      "danger",
+                      "ghost"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Swipe Right Actions",
+              "tier": "presentation",
+              "type": "[DataListSwipeRightActionsItem]"
+            },
+            "variant": {
+              "default": "default",
+              "description": "Visual variant",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "default",
+                "card",
+                "compact",
+                "message"
+              ]
+            }
+          },
+          "emits": [
+            {
+              "description": "Event emitted on reorder: UI:{reorderEvent} with { fromIndex, toIndex }",
+              "event": "REORDER",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win).",
+              "event": "ITEM_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Event emitted on left swipe: UI:{swipeLeftEvent} with { row }",
+              "event": "SWIPE_LEFT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Event emitted on right swipe: UI:{swipeRightEvent} with { row }",
+              "event": "SWIPE_RIGHT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Event emitted on long press: UI:{longPressEvent} with { row }",
+              "event": "LONG_PRESS",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Event emitted when more items needed: UI:{loadMoreEvent}",
+              "event": "LOAD_MORE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "User opened a record from the list.",
+              "event": "VIEW",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "DataListItem",
+          "name": "DataListRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "User opened a record from the list.",
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event emitted on reorder: UI:{reorderEvent} with { fromIndex, toIndex }",
+                "key": "REORDER",
+                "name": "Reorder",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "When set, the whole row is clickable and emits UI:{itemClickEvent} with { id, row } (action-button clicks stopPropagation so they still win).",
+                "key": "ITEM_CLICK",
+                "name": "Item Click",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event emitted on left swipe: UI:{swipeLeftEvent} with { row }",
+                "key": "SWIPE_LEFT",
+                "name": "Swipe Left",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event emitted on right swipe: UI:{swipeRightEvent} with { row }",
+                "key": "SWIPE_RIGHT",
+                "name": "Swipe Right",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event emitted on long press: UI:{longPressEvent} with { row }",
+                "key": "LONG_PRESS",
+                "name": "Long Press",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Event emitted when more items needed: UI:{loadMoreEvent}",
+                "key": "LOAD_MORE",
+                "name": "Load More",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "DataListItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "accepts": "@config.accepts",
+                      "className": "@config.className",
+                      "columns": "@config.columns",
+                      "currentUser": "@config.currentUser",
+                      "dndItemIdField": "@config.dndItemIdField",
+                      "dndRoot": "@config.dndRoot",
+                      "dragGroup": "@config.dragGroup",
+                      "dropEvent": "@config.dropEvent",
+                      "entity": "@entity",
+                      "error": "@config.error",
+                      "fields": "@config.fields",
+                      "gap": "@config.gap",
+                      "groupBy": "@config.groupBy",
+                      "hasMore": "@config.hasMore",
+                      "infiniteScroll": "@config.infiniteScroll",
+                      "isLoading": "@config.isLoading",
+                      "itemActions": [
+                        {
+                          "event": "VIEW",
+                          "label": "View"
+                        }
+                      ],
+                      "itemClickEvent": "ITEM_CLICK",
+                      "loadMoreEvent": "LOAD_MORE",
+                      "longPressEvent": "LONG_PRESS",
+                      "look": "@config.look",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "pageSize": "@config.pageSize",
+                      "positionEvent": "@config.positionEvent",
+                      "reorderEvent": "REORDER",
+                      "reorderable": "@config.reorderable",
+                      "senderField": "@config.senderField",
+                      "sortable": "@config.sortable",
+                      "swipeLeftActions": "@config.swipeLeftActions",
+                      "swipeLeftEvent": "SWIPE_LEFT",
+                      "swipeRightActions": "@config.swipeRightActions",
+                      "swipeRightEvent": "SWIPE_RIGHT",
+                      "type": "data-list",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "emit",
+                    "VIEW",
+                    {}
+                  ]
+                ],
+                "event": "VIEW",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -48,22 +48,22 @@ export interface StdUiFormSectionHeaderTogglePayload {
 export interface StdUiFormSectionHeaderConfig {
   /** Default: `"Badge"` */
   badge?: string;
-  /** Default: `false` */
-  hasErrors?: boolean;
+  /** Default: `"default"` */
+  badgeVariant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
   /** Default: `""` */
   className?: string;
+  /** Default: `false` */
+  hasErrors?: boolean;
   /** Default: `"circle"` */
   icon?: unknown;
   /** Default: `false` */
   isCollapsed?: boolean;
-  /** Default: `"Title"` */
-  title?: string;
-  /** Default: `"Subtitle"` */
-  subtitle?: string;
-  /** Default: `"default"` */
-  badgeVariant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
   /** Default: `false` */
   isComplete?: boolean;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**

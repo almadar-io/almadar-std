@@ -39,10 +39,10 @@ export type StdUiInputGroupEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiInputGroupConfig {
-  leftAddon?: unknown;
-  rightAddon?: unknown;
   /** Default: `""` */
   className?: string;
+  leftAddon?: unknown;
+  rightAddon?: unknown;
 }
 
 /**

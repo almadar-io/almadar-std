@@ -1,82 +1,148 @@
 {
-  "name": "ui-search-input",
-  "version": "1.0.0",
   "description": "SearchInput — UI factory (1:1 with the @almadar/ui search-input pattern).",
+  "name": "ui-search-input",
   "orbitals": [
     {
-      "name": "SearchInputOrbital",
       "entity": {
-        "name": "SearchInputItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
+            "default": "Value",
             "name": "value",
-            "type": "string",
-            "default": "Value"
+            "type": "string"
           }
-        ]
+        ],
+        "name": "SearchInputItem",
+        "persistence": "runtime"
       },
+      "name": "SearchInputOrbital",
+      "pages": [
+        {
+          "name": "SearchInputPage",
+          "path": "/search-input",
+          "traits": [
+            {
+              "ref": "SearchInputRender"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "SearchInputRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "value"
-            ]
-          },
           "category": "interaction",
-          "linkedEntity": "SearchInputItem",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "clearable": {
+              "default": true,
+              "description": "Show clear button",
+              "label": "Clearable",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "debounceMs": {
+              "default": 300.0,
+              "description": "Debounce delay in milliseconds",
+              "label": "Debounce Ms",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "event": {
+              "default": "Event",
+              "description": "Event name to dispatch on search (schema metadata, wired by trait) This is metadata used by the trait generator, not by the component.",
+              "label": "Event",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Show loading state",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "placeholder": {
+              "default": "Placeholder",
+              "description": "Placeholder text",
+              "label": "Placeholder",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "query": {
+              "default": "Query",
+              "description": "Query singleton binding for state management. When provided, syncs search state with the query singleton. Example: '@TaskQuery'",
+              "label": "Query",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "value": {
+              "default": "Value",
+              "description": "Search value (controlled mode)",
+              "label": "Value",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "SEARCH",
               "description": "Callback when search value changes",
-              "tier": "essential",
-              "scope": "external",
+              "event": "SEARCH",
               "payloadSchema": [
                 {
                   "name": "value",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
+          "entityContract": {
+            "provides": [
+              "value"
             ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SearchInputItem",
+          "name": "SearchInputRender",
+          "scope": "instance",
+          "stateMachine": {
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Callback when search value changes",
                 "key": "SEARCH",
                 "name": "Search",
-                "description": "Callback when search value changes",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "value",
                     "type": "string"
                   }
-                ]
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
               }
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -92,25 +158,25 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "@config.className",
+                      "clearable": "@config.clearable",
+                      "debounceMs": "@config.debounceMs",
+                      "entity": "SearchInputItem",
+                      "event": "@config.event",
+                      "isLoading": "@config.isLoading",
                       "onSearch": "SEARCH",
                       "placeholder": "@config.placeholder",
-                      "value": "@entity.value",
-                      "className": "@config.className",
-                      "type": "search-input",
-                      "debounceMs": "@config.debounceMs",
-                      "clearable": "@config.clearable",
-                      "event": "@config.event",
-                      "entity": "SearchInputItem",
                       "query": "@config.query",
-                      "isLoading": "@config.isLoading"
+                      "type": "search-input",
+                      "value": "@entity.value"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "SEARCH",
                 "effects": [
                   [
                     "set",
@@ -121,95 +187,29 @@
                     "render-ui",
                     "main",
                     {
+                      "className": "@config.className",
+                      "clearable": "@config.clearable",
+                      "debounceMs": "@config.debounceMs",
                       "entity": "SearchInputItem",
+                      "event": "@config.event",
+                      "isLoading": "@config.isLoading",
+                      "onSearch": "SEARCH",
+                      "placeholder": "@config.placeholder",
                       "query": "@config.query",
                       "type": "search-input",
-                      "debounceMs": "@config.debounceMs",
-                      "clearable": "@config.clearable",
-                      "placeholder": "@config.placeholder",
-                      "value": "@entity.value",
-                      "onSearch": "SEARCH",
-                      "isLoading": "@config.isLoading",
-                      "className": "@config.className",
-                      "event": "@config.event"
+                      "value": "@entity.value"
                     }
                   ]
-                ]
+                ],
+                "event": "SEARCH",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "placeholder": {
-              "type": "string",
-              "default": "Placeholder",
-              "label": "Placeholder",
-              "description": "Placeholder text",
-              "tier": "presentation"
-            },
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Additional CSS classes",
-              "tier": "presentation"
-            },
-            "event": {
-              "type": "string",
-              "default": "Event",
-              "label": "Event",
-              "description": "Event name to dispatch on search (schema metadata, wired by trait) This is metadata used by the trait generator, not by the component.",
-              "tier": "presentation"
-            },
-            "debounceMs": {
-              "type": "number",
-              "default": 300.0,
-              "label": "Debounce Ms",
-              "description": "Debounce delay in milliseconds",
-              "tier": "presentation"
-            },
-            "isLoading": {
-              "type": "boolean",
-              "default": false,
-              "label": "Is Loading",
-              "description": "Show loading state",
-              "tier": "presentation"
-            },
-            "value": {
-              "type": "string",
-              "default": "Value",
-              "label": "Value",
-              "description": "Search value (controlled mode)",
-              "tier": "presentation"
-            },
-            "query": {
-              "type": "string",
-              "default": "Query",
-              "label": "Query",
-              "description": "Query singleton binding for state management. When provided, syncs search state with the query singleton. Example: '@TaskQuery'",
-              "tier": "presentation"
-            },
-            "clearable": {
-              "type": "boolean",
-              "default": true,
-              "label": "Clearable",
-              "description": "Show clear button",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "SearchInputPage",
-          "path": "/search-input",
-          "traits": [
-            {
-              "ref": "SearchInputRender"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,121 +1,20 @@
 {
-  "name": "ui-tag-cloud",
-  "version": "1.0.0",
   "description": "TagCloud — UI factory (1:1 with the @almadar/ui tag-cloud pattern).",
+  "name": "ui-tag-cloud",
   "orbitals": [
     {
-      "name": "TagCloudOrbital",
       "entity": {
-        "name": "TagCloudItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "TagCloudItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "TagCloudRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "TagCloudItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "tags": "@config.tags",
-                      "type": "tag-cloud",
-                      "className": "@config.className",
-                      "variant": "@config.variant"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "className prop",
-              "tier": "presentation"
-            },
-            "variant": {
-              "type": "string",
-              "default": "default",
-              "label": "Variant",
-              "description": "variant prop",
-              "tier": "presentation",
-              "values": [
-                "default",
-                "primary",
-                "accent"
-              ]
-            },
-            "tags": {
-              "type": "[TagCloudTagsItem]",
-              "default": [
-                {
-                  "label": "Label",
-                  "variant": "Variant",
-                  "href": "Href"
-                }
-              ],
-              "label": "Tags",
-              "description": "tags prop",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "href": {
-                    "name": "href",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "TagCloudOrbital",
       "pages": [
         {
           "name": "TagCloudPage",
@@ -126,7 +25,108 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "tags": {
+              "default": [
+                {
+                  "href": "Href",
+                  "label": "Label",
+                  "variant": "Variant"
+                }
+              ],
+              "description": "tags prop",
+              "items": {
+                "properties": {
+                  "href": {
+                    "name": "href",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tags",
+              "tier": "presentation",
+              "type": "[TagCloudTagsItem]"
+            },
+            "variant": {
+              "default": "default",
+              "description": "variant prop",
+              "label": "Variant",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "default",
+                "primary",
+                "accent"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TagCloudItem",
+          "name": "TagCloudRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "tags": "@config.tags",
+                      "type": "tag-cloud",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

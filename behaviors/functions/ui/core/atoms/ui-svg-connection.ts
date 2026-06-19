@@ -39,30 +39,30 @@ export type StdUiSvgConnectionEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiSvgConnectionConfig {
-  /** Default: `1.5` */
-  strokeWidth?: number;
   /** Default: `true` */
   asRoot?: boolean;
   /** Default: `""` */
   className?: string;
+  /** Default: `"var(--color-primary)"` */
+  color?: string;
   /** Default: `100` */
-  width?: number;
-  /** Default: `90` */
-  x2?: number;
-  /** Default: `10` */
-  x1?: number;
+  height?: number;
   /** Default: `1` */
   opacity?: number;
-  /** Default: `50` */
-  y2?: number;
+  /** Default: `1.5` */
+  strokeWidth?: number;
   /** Default: `"solid"` */
   variant?: 'solid' | 'dashed' | 'animated';
   /** Default: `100` */
-  height?: number;
+  width?: number;
+  /** Default: `10` */
+  x1?: number;
+  /** Default: `90` */
+  x2?: number;
   /** Default: `50` */
   y1?: number;
-  /** Default: `"var(--color-primary)"` */
-  color?: string;
+  /** Default: `50` */
+  y2?: number;
 }
 
 /**

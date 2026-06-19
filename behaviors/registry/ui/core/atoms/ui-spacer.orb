@@ -1,103 +1,20 @@
 {
-  "name": "ui-spacer",
-  "version": "1.0.0",
   "description": "Spacer — UI factory (1:1 with the @almadar/ui spacer pattern).",
+  "name": "ui-spacer",
   "orbitals": [
     {
-      "name": "SpacerOrbital",
       "entity": {
-        "name": "SpacerItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "SpacerItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "SpacerRender",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "SpacerItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "@config.className",
-                      "axis": "@config.axis",
-                      "type": "spacer",
-                      "size": "@config.size"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "className": {
-              "type": "string",
-              "default": "",
-              "label": "Class Name",
-              "description": "Custom class name",
-              "tier": "presentation"
-            },
-            "size": {
-              "type": "string",
-              "default": "auto",
-              "label": "Size",
-              "description": "Fixed size (auto = flex grow)",
-              "tier": "presentation",
-              "values": [
-                "xs",
-                "sm",
-                "md",
-                "lg",
-                "xl",
-                "2xl",
-                "auto"
-              ]
-            },
-            "axis": {
-              "type": "string",
-              "default": "horizontal",
-              "label": "Axis",
-              "description": "Orientation (for fixed sizes)",
-              "tier": "presentation",
-              "values": [
-                "horizontal",
-                "vertical"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "SpacerOrbital",
       "pages": [
         {
           "name": "SpacerPage",
@@ -108,7 +25,90 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "axis": {
+              "default": "horizontal",
+              "description": "Orientation (for fixed sizes)",
+              "label": "Axis",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "horizontal",
+                "vertical"
+              ]
+            },
+            "className": {
+              "default": "",
+              "description": "Custom class name",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "size": {
+              "default": "auto",
+              "description": "Fixed size (auto = flex grow)",
+              "label": "Size",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "xs",
+                "sm",
+                "md",
+                "lg",
+                "xl",
+                "2xl",
+                "auto"
+              ]
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SpacerItem",
+          "name": "SpacerRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "axis": "@config.axis",
+                      "className": "@config.className",
+                      "size": "@config.size",
+                      "type": "spacer"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }
