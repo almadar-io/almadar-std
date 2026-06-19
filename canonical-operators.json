@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Canonical operator registry for Almadar. Generated from @almadar/std/modules. Consumed by orbital-compiler via include_str!.",
-  "generated": "2026-06-18T04:47:14.251Z",
+  "generated": "2026-06-19T08:35:48.734Z",
   "categories": {
     "arithmetic": {
       "description": "Numeric operations",
@@ -120,6 +120,41 @@
     },
     "std-composition": {
       "description": "Behavior composition (compile-time)",
+      "target": [
+        "ts",
+        "rust"
+      ]
+    },
+    "std-vec": {
+      "description": "2D/3D vector math",
+      "target": [
+        "ts",
+        "rust"
+      ]
+    },
+    "std-geo": {
+      "description": "2D collision and geometry",
+      "target": [
+        "ts",
+        "rust"
+      ]
+    },
+    "std-grid": {
+      "description": "Tile/cell coordinate operations",
+      "target": [
+        "ts",
+        "rust"
+      ]
+    },
+    "std-anim": {
+      "description": "Sprite animation helpers",
+      "target": [
+        "ts",
+        "rust"
+      ]
+    },
+    "std-ease": {
+      "description": "Easing and interpolation curves",
       "target": [
         "ts",
         "rust"
@@ -465,6 +500,30 @@
       "description": "Logical AND (returns the last truthy value, NOT a boolean — short-circuit)",
       "module": "core",
       "returnSemantics": "last-truthy-of-args"
+    },
+    "anim/direction-from-delta": {
+      "category": "std-anim",
+      "minArity": 2,
+      "maxArity": 3,
+      "returnType": "string",
+      "description": "Facing direction string from (dx,dy); 4-way (default) or 8-way",
+      "module": "anim"
+    },
+    "anim/frame-at": {
+      "category": "std-anim",
+      "minArity": 3,
+      "maxArity": 4,
+      "returnType": "number",
+      "description": "Frame index for elapsed time; loops by default, else clamps to last",
+      "module": "anim"
+    },
+    "anim/sheet-rect": {
+      "category": "std-anim",
+      "minArity": 4,
+      "maxArity": 4,
+      "returnType": "object",
+      "description": "Source rect {sx,sy,sw,sh} for a frame index on a sprite sheet",
+      "module": "anim"
     },
     "array/append": {
       "category": "std-array",
@@ -932,6 +991,22 @@
       "description": "Sequential execution of multiple effects/expressions",
       "module": "core"
     },
+    "ease/apply": {
+      "category": "std-ease",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Apply an easing curve to t∈[0,1]: linear, in-quad, out-quad, in-out-quad, in-cubic, out-cubic, in-out-cubic, elastic-out, bounce-out (unknown → linear)",
+      "module": "ease"
+    },
+    "ease/smoothstep": {
+      "category": "std-ease",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "number",
+      "description": "Smoothstep: clamp((x-edge0)/(edge1-edge0),0,1) then t*t*(3-2*t)",
+      "module": "ease"
+    },
     "emit": {
       "category": "effect",
       "minArity": 1,
@@ -993,18 +1068,6 @@
         "produces": {
           "kind": "entity"
         }
-      }
-    },
-    "send-server": {
-      "category": "effect",
-      "minArity": 1,
-      "maxArity": 2,
-      "returnType": "void",
-      "description": "Send an orbital event to the server over WebSocket (client-side; chat/real-time trigger)",
-      "module": "core",
-      "hasSideEffects": true,
-      "effect": {
-        "kind": "send-server"
       }
     },
     "fn": {
@@ -1087,6 +1150,142 @@
       "description": "Format count with singular/plural word",
       "module": "format"
     },
+    "geo/aabb-overlap": {
+      "category": "std-geo",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "boolean",
+      "description": "Axis-aligned bounding box overlap test",
+      "module": "geo"
+    },
+    "geo/circle-overlap": {
+      "category": "std-geo",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "boolean",
+      "description": "Circle overlap test: distance(centers) <= a.r+b.r",
+      "module": "geo"
+    },
+    "geo/point-in-circle": {
+      "category": "std-geo",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "boolean",
+      "description": "Point containment in circle (inclusive)",
+      "module": "geo"
+    },
+    "geo/point-in-rect": {
+      "category": "std-geo",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "boolean",
+      "description": "Point containment in rect (inclusive bounds)",
+      "module": "geo"
+    },
+    "geo/rect-circle-overlap": {
+      "category": "std-geo",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "boolean",
+      "description": "Rect-circle overlap via closest point on rect to circle center",
+      "module": "geo"
+    },
+    "geo/reflect": {
+      "category": "std-geo",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "vector",
+      "description": "Reflect vector v across normal n (assumed normalized)",
+      "module": "geo"
+    },
+    "geo/segment-intersect": {
+      "category": "std-geo",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "point | null",
+      "description": "Intersection point of two segments, or null when parallel/none",
+      "module": "geo"
+    },
+    "grid/cells-in-radius": {
+      "category": "std-grid",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "array",
+      "description": "All cells within Euclidean radius r (row-major order)",
+      "module": "grid"
+    },
+    "grid/distance": {
+      "category": "std-grid",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Chebyshev distance max(|dx|,|dy|)",
+      "module": "grid"
+    },
+    "grid/from-world": {
+      "category": "std-grid",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "cell",
+      "description": "World point to grid cell (floor)",
+      "module": "grid"
+    },
+    "grid/in-bounds": {
+      "category": "std-grid",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "boolean",
+      "description": "Whether cell lies within a w×h grid",
+      "module": "grid"
+    },
+    "grid/iso-to-screen": {
+      "category": "std-grid",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "point",
+      "description": "Isometric cell to screen point",
+      "module": "grid"
+    },
+    "grid/line": {
+      "category": "std-grid",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "array",
+      "description": "Bresenham line cells from a to b, inclusive, in step order",
+      "module": "grid"
+    },
+    "grid/manhattan-distance": {
+      "category": "std-grid",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Manhattan distance |dx|+|dy|",
+      "module": "grid"
+    },
+    "grid/neighbors": {
+      "category": "std-grid",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "array",
+      "description": "Adjacent cells in order N,E,S,W (+NE,SE,SW,NW if diagonal)",
+      "module": "grid"
+    },
+    "grid/screen-to-iso": {
+      "category": "std-grid",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "point",
+      "description": "Screen point to isometric cell coordinates",
+      "module": "grid"
+    },
+    "grid/to-world": {
+      "category": "std-grid",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "point",
+      "description": "Cell to world-space center point",
+      "module": "grid"
+    },
     "if": {
       "category": "logic",
       "minArity": 3,
@@ -1132,6 +1331,22 @@
       "description": "Absolute value",
       "module": "math"
     },
+    "math/approach": {
+      "category": "std-math",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "number",
+      "description": "Move cur toward target by at most maxDelta",
+      "module": "math"
+    },
+    "math/atan2": {
+      "category": "std-math",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Angle in radians from the positive x-axis to point (x, y)",
+      "module": "math"
+    },
     "math/ceil": {
       "category": "std-math",
       "minArity": 1,
@@ -1148,6 +1363,14 @@
       "description": "Constrain value to range [min, max]",
       "module": "math"
     },
+    "math/cos": {
+      "category": "std-math",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "number",
+      "description": "Cosine of an angle in radians",
+      "module": "math"
+    },
     "math/default": {
       "category": "std-math",
       "minArity": 2,
@@ -1156,12 +1379,28 @@
       "description": "Return default if value is null, undefined, or NaN",
       "module": "math"
     },
+    "math/deg-rad": {
+      "category": "std-math",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "number",
+      "description": "Convert degrees to radians",
+      "module": "math"
+    },
     "math/floor": {
       "category": "std-math",
       "minArity": 1,
       "maxArity": 1,
       "returnType": "number",
       "description": "Round down to integer",
+      "module": "math"
+    },
+    "math/hypot": {
+      "category": "std-math",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Euclidean length sqrt(a²+b²)",
       "module": "math"
     },
     "math/lerp": {
@@ -1212,6 +1451,14 @@
       "description": "Exponentiation (base^exp)",
       "module": "math"
     },
+    "math/rad-deg": {
+      "category": "std-math",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "number",
+      "description": "Convert radians to degrees",
+      "module": "math"
+    },
     "math/random": {
       "category": "std-math",
       "minArity": 0,
@@ -1244,12 +1491,36 @@
       "description": "Returns -1, 0, or 1 indicating sign",
       "module": "math"
     },
+    "math/sin": {
+      "category": "std-math",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "number",
+      "description": "Sine of an angle in radians",
+      "module": "math"
+    },
     "math/sqrt": {
       "category": "std-math",
       "minArity": 1,
       "maxArity": 1,
       "returnType": "number",
       "description": "Square root",
+      "module": "math"
+    },
+    "math/tan": {
+      "category": "std-math",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "number",
+      "description": "Tangent of an angle in radians",
+      "module": "math"
+    },
+    "math/wrap": {
+      "category": "std-math",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "number",
+      "description": "Wrap a value into the half-open range [min, max)",
       "module": "math"
     },
     "navigate": {
@@ -1838,6 +2109,18 @@
       "hasSideEffects": true,
       "effect": {
         "kind": "render-ui"
+      }
+    },
+    "send-server": {
+      "category": "effect",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "void",
+      "description": "Send an orbital event to the server over WebSocket (client-side; chat/real-time trigger)",
+      "module": "core",
+      "hasSideEffects": true,
+      "effect": {
+        "kind": "send-server"
       }
     },
     "set": {
@@ -2881,6 +3164,118 @@
       "returnType": "boolean",
       "description": "Check if value is a valid UUID",
       "module": "validate"
+    },
+    "vec/add": {
+      "category": "std-vec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "vector",
+      "description": "Componentwise vector addition a+b",
+      "module": "vec"
+    },
+    "vec/angle": {
+      "category": "std-vec",
+      "minArity": 1,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Heading atan2(y,x) (1 arg) or angle between two vectors (2 args), radians",
+      "module": "vec"
+    },
+    "vec/clamp-length": {
+      "category": "std-vec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "vector",
+      "description": "Clamp magnitude to max (preserves direction)",
+      "module": "vec"
+    },
+    "vec/cross": {
+      "category": "std-vec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "vector | number",
+      "description": "3D cross product → vector; 2D → scalar ax·by-ay·bx",
+      "module": "vec"
+    },
+    "vec/distance": {
+      "category": "std-vec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Euclidean distance length(sub(a,b))",
+      "module": "vec"
+    },
+    "vec/distance-sq": {
+      "category": "std-vec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Squared distance length-sq(sub(a,b))",
+      "module": "vec"
+    },
+    "vec/dot": {
+      "category": "std-vec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "number",
+      "description": "Dot product ax·bx+ay·by(+az·bz)",
+      "module": "vec"
+    },
+    "vec/length": {
+      "category": "std-vec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "number",
+      "description": "Vector magnitude sqrt(dot(a,a))",
+      "module": "vec"
+    },
+    "vec/length-sq": {
+      "category": "std-vec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "number",
+      "description": "Squared magnitude dot(a,a)",
+      "module": "vec"
+    },
+    "vec/lerp": {
+      "category": "std-vec",
+      "minArity": 3,
+      "maxArity": 3,
+      "returnType": "vector",
+      "description": "Componentwise linear interpolation a+(b-a)*t",
+      "module": "vec"
+    },
+    "vec/normalize": {
+      "category": "std-vec",
+      "minArity": 1,
+      "maxArity": 1,
+      "returnType": "vector",
+      "description": "Unit vector a/len; zero-length → zero vector (same dim)",
+      "module": "vec"
+    },
+    "vec/rotate": {
+      "category": "std-vec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "vector",
+      "description": "2D rotate by rad (z preserved): x'=x·cos-y·sin, y'=x·sin+y·cos",
+      "module": "vec"
+    },
+    "vec/scale": {
+      "category": "std-vec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "vector",
+      "description": "Componentwise scalar multiply a*k",
+      "module": "vec"
+    },
+    "vec/sub": {
+      "category": "std-vec",
+      "minArity": 2,
+      "maxArity": 2,
+      "returnType": "vector",
+      "description": "Componentwise vector subtraction a-b",
+      "module": "vec"
     },
     "when": {
       "category": "control",

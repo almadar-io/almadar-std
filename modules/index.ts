@@ -41,3 +41,10 @@ export { AGENT_OPERATORS, getAgentOperators } from './agent.js';
 
 // Behavior composition module (compile-time operators)
 export { COMPOSITION_OPERATORS, getCompositionOperators } from './composition.js';
+
+// Game modules (vec/geo/grid/anim/ease)
+export { VEC_OPERATORS, getVecOperators } from './vector.js';
+export { GEO_OPERATORS, getGeoOperators } from './geo.js';
+export { GRID_OPERATORS, getGridOperators } from './grid.js';
+export { ANIM_OPERATORS, getAnimOperators } from './anim.js';
+export { EASE_OPERATORS, getEaseOperators } from './ease.js';

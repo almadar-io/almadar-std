@@ -26,6 +26,11 @@ import { PROB_OPERATORS } from './modules/prob.js';
 import { OS_OPERATORS } from './modules/os.js';
 import { AGENT_OPERATORS } from './modules/agent.js';
 import { COMPOSITION_OPERATORS } from './modules/composition.js';
+import { VEC_OPERATORS } from './modules/vector.js';
+import { GEO_OPERATORS } from './modules/geo.js';
+import { GRID_OPERATORS } from './modules/grid.js';
+import { ANIM_OPERATORS } from './modules/anim.js';
+import { EASE_OPERATORS } from './modules/ease.js';
 
 // ============================================================================
 // Combined Registry
@@ -51,6 +56,11 @@ export const STD_OPERATORS: Record<string, StdOperatorMeta> = {
   ...OS_OPERATORS,
   ...AGENT_OPERATORS,
   ...COMPOSITION_OPERATORS,
+  ...VEC_OPERATORS,
+  ...GEO_OPERATORS,
+  ...GRID_OPERATORS,
+  ...ANIM_OPERATORS,
+  ...EASE_OPERATORS,
 };
 
 /**
@@ -79,6 +89,11 @@ export const STD_OPERATORS_BY_MODULE: Record<string, Record<string, StdOperatorM
   os: OS_OPERATORS,
   agent: AGENT_OPERATORS,
   composition: COMPOSITION_OPERATORS,
+  vec: VEC_OPERATORS,
+  geo: GEO_OPERATORS,
+  grid: GRID_OPERATORS,
+  anim: ANIM_OPERATORS,
+  ease: EASE_OPERATORS,
 };
 
 // ============================================================================
