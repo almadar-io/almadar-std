@@ -79,14 +79,27 @@ orbital BattleBoardOrbital {
 
   entity BattleBoardItem [runtime] {
     id : string!
+    units : [BattleBoardUnitsItem]
+    selectedUnitId : string
+    turn : number = 0
+    result : "none" | "win" | "lose" = none
+    gridWidth : number = 5
+    gridHeight : number = 5
+    movementRange : number = 2
   }
 
   trait BattleBoardRender -> @rebindable BattleBoardItem [interaction, instance] {
-    initial: idle
+    initial: menu
 
-    state idle {
-      INIT -> idle
-        (fetch BattleBoardItem {})
+    state menu {
+      INIT -> menu
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.gridWidth 5)
+        (set @entity.gridHeight 5)
+        (set @entity.movementRange 2)
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -101,7 +114,7 @@ orbital BattleBoardOrbital {
           selectedIds: @config.selectedIds
           entity: @entity
           tiles: @config.tiles
-          units: @config.units
+          units: @entity.units
           features: @config.features
           assetManifest: @config.assetManifest
           scale: @config.scale
@@ -111,6 +124,178 @@ orbital BattleBoardOrbital {
           onUnitMove: UNIT_MOVE
           hasActiveEffects: @config.hasActiveEffects
           effectSpriteUrls: @config.effectSpriteUrls
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: battle-board
+        })
+      START -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: battle-board
+        })
+    }
+
+    state playing {
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: battle-board
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?y } }) @u))))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: battle-board
+        })
+
+      ATTACK -> playing when (== (grid/distance (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position)) 1)
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)) }) @u))))
+        (set @entity.selectedUnitId "")
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: battle-board
+        })
+
+      END_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.selectedUnitId "")
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: battle-board
+        })
+
+      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "lose" "win"))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: battle-board
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
           tileClickEvent: TILE_CLICK
           unitClickEvent: UNIT_CLICK
           endTurnEvent: END_TURN
