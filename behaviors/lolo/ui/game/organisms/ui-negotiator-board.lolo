@@ -31,6 +31,9 @@ orbital NegotiatorBoardOrbital {
     payoffMatrix : [NegotiatorBoardPayoffItem]
     title : string
     description : string
+    lastPlayerAction : string = ""
+    lastOpponentAction : string = ""
+    lastPayoff : number = 0
   }
 
   trait NegotiatorBoardRender -> @rebindable NegotiatorBoardItem [interaction, instance] {
@@ -48,6 +51,9 @@ orbital NegotiatorBoardOrbital {
         (set @entity.actions @config.actions)
         (set @entity.payoffMatrix @config.payoffMatrix)
         (set @entity.opponentStrategy @config.opponentStrategy)
+        (set @entity.lastPlayerAction "")
+        (set @entity.lastOpponentAction "")
+        (set @entity.lastPayoff 0)
         (render-ui main {
           entity: @entity
           completeEvent: COMPLETE
@@ -70,6 +76,9 @@ orbital NegotiatorBoardOrbital {
         (set @entity.opponentStrategy @config.opponentStrategy)
         (set @entity.actions @config.actions)
         (set @entity.payoffMatrix @config.payoffMatrix)
+        (set @entity.lastPlayerAction "")
+        (set @entity.lastOpponentAction "")
+        (set @entity.lastPayoff 0)
         (render-ui main {
           entity: @entity
           completeEvent: COMPLETE
@@ -79,8 +88,13 @@ orbital NegotiatorBoardOrbital {
           type: negotiator-board
         })
       PLAY_ROUND -> playing when (< @entity.round @entity.maxRounds)
-        (set @entity.score (+ @entity.score (if (>= ?payoff 0) ?payoff 0)))
+        # compute opponent move: tit-for-tat copies last player action (first round = cooperate); always-cooperate/always-defect are static
+        (set @entity.lastOpponentAction (if (== @entity.opponentStrategy "always-cooperate") "cooperate" (if (== @entity.opponentStrategy "always-defect") "defect" (if (== @entity.lastPlayerAction "") "cooperate" @entity.lastPlayerAction))))
+        # look up player payoff from matrix for (playerAction, opponentAction) pair
+        (set @entity.lastPayoff (object/get (array/find @entity.payoffMatrix (fn r (and (== @r.playerAction ?playerAction) (== @r.opponentAction @entity.lastOpponentAction)))) "playerPayoff" 0))
+        (set @entity.score (+ @entity.score @entity.lastPayoff))
         (set @entity.round (+ @entity.round 1))
+        (set @entity.lastPlayerAction ?playerAction)
         (render-ui main {
           entity: @entity
           completeEvent: COMPLETE
@@ -120,6 +134,9 @@ orbital NegotiatorBoardOrbital {
         (set @entity.title @config.title)
         (set @entity.description @config.description)
         (set @entity.result "none")
+        (set @entity.lastPlayerAction "")
+        (set @entity.lastOpponentAction "")
+        (set @entity.lastPayoff 0)
         (render-ui main {
           entity: @entity
           completeEvent: COMPLETE
@@ -133,9 +150,9 @@ orbital NegotiatorBoardOrbital {
     emits {
       PLAY_ROUND -> external {
         playerAction : string!
-        payoff : number!
+        payoff : number
       }
-        @description "Emits one negotiation round; the UI resolves the payoff before emitting."
+        @description "Emits one negotiation round; playerAction drives in-model opponent AI and payoff lookup (payoff field is UI-supplied but ignored by model)."
         @tier "essential"
       FINISH -> external {
         id : string

@@ -129,6 +129,7 @@ orbital CastleBoardOrbital {
     maxHealth : number = 20
     wave : number = 0
     tickCount : number = 0
+    lastWaveDamage : number = 0
   }
 
   trait CastleBoardRender -> @rebindable CastleBoardItem [interaction, instance] {
@@ -145,6 +146,7 @@ orbital CastleBoardOrbital {
         (set @entity.maxHealth 20)
         (set @entity.wave 0)
         (set @entity.tickCount 0)
+        (set @entity.lastWaveDamage 0)
         (render-ui main {
           entity: @entity
           tiles: @entity.tiles
@@ -174,6 +176,7 @@ orbital CastleBoardOrbital {
         (set @entity.maxHealth 20)
         (set @entity.wave 0)
         (set @entity.tickCount 0)
+        (set @entity.lastWaveDamage 0)
         (render-ui main {
           entity: @entity
           tiles: @entity.tiles
@@ -297,6 +300,7 @@ orbital CastleBoardOrbital {
         (set @entity.maxHealth 20)
         (set @entity.wave 0)
         (set @entity.tickCount 0)
+        (set @entity.lastWaveDamage 0)
         (render-ui main {
           entity: @entity
           tiles: @entity.tiles
@@ -326,6 +330,7 @@ orbital CastleBoardOrbital {
         (set @entity.maxHealth 20)
         (set @entity.wave 0)
         (set @entity.tickCount 0)
+        (set @entity.lastWaveDamage 0)
         (render-ui main {
           entity: @entity
           tiles: @entity.tiles
@@ -346,7 +351,7 @@ orbital CastleBoardOrbital {
 
     ticks {
       incomeTick every 4s
-        when (== @entity.health 20)
+        when (> @entity.health 0)
         (set @entity.gold (+ @entity.gold (+ 10 (* (array/len @entity.buildings) 5))))
         (set @entity.tickCount (+ @entity.tickCount 1))
         (render-ui main {
@@ -365,6 +370,31 @@ orbital CastleBoardOrbital {
           className: @config.className
           type: castle-board
         })
+
+      # enemy wave arrives every 8s: damage = wave number minus buildings count (each building absorbs one point); emit outcome event so existing guards route to victory/defeat
+      waveTick every 8s
+        when (and (> @entity.health 0) (< @entity.wave 3))
+        (set @entity.wave (+ @entity.wave 1))
+        (set @entity.lastWaveDamage (math/max 0 (- @entity.wave (array/len @entity.buildings))))
+        (set @entity.health (math/max 0 (- @entity.health @entity.lastWaveDamage)))
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          onFeatureClick: FEATURE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileClick: TILE_CLICK
+          featureClickEvent: FEATURE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileClickEvent: TILE_CLICK
+          className: @config.className
+          type: castle-board
+        })
+        (emit CASTLE_HIT { damage: @entity.lastWaveDamage })
+        (emit WAVE_DEFEATED { wave: @entity.wave })
     }
 
     emits {

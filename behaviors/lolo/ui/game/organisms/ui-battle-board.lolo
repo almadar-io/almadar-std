@@ -86,6 +86,7 @@ orbital BattleBoardOrbital {
     gridWidth : number = 5
     gridHeight : number = 5
     movementRange : number = 2
+    enemyTurn : boolean = false
   }
 
   trait BattleBoardRender -> @rebindable BattleBoardItem [interaction, instance] {
@@ -97,6 +98,7 @@ orbital BattleBoardOrbital {
         (set @entity.selectedUnitId "")
         (set @entity.turn 0)
         (set @entity.result "none")
+        (set @entity.enemyTurn false)
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
@@ -125,6 +127,7 @@ orbital BattleBoardOrbital {
         (set @entity.selectedUnitId "")
         (set @entity.turn 0)
         (set @entity.result "none")
+        (set @entity.enemyTurn false)
         (set @entity.gridWidth 5)
         (set @entity.gridHeight 5)
         (set @entity.movementRange 2)
@@ -223,6 +226,7 @@ orbital BattleBoardOrbital {
       END_TURN -> playing when (== @entity.result "none")
         (set @entity.turn (+ @entity.turn 1))
         (set @entity.selectedUnitId "")
+        (set @entity.enemyTurn true)
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
@@ -274,6 +278,38 @@ orbital BattleBoardOrbital {
         (set @entity.selectedUnitId "")
         (set @entity.turn 0)
         (set @entity.result "none")
+        (set @entity.enemyTurn false)
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: battle-board
+        })
+    }
+
+    ticks {
+      enemyAiTick every 1s
+        when (and (== @entity.enemyTurn true) (== @entity.result "none"))
+        # attack pass: each player unit takes 1 damage if any live enemy is adjacent
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)) }) @u) @u))))
+        # move pass: each live enemy without an adjacent player steps one cell toward the first live player
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) } })) @u) @u))))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "lose" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "win" "none")))
+        (set @entity.enemyTurn false)
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
