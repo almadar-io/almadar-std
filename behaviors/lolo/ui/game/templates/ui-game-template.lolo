@@ -1,22 +1,8 @@
 app ui-game-template "1.0.0"
-"GameTemplate — titled game layout; hud + children + play/pause/reset controls are config-driven."
+"GameTemplate — UI factory (1:1 with the @almadar/ui game-template pattern)."
 orbital GameTemplateOrbital {
   type GameTemplateControls = {
     isPlaying : boolean
-    onPlay : string
-    onPause : string
-    onReset : string
-  }
-  type GameTemplateHudItem = {
-    type : string
-    label : string
-    value : number
-    max : number
-    format : string
-    variant : string
-  }
-  type GameTemplateCanvasItem = {
-    type : string
   }
 
   entity GameTemplateItem [runtime] {
@@ -33,8 +19,8 @@ orbital GameTemplateOrbital {
           entity: @entity
           className: @config.className
           title: @config.title
-          children: @config.children
-          hud: @config.hud
+          children: [{ type: game-canvas-2d }]
+          hud: [{ content: "Hud", type: typography }]
           debugPanel: @config.debugPanel
           showDebugPanel: @config.showDebugPanel
           controls: @config.controls
@@ -59,17 +45,9 @@ orbital GameTemplateOrbital {
         @label "Show Debug Panel"
         @description "Whether the debug panel is visible"
         @tier "presentation"
-      controls : GameTemplateControls = { isPlaying: false, onPlay: "PLAY", onPause: "PAUSE", onReset: "RESET" }
+      controls : GameTemplateControls = { isPlaying: false }
         @label "Controls"
-        @description "Play/pause/reset control state; onPlay/onPause/onReset are event names emitted on button click"
-        @tier "presentation"
-      hud : [GameTemplateHudItem] = [{ type: "stat-badge", label: "HP", value: 100, max: 100, format: "bar", variant: "danger" }, { type: "stat-badge", label: "Score", value: 0, format: "number", variant: "warning" }]
-        @label "HUD Items"
-        @description "HUD overlay stat badges; each item is a StatBadge descriptor"
-        @tier "presentation"
-      children : [GameTemplateCanvasItem] = [{ type: "game-canvas-2d" }]
-        @label "Children"
-        @description "Main game content; defaults to a 2D isometric canvas"
+        @description "Game controls"
         @tier "presentation"
     }
   }

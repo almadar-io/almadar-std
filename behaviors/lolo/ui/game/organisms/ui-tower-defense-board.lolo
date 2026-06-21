@@ -1,0 +1,365 @@
+app ui-tower-defense-board "1.0.0"
+"TowerDefenseBoard — UI factory (1:1 with the @almadar/ui tower-defense-board pattern)."
+orbital TowerDefenseBoardOrbital {
+  type TowerDefenseBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type TowerDefenseBoardTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    terrainSprite : asset
+    passable : boolean
+  }
+  type TowerDefenseBoardPathItem = {
+    x : number!
+    y : number!
+  }
+  type TowerDefenseBoardTowersItem = {
+    id : string!
+    x : number!
+    y : number!
+    range : number!
+    damage : number!
+    cooldown : number!
+    lastFiredAt : number
+  }
+  type TowerDefenseBoardCreepsItem = {
+    id : string!
+    x : number!
+    y : number!
+    hp : number!
+    maxHp : number!
+    pathIndex : number!
+    speed : number!
+  }
+
+  entity TowerDefenseBoardItem [runtime] {
+    id : string!
+    tiles : [TowerDefenseBoardTilesItem]
+    path : [TowerDefenseBoardPathItem]
+    towers : [TowerDefenseBoardTowersItem]
+    creeps : [TowerDefenseBoardCreepsItem]
+    gold : number = 100
+    lives : number = 20
+    wave : number = 1
+    maxWaves : number = 5
+    result : "none" | "won" | "lost" = none
+    tick : number = 0
+    waveActive : boolean = false
+  }
+
+  trait TowerDefenseBoardRender -> @rebindable TowerDefenseBoardItem [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.gold @config.gold)
+        (set @entity.lives @config.lives)
+        (set @entity.wave 1)
+        (set @entity.maxWaves @config.maxWaves)
+        (set @entity.result "none")
+        (set @entity.tick 0)
+        (set @entity.waveActive false)
+        (set @entity.towers @config.towers)
+        (set @entity.creeps [])
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          path: @config.path
+          towers: @entity.towers
+          creeps: @entity.creeps
+          gold: @entity.gold
+          lives: @entity.lives
+          wave: @entity.wave
+          maxWaves: @entity.maxWaves
+          result: @entity.result
+          waveActive: @entity.waveActive
+          towerCost: @config.towerCost
+          placeTowerEvent: PLACE_TOWER
+          startWaveEvent: START_WAVE
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: tower-defense-board
+        })
+
+      PLACE_TOWER -> playing when (and (>= @entity.gold @config.towerCost) (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (== (array/len (array/filter @entity.towers (fn t (and (== @t.x ?x) (== @t.y ?y))))) 0) (== (array/len (array/filter @config.path (fn p (and (== (object/get @p x) ?x) (== (object/get @p y) ?y))))) 0))))
+        (set @entity.gold (- @entity.gold @config.towerCost))
+        (set @entity.towers (array/concat @entity.towers [{ id: (string/concat "tower-" (string/from-number (array/len @entity.towers))), x: ?x, y: ?y, range: @config.towerRange, damage: @config.towerDamage, cooldown: @config.towerCooldown, lastFiredAt: 0 }]))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          path: @config.path
+          towers: @entity.towers
+          creeps: @entity.creeps
+          gold: @entity.gold
+          lives: @entity.lives
+          wave: @entity.wave
+          maxWaves: @entity.maxWaves
+          result: @entity.result
+          waveActive: @entity.waveActive
+          towerCost: @config.towerCost
+          placeTowerEvent: PLACE_TOWER
+          startWaveEvent: START_WAVE
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: tower-defense-board
+        })
+
+      START_WAVE -> playing when (and (== @entity.waveActive false) (== @entity.result "none"))
+        (set @entity.waveActive true)
+        (set @entity.creeps (array/map (array/range 0 @config.creepsPerWave) (fn i { id: (string/concat "creep-" (string/from-number @i)), x: (object/get (array/first @config.path) x), y: (object/get (array/first @config.path) y), hp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), maxHp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), pathIndex: 0, speed: @config.creepSpeed })))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          path: @config.path
+          towers: @entity.towers
+          creeps: @entity.creeps
+          gold: @entity.gold
+          lives: @entity.lives
+          wave: @entity.wave
+          maxWaves: @entity.maxWaves
+          result: @entity.result
+          waveActive: @entity.waveActive
+          towerCost: @config.towerCost
+          placeTowerEvent: PLACE_TOWER
+          startWaveEvent: START_WAVE
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: tower-defense-board
+        })
+
+      GAME_END -> gameover when (or (== @entity.result "won") (== @entity.result "lost"))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          path: @config.path
+          towers: @entity.towers
+          creeps: @entity.creeps
+          gold: @entity.gold
+          lives: @entity.lives
+          wave: @entity.wave
+          maxWaves: @entity.maxWaves
+          result: @entity.result
+          waveActive: @entity.waveActive
+          towerCost: @config.towerCost
+          placeTowerEvent: PLACE_TOWER
+          startWaveEvent: START_WAVE
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: tower-defense-board
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> playing
+        (set @entity.gold @config.gold)
+        (set @entity.lives @config.lives)
+        (set @entity.wave 1)
+        (set @entity.result "none")
+        (set @entity.tick 0)
+        (set @entity.waveActive false)
+        (set @entity.towers @config.towers)
+        (set @entity.creeps [])
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          path: @config.path
+          towers: @entity.towers
+          creeps: @entity.creeps
+          gold: @entity.gold
+          lives: @entity.lives
+          wave: @entity.wave
+          maxWaves: @entity.maxWaves
+          result: @entity.result
+          waveActive: @entity.waveActive
+          towerCost: @config.towerCost
+          placeTowerEvent: PLACE_TOWER
+          startWaveEvent: START_WAVE
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: tower-defense-board
+        })
+    }
+
+    ticks {
+      creepMoveTick every 1s
+        when (and (== @entity.waveActive true) (and (== @entity.result "none") (> (array/len @entity.creeps) 0)))
+        (set @entity.tick (+ @entity.tick 1))
+        # advance each creep one step along the path waypoints
+        (set @entity.creeps (array/map @entity.creeps (fn c (let ((nextIndex (math/min (+ (object/get @c pathIndex) 1) (- (array/len @config.path) 1))) (nextWaypoint (array/nth @config.path (math/min (+ (object/get @c pathIndex) 1) (- (array/len @config.path) 1))))) (object/merge @c { x: (object/get nextWaypoint x), y: (object/get nextWaypoint y), pathIndex: nextIndex })))))
+        # creeps that reached the last waypoint drain lives
+        (set @entity.lives (- @entity.lives (array/len (array/filter @entity.creeps (fn c (== (object/get @c pathIndex) (- (array/len @config.path) 1)))))))
+        # remove creeps that reached the end
+        (set @entity.creeps (array/filter @entity.creeps (fn c (< (object/get @c pathIndex) (- (array/len @config.path) 1)))))
+        # check lose condition
+        (set @entity.result (if (<= @entity.lives 0) "lost" @entity.result))
+        (set @entity.waveActive (if (<= @entity.lives 0) false (if (== (array/len @entity.creeps) 0) false @entity.waveActive)))
+        (set @entity.wave (if (and (== (array/len @entity.creeps) 0) (and (> @entity.lives 0) (== @entity.result "none"))) (+ @entity.wave 1) @entity.wave))
+        (set @entity.result (if (and (== (array/len @entity.creeps) 0) (and (> @entity.lives 0) (>= @entity.wave @entity.maxWaves))) "won" @entity.result))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          path: @config.path
+          towers: @entity.towers
+          creeps: @entity.creeps
+          gold: @entity.gold
+          lives: @entity.lives
+          wave: @entity.wave
+          maxWaves: @entity.maxWaves
+          result: @entity.result
+          waveActive: @entity.waveActive
+          towerCost: @config.towerCost
+          placeTowerEvent: PLACE_TOWER
+          startWaveEvent: START_WAVE
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: tower-defense-board
+        })
+
+      towerFireTick every 1s
+        when (and (== @entity.waveActive true) (and (== @entity.result "none") (> (array/len @entity.creeps) 0)))
+        # each tower finds the nearest creep in range and deals damage
+        (set @entity.creeps (array/map @entity.creeps (fn c (let ((inRangeTowers (array/filter @entity.towers (fn t (<= (vec/distance { x: (object/get @t x), y: (object/get @t y) } { x: (object/get @c x), y: (object/get @c y) }) (object/get @t range)))))) (if (> (array/len inRangeTowers) 0) (object/merge @c { hp: (math/max 0 (- (object/get @c hp) (object/get (array/first inRangeTowers) damage))) }) @c)))))
+        # remove dead creeps, award gold per kill
+        (set @entity.gold (+ @entity.gold (* @config.goldPerKill (array/len (array/filter @entity.creeps (fn c (<= (object/get @c hp) 0)))))))
+        (set @entity.creeps (array/filter @entity.creeps (fn c (> (object/get @c hp) 0))))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          path: @config.path
+          towers: @entity.towers
+          creeps: @entity.creeps
+          gold: @entity.gold
+          lives: @entity.lives
+          wave: @entity.wave
+          maxWaves: @entity.maxWaves
+          result: @entity.result
+          waveActive: @entity.waveActive
+          towerCost: @config.towerCost
+          placeTowerEvent: PLACE_TOWER
+          startWaveEvent: START_WAVE
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: tower-defense-board
+        })
+    }
+
+    emits {
+      PLACE_TOWER -> external {
+        x : number!
+        y : number!
+      }
+        @description "Emits UI:{placeTowerEvent} with {x,y} on tile click when player places a tower"
+        @tier "essential"
+      START_WAVE -> external {
+        wave : number
+      }
+        @description "Emits UI:{startWaveEvent} with {wave} when player launches a creep wave"
+        @tier "essential"
+      GAME_END -> external {
+        result : string!
+      }
+        @description "Emits UI:{gameEndEvent} with {result} when the game reaches won or lost"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : TowerDefenseBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      gridWidth : number = 8
+        @label "Grid Width"
+        @description "Number of columns in the tile grid"
+        @tier "presentation"
+      gridHeight : number = 8
+        @label "Grid Height"
+        @description "Number of rows in the tile grid"
+        @tier "presentation"
+      gold : number = 100
+        @label "Starting Gold"
+        @description "Gold the player starts each game with"
+        @tier "presentation"
+      lives : number = 20
+        @label "Starting Lives"
+        @description "Lives the player starts with; reaching 0 = defeat"
+        @tier "presentation"
+      maxWaves : number = 5
+        @label "Max Waves"
+        @description "Number of waves to survive to win"
+        @tier "presentation"
+      towerCost : number = 25
+        @label "Tower Cost"
+        @description "Gold cost to place one tower"
+        @tier "presentation"
+      towerRange : number = 2
+        @label "Tower Range"
+        @description "Attack range in grid units"
+        @tier "presentation"
+      towerDamage : number = 3
+        @label "Tower Damage"
+        @description "Damage per hit per tower"
+        @tier "presentation"
+      towerCooldown : number = 1
+        @label "Tower Cooldown"
+        @description "Seconds between tower shots"
+        @tier "presentation"
+      creepsPerWave : number = 5
+        @label "Creeps Per Wave"
+        @description "Number of creeps spawned per wave"
+        @tier "presentation"
+      creepBaseHp : number = 10
+        @label "Creep Base HP"
+        @description "Base HP of the first creep in a wave"
+        @tier "presentation"
+      creepHpScaling : number = 2
+        @label "Creep HP Scaling"
+        @description "Additional HP per creep index within a wave"
+        @tier "presentation"
+      creepSpeed : number = 1
+        @label "Creep Speed"
+        @description "Waypoints advanced per tick"
+        @tier "presentation"
+      goldPerKill : number = 10
+        @label "Gold Per Kill"
+        @description "Gold awarded for each creep killed"
+        @tier "presentation"
+      tiles : [TowerDefenseBoardTilesItem] = [{ x: 0, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 1, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 2, y: 0, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 3, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 4, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 0, y: 1, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 1, y: 1, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 2, y: 1, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 3, y: 1, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 4, y: 1, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 0, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 1, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 2, y: 2, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 3, y: 2, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 4, y: 2, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 0, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 1, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 2, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 3, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 4, y: 3, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 0, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 1, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 2, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 3, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 4, y: 4, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }]
+        @label "Tiles"
+        @description "Direct tile data — takes priority over entity-derived tiles."
+        @tier "presentation"
+      path : [TowerDefenseBoardPathItem] = [{ x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }]
+        @label "Path"
+        @description "Ordered waypoint coords that creeps follow from entry to exit."
+        @tier "presentation"
+      towers : [TowerDefenseBoardTowersItem] = [{ id: "t0", x: 1, y: 1, range: 2, damage: 3, cooldown: 1, lastFiredAt: 0 }, { id: "t1", x: 3, y: 3, range: 2, damage: 3, cooldown: 1, lastFiredAt: 0 }]
+        @label "Towers"
+        @description "Initial tower placements on the board."
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+    }
+  }
+
+  page "/tower-defense-board" as TowerDefenseBoardPage -> TowerDefenseBoardRender
+}
