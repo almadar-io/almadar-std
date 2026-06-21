@@ -88,7 +88,7 @@ export interface StdUiWorldMapBoardConfig {
   className?: string;
   /** Default: `0` */
   diamondTopY?: number;
-  /** Default: `[]` */
+  /** Default: `["https://almadar-kflow-assets.web.app/shared/effects/particles/slash_03.png","https://almadar-kflow-assets.web.app/shared/effects/particles/magic_02.png","https://almadar-kflow-assets.web.app/shared/effects/particles/spark_06.png","https://almadar-kflow-assets.web.app/shared/effects/explosions/pixel/pixelExplosion07.png"]` */
   effectSpriteUrls?: EntityRow[];
   /** Default: `false` */
   enableCamera?: boolean;
@@ -258,7 +258,12 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'number',
           },
           'effectSpriteUrls': {
-            'default': [],
+            'default': [
+              'https://almadar-kflow-assets.web.app/shared/effects/particles/slash_03.png',
+              'https://almadar-kflow-assets.web.app/shared/effects/particles/magic_02.png',
+              'https://almadar-kflow-assets.web.app/shared/effects/particles/spark_06.png',
+              'https://almadar-kflow-assets.web.app/shared/effects/explosions/pixel/pixelExplosion07.png',
+            ],
             'description': 'effectSpriteUrls prop',
             'items': {
               'type': 'string',
