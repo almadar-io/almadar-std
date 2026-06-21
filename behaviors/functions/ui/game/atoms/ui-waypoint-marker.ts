@@ -41,6 +41,8 @@ export type StdUiWaypointMarkerEventKey = 'INIT';
 export interface StdUiWaypointMarkerConfig {
   /** Default: `true` */
   active?: boolean;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  assetUrl?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */

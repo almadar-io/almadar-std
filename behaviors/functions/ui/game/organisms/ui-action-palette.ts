@@ -39,7 +39,7 @@ export type StdUiActionPaletteEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionPaletteConfig {
-  /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name","stateMachine":{"currentState":"Current State","description":"Description","name":"Name","states":["Item"],"transitions":[{"event":"Event","from":"From","guardHint":"Guard Hint","to":"To"}]}}]` */
+  /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name"}]` */
   actions?: EntityRow[];
   /** Default: `true` */
   allowDuplicates?: boolean;
@@ -135,22 +135,6 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                 'iconEmoji': 'Icon Emoji',
                 'id': 'Id',
                 'name': 'Name',
-                'stateMachine': {
-                  'currentState': 'Current State',
-                  'description': 'Description',
-                  'name': 'Name',
-                  'states': [
-                    'Item',
-                  ],
-                  'transitions': [
-                    {
-                      'event': 'Event',
-                      'from': 'From',
-                      'guardHint': 'Guard Hint',
-                      'to': 'To',
-                    },
-                  ],
-                },
               },
             ],
             'description': 'Available actions',
@@ -188,63 +172,8 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                 },
                 'stateMachine': {
                   'name': 'stateMachine',
-                  'properties': {
-                    'currentState': {
-                      'name': 'currentState',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'description': {
-                      'name': 'description',
-                      'required': false,
-                      'type': 'string',
-                    },
-                    'name': {
-                      'name': 'name',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'states': {
-                      'items': {
-                        'type': 'string',
-                      },
-                      'name': 'states',
-                      'required': true,
-                      'type': 'array',
-                    },
-                    'transitions': {
-                      'items': {
-                        'properties': {
-                          'event': {
-                            'name': 'event',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'from': {
-                            'name': 'from',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          'guardHint': {
-                            'name': 'guardHint',
-                            'required': false,
-                            'type': 'string',
-                          },
-                          'to': {
-                            'name': 'to',
-                            'required': true,
-                            'type': 'string',
-                          },
-                        },
-                        'type': 'object',
-                      },
-                      'name': 'transitions',
-                      'required': true,
-                      'type': 'array',
-                    },
-                  },
                   'required': false,
-                  'type': 'object',
+                  'type': 'string',
                 },
               },
               'type': 'object',

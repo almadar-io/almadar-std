@@ -39,8 +39,6 @@ export type StdUiGameCanvas3dCastleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas3dCastleTemplateConfig {
-  /** Default: `[{"x":1,"z":1}]` */
-  availableBuildSites?: EntityRow[];
   /** Default: `"#1e1e2e"` */
   backgroundColor?: string;
   /** Default: `"Build Event"` */
@@ -53,18 +51,18 @@ export interface StdUiGameCanvas3dCastleTemplateConfig {
   className?: string;
   /** Default: `"Exit Event"` */
   exitEvent?: string;
+  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":1}]` */
+  features?: EntityRow[];
   /** Default: `"Recruit Event"` */
   recruitEvent?: string;
-  /** Default: `"Selected Building Id"` */
-  selectedBuildingId?: string;
-  /** Default: `[]` */
-  selectedTileIds?: string[];
-  /** Default: `true` */
+  /** Default: `false` */
   shadows?: boolean;
-  /** Default: `true` */
+  /** Default: `false` */
   showGrid?: boolean;
   /** Default: `true` */
   showHeader?: boolean;
+  /** Default: `[{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":0},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":1,"y":0},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":2,"y":0},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":3,"y":0},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":0},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":1},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","passable":true,"terrain":"dirt","x":1,"y":1},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":2,"y":1},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":3,"y":1},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":1},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":2},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":1,"y":2},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","passable":true,"terrain":"dirt","x":2,"y":2},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":3,"y":2},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":2},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":3},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":1,"y":3},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":2,"y":3},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","passable":true,"terrain":"dirt","x":3,"y":3},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":3},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":4},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":1,"y":4},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":2,"y":4},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":3,"y":4},{"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":4}]` */
+  tiles?: EntityRow[];
   /** Default: `"Unit Click Event"` */
   unitClickEvent?: string;
 }

@@ -7,7 +7,73 @@
     "entities": [
       {
         "name": "SequencerBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "slots",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "availableActions",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "solutions",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "maxSlots",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "allowDuplicates",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "hint",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "successMessage",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "headerImage",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "currentStep",
+            "type": "number",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -15,22 +81,54 @@
       {
         "name": "SequencerBoardRender",
         "emittedEvents": [
+          "PLACE",
+          "REMOVE",
           "PLAY",
-          "COMPLETE"
+          "STEP",
+          "CHECK",
+          "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "PLAY",
+            "name": "PLACE",
             "direction": "emit",
-            "description": "Emits UI:{playEvent} with { sequence: string[] }",
+            "description": "placeEvent prop — emitted when player drops an action into a slot",
             "tier": "essential"
           },
           {
-            "name": "COMPLETE",
+            "name": "REMOVE",
             "direction": "emit",
-            "description": "Emits UI:{completeEvent} with { success: boolean }",
+            "description": "removeEvent prop — emitted when player removes an action from a slot",
             "tier": "essential"
+          },
+          {
+            "name": "PLAY",
+            "direction": "emit",
+            "description": "playEvent prop — emitted with the current slot sequence on playback start",
+            "tier": "essential"
+          },
+          {
+            "name": "STEP",
+            "direction": "emit",
+            "description": "Advances playback one step; entity.currentStep increments until maxSlots-1 then returns to building",
+            "tier": "essential"
+          },
+          {
+            "name": "CHECK",
+            "direction": "emit",
+            "description": "checkEvent prop — emitted when player submits the sequence for validation",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "playAgainEvent prop — reset slots and restart",
+            "tier": "essential"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
           },
           {
             "name": "INIT",
@@ -39,18 +137,91 @@
         ],
         "overridableConfigKeys": [
           {
-            "key": "activeFilters",
-            "type": "json",
-            "label": "Active Filters",
-            "description": "Active filters",
-            "tier": "presentation"
+            "key": "allowDuplicates",
+            "type": "boolean",
+            "default": false,
+            "label": "Allow Duplicates",
+            "description": "When true the same action can be placed in multiple slots.",
+            "tier": "domain"
+          },
+          {
+            "key": "availableActions",
+            "type": "[SequencerBoardAvailableActionsItem]",
+            "default": [
+              {
+                "category": "morning",
+                "description": "Get out of bed",
+                "iconEmoji": "🌅",
+                "id": "wake-up",
+                "name": "Wake Up"
+              },
+              {
+                "category": "hygiene",
+                "description": "Clean your teeth",
+                "iconEmoji": "🪥",
+                "id": "brush-teeth",
+                "name": "Brush Teeth"
+              },
+              {
+                "category": "food",
+                "description": "Have your morning meal",
+                "iconEmoji": "🍳",
+                "id": "eat-breakfast",
+                "name": "Eat Breakfast"
+              },
+              {
+                "category": "morning",
+                "description": "Put on your clothes",
+                "iconEmoji": "👕",
+                "id": "get-dressed",
+                "name": "Get Dressed"
+              }
+            ],
+            "label": "Available Actions",
+            "description": "Draggable action cards the player picks from.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "iconEmoji": {
+                  "name": "iconEmoji",
+                  "required": false,
+                  "type": "string"
+                },
+                "iconUrl": {
+                  "name": "iconUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "categoryColors",
             "type": "Map<string,SequencerBoardCategoryColorsValue>",
             "default": {},
             "label": "Category Colors",
-            "description": "Category → color mapping",
+            "description": "Category → color mapping for action card tinting.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -69,128 +240,137 @@
             }
           },
           {
-            "key": "className",
+            "key": "description",
             "type": "string",
+            "default": "Put the steps in the right order to start the day right.",
+            "label": "Description",
+            "description": "One-line puzzle brief shown to the player.",
+            "tier": "domain"
+          },
+          {
+            "key": "headerImage",
+            "type": "asset",
             "default": "",
-            "label": "Class Name",
-            "description": "Additional CSS classes",
+            "label": "Header Image",
+            "description": "Optional banner image shown at the top of the board.",
             "tier": "presentation"
           },
           {
-            "key": "error",
-            "type": "SequencerBoardError",
-            "label": "Error",
-            "description": "Error state (UiError)",
+            "key": "hint",
+            "type": "string",
+            "default": "You always brush your teeth before breakfast.",
+            "label": "Hint",
+            "description": "Hint revealed after 3 failed attempts.",
+            "tier": "domain"
+          },
+          {
+            "key": "maxSlots",
+            "type": "number",
+            "default": 3,
+            "label": "Max Slots",
+            "description": "Number of slots the player fills — must match the solution length.",
+            "tier": "domain"
+          },
+          {
+            "key": "slots",
+            "type": "[SequencerBoardSlotsItem]",
+            "default": [
+              {
+                "index": 0,
+                "placedActionId": ""
+              },
+              {
+                "index": 1,
+                "placedActionId": ""
+              },
+              {
+                "index": 2,
+                "placedActionId": ""
+              }
+            ],
+            "label": "Slots",
+            "description": "Initial empty slot positions; one entry per maxSlots step.",
             "tier": "presentation",
-            "properties": {
-              "code": {
-                "name": "code",
-                "required": false,
-                "type": "string"
+            "items": {
+              "properties": {
+                "index": {
+                  "name": "index",
+                  "required": true,
+                  "type": "number"
+                },
+                "placedActionId": {
+                  "name": "placedActionId",
+                  "required": false,
+                  "type": "string"
+                }
               },
-              "message": {
-                "name": "message",
-                "required": true,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "stack": {
-                "name": "stack",
-                "required": false,
+              "type": "object"
+            }
+          },
+          {
+            "key": "solutions",
+            "type": "[[string]]",
+            "default": [
+              [
+                "wake-up",
+                "brush-teeth",
+                "eat-breakfast"
+              ]
+            ],
+            "label": "Solutions",
+            "description": "Accepted winning sequences — at least one must match the player's slot order.",
+            "tier": "domain",
+            "items": {
+              "type": "array",
+              "items": {
                 "type": "string"
               }
             }
-          },
-          {
-            "key": "isLoading",
-            "type": "boolean",
-            "default": false,
-            "label": "Is Loading",
-            "description": "Loading state indicator",
-            "tier": "presentation"
-          },
-          {
-            "key": "pageProp",
-            "type": "number",
-            "default": 0,
-            "label": "Page",
-            "description": "Current page number",
-            "synonyms": "page",
-            "tier": "presentation"
-          },
-          {
-            "key": "pageSize",
-            "type": "number",
-            "default": 0,
-            "label": "Page Size",
-            "description": "Number of items per page",
-            "tier": "presentation"
-          },
-          {
-            "key": "searchValue",
-            "type": "string",
-            "default": "Search Value",
-            "label": "Search Value",
-            "description": "Current search query value",
-            "tier": "presentation"
-          },
-          {
-            "key": "selectedIds",
-            "type": "[string]",
-            "default": [],
-            "label": "Selected Ids",
-            "description": "Currently selected item IDs",
-            "tier": "presentation",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "key": "sortBy",
-            "type": "string",
-            "default": "Sort By",
-            "label": "Sort By",
-            "description": "Current sort field",
-            "tier": "presentation"
-          },
-          {
-            "key": "sortDirection",
-            "type": "string",
-            "default": "asc",
-            "label": "Sort Direction",
-            "description": "Current sort direction",
-            "tier": "presentation",
-            "enumValues": [
-              "asc",
-              "desc"
-            ]
           },
           {
             "key": "stepDurationMs",
             "type": "number",
             "default": 1000,
             "label": "Step Duration Ms",
-            "description": "Playback speed in ms per step",
+            "description": "Playback speed in milliseconds per step.",
             "tier": "presentation"
           },
           {
-            "key": "totalCount",
-            "type": "number",
-            "default": 0,
-            "label": "Total Count",
-            "description": "Total number of items",
-            "tier": "presentation"
+            "key": "successMessage",
+            "type": "string",
+            "default": "Perfect sequence! Great job!",
+            "label": "Success Message",
+            "description": "Message shown when the player wins.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Morning Routine",
+            "label": "Title",
+            "description": "Puzzle title shown above the sequencer.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "allowDuplicates",
+            "attempts",
+            "availableActions",
+            "currentStep",
+            "description",
+            "headerImage",
+            "hint",
+            "maxSlots",
+            "result",
+            "slots",
+            "solutions",
+            "successMessage",
+            "title"
+          ]
         }
       }
     ],
@@ -202,8 +382,12 @@
       }
     ],
     "emittedEvents": [
-      "COMPLETE",
-      "PLAY"
+      "CHECK",
+      "PLACE",
+      "PLAY",
+      "PLAY_AGAIN",
+      "REMOVE",
+      "STEP"
     ],
     "listenedEvents": []
   }

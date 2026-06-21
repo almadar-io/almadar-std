@@ -7,7 +7,63 @@
     "entities": [
       {
         "name": "CastleBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "features",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "buildings",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "gold",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "health",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "maxHealth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "wave",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "tickCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lastWaveDamage",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -17,7 +73,10 @@
         "emittedEvents": [
           "FEATURE_CLICK",
           "UNIT_CLICK",
-          "TILE_CLICK"
+          "TILE_CLICK",
+          "WAVE_DEFEATED",
+          "CASTLE_HIT",
+          "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
@@ -38,6 +97,28 @@
             "direction": "emit",
             "description": "Called when any tile is clicked",
             "tier": "essential"
+          },
+          {
+            "name": "WAVE_DEFEATED",
+            "direction": "emit",
+            "description": "Emitted when the player defeats the current wave",
+            "tier": "essential"
+          },
+          {
+            "name": "CASTLE_HIT",
+            "direction": "emit",
+            "description": "Emitted when the castle takes damage from an enemy",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "essential"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
           },
           {
             "name": "INIT",
@@ -122,7 +203,7 @@
               }
             ],
             "label": "Features",
-            "description": "Direct feature data — takes priority over entity-derived features.",
+            "description": "Initial feature / building slots seeded into entity on INIT.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -364,7 +445,7 @@
               }
             ],
             "label": "Tiles",
-            "description": "Direct tile data — takes priority over entity-derived tiles.",
+            "description": "Initial tile map seeded into entity on INIT.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -464,7 +545,7 @@
               }
             ],
             "label": "Units",
-            "description": "Direct unit data — takes priority over entity-derived units.",
+            "description": "Initial garrison and enemy units seeded into entity on INIT.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -624,7 +705,19 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "buildings",
+            "features",
+            "gold",
+            "health",
+            "lastWaveDamage",
+            "maxHealth",
+            "result",
+            "tickCount",
+            "tiles",
+            "units",
+            "wave"
+          ]
         }
       }
     ],
@@ -636,9 +729,12 @@
       }
     ],
     "emittedEvents": [
+      "CASTLE_HIT",
       "FEATURE_CLICK",
+      "PLAY_AGAIN",
       "TILE_CLICK",
-      "UNIT_CLICK"
+      "UNIT_CLICK",
+      "WAVE_DEFEATED"
     ],
     "listenedEvents": []
   }

@@ -39,7 +39,7 @@ export type StdUiActionTileEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionTileConfig {
-  /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name","stateMachine":{"currentState":"Current State","description":"Description","name":"Name","states":["Item"],"transitions":[{"event":"Event","from":"From","guardHint":"Guard Hint","to":"To"}]}}` */
+  /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name"}` */
   action?: EntityRow;
   activeFilters?: unknown;
   /** Default: `{}` */
@@ -148,22 +148,6 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
               'iconEmoji': 'Icon Emoji',
               'id': 'Id',
               'name': 'Name',
-              'stateMachine': {
-                'currentState': 'Current State',
-                'description': 'Description',
-                'name': 'Name',
-                'states': [
-                  'Item',
-                ],
-                'transitions': [
-                  {
-                    'event': 'Event',
-                    'from': 'From',
-                    'guardHint': 'Guard Hint',
-                    'to': 'To',
-                  },
-                ],
-              },
             },
             'description': 'The action data',
             'label': 'Action',
@@ -200,63 +184,8 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
               },
               'stateMachine': {
                 'name': 'stateMachine',
-                'properties': {
-                  'currentState': {
-                    'name': 'currentState',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  'description': {
-                    'name': 'description',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'name': {
-                    'name': 'name',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  'states': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'states',
-                    'required': true,
-                    'type': 'array',
-                  },
-                  'transitions': {
-                    'items': {
-                      'properties': {
-                        'event': {
-                          'name': 'event',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'from': {
-                          'name': 'from',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'guardHint': {
-                          'name': 'guardHint',
-                          'required': false,
-                          'type': 'string',
-                        },
-                        'to': {
-                          'name': 'to',
-                          'required': true,
-                          'type': 'string',
-                        },
-                      },
-                      'type': 'object',
-                    },
-                    'name': 'transitions',
-                    'required': true,
-                    'type': 'array',
-                  },
-                },
                 'required': false,
-                'type': 'object',
+                'type': 'string',
               },
             },
             'tier': 'presentation',

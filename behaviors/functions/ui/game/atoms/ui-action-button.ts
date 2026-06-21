@@ -46,6 +46,8 @@ export interface StdUiActionButtonClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiActionButtonConfig {
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  assetUrl?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `0` */

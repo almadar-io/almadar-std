@@ -1,5 +1,5 @@
 {
-  "description": "TimerDisplay — UI factory (1:1 with the @almadar/ui timer-display pattern).",
+  "description": "TimerDisplay — counts down every second while running; re-renders on each tick.",
   "name": "ui-timer-display",
   "orbitals": [
     {
@@ -9,6 +9,16 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "default": 90.0,
+            "name": "seconds",
+            "type": "number"
+          },
+          {
+            "default": true,
+            "name": "running",
+            "type": "boolean"
           }
         ],
         "name": "TimerDisplayItem",
@@ -84,7 +94,10 @@
             }
           },
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "running",
+              "seconds"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -108,14 +121,24 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.seconds",
+                    "@config.seconds"
+                  ],
+                  [
+                    "set",
+                    "@entity.running",
+                    "@config.running"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "className": "@config.className",
                       "format": "@config.format",
                       "lowThreshold": "@config.lowThreshold",
-                      "running": "@config.running",
-                      "seconds": "@config.seconds",
+                      "running": "@entity.running",
+                      "seconds": "@entity.seconds",
                       "size": "@config.size",
                       "type": "timer-display"
                     }
@@ -126,7 +149,50 @@
                 "to": "idle"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.seconds",
+                  [
+                    "-",
+                    "@entity.seconds",
+                    1.0
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "className": "@config.className",
+                    "format": "@config.format",
+                    "lowThreshold": "@config.lowThreshold",
+                    "running": "@entity.running",
+                    "seconds": "@entity.seconds",
+                    "size": "@config.size",
+                    "type": "timer-display"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                [
+                  "==",
+                  "@entity.running",
+                  true
+                ],
+                [
+                  ">",
+                  "@entity.seconds",
+                  0.0
+                ]
+              ],
+              "interval": 1000.0,
+              "name": "timerTick"
+            }
+          ]
         }
       ]
     }

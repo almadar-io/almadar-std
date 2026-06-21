@@ -1,0 +1,521 @@
+{
+  "description": "TowerDefenseTemplate — isometric tower-defense arena; composes TowerDefenseBoard with HUD (gold/lives/wave).",
+  "name": "ui-tower-defense-template",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "TowerDefenseTemplateItem",
+        "persistence": "runtime"
+      },
+      "name": "TowerDefenseTemplateOrbital",
+      "pages": [
+        {
+          "name": "TowerDefenseTemplatePage",
+          "path": "/tower-defense-template",
+          "traits": [
+            {
+              "ref": "TowerDefenseTemplateRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "External styling override",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "creepBaseHp": {
+              "default": 10.0,
+              "description": "Base HP of the first creep in a wave",
+              "label": "Creep Base HP",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "creepsPerWave": {
+              "default": 5.0,
+              "description": "Number of creeps spawned per wave",
+              "label": "Creeps Per Wave",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "gold": {
+              "default": 100.0,
+              "description": "Gold the player starts with",
+              "label": "Starting Gold",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "goldPerKill": {
+              "default": 10.0,
+              "description": "Gold awarded for each creep killed",
+              "label": "Gold Per Kill",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "lives": {
+              "default": 20.0,
+              "description": "Lives the player starts with",
+              "label": "Starting Lives",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "maxWaves": {
+              "default": 5.0,
+              "description": "Total waves to survive for victory",
+              "label": "Max Waves",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "path": {
+              "default": [
+                {
+                  "x": 2.0,
+                  "y": 0.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 1.0
+                },
+                {
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                {
+                  "x": 3.0,
+                  "y": 2.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 2.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "x": 4.0,
+                  "y": 4.0
+                }
+              ],
+              "description": "Ordered waypoint coords forwarded to TowerDefenseBoard.",
+              "items": {
+                "properties": {
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Path",
+              "tier": "presentation",
+              "type": "[TowerDefenseTemplatePathItem]"
+            },
+            "scale": {
+              "default": 0.45,
+              "description": "Canvas render scale",
+              "label": "Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "tiles": {
+              "default": [
+                {
+                  "passable": false,
+                  "terrain": "wall",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "wall",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "path",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                  "x": 2.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "wall",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                  "x": 3.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "wall",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                  "x": 4.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "ground",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "ground",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                  "x": 1.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "path",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                  "x": 2.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "ground",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                  "x": 3.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "ground",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                  "x": 4.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "ground",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                  "x": 0.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "ground",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                  "x": 1.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "path",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "path",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                  "x": 3.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "path",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                  "x": 4.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "ground",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                  "x": 0.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "ground",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                  "x": 1.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "ground",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "ground",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "path",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "wall",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                  "x": 0.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "wall",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                  "x": 1.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "wall",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                  "x": 2.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "wall",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                  "x": 3.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "path",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                  "x": 4.0,
+                  "y": 4.0
+                }
+              ],
+              "description": "Tile grid forwarded to TowerDefenseBoard; path cells marked passable:false.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "passable": {
+                    "name": "passable",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "terrain": {
+                    "name": "terrain",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "terrainSprite": {
+                    "name": "terrainSprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tiles",
+              "tier": "presentation",
+              "type": "[TowerDefenseTemplateTilesItem]"
+            },
+            "title": {
+              "default": "Tower Defense",
+              "description": "Display title shown in the template header",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "towerCost": {
+              "default": 25.0,
+              "description": "Gold cost to place one tower",
+              "label": "Tower Cost",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "towerDamage": {
+              "default": 3.0,
+              "description": "Damage per hit per tower",
+              "label": "Tower Damage",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "towerRange": {
+              "default": 2.0,
+              "description": "Attack range in grid units",
+              "label": "Tower Range",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "towers": {
+              "default": [
+                {
+                  "cooldown": 1.0,
+                  "damage": 3.0,
+                  "id": "t0",
+                  "lastFiredAt": 0.0,
+                  "range": 2.0,
+                  "x": 1.0,
+                  "y": 1.0
+                },
+                {
+                  "cooldown": 1.0,
+                  "damage": 3.0,
+                  "id": "t1",
+                  "lastFiredAt": 0.0,
+                  "range": 2.0,
+                  "x": 3.0,
+                  "y": 3.0
+                }
+              ],
+              "description": "Pre-placed towers forwarded to TowerDefenseBoard.",
+              "items": {
+                "properties": {
+                  "cooldown": {
+                    "name": "cooldown",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "damage": {
+                    "name": "damage",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "lastFiredAt": {
+                    "name": "lastFiredAt",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "range": {
+                    "name": "range",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Towers",
+              "tier": "presentation",
+              "type": "[TowerDefenseTemplateTowersItem]"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TowerDefenseTemplateItem",
+          "name": "TowerDefenseTemplateRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "TowerDefenseTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "creepBaseHp": "@config.creepBaseHp",
+                      "creepsPerWave": "@config.creepsPerWave",
+                      "entity": "@entity",
+                      "gameEndEvent": "GAME_END",
+                      "gold": "@config.gold",
+                      "goldPerKill": "@config.goldPerKill",
+                      "lives": "@config.lives",
+                      "maxWaves": "@config.maxWaves",
+                      "path": "@config.path",
+                      "placeTowerEvent": "PLACE_TOWER",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "scale": "@config.scale",
+                      "startWaveEvent": "START_WAVE",
+                      "tiles": "@config.tiles",
+                      "title": "@config.title",
+                      "towerCost": "@config.towerCost",
+                      "towerDamage": "@config.towerDamage",
+                      "towerRange": "@config.towerRange",
+                      "towers": "@config.towers",
+                      "type": "tower-defense-template"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

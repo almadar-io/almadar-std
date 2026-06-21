@@ -1,0 +1,642 @@
+[
+  {
+    "organism": "ui-roguelike-board",
+    "orbital": "RoguelikeBoardOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/organisms/ui-roguelike-board.ts",
+    "entities": [
+      {
+        "name": "RoguelikeBoardItem",
+        "fields": [
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "player",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "playerHp",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "playerMaxHp",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "playerAttack",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "enemies",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "items",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "depth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "stairsX",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "stairsY",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridWidth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridHeight",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "RoguelikeBoardRender",
+        "emittedEvents": [
+          "MOVE",
+          "PLAY_AGAIN",
+          "GAME_END"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "MOVE",
+            "direction": "emit",
+            "description": "Player move by delta (arrow key or tile click)",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Resets the dungeon to depth 1",
+            "tier": "essential"
+          },
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Emitted when result transitions to won or lost",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "RoguelikeBoardAssetManifest",
+            "default": {
+              "baseUrl": "https://almadar-kflow-assets.web.app/shared",
+              "features": {
+                "health_potion": "isometric-dungeon/Isometric/chestClosed_E.png",
+                "shield": "isometric-dungeon/Isometric/barrel_E.png",
+                "sword": "isometric-dungeon/Isometric/barrel_E.png"
+              },
+              "terrains": {
+                "floor": "isometric-dungeon/Isometric/dirt_E.png",
+                "planks": "isometric-dungeon/Isometric/planks_E.png",
+                "stairs": "isometric-dungeon/Isometric/stairs_E.png",
+                "wall": "isometric-dungeon/Isometric/stoneInset_E.png"
+              },
+              "units": {
+                "enemy": "sprite-sheets/shadow-legion-sprite-sheet-sw.png",
+                "player": "isometric-dungeon/Characters/Male/Male_0_Idle0.png"
+              }
+            },
+            "label": "Asset Manifest",
+            "description": "CDN sprite paths for terrain, player, enemies, and items.",
+            "tier": "presentation",
+            "properties": {
+              "baseUrl": {
+                "name": "baseUrl",
+                "required": false,
+                "type": "string"
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object"
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object"
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object"
+              }
+            }
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "enemies",
+            "type": "[RoguelikeBoardEnemiesItem]",
+            "default": [
+              {
+                "attack": 2,
+                "hp": 5,
+                "id": "e1",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "attack": 1,
+                "hp": 4,
+                "id": "e2",
+                "x": 1,
+                "y": 3
+              }
+            ],
+            "label": "Enemies",
+            "description": "Initial enemy positions, hp, and attack values.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "attack": {
+                  "name": "attack",
+                  "required": true,
+                  "type": "number"
+                },
+                "hp": {
+                  "name": "hp",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "error",
+            "type": "RoguelikeBoardError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "items",
+            "type": "[RoguelikeBoardItemsItem]",
+            "default": [
+              {
+                "id": "i1",
+                "kind": "health_potion",
+                "x": 2,
+                "y": 2
+              }
+            ],
+            "label": "Items",
+            "description": "Floor items (health_potion / sword / shield).",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "health_potion",
+                    "sword",
+                    "shield"
+                  ]
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "player",
+            "type": "RoguelikeBoardPlayerPos",
+            "default": {
+              "x": 1,
+              "y": 1
+            },
+            "label": "Player Start",
+            "description": "Player starting position",
+            "tier": "presentation",
+            "properties": {
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "playerAttack",
+            "type": "number",
+            "default": 3,
+            "label": "Player Attack",
+            "description": "Player base damage per hit",
+            "tier": "presentation"
+          },
+          {
+            "key": "playerMaxHp",
+            "type": "number",
+            "default": 10,
+            "label": "Player Max HP",
+            "description": "Starting max HP for the player",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.45,
+            "label": "Scale",
+            "description": "Canvas render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "stairsX",
+            "type": "number",
+            "default": 3,
+            "label": "Stairs X",
+            "description": "Stairs tile X coordinate",
+            "tier": "presentation"
+          },
+          {
+            "key": "stairsY",
+            "type": "number",
+            "default": 3,
+            "label": "Stairs Y",
+            "description": "Stairs tile Y coordinate",
+            "tier": "presentation"
+          },
+          {
+            "key": "tiles",
+            "type": "[RoguelikeBoardTilesItem]",
+            "default": [
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "floor",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "stairs",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stairs_E.png",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png",
+                "x": 4,
+                "y": 4
+              }
+            ],
+            "label": "Tiles",
+            "description": "Dungeon tile grid with wall/floor/stairs layout.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "terrainSprite": {
+                  "name": "terrainSprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "tileType": {
+                  "name": "tileType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "unitScale",
+            "type": "number",
+            "default": 1,
+            "label": "Unit Scale",
+            "description": "Unit draw-size multiplier",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "depth",
+            "enemies",
+            "gridHeight",
+            "gridWidth",
+            "items",
+            "phase",
+            "player",
+            "playerAttack",
+            "playerHp",
+            "playerMaxHp",
+            "result",
+            "stairsX",
+            "stairsY",
+            "tiles"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "RoguelikeBoardPage",
+        "defaultPath": "/roguelike-board",
+        "primaryEntity": "RoguelikeBoardItem"
+      }
+    ],
+    "emittedEvents": [
+      "GAME_END",
+      "MOVE",
+      "PLAY_AGAIN"
+    ],
+    "listenedEvents": []
+  }
+]

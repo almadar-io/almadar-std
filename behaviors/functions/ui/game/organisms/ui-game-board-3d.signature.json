@@ -1,0 +1,871 @@
+[
+  {
+    "organism": "ui-game-board-3d",
+    "orbital": "GameBoard3DOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/organisms/ui-game-board-3d.ts",
+    "entities": [
+      {
+        "name": "GameBoard3DItem",
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "attackTargets",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "turn",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "currentTeam",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "gridWidth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridHeight",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "movementRange",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "enemyTurn",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GameBoard3DRender",
+        "emittedEvents": [
+          "ATTACK",
+          "GAME_END",
+          "UNIT_MOVE",
+          "TILE_CLICK",
+          "UNIT_CLICK",
+          "END_TURN",
+          "CANCEL",
+          "PLAY_AGAIN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "ATTACK",
+            "direction": "emit",
+            "description": "-- Callbacks --",
+            "tier": "essential"
+          },
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Called when the match ends",
+            "tier": "essential"
+          },
+          {
+            "name": "UNIT_MOVE",
+            "direction": "emit",
+            "description": "Called after a unit moves",
+            "tier": "essential"
+          },
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "-- Declarative event props --",
+            "tier": "essential"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+            "tier": "essential"
+          },
+          {
+            "name": "END_TURN",
+            "direction": "emit",
+            "description": "Emits UI:{endTurnEvent} with {} on end turn",
+            "tier": "essential"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Emits UI:{cancelEvent} with {} on cancel",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "essential"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "GameBoard3DAssetManifest",
+            "default": {
+              "effects": {
+                "death": "effects/explosions/pixel/pixelExplosion07.png",
+                "heal": "effects/particles/magic_02.png",
+                "hit": "effects/particles/spark_06.png",
+                "magic": "effects/particles/magic_02.png",
+                "melee": "effects/particles/slash_03.png",
+                "ranged": "effects/particles/spark_06.png"
+              },
+              "features": {
+                "gold_mine": "world-map/gold_mine.png",
+                "portal": "world-map/portal_open.png"
+              },
+              "terrains": {
+                "castle": "isometric-dungeon/Isometric/stoneTile_E.png",
+                "dirt": "isometric-dungeon/Isometric/dirtTiles_E.png",
+                "forest": "isometric-dungeon/Isometric/planks_E.png",
+                "grass": "isometric-dungeon/Isometric/dirt_E.png",
+                "stone": "isometric-dungeon/Isometric/stoneInset_E.png"
+              },
+              "units": {
+                "guardian": "units/guardian.png",
+                "scout": "units/scout.png",
+                "warrior": "units/warrior.png",
+                "worker": "units/worker.png"
+              }
+            },
+            "label": "Asset Manifest",
+            "description": "Asset manifest for terrain/unit/feature/effect sprites.",
+            "tier": "presentation",
+            "properties": {
+              "baseUrl": {
+                "name": "baseUrl",
+                "required": false,
+                "type": "string"
+              },
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object"
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object"
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object"
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object"
+              }
+            }
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "GameBoard3DError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "features",
+            "type": "[GameBoard3DFeaturesItem]",
+            "default": [
+              {
+                "assetUrl": "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb",
+                "id": "f1",
+                "type": "gold_mine",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "assetUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb",
+                "id": "f2",
+                "type": "portal",
+                "x": 3,
+                "y": 0
+              }
+            ],
+            "label": "Features",
+            "description": "Decorative features on the board.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.45,
+            "label": "Scale",
+            "description": "Canvas render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "tiles",
+            "type": "[GameBoard3DTilesItem]",
+            "default": [
+              {
+                "id": "t00",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "id": "t10",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "id": "t20",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "id": "t30",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "id": "t40",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "id": "t01",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "id": "t11",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb",
+                "passable": true,
+                "terrain": "dirt",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "id": "t21",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb",
+                "passable": true,
+                "terrain": "grass",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "id": "t31",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb",
+                "passable": true,
+                "terrain": "grass",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "id": "t41",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "id": "t02",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "id": "t12",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb",
+                "passable": true,
+                "terrain": "grass",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "id": "t22",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb",
+                "passable": true,
+                "terrain": "dirt",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "t32",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb",
+                "passable": true,
+                "terrain": "grass",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "id": "t42",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "id": "t03",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "id": "t13",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb",
+                "passable": true,
+                "terrain": "grass",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "id": "t23",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb",
+                "passable": true,
+                "terrain": "grass",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "id": "t33",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb",
+                "passable": true,
+                "terrain": "dirt",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "id": "t43",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "id": "t04",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "id": "t14",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "id": "t24",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "id": "t34",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "id": "t44",
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb",
+                "passable": false,
+                "terrain": "stone",
+                "x": 4,
+                "y": 4
+              }
+            ],
+            "label": "Tiles",
+            "description": "5×5 grid tile data — takes priority over entity-derived tiles.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "movementCost": {
+                  "name": "movementCost",
+                  "required": false,
+                  "type": "number"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "terrainSprite": {
+                  "name": "terrainSprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "tileType": {
+                  "name": "tileType",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "unitScale",
+            "type": "number",
+            "default": 1,
+            "label": "Unit Scale",
+            "description": "Unit draw-size multiplier",
+            "tier": "presentation"
+          },
+          {
+            "key": "units",
+            "type": "[GameBoard3DUnitsItem]",
+            "default": [
+              {
+                "health": 10,
+                "id": "u1",
+                "maxHealth": 10,
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb",
+                "name": "Worker",
+                "position": {
+                  "x": 1,
+                  "y": 1
+                },
+                "team": "player",
+                "unitType": "worker"
+              },
+              {
+                "health": 10,
+                "id": "u2",
+                "maxHealth": 10,
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb",
+                "name": "Warrior",
+                "position": {
+                  "x": 1,
+                  "y": 3
+                },
+                "team": "player",
+                "unitType": "warrior"
+              },
+              {
+                "health": 8,
+                "id": "e1",
+                "maxHealth": 10,
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb",
+                "name": "Guardian",
+                "position": {
+                  "x": 3,
+                  "y": 3
+                },
+                "team": "enemy",
+                "unitType": "guardian"
+              },
+              {
+                "health": 6,
+                "id": "e2",
+                "maxHealth": 8,
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb",
+                "name": "Scout",
+                "position": {
+                  "x": 3,
+                  "y": 1
+                },
+                "team": "enemy",
+                "unitType": "scout"
+              }
+            ],
+            "label": "Units",
+            "description": "Initial unit roster (2 player + 2 enemy) — takes priority over entity-derived units.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "faction": {
+                  "name": "faction",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "heroId": {
+                  "name": "heroId",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "previousPosition": {
+                  "name": "previousPosition",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "traits": {
+                  "name": "traits",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "cooldown": {
+                        "name": "cooldown",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "currentState": {
+                        "name": "currentState",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "states": {
+                        "name": "states",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "attackTargets",
+            "currentTeam",
+            "enemyTurn",
+            "gridHeight",
+            "gridWidth",
+            "movementRange",
+            "phase",
+            "result",
+            "selectedUnitId",
+            "turn",
+            "units",
+            "validMoves"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "GameBoard3DPage",
+        "defaultPath": "/game-board-3d",
+        "primaryEntity": "GameBoard3DItem"
+      }
+    ],
+    "emittedEvents": [
+      "ATTACK",
+      "CANCEL",
+      "END_TURN",
+      "GAME_END",
+      "PLAY_AGAIN",
+      "TILE_CLICK",
+      "UNIT_CLICK",
+      "UNIT_MOVE"
+    ],
+    "listenedEvents": []
+  }
+]

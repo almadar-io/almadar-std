@@ -37,7 +37,7 @@ export type StdUiNegotiatorBoardEventKey = 'COMPLETE' | 'FINISH' | 'INIT' | 'PLA
  */
 export interface StdUiNegotiatorBoardPlayRoundPayload {
   playerAction: string;
-  payoff: number;
+  payoff?: number;
 }
 
 /**
@@ -261,6 +261,21 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
           {
             'name': 'description',
             'type': 'string',
+          },
+          {
+            'default': '',
+            'name': 'lastPlayerAction',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'name': 'lastOpponentAction',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'name': 'lastPayoff',
+            'type': 'number',
           },
         ];
         const extras = params.fields ?? [];
@@ -511,7 +526,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
         },
         'emits': [
           {
-            'description': 'Emits one negotiation round; the UI resolves the payoff before emitting.',
+            'description': 'Emits one negotiation round; playerAction drives in-model opponent AI and payoff lookup (payoff field is UI-supplied but ignored by model).',
             'event': 'PLAY_ROUND',
             'payloadSchema': [
               {
@@ -521,7 +536,6 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
               },
               {
                 'name': 'payoff',
-                'required': true,
                 'type': 'number',
               },
             ],
@@ -575,6 +589,9 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
           'provides': [
             'actions',
             'description',
+            'lastOpponentAction',
+            'lastPayoff',
+            'lastPlayerAction',
             'maxRounds',
             'opponentStrategy',
             'payoffMatrix',
@@ -601,7 +618,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
               'name': 'Initialize',
             },
             {
-              'description': 'Emits one negotiation round; the UI resolves the payoff before emitting.',
+              'description': 'Emits one negotiation round; playerAction drives in-model opponent AI and payoff lookup (payoff field is UI-supplied but ignored by model).',
               'key': 'PLAY_ROUND',
               'name': 'Play Round',
               'payloadSchema': [
@@ -612,7 +629,6 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                 },
                 {
                   'name': 'payoff',
-                  'required': true,
                   'type': 'number',
                 },
               ],
@@ -727,6 +743,21 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   '@config.opponentStrategy',
                 ],
                 [
+                  'set',
+                  '@entity.lastPlayerAction',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.lastOpponentAction',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.lastPayoff',
+                  0,
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -796,6 +827,21 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   '@config.payoffMatrix',
                 ],
                 [
+                  'set',
+                  '@entity.lastPlayerAction',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.lastOpponentAction',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.lastPayoff',
+                  0,
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -816,20 +862,73 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
               'effects': [
                 [
                   'set',
+                  '@entity.lastOpponentAction',
+                  [
+                    'if',
+                    [
+                      '==',
+                      '@entity.opponentStrategy',
+                      'always-cooperate',
+                    ],
+                    'cooperate',
+                    [
+                      'if',
+                      [
+                        '==',
+                        '@entity.opponentStrategy',
+                        'always-defect',
+                      ],
+                      'defect',
+                      [
+                        'if',
+                        [
+                          '==',
+                          '@entity.lastPlayerAction',
+                          '',
+                        ],
+                        'cooperate',
+                        '@entity.lastPlayerAction',
+                      ],
+                    ],
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.lastPayoff',
+                  [
+                    'object/get',
+                    [
+                      'array/find',
+                      '@entity.payoffMatrix',
+                      [
+                        'fn',
+                        'r',
+                        [
+                          'and',
+                          [
+                            '==',
+                            '@r.playerAction',
+                            '@payload.playerAction',
+                          ],
+                          [
+                            '==',
+                            '@r.opponentAction',
+                            '@entity.lastOpponentAction',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'playerPayoff',
+                    0,
+                  ],
+                ],
+                [
+                  'set',
                   '@entity.score',
                   [
                     '+',
                     '@entity.score',
-                    [
-                      'if',
-                      [
-                        '>=',
-                        '@payload.payoff',
-                        0,
-                      ],
-                      '@payload.payoff',
-                      0,
-                    ],
+                    '@entity.lastPayoff',
                   ],
                 ],
                 [
@@ -840,6 +939,11 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                     '@entity.round',
                     1,
                   ],
+                ],
+                [
+                  'set',
+                  '@entity.lastPlayerAction',
+                  '@payload.playerAction',
                 ],
                 [
                   'render-ui',
@@ -947,6 +1051,21 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'set',
                   '@entity.result',
                   'none',
+                ],
+                [
+                  'set',
+                  '@entity.lastPlayerAction',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.lastOpponentAction',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.lastPayoff',
+                  0,
                 ],
                 [
                   'render-ui',

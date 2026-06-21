@@ -7,7 +7,78 @@
     "entities": [
       {
         "name": "StateArchitectBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "states",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "initialState",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "entityName",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "availableEvents",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "transitions",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "testCases",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "variables",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "passedTests",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "totalTests",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "hint",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -15,22 +86,47 @@
       {
         "name": "StateArchitectBoardRender",
         "emittedEvents": [
-          "TEST",
-          "COMPLETE"
+          "COMPLETE",
+          "RUN_TESTS",
+          "ADD_TRANSITION",
+          "REMOVE_TRANSITION",
+          "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "TEST",
+            "name": "COMPLETE",
             "direction": "emit",
-            "description": "Emits UI:{testEvent}",
+            "description": "Emitted by the component when test-run completes; carries pass count.",
             "tier": "essential"
           },
           {
-            "name": "COMPLETE",
+            "name": "RUN_TESTS",
             "direction": "emit",
-            "description": "Emits UI:{completeEvent} with { success, passedTests }",
+            "description": "Player triggers the test runner; component evaluates each test case and fires COMPLETE.",
             "tier": "essential"
+          },
+          {
+            "name": "ADD_TRANSITION",
+            "direction": "emit",
+            "description": "Player wires a new transition in the graph editor.",
+            "tier": "essential"
+          },
+          {
+            "name": "REMOVE_TRANSITION",
+            "direction": "emit",
+            "description": "Player removes a transition from the graph.",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Reset the puzzle back to the menu.",
+            "tier": "essential"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
           },
           {
             "name": "INIT",
@@ -46,12 +142,42 @@
             "tier": "presentation"
           },
           {
+            "key": "availableEvents",
+            "type": "[string]",
+            "default": [
+              "ADVANCE",
+              "RESET"
+            ],
+            "label": "Available Events",
+            "description": "Events the player can assign to transitions they add.",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "key": "className",
             "type": "string",
             "default": "",
             "label": "Class Name",
             "description": "Additional CSS classes",
             "tier": "presentation"
+          },
+          {
+            "key": "description",
+            "type": "string",
+            "default": "Wire transitions between states so every test case reaches the correct final state.",
+            "label": "Description",
+            "description": "One-line puzzle brief shown to the player.",
+            "tier": "domain"
+          },
+          {
+            "key": "entityName",
+            "type": "string",
+            "default": "TrafficLight",
+            "label": "Entity Name",
+            "description": "Name of the machine being built, shown in the code view.",
+            "tier": "domain"
           },
           {
             "key": "error",
@@ -81,6 +207,22 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "key": "hint",
+            "type": "string",
+            "default": "Red must go to Green on ADVANCE. Green must go to Yellow on ADVANCE. Yellow must go back to Red on ADVANCE.",
+            "label": "Hint",
+            "description": "Optional hint revealed after 3 failed attempts.",
+            "tier": "domain"
+          },
+          {
+            "key": "initialState",
+            "type": "string",
+            "default": "red",
+            "label": "Initial State",
+            "description": "The state the machine starts in when a test begins.",
+            "tier": "domain"
           },
           {
             "key": "isLoading",
@@ -147,6 +289,21 @@
             ]
           },
           {
+            "key": "states",
+            "type": "[string]",
+            "default": [
+              "red",
+              "green",
+              "yellow"
+            ],
+            "label": "States",
+            "description": "All valid states in the puzzle's machine.",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
             "key": "stepDurationMs",
             "type": "number",
             "default": 600,
@@ -155,19 +312,170 @@
             "tier": "presentation"
           },
           {
+            "key": "testCases",
+            "type": "[StateArchitectBoardTestCasesItem]",
+            "default": [
+              {
+                "events": [
+                  "ADVANCE"
+                ],
+                "expectedState": "green",
+                "label": "One ADVANCE from red → green"
+              },
+              {
+                "events": [
+                  "ADVANCE",
+                  "ADVANCE"
+                ],
+                "expectedState": "yellow",
+                "label": "Two ADVANCEs from red → yellow"
+              },
+              {
+                "events": [
+                  "ADVANCE",
+                  "ADVANCE",
+                  "ADVANCE"
+                ],
+                "expectedState": "red",
+                "label": "Three ADVANCEs cycle back → red"
+              }
+            ],
+            "label": "Test Cases",
+            "description": "Ordered event sequences starting from initialState; must all reach expectedState for a win. Non-empty by default so an empty graph cannot win vacuously.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "events": {
+                  "name": "events",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "expectedState": {
+                  "name": "expectedState",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Build the Traffic Light",
+            "label": "Title",
+            "description": "Puzzle title shown above the board.",
+            "tier": "domain"
+          },
+          {
             "key": "totalCount",
             "type": "number",
             "default": 0,
             "label": "Total Count",
             "description": "Total number of items",
             "tier": "presentation"
+          },
+          {
+            "key": "transitions",
+            "type": "[StateArchitectBoardTransitionsItem]",
+            "default": [],
+            "label": "Transitions",
+            "description": "The player's current transition graph; empty at puzzle start so they must build it.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "event": {
+                  "name": "event",
+                  "required": true,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "guardHint": {
+                  "name": "guardHint",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "variables",
+            "type": "[StateArchitectBoardVariablesItem]",
+            "default": [
+              {
+                "id": "v1",
+                "name": "current",
+                "value": "red"
+              }
+            ],
+            "label": "Variables",
+            "description": "Variable panel entries shown in the side panel.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           }
         ],
         "capabilities": [],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "attempts",
+            "availableEvents",
+            "description",
+            "entityName",
+            "hint",
+            "initialState",
+            "passedTests",
+            "result",
+            "states",
+            "testCases",
+            "title",
+            "totalTests",
+            "transitions",
+            "variables"
+          ]
         }
       }
     ],
@@ -179,8 +487,11 @@
       }
     ],
     "emittedEvents": [
+      "ADD_TRANSITION",
       "COMPLETE",
-      "TEST"
+      "PLAY_AGAIN",
+      "REMOVE_TRANSITION",
+      "RUN_TESTS"
     ],
     "listenedEvents": []
   }

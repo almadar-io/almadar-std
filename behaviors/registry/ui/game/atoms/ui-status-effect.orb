@@ -1,5 +1,5 @@
 {
-  "description": "StatusEffect — UI factory (1:1 with the @almadar/ui status-effect pattern).",
+  "description": "StatusEffect — counts down duration every second; re-renders on each tick.",
   "name": "ui-status-effect",
   "orbitals": [
     {
@@ -9,6 +9,11 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "default": 30.0,
+            "name": "duration",
+            "type": "number"
           }
         ],
         "name": "StatusEffectItem",
@@ -30,6 +35,13 @@
         {
           "category": "interaction",
           "config": {
+            "assetUrl": {
+              "default": "https://almadar-kflow-assets.web.app/shared/effects/particles/flame_01.png",
+              "description": "Sprite image URL — takes precedence over icon when provided",
+              "label": "Asset Url",
+              "tier": "presentation",
+              "type": "asset"
+            },
             "className": {
               "default": "",
               "description": "Additional CSS classes",
@@ -45,8 +57,8 @@
               "type": "number"
             },
             "icon": {
-              "default": "circle",
-              "description": "Lucide icon name or component",
+              "default": "shield",
+              "description": "Lucide icon name for the status effect",
               "label": "Icon",
               "tier": "presentation",
               "type": "icon"
@@ -91,7 +103,9 @@
             }
           },
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "duration"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -115,11 +129,17 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.duration",
+                    "@config.duration"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
+                      "assetUrl": "@config.assetUrl",
                       "className": "@config.className",
-                      "duration": "@config.duration",
+                      "duration": "@entity.duration",
                       "icon": "@config.icon",
                       "label": "@config.label",
                       "size": "@config.size",
@@ -134,7 +154,44 @@
                 "to": "idle"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.duration",
+                  [
+                    "-",
+                    "@entity.duration",
+                    1.0
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "assetUrl": "@config.assetUrl",
+                    "className": "@config.className",
+                    "duration": "@entity.duration",
+                    "icon": "@config.icon",
+                    "label": "@config.label",
+                    "size": "@config.size",
+                    "stacks": "@config.stacks",
+                    "type": "status-effect",
+                    "variant": "@config.variant"
+                  }
+                ]
+              ],
+              "guard": [
+                ">",
+                "@entity.duration",
+                0.0
+              ],
+              "interval": 1000.0,
+              "name": "durationTick"
+            }
+          ]
         }
       ]
     }
