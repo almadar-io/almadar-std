@@ -1,8 +1,9 @@
 app ui-status-effect "1.0.0"
-"StatusEffect — UI factory (1:1 with the @almadar/ui status-effect pattern)."
+"StatusEffect — counts down duration every second; re-renders on each tick."
 orbital StatusEffectOrbital {
   entity StatusEffectItem [runtime] {
-    id : string!
+    id       : string!
+    duration : number = 30
   }
 
   trait StatusEffectRender -> @rebindable StatusEffectItem [interaction, instance] {
@@ -10,10 +11,27 @@ orbital StatusEffectOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.duration @config.duration)
         (render-ui main {
           icon: @config.icon
           label: @config.label
-          duration: @config.duration
+          duration: @entity.duration
+          stacks: @config.stacks
+          variant: @config.variant
+          size: @config.size
+          className: @config.className
+          type: status-effect
+        })
+    }
+
+    ticks {
+      durationTick every 1s
+        when (> @entity.duration 0)
+        (set @entity.duration (- @entity.duration 1))
+        (render-ui main {
+          icon: @config.icon
+          label: @config.label
+          duration: @entity.duration
           stacks: @config.stacks
           variant: @config.variant
           size: @config.size
@@ -23,11 +41,11 @@ orbital StatusEffectOrbital {
     }
 
     config {
-      icon : icon = "circle"
+      icon : icon = "shield"
         @label "Icon"
-        @description "Lucide icon name or component"
+        @description "Lucide icon name for the status effect"
         @tier "presentation"
-      label : string = Shield
+      label : string = "Shield"
         @label "Label"
         @description "Label describing the effect"
         @tier "presentation"

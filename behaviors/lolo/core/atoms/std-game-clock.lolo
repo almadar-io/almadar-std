@@ -1,0 +1,58 @@
+app std-game-clock "1.0.0"
+"std-game-clock — fixed-timestep authoritative clock games compose to drive time; emits GameClockTicked every 100ms while running."
+orbital GameClockOrbital {
+    type GameClockTicked = Event { elapsedMs : number } "Broadcast each tick while the clock is running."
+
+  entity GameClockRecord [persistent: game_clock_states] {
+    id : string!
+    elapsedMs : number @description "Total milliseconds elapsed since the clock started." @synonyms "elapsed, time, ms, total time" = 0
+    running : boolean @description "Whether the clock is currently ticking." @synonyms "active, playing, started" = true
+  }
+
+  trait GameClock -> GameClockRecord [game-core, instance] {
+    initial: running
+
+    state running {
+      PAUSE -> paused
+        (set @entity.running false)
+      RESUME -> running
+    }
+
+    state paused {
+      RESUME -> running
+        (set @entity.running true)
+      PAUSE -> paused
+    }
+
+    emits {
+      GameClockTicked -> external {
+        elapsedMs : number
+      }
+        @description "Fires every clock tick while running; consumers use elapsedMs to drive animations and game logic."
+        @synonyms "clock-tick, time-advance, tick, frame, elapsed"
+        @tier "primary"
+    }
+
+    listens {
+      PAUSE { }
+      RESUME { }
+    }
+
+    ticks {
+      clockTick every 100ms
+        when (== @entity.running true)
+        (set @entity.elapsedMs (+ @entity.elapsedMs 100))
+        (emit GameClockTicked { elapsedMs: @entity.elapsedMs })
+    }
+
+    config {
+      autoStart : boolean = true
+        @label "Auto-start clock"
+        @description "When true the clock begins ticking immediately on INIT without waiting for a RESUME event."
+        @synonyms "start on init, auto-run, begin immediately"
+        @tier "domain"
+    }
+  }
+
+  page "/game/clock" as GameClockPage -> GameClock
+}
