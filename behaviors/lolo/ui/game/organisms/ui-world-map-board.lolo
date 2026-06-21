@@ -1,5 +1,5 @@
 app ui-world-map-board "1.0.0"
-"WorldMapBoard — UI factory (1:1 with the @almadar/ui world-map-board pattern)."
+"WorldMapBoard — overworld exploration: model owns hero selection, movement validation (Manhattan range + passable), battle encounters, and win/lose conditions."
 orbital WorldMapBoardOrbital {
   type WorldMapBoardError = {
     message : string!
@@ -36,6 +36,7 @@ orbital WorldMapBoardOrbital {
     faction : "player" | "enemy" | "neutral"
     health : number
     maxHealth : number
+    movement : number
     traits : [WorldMapBoardUnitsItemTraitsItem]
     previousPosition : WorldMapBoardUnitsItemPreviousPosition
     elevation : number
@@ -74,22 +75,263 @@ orbital WorldMapBoardOrbital {
 
   entity WorldMapBoardItem [runtime] {
     id : string!
+    units : [WorldMapBoardUnitsItem]
+    tiles : [WorldMapBoardTilesItem]
+    features : [WorldMapBoardFeaturesItem]
+    selectedHeroId : string = ""
+    turn : number = 0
+    result : "none" | "win" | "lose" = none
+    gridWidth : number = 5
+    gridHeight : number = 5
+    movementRange : number = 3
   }
 
   trait WorldMapBoardRender -> @rebindable WorldMapBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
-        (fetch WorldMapBoardItem {})
+    state menu {
+      START -> playing
+        (set @entity.units @config.units)
+        (set @entity.tiles @config.tiles)
+        (set @entity.features @config.features)
+        (set @entity.selectedHeroId "")
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.gridWidth 5)
+        (set @entity.gridHeight 5)
+        (set @entity.movementRange 3)
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
           entity: @entity
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          allowMoveAllHeroes: @config.allowMoveAllHeroes
+          heroSelectEvent: HERO_SELECT
+          heroMoveEvent: HERO_MOVE
+          battleEncounterEvent: BATTLE_ENCOUNTER
+          featureEnterEvent: FEATURE_ENTER
+          tileClickEvent: TILE_CLICK
+          onHeroSelect: HERO_SELECT
+          onHeroMove: HERO_MOVE
+          onBattleEncounter: BATTLE_ENCOUNTER
+          onFeatureEnter: FEATURE_ENTER
+          diamondTopY: @config.diamondTopY
+          enableCamera: @config.enableCamera
+          effectSpriteUrls: @config.effectSpriteUrls
+          type: world-map-board
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.tiles @config.tiles)
+        (set @entity.features @config.features)
+        (set @entity.selectedHeroId "")
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.gridWidth 5)
+        (set @entity.gridHeight 5)
+        (set @entity.movementRange 3)
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          allowMoveAllHeroes: @config.allowMoveAllHeroes
+          heroSelectEvent: HERO_SELECT
+          heroMoveEvent: HERO_MOVE
+          battleEncounterEvent: BATTLE_ENCOUNTER
+          featureEnterEvent: FEATURE_ENTER
+          tileClickEvent: TILE_CLICK
+          onHeroSelect: HERO_SELECT
+          onHeroMove: HERO_MOVE
+          onBattleEncounter: BATTLE_ENCOUNTER
+          onFeatureEnter: FEATURE_ENTER
+          diamondTopY: @config.diamondTopY
+          enableCamera: @config.enableCamera
+          effectSpriteUrls: @config.effectSpriteUrls
+          type: world-map-board
+        })
+
+      HERO_SELECT -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?heroId))) team) "player")
+        (set @entity.selectedHeroId ?heroId)
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          allowMoveAllHeroes: @config.allowMoveAllHeroes
+          heroSelectEvent: HERO_SELECT
+          heroMoveEvent: HERO_MOVE
+          battleEncounterEvent: BATTLE_ENCOUNTER
+          featureEnterEvent: FEATURE_ENTER
+          tileClickEvent: TILE_CLICK
+          onHeroSelect: HERO_SELECT
+          onHeroMove: HERO_MOVE
+          onBattleEncounter: BATTLE_ENCOUNTER
+          onFeatureEnter: FEATURE_ENTER
+          diamondTopY: @config.diamondTopY
+          enableCamera: @config.enableCamera
+          effectSpriteUrls: @config.effectSpriteUrls
+          type: world-map-board
+        })
+
+      HERO_MOVE -> playing when (and (!= @entity.selectedHeroId "") (and (grid/in-bounds { x: ?toX, y: ?toY } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedHeroId))) position) { x: ?toX, y: ?toY }) @entity.movementRange) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) ?toX) (== (object/get @t y) ?toY)))) passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?toX) (== (object/get (object/get @u position) y) ?toY))))) 0)))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedHeroId) (object/merge @u { position: { x: ?toX, y: ?toY } }) @u))))
+        (set @entity.selectedHeroId "")
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          allowMoveAllHeroes: @config.allowMoveAllHeroes
+          heroSelectEvent: HERO_SELECT
+          heroMoveEvent: HERO_MOVE
+          battleEncounterEvent: BATTLE_ENCOUNTER
+          featureEnterEvent: FEATURE_ENTER
+          tileClickEvent: TILE_CLICK
+          onHeroSelect: HERO_SELECT
+          onHeroMove: HERO_MOVE
+          onBattleEncounter: BATTLE_ENCOUNTER
+          onFeatureEnter: FEATURE_ENTER
+          diamondTopY: @config.diamondTopY
+          enableCamera: @config.enableCamera
+          effectSpriteUrls: @config.effectSpriteUrls
+          type: world-map-board
+        })
+
+      BATTLE_ENCOUNTER -> playing when (and (!= @entity.selectedHeroId "") (== (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?defenderId))) position)) 1))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?defenderId) (object/merge @u { health: (math/max 0 (- (object/get @u health) 3)) }) @u))))
+        (set @entity.selectedHeroId "")
+        (set @entity.turn (+ @entity.turn 1))
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          allowMoveAllHeroes: @config.allowMoveAllHeroes
+          heroSelectEvent: HERO_SELECT
+          heroMoveEvent: HERO_MOVE
+          battleEncounterEvent: BATTLE_ENCOUNTER
+          featureEnterEvent: FEATURE_ENTER
+          tileClickEvent: TILE_CLICK
+          onHeroSelect: HERO_SELECT
+          onHeroMove: HERO_MOVE
+          onBattleEncounter: BATTLE_ENCOUNTER
+          onFeatureEnter: FEATURE_ENTER
+          diamondTopY: @config.diamondTopY
+          enableCamera: @config.enableCamera
+          effectSpriteUrls: @config.effectSpriteUrls
+          type: world-map-board
+        })
+
+      FEATURE_ENTER -> playing
+        (set @entity.turn (+ @entity.turn 1))
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          allowMoveAllHeroes: @config.allowMoveAllHeroes
+          heroSelectEvent: HERO_SELECT
+          heroMoveEvent: HERO_MOVE
+          battleEncounterEvent: BATTLE_ENCOUNTER
+          featureEnterEvent: FEATURE_ENTER
+          tileClickEvent: TILE_CLICK
+          onHeroSelect: HERO_SELECT
+          onHeroMove: HERO_MOVE
+          onBattleEncounter: BATTLE_ENCOUNTER
+          onFeatureEnter: FEATURE_ENTER
+          diamondTopY: @config.diamondTopY
+          enableCamera: @config.enableCamera
+          effectSpriteUrls: @config.effectSpriteUrls
+          type: world-map-board
+        })
+
+      TILE_CLICK -> playing
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          allowMoveAllHeroes: @config.allowMoveAllHeroes
+          heroSelectEvent: HERO_SELECT
+          heroMoveEvent: HERO_MOVE
+          battleEncounterEvent: BATTLE_ENCOUNTER
+          featureEnterEvent: FEATURE_ENTER
+          tileClickEvent: TILE_CLICK
+          onHeroSelect: HERO_SELECT
+          onHeroMove: HERO_MOVE
+          onBattleEncounter: BATTLE_ENCOUNTER
+          onFeatureEnter: FEATURE_ENTER
+          diamondTopY: @config.diamondTopY
+          enableCamera: @config.enableCamera
+          effectSpriteUrls: @config.effectSpriteUrls
+          type: world-map-board
+        })
+
+      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "lose" "win"))
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          allowMoveAllHeroes: @config.allowMoveAllHeroes
+          heroSelectEvent: HERO_SELECT
+          heroMoveEvent: HERO_MOVE
+          battleEncounterEvent: BATTLE_ENCOUNTER
+          featureEnterEvent: FEATURE_ENTER
+          tileClickEvent: TILE_CLICK
+          onHeroSelect: HERO_SELECT
+          onHeroMove: HERO_MOVE
+          onBattleEncounter: BATTLE_ENCOUNTER
+          onFeatureEnter: FEATURE_ENTER
+          diamondTopY: @config.diamondTopY
+          enableCamera: @config.enableCamera
+          effectSpriteUrls: @config.effectSpriteUrls
+          type: world-map-board
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.tiles @config.tiles)
+        (set @entity.features @config.features)
+        (set @entity.selectedHeroId "")
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
           assetManifest: @config.assetManifest
           scale: @config.scale
           unitScale: @config.unitScale
@@ -142,6 +384,16 @@ orbital WorldMapBoardOrbital {
       }
         @description "Emits UI:{tileClickEvent} with { x, y }"
         @tier "essential"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when all enemies or all player heroes are defeated"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "essential"
     }
 
     config {
@@ -159,15 +411,15 @@ orbital WorldMapBoardOrbital {
         @tier "presentation"
       tiles : [WorldMapBoardTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 1, y: 0, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 2, y: 0, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 3, y: 0, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 4, y: 0, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 0, y: 1, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 1, y: 1, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png" }, { x: 2, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png" }, { x: 3, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png" }, { x: 4, y: 1, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 0, y: 2, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 1, y: 2, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png" }, { x: 2, y: 2, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png" }, { x: 3, y: 2, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png" }, { x: 4, y: 2, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 0, y: 3, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 1, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png" }, { x: 2, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png" }, { x: 3, y: 3, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png" }, { x: 4, y: 3, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 0, y: 4, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 1, y: 4, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 2, y: 4, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 3, y: 4, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 4, y: 4, terrain: "stone", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }]
         @label "Tiles"
-        @description "Direct tile data — takes priority over entity-derived tiles."
+        @description "Initial tile map seeded into entity on INIT — passable drives movement validation in the model."
         @tier "presentation"
-      units : [WorldMapBoardUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "worker", name: "Worker", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/sprite-sheets/amir-sprite-sheet-se.png" }, { id: "u2", position: { x: 3, y: 3 }, unitType: "guardian", name: "Guardian", team: enemy, health: 8, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/sprite-sheets/archivist-sprite-sheet-se.png" }]
+      units : [WorldMapBoardUnitsItem] = [{ id: "h1", position: { x: 1, y: 1 }, unitType: "hero", name: "Amir", team: player, health: 10, maxHealth: 10, movement: 3, sprite: "https://almadar-kflow-assets.web.app/shared/sprite-sheets/amir-sprite-sheet-se.png" }, { id: "h2", position: { x: 3, y: 3 }, unitType: "guard", name: "Sentinel", team: enemy, health: 8, maxHealth: 8, movement: 2, sprite: "https://almadar-kflow-assets.web.app/shared/sprite-sheets/archivist-sprite-sheet-se.png" }]
         @label "Units"
-        @description "Direct unit data — takes priority over entity-derived units."
+        @description "Initial hero/unit roster seeded into entity on INIT — team+health drive win/lose conditions."
         @tier "presentation"
       features : [WorldMapBoardFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb" }, { id: "f2", x: 3, y: 1, type: "portal", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb" }]
         @label "Features"
-        @description "Direct feature data — takes priority over entity-derived features."
+        @description "World features seeded into entity on INIT."
         @tier "presentation"
       assetManifest : WorldMapBoardAssetManifest = { terrains: { grass: "isometric-dungeon/Isometric/dirt_E.png", dirt: "isometric-dungeon/Isometric/dirtTiles_E.png", stone: "isometric-dungeon/Isometric/stoneInset_E.png", forest: "isometric-dungeon/Isometric/planks_E.png", castle: "isometric-dungeon/Isometric/stoneTile_E.png" }, units: { worker: "units/worker.png", guardian: "units/guardian.png", scrapper: "units/scrapper.png", mender: "units/mender.png" }, features: { gold_mine: "world-map/gold_mine.png", portal: "world-map/portal_open.png", castle: "castle/resonator_citadel.png" } }
         @label "Asset Manifest"

@@ -1,11 +1,17 @@
 app ui-sequencer-board "1.0.0"
-"SequencerBoard — UI factory (1:1 with the @almadar/ui sequencer-board pattern)."
+"SequencerBoard — order-the-steps puzzle: player places actions into slots; CHECK guard compares slot sequence against solution; win on exact match."
 orbital SequencerBoardOrbital {
-  type SequencerBoardError = {
-    message : string!
-    name : string
-    code : string
-    stack : string
+  type SequencerBoardAvailableActionsItem = {
+    id : string!
+    name : string!
+    description : string
+    category : string
+    iconEmoji : string
+    iconUrl : asset
+  }
+  type SequencerBoardSlotsItem = {
+    index : number!
+    placedActionId : string
   }
   type SequencerBoardCategoryColorsValue = {
     bg : string!
@@ -14,102 +20,282 @@ orbital SequencerBoardOrbital {
 
   entity SequencerBoardItem [runtime] {
     id : string!
+    slots : [SequencerBoardSlotsItem]
+    availableActions : [SequencerBoardAvailableActionsItem]
+    solutions : [[string]]
+    maxSlots : number = 3
+    allowDuplicates : boolean = false
+    title : string
+    description : string
+    hint : string
+    successMessage : string
+    headerImage : asset
+    attempts : number = 0
+    result : "none" | "win" = none
+    currentStep : number = -1
   }
 
   trait SequencerBoardRender -> @rebindable SequencerBoardItem [interaction, instance] {
-    initial: idle
+    initial: building
 
-    state idle {
-      INIT -> idle
-        (fetch SequencerBoardItem {})
+    state menu {
+      START -> building
+        (set @entity.slots @config.slots)
+        (set @entity.availableActions @config.availableActions)
+        (set @entity.solutions @config.solutions)
+        (set @entity.maxSlots @config.maxSlots)
+        (set @entity.allowDuplicates @config.allowDuplicates)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.hint @config.hint)
+        (set @entity.successMessage @config.successMessage)
+        (set @entity.headerImage @config.headerImage)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (set @entity.currentStep -1)
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
           entity: @entity
           categoryColors: @config.categoryColors
           stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
           playEvent: PLAY
-          completeEvent: COMPLETE
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
+        })
+    }
+
+    state building {
+      INIT -> building
+        (set @entity.slots @config.slots)
+        (set @entity.availableActions @config.availableActions)
+        (set @entity.solutions @config.solutions)
+        (set @entity.maxSlots @config.maxSlots)
+        (set @entity.allowDuplicates @config.allowDuplicates)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.hint @config.hint)
+        (set @entity.successMessage @config.successMessage)
+        (set @entity.headerImage @config.headerImage)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (set @entity.currentStep -1)
+        (render-ui main {
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
+        })
+
+      PLACE -> building
+        (set @entity.slots (array/map @entity.slots (fn s (if (== (object/get s index) ?slotIndex) (object/merge s { placedActionId: ?actionId }) s))))
+        (render-ui main {
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
+        })
+
+      REMOVE -> building
+        (set @entity.slots (array/map @entity.slots (fn s (if (== (object/get s index) ?slotIndex) (object/merge s { placedActionId: "" }) s))))
+        (render-ui main {
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
+        })
+
+      PLAY -> playing-back
+        (set @entity.currentStep 0)
+        (render-ui main {
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
+        })
+
+      CHECK -> complete when (array/some @entity.solutions (fn sol (== (array/map @entity.slots (fn s (object/get s placedActionId))) sol)))
+        (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.result "win")
+        (render-ui main {
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
+        })
+
+      CHECK -> building
+        (set @entity.attempts (+ @entity.attempts 1))
+        (render-ui main {
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
+        })
+    }
+
+    state playing-back {
+      STEP -> building when (>= @entity.currentStep (- @entity.maxSlots 1))
+        (set @entity.currentStep -1)
+        (render-ui main {
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
+        })
+
+      STEP -> playing-back
+        (set @entity.currentStep (+ @entity.currentStep 1))
+        (render-ui main {
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: sequencer-board
+        })
+    }
+
+    state complete {
+      PLAY_AGAIN -> menu
+        (set @entity.slots @config.slots)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (set @entity.currentStep -1)
+        (render-ui main {
+          entity: @entity
+          categoryColors: @config.categoryColors
+          stepDurationMs: @config.stepDurationMs
+          placeEvent: PLACE
+          removeEvent: REMOVE
+          playEvent: PLAY
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
           type: sequencer-board
         })
     }
 
     emits {
-      PLAY -> external {
-        sequence : [object]!
+      PLACE -> external {
+        slotIndex : number!
+        actionId : string!
       }
-        @description "Emits UI:{playEvent} with { sequence: string[] }"
+        @description "placeEvent prop — emitted when player drops an action into a slot"
         @tier "essential"
-      COMPLETE -> external {
-        success : boolean!
-        sequence : [object]!
+      REMOVE -> external {
+        slotIndex : number!
       }
-        @description "Emits UI:{completeEvent} with { success: boolean }"
+        @description "removeEvent prop — emitted when player removes an action from a slot"
+        @tier "essential"
+      PLAY -> external {
+        sequence : [string]!
+      }
+        @description "playEvent prop — emitted with the current slot sequence on playback start"
+        @tier "essential"
+      STEP -> external {
+        step : number!
+      }
+        @description "Advances playback one step; entity.currentStep increments until maxSlots-1 then returns to building"
+        @tier "essential"
+      CHECK -> external {
+        sequence : [string]!
+      }
+        @description "checkEvent prop — emitted when player submits the sequence for validation"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "playAgainEvent prop — reset slots and restart"
         @tier "essential"
     }
 
     config {
-      className : string = ""
-        @label "Class Name"
-        @description "Additional CSS classes"
+      title : string = "Morning Routine"
+        @label "Title"
+        @description "Puzzle title shown above the sequencer."
+        @tier "domain"
+      description : string = "Put the steps in the right order to start the day right."
+        @label "Description"
+        @description "One-line puzzle brief shown to the player."
+        @tier "domain"
+      hint : string = "You always brush your teeth before breakfast."
+        @label "Hint"
+        @description "Hint revealed after 3 failed attempts."
+        @tier "domain"
+      successMessage : string = "Perfect sequence! Great job!"
+        @label "Success Message"
+        @description "Message shown when the player wins."
+        @tier "domain"
+      headerImage : asset = ""
+        @label "Header Image"
+        @description "Optional banner image shown at the top of the board."
         @tier "presentation"
-      isLoading : boolean = false
-        @label "Is Loading"
-        @description "Loading state indicator"
-        @tier "presentation"
-      error : SequencerBoardError
-        @label "Error"
-        @description "Error state (UiError)"
-        @tier "presentation"
-      sortBy : string = "Sort By"
-        @label "Sort By"
-        @description "Current sort field"
-        @tier "presentation"
-      sortDirection : "asc" | "desc" = asc
-        @label "Sort Direction"
-        @description "Current sort direction"
-        @tier "presentation"
-      searchValue : string = "Search Value"
-        @label "Search Value"
-        @description "Current search query value"
-        @tier "presentation"
-      pageProp : number = 0
-        @label "Page"
-        @description "Current page number"
-        @synonyms "page"
-        @tier "presentation"
-      pageSize : number = 0
-        @label "Page Size"
-        @description "Number of items per page"
-        @tier "presentation"
-      totalCount : number = 0
-        @label "Total Count"
-        @description "Total number of items"
-        @tier "presentation"
-      activeFilters : json
-        @label "Active Filters"
-        @description "Active filters"
-        @tier "presentation"
-      selectedIds : [string] = []
-        @label "Selected Ids"
-        @description "Currently selected item IDs"
+      maxSlots : number = 3
+        @label "Max Slots"
+        @description "Number of slots the player fills — must match the solution length."
+        @tier "domain"
+      allowDuplicates : boolean = false
+        @label "Allow Duplicates"
+        @description "When true the same action can be placed in multiple slots."
+        @tier "domain"
+      availableActions : [SequencerBoardAvailableActionsItem] = [{ id: "wake-up", name: "Wake Up", description: "Get out of bed", category: "morning", iconEmoji: "🌅" }, { id: "brush-teeth", name: "Brush Teeth", description: "Clean your teeth", category: "hygiene", iconEmoji: "🪥" }, { id: "eat-breakfast", name: "Eat Breakfast", description: "Have your morning meal", category: "food", iconEmoji: "🍳" }, { id: "get-dressed", name: "Get Dressed", description: "Put on your clothes", category: "morning", iconEmoji: "👕" }]
+        @label "Available Actions"
+        @description "Draggable action cards the player picks from."
+        @tier "domain"
+      solutions : [[string]] = [["wake-up", "brush-teeth", "eat-breakfast"]]
+        @label "Solutions"
+        @description "Accepted winning sequences — at least one must match the player's slot order."
+        @tier "domain"
+      slots : [SequencerBoardSlotsItem] = [{ index: 0, placedActionId: "" }, { index: 1, placedActionId: "" }, { index: 2, placedActionId: "" }]
+        @label "Slots"
+        @description "Initial empty slot positions; one entry per maxSlots step."
         @tier "presentation"
       categoryColors : Map string SequencerBoardCategoryColorsValue = {}
         @label "Category Colors"
-        @description "Category → color mapping"
+        @description "Category → color mapping for action card tinting."
         @tier "presentation"
       stepDurationMs : number = 1000
         @label "Step Duration Ms"
-        @description "Playback speed in ms per step"
+        @description "Playback speed in milliseconds per step."
         @tier "presentation"
     }
   }
