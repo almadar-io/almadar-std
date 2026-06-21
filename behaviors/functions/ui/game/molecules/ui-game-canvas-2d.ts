@@ -48,7 +48,7 @@ export interface StdUiGameCanvas2dTickPayload {
 export interface StdUiGameCanvas2dConfig {
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
   assetBaseUrl?: unknown;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/scenes/resonators.jpeg"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/scenes/dark_clouds_from_above.png"` */
   backgroundImage?: unknown;
   /** Default: `""` */
   className?: string;

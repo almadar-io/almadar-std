@@ -102,11 +102,11 @@ export interface StdUiBattleBoardPlayAgainPayload {
  */
 export interface StdUiBattleBoardConfig {
   activeFilters?: unknown;
-  /** Default: `{"effects":{},"features":{"castle":"castle/resonator_citadel.png","gold_mine":"world-map/gold_mine.png","portal":"world-map/portal_open.png"},"terrains":{"castle":"isometric-dungeon/Isometric/stoneTile_E.png","dirt":"isometric-dungeon/Isometric/dirtTiles_E.png","forest":"isometric-dungeon/Isometric/planks_E.png","grass":"isometric-dungeon/Isometric/dirt_E.png","stone":"isometric-dungeon/Isometric/stoneInset_E.png"},"units":{"guardian":"units/guardian.png","mender":"units/mender.png","scrapper":"units/scrapper.png","worker":"units/worker.png"}}` */
+  /** Default: `{"effects":{"death":"effects/explosions/pixel/pixelExplosion07.png","fire":"effects/particles/fire_02.png","heal":"effects/particles/magic_02.png","hit":"effects/particles/spark_06.png","magic":"effects/particles/magic_02.png","melee":"effects/particles/slash_03.png","ranged":"effects/particles/spark_06.png","smoke":"effects/particles/smoke_02.png"},"features":{"castle":"castle/resonator_citadel.png","gold_mine":"world-map/gold_mine.png","portal":"world-map/portal_open.png"},"terrains":{"castle":"isometric-dungeon/Isometric/stoneTile_E.png","dirt":"isometric-dungeon/Isometric/dirtTiles_E.png","forest":"isometric-dungeon/Isometric/planks_E.png","grass":"isometric-dungeon/Isometric/dirt_E.png","stone":"isometric-dungeon/Isometric/stoneInset_E.png"},"units":{"guardian":"units/guardian.png","mender":"units/mender.png","scrapper":"units/scrapper.png","worker":"units/worker.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
-  /** Default: `[]` */
+  /** Default: `["https://almadar-kflow-assets.web.app/shared/effects/particles/slash_03.png","https://almadar-kflow-assets.web.app/shared/effects/particles/magic_02.png","https://almadar-kflow-assets.web.app/shared/effects/particles/spark_06.png","https://almadar-kflow-assets.web.app/shared/effects/explosions/pixel/pixelExplosion07.png"]` */
   effectSpriteUrls?: EntityRow[];
   error?: EntityRow;
   /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":1}]` */
@@ -409,7 +409,16 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
           },
           'assetManifest': {
             'default': {
-              'effects': {},
+              'effects': {
+                'death': 'effects/explosions/pixel/pixelExplosion07.png',
+                'fire': 'effects/particles/fire_02.png',
+                'heal': 'effects/particles/magic_02.png',
+                'hit': 'effects/particles/spark_06.png',
+                'magic': 'effects/particles/magic_02.png',
+                'melee': 'effects/particles/slash_03.png',
+                'ranged': 'effects/particles/spark_06.png',
+                'smoke': 'effects/particles/smoke_02.png',
+              },
               'features': {
                 'castle': 'castle/resonator_citadel.png',
                 'gold_mine': 'world-map/gold_mine.png',
@@ -481,7 +490,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'type': 'string',
           },
           'effectSpriteUrls': {
-            'default': [],
+            'default': [
+              'https://almadar-kflow-assets.web.app/shared/effects/particles/slash_03.png',
+              'https://almadar-kflow-assets.web.app/shared/effects/particles/magic_02.png',
+              'https://almadar-kflow-assets.web.app/shared/effects/particles/spark_06.png',
+              'https://almadar-kflow-assets.web.app/shared/effects/explosions/pixel/pixelExplosion07.png',
+            ],
             'description': 'effectSpriteUrls prop',
             'items': {
               'type': 'string',

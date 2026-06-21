@@ -69,7 +69,7 @@ export interface StdUiPlatformerCanvasStopPayload {
 export interface StdUiPlatformerCanvasConfig {
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
   assetBaseUrl?: unknown;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/scenes/court.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/scenes/dark_clouds_from_above.png"` */
   backgroundImage?: unknown;
   /** Default: `"Bg Color"` */
   bgColor?: string;
