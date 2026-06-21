@@ -82,7 +82,8 @@ orbital BattleBoardOrbital {
     units : [BattleBoardUnitsItem]
     selectedUnitId : string
     turn : number = 0
-    result : "none" | "win" | "lose" = none
+    result : "none" | "victory" | "defeat" = none
+    phase : string = "observation"
     gridWidth : number = 5
     gridHeight : number = 5
     movementRange : number = 2
@@ -98,6 +99,7 @@ orbital BattleBoardOrbital {
         (set @entity.selectedUnitId "")
         (set @entity.turn 0)
         (set @entity.result "none")
+        (set @entity.phase "observation")
         (set @entity.enemyTurn false)
         (render-ui main {
           entity: @entity
@@ -127,6 +129,7 @@ orbital BattleBoardOrbital {
         (set @entity.selectedUnitId "")
         (set @entity.turn 0)
         (set @entity.result "none")
+        (set @entity.phase "observation")
         (set @entity.enemyTurn false)
         (set @entity.gridWidth 5)
         (set @entity.gridHeight 5)
@@ -153,8 +156,32 @@ orbital BattleBoardOrbital {
           attackEvent: ATTACK
           type: battle-board
         })
+      UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.phase "action")
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: battle-board
+        })
+
       UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
         (set @entity.selectedUnitId ?unitId)
+        (set @entity.phase "movement")
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
@@ -178,6 +205,8 @@ orbital BattleBoardOrbital {
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
         (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?y } }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "observation")
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
@@ -199,9 +228,10 @@ orbital BattleBoardOrbital {
           type: battle-board
         })
 
-      ATTACK -> playing when (== (grid/distance (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position)) 1)
+      ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get ap x) (object/get tp x))) 1) (and (<= (math/abs (- (object/get ap y) (object/get tp y))) 1) (!= ap tp))))
         (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)) }) @u))))
         (set @entity.selectedUnitId "")
+        (set @entity.phase "observation")
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
@@ -227,6 +257,31 @@ orbital BattleBoardOrbital {
         (set @entity.turn (+ @entity.turn 1))
         (set @entity.selectedUnitId "")
         (set @entity.enemyTurn true)
+        (set @entity.phase "enemy_turn")
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: battle-board
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "observation")
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
@@ -249,7 +304,8 @@ orbital BattleBoardOrbital {
         })
 
       GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
-        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "lose" "win"))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
+        (set @entity.phase "game_over")
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
@@ -278,6 +334,7 @@ orbital BattleBoardOrbital {
         (set @entity.selectedUnitId "")
         (set @entity.turn 0)
         (set @entity.result "none")
+        (set @entity.phase "observation")
         (set @entity.enemyTurn false)
         (render-ui main {
           entity: @entity
@@ -308,8 +365,9 @@ orbital BattleBoardOrbital {
         (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)) }) @u) @u))))
         # move pass: each live enemy without an adjacent player steps one cell toward the first live player
         (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) } })) @u) @u))))
-        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "lose" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "win" "none")))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
         (set @entity.enemyTurn false)
+        (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
