@@ -1,5 +1,5 @@
-app ui-simulation-canvas "1.0.0"
-"SimulationCanvas — UI factory (1:1 with the @almadar/ui simulation-canvas pattern)."
+app ui-simulation-canvas "1.1.0"
+"SimulationCanvas — model-authoritative N-body Euler physics; 33ms tick integrates + wall-bounces each body; entity.preset.bodies is the live state the canvas reads."
 orbital SimulationCanvasOrbital {
   type SimulationCanvasPreset = {
     id : string!
@@ -44,6 +44,8 @@ orbital SimulationCanvasOrbital {
 
   entity SimulationCanvasItem [runtime] {
     id : string!
+    preset : SimulationCanvasPreset = { id: "demo", name: "Demo Scene", description: "Bouncing bodies", domain: "mechanics", gravity: { x: 0, y: 9.81 }, bodies: [], constraints: [], backgroundColor: "#1a1a2e", showVelocity: true, parameters: {} }
+    running : boolean = true
   }
 
   trait SimulationCanvasRender -> @rebindable SimulationCanvasItem [interaction, instance] {
@@ -51,41 +53,113 @@ orbital SimulationCanvasOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.preset @config.preset)
+        (set @entity.running @config.running)
         (render-ui main {
-          preset: @config.preset
+          preset: @entity.preset
           width: @config.width
           height: @config.height
-          running: @config.running
+          running: @entity.running
+          speed: @config.speed
+          className: @config.className
+          type: simulation-canvas
+        })
+
+      PAUSE -> idle
+        (set @entity.running false)
+        (render-ui main {
+          preset: @entity.preset
+          width: @config.width
+          height: @config.height
+          running: @entity.running
+          speed: @config.speed
+          className: @config.className
+          type: simulation-canvas
+        })
+
+      RESUME -> idle
+        (set @entity.running true)
+        (render-ui main {
+          preset: @entity.preset
+          width: @config.width
+          height: @config.height
+          running: @entity.running
+          speed: @config.speed
+          className: @config.className
+          type: simulation-canvas
+        })
+
+      RESET -> idle
+        (set @entity.preset @config.preset)
+        (set @entity.running @config.running)
+        (render-ui main {
+          preset: @entity.preset
+          width: @config.width
+          height: @config.height
+          running: @entity.running
           speed: @config.speed
           className: @config.className
           type: simulation-canvas
         })
     }
 
+    ticks {
+      physicsStep every 33ms
+        when (== @entity.running true)
+        (set @entity.preset (object/merge @entity.preset { bodies: (array/map @entity.preset.bodies (fn b (if @b.fixed @b (let ((vx1 (math/clamp (+ @b.vx (* @entity.preset.gravity.x 0.0333)) (- 0 500) 500)) (vy1 (math/clamp (+ @b.vy (* @entity.preset.gravity.y 0.0333)) (- 0 500) 500)) (x1 (+ @b.x (* vx1 0.0333))) (y1 (+ @b.y (* vy1 0.0333))) (hitR (> (+ x1 @b.radius) @config.width)) (hitL (< (- x1 @b.radius) 0)) (hitB (> (+ y1 @b.radius) @config.height)) (hitT (< (- y1 @b.radius) 0)) (vx2 (if (or hitR hitL) (* (- 0 vx1) 0.8) vx1)) (vy2 (if (or hitB hitT) (* (- 0 vy1) 0.8) vy1)) (x2 (math/clamp x1 @b.radius (- @config.width @b.radius))) (y2 (math/clamp y1 @b.radius (- @config.height @b.radius)))) (object/merge @b { x: x2, y: y2, vx: vx2, vy: vy2 })))))}))
+        (render-ui main {
+          preset: @entity.preset
+          width: @config.width
+          height: @config.height
+          running: @entity.running
+          speed: @config.speed
+          className: @config.className
+          type: simulation-canvas
+        })
+    }
+
+    emits {
+      PAUSE -> external {
+        id : string
+      }
+        @description "Pause simulation"
+        @tier "essential"
+      RESUME -> external {
+        id : string
+      }
+        @description "Resume simulation"
+        @tier "essential"
+      RESET -> external {
+        id : string
+      }
+        @description "Reset bodies to initial config"
+        @tier "essential"
+    }
+
     config {
-      preset : SimulationCanvasPreset = { id: "demo", name: "Demo Scene", description: "Bouncing bodies with a spring", domain: "mechanics", gravity: { x: 0, y: 9.81 }, bodies: [{ id: "b0", x: 100, y: 80,  vx: 120, vy: 0,   mass: 1, radius: 14, color: "#e94560", fixed: false }, { id: "b1", x: 300, y: 150, vx: -80, vy: 60,  mass: 2, radius: 20, color: "#0f3460", fixed: false }, { id: "b2", x: 480, y: 90,  vx: 50,  vy: 90,  mass: 1, radius: 12, color: "#533483", fixed: false }, { id: "b3", x: 200, y: 300, vx: -40, vy: -70, mass: 3, radius: 22, color: "#16213e", fixed: false }, { id: "b4", x: 400, y: 280, vx: 70,  vy: -50, mass: 1, radius: 16, color: "#e94560", fixed: false }], constraints: [{ bodyA: 1, bodyB: 3, length: 160, stiffness: 0.4 }], backgroundColor: "#1a1a2e", showVelocity: true, parameters: {} }
+      preset : SimulationCanvasPreset = { id: "demo", name: "Demo Scene", description: "Bouncing bodies with wall reflection", domain: "mechanics", gravity: { x: 0, y: 9.81 }, bodies: [{ id: "b0", x: 100, y: 80,  vx: 120, vy: 0,   mass: 1, radius: 14, color: "#e94560", fixed: false }, { id: "b1", x: 300, y: 150, vx: -80, vy: 60,  mass: 2, radius: 20, color: "#0f3460", fixed: false }, { id: "b2", x: 480, y: 90,  vx: 50,  vy: 90,  mass: 1, radius: 12, color: "#533483", fixed: false }, { id: "b3", x: 200, y: 300, vx: -40, vy: -70, mass: 3, radius: 22, color: "#16213e", fixed: false }, { id: "b4", x: 400, y: 280, vx: 70,  vy: -50, mass: 1, radius: 16, color: "#e94560", fixed: false }], constraints: [], backgroundColor: "#1a1a2e", showVelocity: true, parameters: {} }
         @label "Preset"
-        @description "preset prop"
-        @tier "presentation"
-      width : number = 600
-        @label "Width"
-        @description "width prop"
-        @tier "presentation"
-      height : number = 400
-        @label "Height"
-        @description "height prop"
+        @description "Initial simulation preset; bodies are live-mutated each tick"
         @tier "presentation"
       running : boolean = true
         @label "Running"
-        @description "running prop"
+        @description "Whether the simulation ticks on mount"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels"
         @tier "presentation"
       speed : number = 1
         @label "Speed"
-        @description "speed prop"
+        @description "Simulation speed multiplier (cosmetic)"
         @tier "presentation"
       className : string = ""
         @label "Class Name"
-        @description "className prop"
+        @description "Additional CSS classes"
         @tier "presentation"
     }
   }
