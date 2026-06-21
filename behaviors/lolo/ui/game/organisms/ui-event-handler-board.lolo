@@ -1,53 +1,176 @@
 app ui-event-handler-board "1.0.0"
-"EventHandlerBoard — UI factory (1:1 with the @almadar/ui event-handler-board pattern)."
+"EventHandlerBoard — wire WHEN/THEN rules on objects so a trigger event chain reaches the goal."
 orbital EventHandlerBoardOrbital {
   type EventHandlerBoardError = {
     message : string!
-    name : string
-    code : string
-    stack : string
+    name    : string
+    code    : string
+    stack   : string
+  }
+  type EventHandlerBoardEventOption = {
+    id    : string!
+    label : string
+  }
+  type EventHandlerBoardRule = {
+    whenEvent  : string!
+    thenAction : string!
+  }
+  type EventHandlerBoardObjectsItem = {
+    id              : string!
+    name            : string
+    icon            : string
+    states          : [string]
+    currentState    : string
+    availableEvents : [EventHandlerBoardEventOption]
+    availableActions: [EventHandlerBoardEventOption]
+    rules           : [EventHandlerBoardRule]
+    maxRules        : number
   }
 
   entity EventHandlerBoardItem [runtime] {
-    id : string!
+    id           : string!
+    objects      : [EventHandlerBoardObjectsItem]
+    triggerEvents: [string]
+    goalEvent    : string
+    goalCondition: string
+    title        : string
+    description  : string
+    hint         : string
+    attempts     : number = 0
+    result       : "none" | "win" = none
   }
 
   trait EventHandlerBoardRender -> @rebindable EventHandlerBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
-        (fetch EventHandlerBoardItem {})
+    state menu {
+      START -> playing
+        (set @entity.objects      @config.objects)
+        (set @entity.triggerEvents @config.triggerEvents)
+        (set @entity.goalEvent    @config.goalEvent)
+        (set @entity.goalCondition @config.goalCondition)
+        (set @entity.title        @config.title)
+        (set @entity.description  @config.description)
+        (set @entity.hint         @config.hint)
+        (set @entity.attempts     0)
+        (set @entity.result       "none")
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          entity: @entity
-          stepDurationMs: @config.stepDurationMs
-          playEvent: PLAY
-          completeEvent: COMPLETE
-          type: event-handler-board
+          entity        : @entity
+          completeEvent : COMPLETE
+          playEvent     : PLAY
+          editRuleEvent : EDIT_RULE
+          playAgainEvent: PLAY_AGAIN
+          type          : event-handler-board
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.objects      @config.objects)
+        (set @entity.triggerEvents @config.triggerEvents)
+        (set @entity.goalEvent    @config.goalEvent)
+        (set @entity.goalCondition @config.goalCondition)
+        (set @entity.title        @config.title)
+        (set @entity.description  @config.description)
+        (set @entity.hint         @config.hint)
+        (set @entity.attempts     0)
+        (set @entity.result       "none")
+        (render-ui main {
+          entity        : @entity
+          completeEvent : COMPLETE
+          playEvent     : PLAY
+          editRuleEvent : EDIT_RULE
+          playAgainEvent: PLAY_AGAIN
+          type          : event-handler-board
+        })
+
+      EDIT_RULE -> playing
+        (set @entity.objects (array/map @entity.objects (fn obj (if (== (object/get obj id) ?objectId) (object/merge obj { rules: ?rules }) obj))))
+        (render-ui main {
+          entity        : @entity
+          completeEvent : COMPLETE
+          playEvent     : PLAY
+          editRuleEvent : EDIT_RULE
+          playAgainEvent: PLAY_AGAIN
+          type          : event-handler-board
+        })
+
+      PLAY -> complete when (> (array/len (array/filter @entity.objects (fn obj (array/some (object/get obj rules) (fn rule (== (object/get rule thenAction) @entity.goalEvent)))))) 0)
+        (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.result "win")
+        (render-ui main {
+          entity        : @entity
+          completeEvent : COMPLETE
+          playEvent     : PLAY
+          editRuleEvent : EDIT_RULE
+          playAgainEvent: PLAY_AGAIN
+          type          : event-handler-board
+        })
+
+      PLAY -> playing when (== (array/len (array/filter @entity.objects (fn obj (array/some (object/get obj rules) (fn rule (== (object/get rule thenAction) @entity.goalEvent)))))) 0)
+        (set @entity.attempts (+ @entity.attempts 1))
+        (render-ui main {
+          entity        : @entity
+          completeEvent : COMPLETE
+          playEvent     : PLAY
+          editRuleEvent : EDIT_RULE
+          playAgainEvent: PLAY_AGAIN
+          type          : event-handler-board
+        })
+    }
+
+    state complete {
+      PLAY_AGAIN -> menu
+        (set @entity.objects      @config.objects)
+        (set @entity.triggerEvents @config.triggerEvents)
+        (set @entity.goalEvent    @config.goalEvent)
+        (set @entity.goalCondition @config.goalCondition)
+        (set @entity.title        @config.title)
+        (set @entity.description  @config.description)
+        (set @entity.hint         @config.hint)
+        (set @entity.attempts     0)
+        (set @entity.result       "none")
+        (render-ui main {
+          entity        : @entity
+          completeEvent : COMPLETE
+          playEvent     : PLAY
+          editRuleEvent : EDIT_RULE
+          playAgainEvent: PLAY_AGAIN
+          type          : event-handler-board
+        })
+
+      COMPLETE -> complete
+        (render-ui main {
+          entity        : @entity
+          completeEvent : COMPLETE
+          playEvent     : PLAY
+          editRuleEvent : EDIT_RULE
+          playAgainEvent: PLAY_AGAIN
+          type          : event-handler-board
         })
     }
 
     emits {
-      PLAY -> external {
-        id : string
-      }
-        @description "Emits UI:{playEvent}"
-        @tier "essential"
       COMPLETE -> external {
         success : boolean!
       }
-        @description "Emits UI:{completeEvent} with { success }"
+        @description "Emitted by the component when the animated chain resolves (success or failure)."
+        @tier "essential"
+      PLAY -> external {
+        id : string
+      }
+        @description "Player hits Play; component runs the animated simulation and fires COMPLETE."
+        @tier "essential"
+      EDIT_RULE -> external {
+        objectId : string!
+        rules    : string
+      }
+        @description "Player saves a WHEN/THEN rule set for one object (rules is a JSON-encoded array)."
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Reset to menu after completing the puzzle."
         @tier "essential"
     }
 
@@ -101,6 +224,34 @@ orbital EventHandlerBoardOrbital {
         @label "Step Duration Ms"
         @description "Playback speed in ms per event"
         @tier "presentation"
+      title : string = "Chain the Events"
+        @label "Title"
+        @description "Puzzle title shown above the board."
+        @tier "domain"
+      description : string = "Set WHEN/THEN rules on each object so the trigger events eventually fire the goal event."
+        @label "Description"
+        @description "One-line puzzle brief shown to the player."
+        @tier "domain"
+      hint : string = "The Alarm object needs to react to DOOR_OPEN and fire SIREN_ON. The Siren needs to react to SIREN_ON and fire ALERT_SENT."
+        @label "Hint"
+        @description "Optional hint revealed after 3 failed attempts."
+        @tier "domain"
+      goalCondition : string = "ALERT_SENT must fire during the simulation"
+        @label "Goal Condition"
+        @description "Human-readable description of the win condition shown to the player."
+        @tier "domain"
+      goalEvent : string = "ALERT_SENT"
+        @label "Goal Event"
+        @description "The event name that must appear in the simulated chain for the player to win."
+        @tier "domain"
+      triggerEvents : [string] = ["DOOR_OPEN"]
+        @label "Trigger Events"
+        @description "Events that fire automatically at the start of each simulation run."
+        @tier "domain"
+      objects : [EventHandlerBoardObjectsItem] = [{ id: "obj-door", name: "Door Sensor", icon: "🚪", states: ["closed", "open"], currentState: "closed", availableEvents: [{ id: "DOOR_OPEN", label: "DOOR_OPEN" }, { id: "DOOR_CLOSE", label: "DOOR_CLOSE" }], availableActions: [{ id: "SIREN_ON", label: "SIREN_ON" }, { id: "LIGHT_ON", label: "LIGHT_ON" }], rules: [], maxRules: 2 }, { id: "obj-alarm", name: "Alarm", icon: "🔔", states: ["silent", "ringing"], currentState: "silent", availableEvents: [{ id: "SIREN_ON", label: "SIREN_ON" }, { id: "DOOR_OPEN", label: "DOOR_OPEN" }], availableActions: [{ id: "ALERT_SENT", label: "ALERT_SENT" }, { id: "LOG_EVENT", label: "LOG_EVENT" }], rules: [], maxRules: 2 }]
+        @label "Objects"
+        @description "Puzzle world objects each with their editable WHEN/THEN rule slots."
+        @tier "domain"
     }
   }
 

@@ -1,54 +1,222 @@
 app ui-state-architect-board "1.0.0"
-"StateArchitectBoard — UI factory (1:1 with the @almadar/ui state-architect-board pattern)."
+"StateArchitectBoard — build a state machine whose transitions pass every test case."
 orbital StateArchitectBoardOrbital {
   type StateArchitectBoardError = {
     message : string!
-    name : string
-    code : string
-    stack : string
+    name    : string
+    code    : string
+    stack   : string
+  }
+  type StateArchitectBoardTransitionsItem = {
+    id        : string!
+    from      : string!
+    to        : string!
+    event     : string!
+    guardHint : string
+  }
+  type StateArchitectBoardTestCasesItem = {
+    label         : string!
+    events        : [string]
+    expectedState : string!
+  }
+  type StateArchitectBoardVariablesItem = {
+    id    : string!
+    name  : string
+    value : string
   }
 
   entity StateArchitectBoardItem [runtime] {
-    id : string!
+    id             : string!
+    states         : [string]
+    initialState   : string
+    entityName     : string
+    availableEvents: [string]
+    transitions    : [StateArchitectBoardTransitionsItem]
+    testCases      : [StateArchitectBoardTestCasesItem]
+    variables      : [StateArchitectBoardVariablesItem]
+    passedTests    : number = 0
+    totalTests     : number = 0
+    title          : string
+    description    : string
+    hint           : string
+    attempts       : number = 0
+    result         : "none" | "win" = none
   }
 
   trait StateArchitectBoardRender -> @rebindable StateArchitectBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
-        (fetch StateArchitectBoardItem {})
+    state menu {
+      START -> playing
+        (set @entity.states          @config.states)
+        (set @entity.initialState    @config.initialState)
+        (set @entity.entityName      @config.entityName)
+        (set @entity.availableEvents @config.availableEvents)
+        (set @entity.transitions     @config.transitions)
+        (set @entity.testCases       @config.testCases)
+        (set @entity.variables       @config.variables)
+        (set @entity.totalTests      (array/len @config.testCases))
+        (set @entity.passedTests     0)
+        (set @entity.title           @config.title)
+        (set @entity.description     @config.description)
+        (set @entity.hint            @config.hint)
+        (set @entity.attempts        0)
+        (set @entity.result          "none")
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          entity: @entity
-          stepDurationMs: @config.stepDurationMs
-          testEvent: TEST
-          completeEvent: COMPLETE
-          type: state-architect-board
+          entity              : @entity
+          completeEvent       : COMPLETE
+          testEvent           : RUN_TESTS
+          addTransitionEvent  : ADD_TRANSITION
+          removeTransitionEvent: REMOVE_TRANSITION
+          playAgainEvent      : PLAY_AGAIN
+          type                : state-architect-board
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.states          @config.states)
+        (set @entity.initialState    @config.initialState)
+        (set @entity.entityName      @config.entityName)
+        (set @entity.availableEvents @config.availableEvents)
+        (set @entity.transitions     @config.transitions)
+        (set @entity.testCases       @config.testCases)
+        (set @entity.variables       @config.variables)
+        (set @entity.totalTests      (array/len @config.testCases))
+        (set @entity.passedTests     0)
+        (set @entity.title           @config.title)
+        (set @entity.description     @config.description)
+        (set @entity.hint            @config.hint)
+        (set @entity.attempts        0)
+        (set @entity.result          "none")
+        (render-ui main {
+          entity              : @entity
+          completeEvent       : COMPLETE
+          testEvent           : RUN_TESTS
+          addTransitionEvent  : ADD_TRANSITION
+          removeTransitionEvent: REMOVE_TRANSITION
+          playAgainEvent      : PLAY_AGAIN
+          type                : state-architect-board
+        })
+
+      ADD_TRANSITION -> playing
+        (set @entity.transitions (array/append @entity.transitions { id: ?id, from: ?from, to: ?to, event: ?event }))
+        (render-ui main {
+          entity              : @entity
+          completeEvent       : COMPLETE
+          testEvent           : RUN_TESTS
+          addTransitionEvent  : ADD_TRANSITION
+          removeTransitionEvent: REMOVE_TRANSITION
+          playAgainEvent      : PLAY_AGAIN
+          type                : state-architect-board
+        })
+
+      REMOVE_TRANSITION -> playing
+        (set @entity.transitions (array/filter @entity.transitions (fn t (!= (object/get t id) ?id))))
+        (render-ui main {
+          entity              : @entity
+          completeEvent       : COMPLETE
+          testEvent           : RUN_TESTS
+          addTransitionEvent  : ADD_TRANSITION
+          removeTransitionEvent: REMOVE_TRANSITION
+          playAgainEvent      : PLAY_AGAIN
+          type                : state-architect-board
+        })
+
+      RUN_TESTS -> complete when (and (> (array/len @entity.transitions) 0) (== (array/len @entity.testCases) @entity.passedTests))
+        (set @entity.attempts (+ @entity.attempts 1))
+        (set @entity.result "win")
+        (render-ui main {
+          entity              : @entity
+          completeEvent       : COMPLETE
+          testEvent           : RUN_TESTS
+          addTransitionEvent  : ADD_TRANSITION
+          removeTransitionEvent: REMOVE_TRANSITION
+          playAgainEvent      : PLAY_AGAIN
+          type                : state-architect-board
+        })
+
+      RUN_TESTS -> playing when (or (== (array/len @entity.transitions) 0) (!= (array/len @entity.testCases) @entity.passedTests))
+        (set @entity.attempts (+ @entity.attempts 1))
+        (render-ui main {
+          entity              : @entity
+          completeEvent       : COMPLETE
+          testEvent           : RUN_TESTS
+          addTransitionEvent  : ADD_TRANSITION
+          removeTransitionEvent: REMOVE_TRANSITION
+          playAgainEvent      : PLAY_AGAIN
+          type                : state-architect-board
+        })
+
+      COMPLETE -> complete
+        (set @entity.passedTests ?passedTests)
+        (render-ui main {
+          entity              : @entity
+          completeEvent       : COMPLETE
+          testEvent           : RUN_TESTS
+          addTransitionEvent  : ADD_TRANSITION
+          removeTransitionEvent: REMOVE_TRANSITION
+          playAgainEvent      : PLAY_AGAIN
+          type                : state-architect-board
+        })
+    }
+
+    state complete {
+      PLAY_AGAIN -> menu
+        (set @entity.states          @config.states)
+        (set @entity.initialState    @config.initialState)
+        (set @entity.entityName      @config.entityName)
+        (set @entity.availableEvents @config.availableEvents)
+        (set @entity.transitions     @config.transitions)
+        (set @entity.testCases       @config.testCases)
+        (set @entity.variables       @config.variables)
+        (set @entity.totalTests      (array/len @config.testCases))
+        (set @entity.passedTests     0)
+        (set @entity.title           @config.title)
+        (set @entity.description     @config.description)
+        (set @entity.hint            @config.hint)
+        (set @entity.attempts        0)
+        (set @entity.result          "none")
+        (render-ui main {
+          entity              : @entity
+          completeEvent       : COMPLETE
+          testEvent           : RUN_TESTS
+          addTransitionEvent  : ADD_TRANSITION
+          removeTransitionEvent: REMOVE_TRANSITION
+          playAgainEvent      : PLAY_AGAIN
+          type                : state-architect-board
         })
     }
 
     emits {
-      TEST -> external {
-        id : string
-      }
-        @description "Emits UI:{testEvent}"
-        @tier "essential"
       COMPLETE -> external {
-        success : boolean!
+        success     : boolean!
         passedTests : number!
       }
-        @description "Emits UI:{completeEvent} with { success, passedTests }"
+        @description "Emitted by the component when test-run completes; carries pass count."
+        @tier "essential"
+      RUN_TESTS -> external {
+        id : string
+      }
+        @description "Player triggers the test runner; component evaluates each test case and fires COMPLETE."
+        @tier "essential"
+      ADD_TRANSITION -> external {
+        id    : string!
+        from  : string!
+        to    : string!
+        event : string!
+      }
+        @description "Player wires a new transition in the graph editor."
+        @tier "essential"
+      REMOVE_TRANSITION -> external {
+        id : string!
+      }
+        @description "Player removes a transition from the graph."
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Reset the puzzle back to the menu."
         @tier "essential"
     }
 
@@ -102,6 +270,46 @@ orbital StateArchitectBoardOrbital {
         @label "Step Duration Ms"
         @description "Playback speed"
         @tier "presentation"
+      title : string = "Build the Traffic Light"
+        @label "Title"
+        @description "Puzzle title shown above the board."
+        @tier "domain"
+      description : string = "Wire transitions between states so every test case reaches the correct final state."
+        @label "Description"
+        @description "One-line puzzle brief shown to the player."
+        @tier "domain"
+      hint : string = "Red must go to Green on ADVANCE. Green must go to Yellow on ADVANCE. Yellow must go back to Red on ADVANCE."
+        @label "Hint"
+        @description "Optional hint revealed after 3 failed attempts."
+        @tier "domain"
+      entityName : string = "TrafficLight"
+        @label "Entity Name"
+        @description "Name of the machine being built, shown in the code view."
+        @tier "domain"
+      initialState : string = "red"
+        @label "Initial State"
+        @description "The state the machine starts in when a test begins."
+        @tier "domain"
+      states : [string] = ["red", "green", "yellow"]
+        @label "States"
+        @description "All valid states in the puzzle's machine."
+        @tier "domain"
+      availableEvents : [string] = ["ADVANCE", "RESET"]
+        @label "Available Events"
+        @description "Events the player can assign to transitions they add."
+        @tier "domain"
+      transitions : [StateArchitectBoardTransitionsItem] = []
+        @label "Transitions"
+        @description "The player's current transition graph; empty at puzzle start so they must build it."
+        @tier "domain"
+      variables : [StateArchitectBoardVariablesItem] = [{ id: "v1", name: "current", value: "red" }]
+        @label "Variables"
+        @description "Variable panel entries shown in the side panel."
+        @tier "domain"
+      testCases : [StateArchitectBoardTestCasesItem] = [{ label: "One ADVANCE from red → green", events: ["ADVANCE"], expectedState: "green" }, { label: "Two ADVANCEs from red → yellow", events: ["ADVANCE", "ADVANCE"], expectedState: "yellow" }, { label: "Three ADVANCEs cycle back → red", events: ["ADVANCE", "ADVANCE", "ADVANCE"], expectedState: "red" }]
+        @label "Test Cases"
+        @description "Ordered event sequences starting from initialState; must all reach expectedState for a win. Non-empty by default so an empty graph cannot win vacuously."
+        @tier "domain"
     }
   }
 

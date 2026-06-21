@@ -1,5 +1,5 @@
 app ui-castle-board "1.0.0"
-"CastleBoard — UI factory (1:1 with the @almadar/ui castle-board pattern)."
+"CastleBoard — build-and-defend: model owns gold, buildings, garrison, wave counter, health, and win/lose; ticks drive resource income; FEATURE_CLICK purchases buildings guarded by cost."
 orbital CastleBoardOrbital {
   type CastleBoardTilesItem = {
     id : string
@@ -59,6 +59,14 @@ orbital CastleBoardOrbital {
     color : string
     elevation : number
   }
+  type CastleBoardBuildingsItem = {
+    id : string!
+    type : string!
+    x : number!
+    y : number!
+    cost : number!
+    incomePerTick : number
+  }
   type CastleBoardAssetManifest = {
     baseUrl : asset
     terrains : Map string asset
@@ -112,19 +120,240 @@ orbital CastleBoardOrbital {
 
   entity CastleBoardItem [runtime] {
     id : string!
+    tiles : [CastleBoardTilesItem]
+    units : [CastleBoardUnitsItem]
+    features : [CastleBoardFeaturesItem]
+    buildings : [CastleBoardBuildingsItem]
+    gold : number = 100
+    health : number = 20
+    maxHealth : number = 20
+    wave : number = 0
+    tickCount : number = 0
   }
 
   trait CastleBoardRender -> @rebindable CastleBoardItem [interaction, instance] {
     initial: idle
 
-    state idle {
-      INIT -> idle
-        (fetch CastleBoardItem {})
+    state menu {
+      START -> idle
+        (set @entity.tiles @config.tiles)
+        (set @entity.units @config.units)
+        (set @entity.features @config.features)
+        (set @entity.buildings [])
+        (set @entity.gold 100)
+        (set @entity.health 20)
+        (set @entity.maxHealth 20)
+        (set @entity.wave 0)
+        (set @entity.tickCount 0)
         (render-ui main {
           entity: @entity
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          onFeatureClick: FEATURE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileClick: TILE_CLICK
+          featureClickEvent: FEATURE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileClickEvent: TILE_CLICK
+          className: @config.className
+          type: castle-board
+        })
+    }
+
+    state idle {
+      INIT -> idle
+        (set @entity.tiles @config.tiles)
+        (set @entity.units @config.units)
+        (set @entity.features @config.features)
+        (set @entity.buildings [])
+        (set @entity.gold 100)
+        (set @entity.health 20)
+        (set @entity.maxHealth 20)
+        (set @entity.wave 0)
+        (set @entity.tickCount 0)
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          onFeatureClick: FEATURE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileClick: TILE_CLICK
+          featureClickEvent: FEATURE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileClickEvent: TILE_CLICK
+          className: @config.className
+          type: castle-board
+        })
+
+      FEATURE_CLICK -> idle when (>= @entity.gold 25)
+        (set @entity.gold (- @entity.gold 25))
+        (set @entity.buildings (array/append @entity.buildings { id: ?featureId, type: ?featureType, x: ?x, y: ?y, cost: 25, incomePerTick: 5 }))
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          onFeatureClick: FEATURE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileClick: TILE_CLICK
+          featureClickEvent: FEATURE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileClickEvent: TILE_CLICK
+          className: @config.className
+          type: castle-board
+        })
+
+      UNIT_CLICK -> idle
+        (set @entity.wave (+ @entity.wave 1))
+        (set @entity.health (math/max 0 (- @entity.health 5)))
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          onFeatureClick: FEATURE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileClick: TILE_CLICK
+          featureClickEvent: FEATURE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileClickEvent: TILE_CLICK
+          className: @config.className
+          type: castle-board
+        })
+
+      TILE_CLICK -> idle
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          onFeatureClick: FEATURE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileClick: TILE_CLICK
+          featureClickEvent: FEATURE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileClickEvent: TILE_CLICK
+          className: @config.className
+          type: castle-board
+        })
+
+      WAVE_DEFEATED -> victory when (>= @entity.wave 3)
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          onFeatureClick: FEATURE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileClick: TILE_CLICK
+          featureClickEvent: FEATURE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileClickEvent: TILE_CLICK
+          className: @config.className
+          type: castle-board
+        })
+
+      CASTLE_HIT -> defeat when (<= @entity.health 0)
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          onFeatureClick: FEATURE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileClick: TILE_CLICK
+          featureClickEvent: FEATURE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileClickEvent: TILE_CLICK
+          className: @config.className
+          type: castle-board
+        })
+    }
+
+    state victory {
+      PLAY_AGAIN -> menu
+        (set @entity.tiles @config.tiles)
+        (set @entity.units @config.units)
+        (set @entity.features @config.features)
+        (set @entity.buildings [])
+        (set @entity.gold 100)
+        (set @entity.health 20)
+        (set @entity.maxHealth 20)
+        (set @entity.wave 0)
+        (set @entity.tickCount 0)
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          onFeatureClick: FEATURE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileClick: TILE_CLICK
+          featureClickEvent: FEATURE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileClickEvent: TILE_CLICK
+          className: @config.className
+          type: castle-board
+        })
+    }
+
+    state defeat {
+      PLAY_AGAIN -> menu
+        (set @entity.tiles @config.tiles)
+        (set @entity.units @config.units)
+        (set @entity.features @config.features)
+        (set @entity.buildings [])
+        (set @entity.gold 100)
+        (set @entity.health 20)
+        (set @entity.maxHealth 20)
+        (set @entity.wave 0)
+        (set @entity.tickCount 0)
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          onFeatureClick: FEATURE_CLICK
+          onUnitClick: UNIT_CLICK
+          onTileClick: TILE_CLICK
+          featureClickEvent: FEATURE_CLICK
+          unitClickEvent: UNIT_CLICK
+          tileClickEvent: TILE_CLICK
+          className: @config.className
+          type: castle-board
+        })
+    }
+
+    ticks {
+      incomeTick every 4s
+        when (== @entity.health 20)
+        (set @entity.gold (+ @entity.gold (+ 10 (* (array/len @entity.buildings) 5))))
+        (set @entity.tickCount (+ @entity.tickCount 1))
+        (render-ui main {
+          entity: @entity
+          tiles: @entity.tiles
+          units: @entity.units
+          features: @entity.features
           assetManifest: @config.assetManifest
           scale: @config.scale
           onFeatureClick: FEATURE_CLICK
@@ -160,20 +389,35 @@ orbital CastleBoardOrbital {
       }
         @description "Called when any tile is clicked"
         @tier "essential"
+      WAVE_DEFEATED -> external {
+        wave : number!
+      }
+        @description "Emitted when the player defeats the current wave"
+        @tier "essential"
+      CASTLE_HIT -> external {
+        damage : number!
+      }
+        @description "Emitted when the castle takes damage from an enemy"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "essential"
     }
 
     config {
       tiles : [CastleBoardTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 2, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 3, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 4, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 1, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 2, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 3, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 4, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 2, y: 2, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 3, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 4, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 2, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 3, y: 3, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 4, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 2, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 3, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 4, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }]
         @label "Tiles"
-        @description "Direct tile data — takes priority over entity-derived tiles."
+        @description "Initial tile map seeded into entity on INIT."
         @tier "presentation"
       units : [CastleBoardUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "worker", name: "Worker", team: player, health: 10, maxHealth: 10, modelUrl: "https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb" }, { id: "u2", position: { x: 3, y: 3 }, unitType: "guardian", name: "Guardian", team: enemy, health: 8, maxHealth: 10, modelUrl: "https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb" }]
         @label "Units"
-        @description "Direct unit data — takes priority over entity-derived units."
+        @description "Initial garrison and enemy units seeded into entity on INIT."
         @tier "presentation"
       features : [CastleBoardFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb" }, { id: "f2", x: 3, y: 1, type: "portal", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb" }]
         @label "Features"
-        @description "Direct feature data — takes priority over entity-derived features."
+        @description "Initial feature / building slots seeded into entity on INIT."
         @tier "presentation"
       assetManifest : CastleBoardAssetManifest = { terrains: { grass: "isometric-dungeon/Isometric/dirt_E.png", dirt: "isometric-dungeon/Isometric/dirtTiles_E.png", stone: "isometric-dungeon/Isometric/stoneInset_E.png", forest: "isometric-dungeon/Isometric/planks_E.png", castle: "isometric-dungeon/Isometric/stoneTile_E.png" }, units: { worker: "units/worker.png", guardian: "units/guardian.png", scrapper: "units/scrapper.png", mender: "units/mender.png" }, features: { gold_mine: "world-map/gold_mine.png", portal: "world-map/portal_open.png", castle: "castle/resonator_citadel.png" } }
         @label "Asset Manifest"
