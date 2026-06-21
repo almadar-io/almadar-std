@@ -1,5 +1,5 @@
 {
-  "description": "PlatformerCanvas — UI factory (1:1 with the @almadar/ui platformer-canvas pattern).",
+  "description": "PlatformerCanvas — model-authoritative platformer physics; 33ms tick owns gravity+integration+AABB collision; canvas interpolates from player/platforms props.",
   "name": "ui-platformer-canvas",
   "orbitals": [
     {
@@ -9,6 +9,103 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "default": {
+              "facingRight": true,
+              "grounded": false,
+              "height": 48.0,
+              "vx": 0.0,
+              "vy": 0.0,
+              "width": 32.0,
+              "x": 80.0,
+              "y": 320.0
+            },
+            "name": "player",
+            "properties": {
+              "facingRight": {
+                "name": "facingRight",
+                "required": false,
+                "type": "boolean"
+              },
+              "grounded": {
+                "name": "grounded",
+                "required": false,
+                "type": "boolean"
+              },
+              "height": {
+                "name": "height",
+                "required": false,
+                "type": "number"
+              },
+              "vx": {
+                "name": "vx",
+                "required": false,
+                "type": "number"
+              },
+              "vy": {
+                "name": "vy",
+                "required": false,
+                "type": "number"
+              },
+              "width": {
+                "name": "width",
+                "required": false,
+                "type": "number"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            },
+            "type": "object"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "height": {
+                  "name": "height",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "ground",
+                    "platform",
+                    "hazard",
+                    "goal"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "platforms",
+            "type": "array"
           }
         ],
         "name": "PlatformerCanvasItem",
@@ -79,17 +176,66 @@
               "tier": "presentation",
               "type": "boolean"
             },
+            "gravity": {
+              "default": 0.6,
+              "description": "vy delta applied each 33ms tick",
+              "label": "Gravity",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "jumpStrength": {
+              "default": 12.0,
+              "description": "vy set to -(jumpStrength) on JUMP",
+              "label": "Jump Strength",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "maxFallSpeed": {
+              "default": 20.0,
+              "description": "Terminal velocity cap downward",
+              "label": "Max Fall Speed",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "moveSpeed": {
+              "default": 4.0,
+              "description": "Horizontal vx magnitude on LEFT/RIGHT",
+              "label": "Move Speed",
+              "tier": "presentation",
+              "type": "number"
+            },
             "platforms": {
               "default": [
                 {
-                  "height": 1.0,
+                  "height": 32.0,
                   "type": "ground",
-                  "width": 1.0,
-                  "x": 1.0,
-                  "y": 1.0
+                  "width": 800.0,
+                  "x": 0.0,
+                  "y": 368.0
+                },
+                {
+                  "height": 16.0,
+                  "type": "platform",
+                  "width": 160.0,
+                  "x": 150.0,
+                  "y": 280.0
+                },
+                {
+                  "height": 16.0,
+                  "type": "platform",
+                  "width": 160.0,
+                  "x": 420.0,
+                  "y": 220.0
+                },
+                {
+                  "height": 16.0,
+                  "type": "platform",
+                  "width": 140.0,
+                  "x": 620.0,
+                  "y": 300.0
                 }
               ],
-              "description": "Static platforms / level geometry",
+              "description": "Level geometry; ground at worldHeight-32",
               "items": {
                 "properties": {
                   "height": {
@@ -132,16 +278,16 @@
             },
             "player": {
               "default": {
-                "facingRight": false,
+                "facingRight": true,
                 "grounded": false,
-                "height": 1.0,
-                "vx": 1.0,
-                "vy": 1.0,
-                "width": 1.0,
-                "x": 1.0,
-                "y": 1.0
+                "height": 48.0,
+                "vx": 0.0,
+                "vy": 0.0,
+                "width": 32.0,
+                "x": 80.0,
+                "y": 320.0
               },
-              "description": "Player state data",
+              "description": "Initial player state",
               "label": "Player",
               "properties": {
                 "facingRight": {
@@ -214,7 +360,7 @@
             },
             "worldWidth": {
               "default": 800.0,
-              "description": "World dimensions",
+              "description": "World dimensions in pixels",
               "label": "World Width",
               "tier": "presentation",
               "type": "number"
@@ -222,7 +368,7 @@
           },
           "emits": [
             {
-              "description": "Event names for keyboard controls",
+              "description": "Left arrow / A key pressed",
               "event": "LEFT",
               "payloadSchema": [
                 {
@@ -235,7 +381,7 @@
               "tier": "essential"
             },
             {
-              "description": "rightEvent prop",
+              "description": "Right arrow / D key pressed",
               "event": "RIGHT",
               "payloadSchema": [
                 {
@@ -248,7 +394,7 @@
               "tier": "essential"
             },
             {
-              "description": "jumpEvent prop",
+              "description": "Up / Space pressed; model checks grounded guard",
               "event": "JUMP",
               "payloadSchema": [
                 {
@@ -260,7 +406,7 @@
               "tier": "essential"
             },
             {
-              "description": "stopEvent prop",
+              "description": "Horizontal key released",
               "event": "STOP",
               "payloadSchema": [
                 {
@@ -273,7 +419,10 @@
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "platforms",
+              "player"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -287,7 +436,7 @@
                 "name": "Initialize"
               },
               {
-                "description": "Event names for keyboard controls",
+                "description": "Left arrow / A key pressed",
                 "key": "LEFT",
                 "name": "Left",
                 "payloadSchema": [
@@ -300,7 +449,7 @@
                 "tier": "essential"
               },
               {
-                "description": "rightEvent prop",
+                "description": "Right arrow / D key pressed",
                 "key": "RIGHT",
                 "name": "Right",
                 "payloadSchema": [
@@ -313,7 +462,7 @@
                 "tier": "essential"
               },
               {
-                "description": "jumpEvent prop",
+                "description": "Up / Space pressed; model checks grounded guard",
                 "key": "JUMP",
                 "name": "Jump",
                 "payloadSchema": [
@@ -325,7 +474,7 @@
                 "tier": "essential"
               },
               {
-                "description": "stopEvent prop",
+                "description": "Horizontal key released",
                 "key": "STOP",
                 "name": "Stop",
                 "payloadSchema": [
@@ -347,6 +496,16 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.player",
+                    "@config.player"
+                  ],
+                  [
+                    "set",
+                    "@entity.platforms",
+                    "@config.platforms"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -359,8 +518,8 @@
                       "followCamera": "@config.followCamera",
                       "jumpEvent": "JUMP",
                       "leftEvent": "LEFT",
-                      "platforms": "@config.platforms",
-                      "player": "@config.player",
+                      "platforms": "@entity.platforms",
+                      "player": "@entity.player",
                       "playerSprite": "@config.playerSprite",
                       "rightEvent": "RIGHT",
                       "stopEvent": "STOP",
@@ -374,12 +533,323 @@
                 "event": "INIT",
                 "from": "idle",
                 "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "facingRight": false,
+                        "vx": [
+                          "-",
+                          0.0,
+                          "@config.moveSpeed"
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                "event": "LEFT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "facingRight": true,
+                        "vx": "@config.moveSpeed"
+                      }
+                    ]
+                  ]
+                ],
+                "event": "RIGHT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "grounded": false,
+                        "vy": [
+                          "-",
+                          0.0,
+                          "@config.jumpStrength"
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                "event": "JUMP",
+                "from": "idle",
+                "guard": [
+                  "==",
+                  "@entity.player.grounded",
+                  true
+                ],
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "vx": 0.0
+                      }
+                    ]
+                  ]
+                ],
+                "event": "STOP",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "let",
+                  [
+                    [
+                      "vy1",
+                      [
+                        "math/clamp",
+                        [
+                          "+",
+                          "@entity.player.vy",
+                          "@config.gravity"
+                        ],
+                        [
+                          "-",
+                          0.0,
+                          "@config.jumpStrength"
+                        ],
+                        "@config.maxFallSpeed"
+                      ]
+                    ],
+                    [
+                      "px1",
+                      [
+                        "math/clamp",
+                        [
+                          "+",
+                          "@entity.player.x",
+                          "@entity.player.vx"
+                        ],
+                        0.0,
+                        [
+                          "-",
+                          "@config.worldWidth",
+                          "@entity.player.width"
+                        ]
+                      ]
+                    ],
+                    [
+                      "py1",
+                      [
+                        "+",
+                        "@entity.player.y",
+                        "vy1"
+                      ]
+                    ],
+                    [
+                      "pw",
+                      "@entity.player.width"
+                    ],
+                    [
+                      "ph",
+                      "@entity.player.height"
+                    ],
+                    [
+                      "playerRect",
+                      {
+                        "h": "ph",
+                        "w": "pw",
+                        "x": "px1",
+                        "y": "py1"
+                      }
+                    ],
+                    [
+                      "hit",
+                      [
+                        "array/find",
+                        "@entity.platforms",
+                        [
+                          "fn",
+                          "p",
+                          [
+                            "geo/aabb-overlap",
+                            "playerRect",
+                            {
+                              "h": "@p.height",
+                              "w": "@p.width",
+                              "x": "@p.x",
+                              "y": "@p.y"
+                            }
+                          ]
+                        ]
+                      ]
+                    ],
+                    [
+                      "hitY",
+                      [
+                        "object/get",
+                        "hit",
+                        "y",
+                        "@config.worldHeight"
+                      ]
+                    ],
+                    [
+                      "landed",
+                      [
+                        "and",
+                        [
+                          "!=",
+                          "hit",
+                          null
+                        ],
+                        [
+                          ">",
+                          "vy1",
+                          0.0
+                        ]
+                      ]
+                    ],
+                    [
+                      "py2",
+                      [
+                        "if",
+                        "landed",
+                        [
+                          "-",
+                          "hitY",
+                          "ph"
+                        ],
+                        "py1"
+                      ]
+                    ],
+                    [
+                      "vy2",
+                      [
+                        "if",
+                        "landed",
+                        0.0,
+                        "vy1"
+                      ]
+                    ],
+                    [
+                      "atGround",
+                      [
+                        ">=",
+                        [
+                          "+",
+                          "py2",
+                          "ph"
+                        ],
+                        "@config.worldHeight"
+                      ]
+                    ],
+                    [
+                      "py3",
+                      [
+                        "if",
+                        "atGround",
+                        [
+                          "-",
+                          "@config.worldHeight",
+                          "ph"
+                        ],
+                        "py2"
+                      ]
+                    ],
+                    [
+                      "vy3",
+                      [
+                        "if",
+                        "atGround",
+                        0.0,
+                        "vy2"
+                      ]
+                    ],
+                    [
+                      "grounded",
+                      [
+                        "or",
+                        "landed",
+                        "atGround"
+                      ]
+                    ]
+                  ],
+                  [
+                    "do",
+                    [
+                      "set",
+                      "@entity.player",
+                      [
+                        "object/merge",
+                        "@entity.player",
+                        {
+                          "grounded": "grounded",
+                          "vy": "vy3",
+                          "x": "px1",
+                          "y": "py3"
+                        }
+                      ]
+                    ],
+                    [
+                      "render-ui",
+                      "main",
+                      {
+                        "assetBaseUrl": "@config.assetBaseUrl",
+                        "backgroundImage": "@config.backgroundImage",
+                        "bgColor": "@config.bgColor",
+                        "canvasHeight": "@config.canvasHeight",
+                        "canvasWidth": "@config.canvasWidth",
+                        "className": "@config.className",
+                        "followCamera": "@config.followCamera",
+                        "jumpEvent": "JUMP",
+                        "leftEvent": "LEFT",
+                        "platforms": "@entity.platforms",
+                        "player": "@entity.player",
+                        "playerSprite": "@config.playerSprite",
+                        "rightEvent": "RIGHT",
+                        "stopEvent": "STOP",
+                        "tileSprites": "@config.tileSprites",
+                        "type": "platformer-canvas",
+                        "worldHeight": "@config.worldHeight",
+                        "worldWidth": "@config.worldWidth"
+                      }
+                    ]
+                  ]
+                ]
+              ],
+              "interval": 33.0,
+              "name": "physicsStep"
+            }
+          ]
         }
       ]
     }
   ],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

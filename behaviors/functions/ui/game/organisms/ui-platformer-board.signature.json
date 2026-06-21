@@ -1,0 +1,343 @@
+[
+  {
+    "organism": "ui-platformer-board",
+    "orbital": "PlatformerBoardOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/organisms/ui-platformer-board.ts",
+    "entities": [
+      {
+        "name": "PlatformerBoardItem",
+        "fields": [
+          {
+            "name": "level",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lives",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "player",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "platforms",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "goalX",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "worldWidth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "worldHeight",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "PlatformerBoardRender",
+        "emittedEvents": [
+          "GAME_END",
+          "LEFT",
+          "RIGHT",
+          "JUMP",
+          "STOP",
+          "PLAY_AGAIN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Emitted when result becomes won or lost",
+            "tier": "essential"
+          },
+          {
+            "name": "LEFT",
+            "direction": "emit",
+            "description": "Left arrow / A key pressed",
+            "tier": "essential"
+          },
+          {
+            "name": "RIGHT",
+            "direction": "emit",
+            "description": "Right arrow / D key pressed",
+            "tier": "essential"
+          },
+          {
+            "name": "JUMP",
+            "direction": "emit",
+            "description": "Up / Space pressed",
+            "tier": "essential"
+          },
+          {
+            "name": "STOP",
+            "direction": "emit",
+            "description": "Horizontal key released",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} on restart",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "bgColor",
+            "type": "string",
+            "default": "#5c94fc",
+            "label": "Bg Color",
+            "description": "Canvas background color",
+            "tier": "presentation"
+          },
+          {
+            "key": "canvasHeight",
+            "type": "number",
+            "default": 400,
+            "label": "Canvas Height",
+            "description": "Canvas display height",
+            "tier": "presentation"
+          },
+          {
+            "key": "canvasWidth",
+            "type": "number",
+            "default": 800,
+            "label": "Canvas Width",
+            "description": "Canvas display width",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "goalX",
+            "type": "number",
+            "default": 720,
+            "label": "Goal X",
+            "description": "X pixel of the goal tile (used for display)",
+            "tier": "presentation"
+          },
+          {
+            "key": "gravity",
+            "type": "number",
+            "default": 0.6,
+            "label": "Gravity",
+            "description": "vy delta per 33ms tick",
+            "tier": "presentation"
+          },
+          {
+            "key": "jumpStrength",
+            "type": "number",
+            "default": 12,
+            "label": "Jump Strength",
+            "description": "vy set to -(jumpStrength) on JUMP",
+            "tier": "presentation"
+          },
+          {
+            "key": "maxFallSpeed",
+            "type": "number",
+            "default": 20,
+            "label": "Max Fall Speed",
+            "description": "Terminal velocity cap",
+            "tier": "presentation"
+          },
+          {
+            "key": "moveSpeed",
+            "type": "number",
+            "default": 4,
+            "label": "Move Speed",
+            "description": "Horizontal vx magnitude",
+            "tier": "presentation"
+          },
+          {
+            "key": "platforms",
+            "type": "[PlatformerBoardPlatformsItem]",
+            "default": [
+              {
+                "height": 32,
+                "type": "ground",
+                "width": 800,
+                "x": 0,
+                "y": 368
+              },
+              {
+                "height": 16,
+                "type": "platform",
+                "width": 160,
+                "x": 150,
+                "y": 280
+              },
+              {
+                "height": 16,
+                "type": "platform",
+                "width": 160,
+                "x": 420,
+                "y": 220
+              },
+              {
+                "height": 16,
+                "type": "hazard",
+                "width": 80,
+                "x": 580,
+                "y": 300
+              },
+              {
+                "height": 28,
+                "type": "goal",
+                "width": 64,
+                "x": 700,
+                "y": 340
+              }
+            ],
+            "label": "Platforms",
+            "description": "Level geometry including hazard and goal tiles",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "height": {
+                  "name": "height",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "ground",
+                    "platform",
+                    "hazard",
+                    "goal"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "playerSprite",
+            "type": "asset",
+            "default": "https://almadar-kflow-assets.web.app/shared/platformer/characters/platformChar_idle.png",
+            "label": "Player Sprite",
+            "description": "Player sprite image URL",
+            "tier": "presentation"
+          },
+          {
+            "key": "tileSprites",
+            "type": "Map<string,asset>",
+            "default": {
+              "goal": "https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile007.png",
+              "ground": "https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile001.png",
+              "hazard": "https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile017.png",
+              "platform": "https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile004.png"
+            },
+            "label": "Tile Sprites",
+            "description": "Map of platform type to tile sprite URL",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "worldHeight",
+            "type": "number",
+            "default": 400,
+            "label": "World Height",
+            "description": "World pixel height",
+            "tier": "presentation"
+          },
+          {
+            "key": "worldWidth",
+            "type": "number",
+            "default": 800,
+            "label": "World Width",
+            "description": "World pixel width",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "goalX",
+            "level",
+            "lives",
+            "platforms",
+            "player",
+            "result",
+            "score",
+            "worldHeight",
+            "worldWidth"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "PlatformerBoardPage",
+        "defaultPath": "/platformer-board",
+        "primaryEntity": "PlatformerBoardItem"
+      }
+    ],
+    "emittedEvents": [
+      "GAME_END",
+      "JUMP",
+      "LEFT",
+      "PLAY_AGAIN",
+      "RIGHT",
+      "STOP"
+    ],
+    "listenedEvents": []
+  }
+]

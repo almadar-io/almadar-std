@@ -1,5 +1,5 @@
 {
-  "description": "EventHandlerBoard — UI factory (1:1 with the @almadar/ui event-handler-board pattern).",
+  "description": "EventHandlerBoard — wire WHEN/THEN rules on objects so a trigger event chain reaches the goal.",
   "name": "ui-event-handler-board",
   "orbitals": [
     {
@@ -9,6 +9,149 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "availableActions": {
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "availableActions",
+                  "required": false,
+                  "type": "array"
+                },
+                "availableEvents": {
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "availableEvents",
+                  "required": false,
+                  "type": "array"
+                },
+                "currentState": {
+                  "name": "currentState",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxRules": {
+                  "name": "maxRules",
+                  "required": false,
+                  "type": "number"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "rules": {
+                  "items": {
+                    "properties": {
+                      "thenAction": {
+                        "name": "thenAction",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "whenEvent": {
+                        "name": "whenEvent",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "rules",
+                  "required": false,
+                  "type": "array"
+                },
+                "states": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "states",
+                  "required": false,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "objects",
+            "type": "array"
+          },
+          {
+            "items": {
+              "type": "string"
+            },
+            "name": "triggerEvents",
+            "type": "array"
+          },
+          {
+            "name": "goalEvent",
+            "type": "string"
+          },
+          {
+            "name": "goalCondition",
+            "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "hint",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "attempts",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "win"
+            ]
           }
         ],
         "name": "EventHandlerBoardItem",
@@ -43,6 +186,13 @@
               "tier": "presentation",
               "type": "string"
             },
+            "description": {
+              "default": "Set WHEN/THEN rules on each object so the trigger events eventually fire the goal event.",
+              "description": "One-line puzzle brief shown to the player.",
+              "label": "Description",
+              "tier": "domain",
+              "type": "string"
+            },
             "error": {
               "description": "Error state (UiError)",
               "label": "Error",
@@ -71,12 +221,203 @@
               "tier": "presentation",
               "type": "EventHandlerBoardError"
             },
+            "goalCondition": {
+              "default": "ALERT_SENT must fire during the simulation",
+              "description": "Human-readable description of the win condition shown to the player.",
+              "label": "Goal Condition",
+              "tier": "domain",
+              "type": "string"
+            },
+            "goalEvent": {
+              "default": "ALERT_SENT",
+              "description": "The event name that must appear in the simulated chain for the player to win.",
+              "label": "Goal Event",
+              "tier": "domain",
+              "type": "string"
+            },
+            "hint": {
+              "default": "The Alarm object needs to react to DOOR_OPEN and fire SIREN_ON. The Siren needs to react to SIREN_ON and fire ALERT_SENT.",
+              "description": "Optional hint revealed after 3 failed attempts.",
+              "label": "Hint",
+              "tier": "domain",
+              "type": "string"
+            },
             "isLoading": {
               "default": false,
               "description": "Loading state indicator",
               "label": "Is Loading",
               "tier": "presentation",
               "type": "boolean"
+            },
+            "objects": {
+              "default": [
+                {
+                  "availableActions": [
+                    {
+                      "id": "SIREN_ON",
+                      "label": "SIREN_ON"
+                    },
+                    {
+                      "id": "LIGHT_ON",
+                      "label": "LIGHT_ON"
+                    }
+                  ],
+                  "availableEvents": [
+                    {
+                      "id": "DOOR_OPEN",
+                      "label": "DOOR_OPEN"
+                    },
+                    {
+                      "id": "DOOR_CLOSE",
+                      "label": "DOOR_CLOSE"
+                    }
+                  ],
+                  "currentState": "closed",
+                  "icon": "🚪",
+                  "id": "obj-door",
+                  "maxRules": 2.0,
+                  "name": "Door Sensor",
+                  "rules": [],
+                  "states": [
+                    "closed",
+                    "open"
+                  ]
+                },
+                {
+                  "availableActions": [
+                    {
+                      "id": "ALERT_SENT",
+                      "label": "ALERT_SENT"
+                    },
+                    {
+                      "id": "LOG_EVENT",
+                      "label": "LOG_EVENT"
+                    }
+                  ],
+                  "availableEvents": [
+                    {
+                      "id": "SIREN_ON",
+                      "label": "SIREN_ON"
+                    },
+                    {
+                      "id": "DOOR_OPEN",
+                      "label": "DOOR_OPEN"
+                    }
+                  ],
+                  "currentState": "silent",
+                  "icon": "🔔",
+                  "id": "obj-alarm",
+                  "maxRules": 2.0,
+                  "name": "Alarm",
+                  "rules": [],
+                  "states": [
+                    "silent",
+                    "ringing"
+                  ]
+                }
+              ],
+              "description": "Puzzle world objects each with their editable WHEN/THEN rule slots.",
+              "items": {
+                "properties": {
+                  "availableActions": {
+                    "items": {
+                      "properties": {
+                        "id": {
+                          "name": "id",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "label": {
+                          "name": "label",
+                          "required": false,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "availableActions",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "availableEvents": {
+                    "items": {
+                      "properties": {
+                        "id": {
+                          "name": "id",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "label": {
+                          "name": "label",
+                          "required": false,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "availableEvents",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "currentState": {
+                    "name": "currentState",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "maxRules": {
+                    "name": "maxRules",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "rules": {
+                    "items": {
+                      "properties": {
+                        "thenAction": {
+                          "name": "thenAction",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "whenEvent": {
+                          "name": "whenEvent",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "rules",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "states": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "states",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Objects",
+              "tier": "domain",
+              "type": "[EventHandlerBoardObjectsItem]"
             },
             "pageProp": {
               "default": 0.0,
@@ -135,17 +476,49 @@
               "tier": "presentation",
               "type": "number"
             },
+            "title": {
+              "default": "Chain the Events",
+              "description": "Puzzle title shown above the board.",
+              "label": "Title",
+              "tier": "domain",
+              "type": "string"
+            },
             "totalCount": {
               "default": 0.0,
               "description": "Total number of items",
               "label": "Total Count",
               "tier": "presentation",
               "type": "number"
+            },
+            "triggerEvents": {
+              "default": [
+                "DOOR_OPEN"
+              ],
+              "description": "Events that fire automatically at the start of each simulation run.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Trigger Events",
+              "tier": "domain",
+              "type": "[string]"
             }
           },
           "emits": [
             {
-              "description": "Emits UI:{playEvent}",
+              "description": "Emitted by the component when the animated chain resolves (success or failure).",
+              "event": "COMPLETE",
+              "payloadSchema": [
+                {
+                  "name": "success",
+                  "required": true,
+                  "type": "boolean"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Player hits Play; component runs the animated simulation and fires COMPLETE.",
               "event": "PLAY",
               "payloadSchema": [
                 {
@@ -157,13 +530,29 @@
               "tier": "essential"
             },
             {
-              "description": "Emits UI:{completeEvent} with { success }",
-              "event": "COMPLETE",
+              "description": "Player saves a WHEN/THEN rule set for one object.",
+              "event": "EDIT_RULE",
               "payloadSchema": [
                 {
-                  "name": "success",
+                  "name": "objectId",
                   "required": true,
-                  "type": "boolean"
+                  "type": "string"
+                },
+                {
+                  "name": "rules",
+                  "type": "[EventHandlerBoardRule]"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Reset to menu after completing the puzzle.",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
                 }
               ],
               "scope": "external",
@@ -171,7 +560,17 @@
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "attempts",
+              "description",
+              "goalCondition",
+              "goalEvent",
+              "hint",
+              "objects",
+              "result",
+              "title",
+              "triggerEvents"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -181,11 +580,32 @@
           "stateMachine": {
             "events": [
               {
+                "key": "START",
+                "name": "Start"
+              },
+              {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
-                "description": "Emits UI:{playEvent}",
+                "description": "Player saves a WHEN/THEN rule set for one object.",
+                "key": "EDIT_RULE",
+                "name": "Edit Rule",
+                "payloadSchema": [
+                  {
+                    "name": "objectId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "rules",
+                    "type": "[EventHandlerBoardRule]"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Player hits Play; component runs the animated simulation and fires COMPLETE.",
                 "key": "PLAY",
                 "name": "Play",
                 "payloadSchema": [
@@ -197,7 +617,19 @@
                 "tier": "essential"
               },
               {
-                "description": "Emits UI:{completeEvent} with { success }",
+                "description": "Reset to menu after completing the puzzle.",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emitted by the component when the animated chain resolves (success or failure).",
                 "key": "COMPLETE",
                 "name": "Complete",
                 "payloadSchema": [
@@ -213,43 +645,410 @@
             "states": [
               {
                 "isInitial": true,
-                "name": "idle"
+                "name": "playing"
+              },
+              {
+                "name": "menu"
+              },
+              {
+                "name": "complete"
               }
             ],
             "transitions": [
               {
                 "effects": [
                   [
-                    "fetch",
-                    "EventHandlerBoardItem",
-                    {}
+                    "set",
+                    "@entity.objects",
+                    "@config.objects"
+                  ],
+                  [
+                    "set",
+                    "@entity.triggerEvents",
+                    "@config.triggerEvents"
+                  ],
+                  [
+                    "set",
+                    "@entity.goalEvent",
+                    "@config.goalEvent"
+                  ],
+                  [
+                    "set",
+                    "@entity.goalCondition",
+                    "@config.goalCondition"
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@config.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.hint",
+                    "@config.hint"
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "activeFilters": "@config.activeFilters",
-                      "className": "@config.className",
                       "completeEvent": "COMPLETE",
+                      "editRuleEvent": "EDIT_RULE",
                       "entity": "@entity",
-                      "error": "@config.error",
-                      "isLoading": "@config.isLoading",
-                      "page": "@config.pageProp",
-                      "pageSize": "@config.pageSize",
+                      "playAgainEvent": "PLAY_AGAIN",
                       "playEvent": "PLAY",
-                      "searchValue": "@config.searchValue",
-                      "selectedIds": "@config.selectedIds",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "stepDurationMs": "@config.stepDurationMs",
-                      "totalCount": "@config.totalCount",
+                      "type": "event-handler-board"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "from": "menu",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.objects",
+                    "@config.objects"
+                  ],
+                  [
+                    "set",
+                    "@entity.triggerEvents",
+                    "@config.triggerEvents"
+                  ],
+                  [
+                    "set",
+                    "@entity.goalEvent",
+                    "@config.goalEvent"
+                  ],
+                  [
+                    "set",
+                    "@entity.goalCondition",
+                    "@config.goalCondition"
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@config.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.hint",
+                    "@config.hint"
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "editRuleEvent": "EDIT_RULE",
+                      "entity": "@entity",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "playEvent": "PLAY",
                       "type": "event-handler-board"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.objects",
+                    [
+                      "array/map",
+                      "@entity.objects",
+                      [
+                        "fn",
+                        "obj",
+                        [
+                          "if",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "obj",
+                              "id"
+                            ],
+                            "@payload.objectId"
+                          ],
+                          [
+                            "object/merge",
+                            "obj",
+                            {
+                              "rules": "@payload.rules"
+                            }
+                          ],
+                          "obj"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "editRuleEvent": "EDIT_RULE",
+                      "entity": "@entity",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "playEvent": "PLAY",
+                      "type": "event-handler-board"
+                    }
+                  ]
+                ],
+                "event": "EDIT_RULE",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.attempts",
+                    [
+                      "+",
+                      "@entity.attempts",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "win"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "editRuleEvent": "EDIT_RULE",
+                      "entity": "@entity",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "playEvent": "PLAY",
+                      "type": "event-handler-board"
+                    }
+                  ]
+                ],
+                "event": "PLAY",
+                "from": "playing",
+                "guard": [
+                  ">",
+                  [
+                    "array/len",
+                    [
+                      "array/filter",
+                      "@entity.objects",
+                      [
+                        "fn",
+                        "obj",
+                        [
+                          "array/some",
+                          [
+                            "object/get",
+                            "obj",
+                            "rules"
+                          ],
+                          [
+                            "fn",
+                            "rule",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "rule",
+                                "thenAction"
+                              ],
+                              "@entity.goalEvent"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  0.0
+                ],
+                "to": "complete"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.attempts",
+                    [
+                      "+",
+                      "@entity.attempts",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "editRuleEvent": "EDIT_RULE",
+                      "entity": "@entity",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "playEvent": "PLAY",
+                      "type": "event-handler-board"
+                    }
+                  ]
+                ],
+                "event": "PLAY",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  [
+                    "array/len",
+                    [
+                      "array/filter",
+                      "@entity.objects",
+                      [
+                        "fn",
+                        "obj",
+                        [
+                          "array/some",
+                          [
+                            "object/get",
+                            "obj",
+                            "rules"
+                          ],
+                          [
+                            "fn",
+                            "rule",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "rule",
+                                "thenAction"
+                              ],
+                              "@entity.goalEvent"
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  0.0
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.objects",
+                    "@config.objects"
+                  ],
+                  [
+                    "set",
+                    "@entity.triggerEvents",
+                    "@config.triggerEvents"
+                  ],
+                  [
+                    "set",
+                    "@entity.goalEvent",
+                    "@config.goalEvent"
+                  ],
+                  [
+                    "set",
+                    "@entity.goalCondition",
+                    "@config.goalCondition"
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@config.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.hint",
+                    "@config.hint"
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "editRuleEvent": "EDIT_RULE",
+                      "entity": "@entity",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "playEvent": "PLAY",
+                      "type": "event-handler-board"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "complete",
+                "to": "menu"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "completeEvent": "COMPLETE",
+                      "editRuleEvent": "EDIT_RULE",
+                      "entity": "@entity",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "playEvent": "PLAY",
+                      "type": "event-handler-board"
+                    }
+                  ]
+                ],
+                "event": "COMPLETE",
+                "from": "complete",
+                "to": "complete"
               }
             ]
           }

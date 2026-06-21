@@ -371,9 +371,14 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'type': 'string',
             'values': [
               'none',
-              'win',
-              'lose',
+              'victory',
+              'defeat',
             ],
+          },
+          {
+            'default': 'observation',
+            'name': 'phase',
+            'type': 'string',
           },
           {
             'default': 5,
@@ -389,6 +394,11 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'default': 2,
             'name': 'movementRange',
             'type': 'number',
+          },
+          {
+            'default': false,
+            'name': 'enemyTurn',
+            'type': 'boolean',
           },
         ];
         const extras = params.fields ?? [];
@@ -1265,9 +1275,11 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         ],
         'entityContract': {
           'provides': [
+            'enemyTurn',
             'gridHeight',
             'gridWidth',
             'movementRange',
+            'phase',
             'result',
             'selectedUnitId',
             'turn',
@@ -1363,6 +1375,18 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               'tier': 'essential',
             },
             {
+              'description': 'Emits UI:{cancelEvent} with {} on cancel',
+              'key': 'CANCEL',
+              'name': 'Cancel',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'essential',
+            },
+            {
               'description': 'Called when battle ends',
               'key': 'GAME_END',
               'name': 'Game End',
@@ -1414,18 +1438,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               ],
               'tier': 'essential',
             },
-            {
-              'description': 'Emits UI:{cancelEvent} with {} on cancel',
-              'key': 'CANCEL',
-              'name': 'Cancel',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
-              'tier': 'essential',
-            },
           ],
           'states': [
             {
@@ -1461,6 +1473,16 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'set',
                   '@entity.result',
                   'none',
+                ],
+                [
+                  'set',
+                  '@entity.phase',
+                  'observation',
+                ],
+                [
+                  'set',
+                  '@entity.enemyTurn',
+                  false,
                 ],
                 [
                   'render-ui',
@@ -1515,6 +1537,16 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 ],
                 [
                   'set',
+                  '@entity.phase',
+                  'observation',
+                ],
+                [
+                  'set',
+                  '@entity.enemyTurn',
+                  false,
+                ],
+                [
+                  'set',
                   '@entity.gridWidth',
                   5,
                 ],
@@ -1563,8 +1595,78 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               'effects': [
                 [
                   'set',
+                  '@entity.phase',
+                  'action',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'assetManifest': '@config.assetManifest',
+                    'attackEvent': 'ATTACK',
+                    'cancelEvent': 'CANCEL',
+                    'endTurnEvent': 'END_TURN',
+                    'entity': '@entity',
+                    'features': '@config.features',
+                    'gameEndEvent': 'GAME_END',
+                    'onAttack': 'ATTACK',
+                    'onGameEnd': 'GAME_END',
+                    'onUnitMove': 'UNIT_MOVE',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'scale': '@config.scale',
+                    'tileClickEvent': 'TILE_CLICK',
+                    'tiles': '@config.tiles',
+                    'type': 'battle-board',
+                    'unitClickEvent': 'UNIT_CLICK',
+                    'unitScale': '@config.unitScale',
+                    'units': '@entity.units',
+                  },
+                ],
+              ],
+              'event': 'UNIT_CLICK',
+              'from': 'playing',
+              'guard': [
+                'and',
+                [
+                  '==',
                   '@entity.selectedUnitId',
                   '@payload.unitId',
+                ],
+                [
+                  '==',
+                  [
+                    'object/get',
+                    [
+                      'array/find',
+                      '@entity.units',
+                      [
+                        'fn',
+                        'u',
+                        [
+                          '==',
+                          '@u.id',
+                          '@payload.unitId',
+                        ],
+                      ],
+                    ],
+                    'team',
+                  ],
+                  'player',
+                ],
+              ],
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '@payload.unitId',
+                ],
+                [
+                  'set',
+                  '@entity.phase',
+                  'movement',
                 ],
                 [
                   'render-ui',
@@ -1648,6 +1750,16 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                       ],
                     ],
                   ],
+                ],
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.phase',
+                  'observation',
                 ],
                 [
                   'render-ui',
@@ -1821,6 +1933,11 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   '',
                 ],
                 [
+                  'set',
+                  '@entity.phase',
+                  'observation',
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -1848,45 +1965,100 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               'event': 'ATTACK',
               'from': 'playing',
               'guard': [
-                '==',
+                'let',
                 [
-                  'grid/distance',
                   [
-                    'object/get',
+                    'ap',
                     [
-                      'array/find',
-                      '@entity.units',
+                      'object/get',
                       [
-                        'fn',
-                        'u',
+                        'array/find',
+                        '@entity.units',
                         [
-                          '==',
-                          '@u.id',
-                          '@payload.attackerId',
+                          'fn',
+                          'u',
+                          [
+                            '==',
+                            '@u.id',
+                            '@payload.attackerId',
+                          ],
                         ],
                       ],
+                      'position',
                     ],
-                    'position',
                   ],
                   [
-                    'object/get',
+                    'tp',
                     [
-                      'array/find',
-                      '@entity.units',
+                      'object/get',
                       [
-                        'fn',
-                        'u',
+                        'array/find',
+                        '@entity.units',
                         [
-                          '==',
-                          '@u.id',
-                          '@payload.targetId',
+                          'fn',
+                          'u',
+                          [
+                            '==',
+                            '@u.id',
+                            '@payload.targetId',
+                          ],
                         ],
                       ],
+                      'position',
                     ],
-                    'position',
                   ],
                 ],
-                1,
+                [
+                  'and',
+                  [
+                    '<=',
+                    [
+                      'math/abs',
+                      [
+                        '-',
+                        [
+                          'object/get',
+                          'ap',
+                          'x',
+                        ],
+                        [
+                          'object/get',
+                          'tp',
+                          'x',
+                        ],
+                      ],
+                    ],
+                    1,
+                  ],
+                  [
+                    'and',
+                    [
+                      '<=',
+                      [
+                        'math/abs',
+                        [
+                          '-',
+                          [
+                            'object/get',
+                            'ap',
+                            'y',
+                          ],
+                          [
+                            'object/get',
+                            'tp',
+                            'y',
+                          ],
+                        ],
+                      ],
+                      1,
+                    ],
+                    [
+                      '!=',
+                      'ap',
+                      'tp',
+                    ],
+                  ],
+                ],
               ],
               'to': 'playing',
             },
@@ -1905,6 +2077,16 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'set',
                   '@entity.selectedUnitId',
                   '',
+                ],
+                [
+                  'set',
+                  '@entity.enemyTurn',
+                  true,
+                ],
+                [
+                  'set',
+                  '@entity.phase',
+                  'enemy_turn',
                 ],
                 [
                   'render-ui',
@@ -1937,6 +2119,52 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 '==',
                 '@entity.result',
                 'none',
+              ],
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.phase',
+                  'observation',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'assetManifest': '@config.assetManifest',
+                    'attackEvent': 'ATTACK',
+                    'cancelEvent': 'CANCEL',
+                    'endTurnEvent': 'END_TURN',
+                    'entity': '@entity',
+                    'features': '@config.features',
+                    'gameEndEvent': 'GAME_END',
+                    'onAttack': 'ATTACK',
+                    'onGameEnd': 'GAME_END',
+                    'onUnitMove': 'UNIT_MOVE',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'scale': '@config.scale',
+                    'tileClickEvent': 'TILE_CLICK',
+                    'tiles': '@config.tiles',
+                    'type': 'battle-board',
+                    'unitClickEvent': 'UNIT_CLICK',
+                    'unitScale': '@config.unitScale',
+                    'units': '@entity.units',
+                  },
+                ],
+              ],
+              'event': 'CANCEL',
+              'from': 'playing',
+              'guard': [
+                '!=',
+                '@entity.selectedUnitId',
+                '',
               ],
               'to': 'playing',
             },
@@ -1979,9 +2207,14 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                       ],
                       0,
                     ],
-                    'lose',
-                    'win',
+                    'defeat',
+                    'victory',
                   ],
+                ],
+                [
+                  'set',
+                  '@entity.phase',
+                  'game_over',
                 ],
                 [
                   'render-ui',
@@ -2102,6 +2335,16 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                   'none',
                 ],
                 [
+                  'set',
+                  '@entity.phase',
+                  'observation',
+                ],
+                [
+                  'set',
+                  '@entity.enemyTurn',
+                  false,
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -2132,6 +2375,446 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             },
           ],
         },
+        'ticks': [
+          {
+            'effects': [
+              [
+                'set',
+                '@entity.units',
+                [
+                  'array/map',
+                  '@entity.units',
+                  [
+                    'fn',
+                    'u',
+                    [
+                      'if',
+                      [
+                        'and',
+                        [
+                          '==',
+                          '@u.team',
+                          'player',
+                        ],
+                        [
+                          '>',
+                          '@u.health',
+                          0,
+                        ],
+                      ],
+                      [
+                        'if',
+                        [
+                          '>',
+                          [
+                            'array/len',
+                            [
+                              'array/filter',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'e',
+                                [
+                                  'and',
+                                  [
+                                    'and',
+                                    [
+                                      '==',
+                                      '@e.team',
+                                      'enemy',
+                                    ],
+                                    [
+                                      '>',
+                                      '@e.health',
+                                      0,
+                                    ],
+                                  ],
+                                  [
+                                    '==',
+                                    [
+                                      'grid/manhattan-distance',
+                                      [
+                                        'object/get',
+                                        '@e',
+                                        'position',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'position',
+                                      ],
+                                    ],
+                                    1,
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'object/merge',
+                          '@u',
+                          {
+                            'health': [
+                              'math/max',
+                              0,
+                              [
+                                '-',
+                                '@u.health',
+                                1,
+                              ],
+                            ],
+                          },
+                        ],
+                        '@u',
+                      ],
+                      '@u',
+                    ],
+                  ],
+                ],
+              ],
+              [
+                'set',
+                '@entity.units',
+                [
+                  'array/map',
+                  '@entity.units',
+                  [
+                    'fn',
+                    'u',
+                    [
+                      'if',
+                      [
+                        'and',
+                        [
+                          '==',
+                          '@u.team',
+                          'enemy',
+                        ],
+                        [
+                          '>',
+                          '@u.health',
+                          0,
+                        ],
+                      ],
+                      [
+                        'if',
+                        [
+                          '==',
+                          [
+                            'array/len',
+                            [
+                              'array/filter',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'p',
+                                [
+                                  'and',
+                                  [
+                                    'and',
+                                    [
+                                      '==',
+                                      '@p.team',
+                                      'player',
+                                    ],
+                                    [
+                                      '>',
+                                      '@p.health',
+                                      0,
+                                    ],
+                                  ],
+                                  [
+                                    '==',
+                                    [
+                                      'grid/manhattan-distance',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'position',
+                                      ],
+                                      [
+                                        'object/get',
+                                        '@p',
+                                        'position',
+                                      ],
+                                    ],
+                                    1,
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'let',
+                          [
+                            [
+                              'target',
+                              [
+                                'array/first',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'p',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        '@p.team',
+                                        'player',
+                                      ],
+                                      [
+                                        '>',
+                                        '@p.health',
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                          [
+                            'object/merge',
+                            '@u',
+                            {
+                              'position': {
+                                'x': [
+                                  'math/clamp',
+                                  [
+                                    '+',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'position',
+                                      ],
+                                      'x',
+                                    ],
+                                    [
+                                      'math/sign',
+                                      [
+                                        '-',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            'target',
+                                            'position',
+                                          ],
+                                          'x',
+                                        ],
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'position',
+                                          ],
+                                          'x',
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                  0,
+                                  [
+                                    '-',
+                                    '@entity.gridWidth',
+                                    1,
+                                  ],
+                                ],
+                                'y': [
+                                  'math/clamp',
+                                  [
+                                    '+',
+                                    [
+                                      'object/get',
+                                      [
+                                        'object/get',
+                                        '@u',
+                                        'position',
+                                      ],
+                                      'y',
+                                    ],
+                                    [
+                                      'math/sign',
+                                      [
+                                        '-',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            'target',
+                                            'position',
+                                          ],
+                                          'y',
+                                        ],
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'position',
+                                          ],
+                                          'y',
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                  0,
+                                  [
+                                    '-',
+                                    '@entity.gridHeight',
+                                    1,
+                                  ],
+                                ],
+                              },
+                            },
+                          ],
+                        ],
+                        '@u',
+                      ],
+                      '@u',
+                    ],
+                  ],
+                ],
+              ],
+              [
+                'set',
+                '@entity.result',
+                [
+                  'if',
+                  [
+                    '==',
+                    [
+                      'array/len',
+                      [
+                        'array/filter',
+                        '@entity.units',
+                        [
+                          'fn',
+                          'u',
+                          [
+                            'and',
+                            [
+                              '==',
+                              '@u.team',
+                              'player',
+                            ],
+                            [
+                              '>',
+                              '@u.health',
+                              0,
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                    0,
+                  ],
+                  'defeat',
+                  [
+                    'if',
+                    [
+                      '==',
+                      [
+                        'array/len',
+                        [
+                          'array/filter',
+                          '@entity.units',
+                          [
+                            'fn',
+                            'u',
+                            [
+                              'and',
+                              [
+                                '==',
+                                '@u.team',
+                                'enemy',
+                              ],
+                              [
+                                '>',
+                                '@u.health',
+                                0,
+                              ],
+                            ],
+                          ],
+                        ],
+                      ],
+                      0,
+                    ],
+                    'victory',
+                    'none',
+                  ],
+                ],
+              ],
+              [
+                'set',
+                '@entity.enemyTurn',
+                false,
+              ],
+              [
+                'set',
+                '@entity.phase',
+                [
+                  'if',
+                  [
+                    '!=',
+                    '@entity.result',
+                    'none',
+                  ],
+                  'game_over',
+                  'observation',
+                ],
+              ],
+              [
+                'render-ui',
+                'main',
+                {
+                  'assetManifest': '@config.assetManifest',
+                  'attackEvent': 'ATTACK',
+                  'cancelEvent': 'CANCEL',
+                  'endTurnEvent': 'END_TURN',
+                  'entity': '@entity',
+                  'features': '@config.features',
+                  'gameEndEvent': 'GAME_END',
+                  'onAttack': 'ATTACK',
+                  'onGameEnd': 'GAME_END',
+                  'onUnitMove': 'UNIT_MOVE',
+                  'playAgainEvent': 'PLAY_AGAIN',
+                  'scale': '@config.scale',
+                  'tileClickEvent': 'TILE_CLICK',
+                  'tiles': '@config.tiles',
+                  'type': 'battle-board',
+                  'unitClickEvent': 'UNIT_CLICK',
+                  'unitScale': '@config.unitScale',
+                  'units': '@entity.units',
+                },
+              ],
+            ],
+            'guard': [
+              'and',
+              [
+                '==',
+                '@entity.enemyTurn',
+                true,
+              ],
+              [
+                '==',
+                '@entity.result',
+                'none',
+              ],
+            ],
+            'interval': 1000,
+            'name': 'enemyAiTick',
+          },
+        ],
       } as never, 'BattleBoardItem', canonicalName) as never,
     ],
     pages: [

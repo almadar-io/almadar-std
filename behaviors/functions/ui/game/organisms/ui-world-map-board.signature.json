@@ -7,7 +7,53 @@
     "entities": [
       {
         "name": "WorldMapBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "features",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedHeroId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "turn",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "gridWidth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridHeight",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "movementRange",
+            "type": "number",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -19,7 +65,9 @@
           "HERO_MOVE",
           "BATTLE_ENCOUNTER",
           "FEATURE_ENTER",
-          "TILE_CLICK"
+          "TILE_CLICK",
+          "GAME_END",
+          "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
@@ -52,6 +100,22 @@
             "direction": "emit",
             "description": "Emits UI:{tileClickEvent} with { x, y }",
             "tier": "essential"
+          },
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Called when all enemies or all player heroes are defeated",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "essential"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
           },
           {
             "name": "INIT",
@@ -205,7 +269,7 @@
               }
             ],
             "label": "Features",
-            "description": "Direct feature data — takes priority over entity-derived features.",
+            "description": "World features seeded into entity on INIT.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -455,7 +519,7 @@
               }
             ],
             "label": "Tiles",
-            "description": "Direct tile data — takes priority over entity-derived tiles.",
+            "description": "Initial tile map seeded into entity on INIT — passable drives movement validation in the model.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -537,33 +601,35 @@
             "default": [
               {
                 "health": 10,
-                "id": "u1",
+                "id": "h1",
                 "maxHealth": 10,
-                "name": "Worker",
+                "movement": 3,
+                "name": "Amir",
                 "position": {
                   "x": 1,
                   "y": 1
                 },
                 "sprite": "https://almadar-kflow-assets.web.app/shared/sprite-sheets/amir-sprite-sheet-se.png",
                 "team": "player",
-                "unitType": "worker"
+                "unitType": "hero"
               },
               {
                 "health": 8,
-                "id": "u2",
-                "maxHealth": 10,
-                "name": "Guardian",
+                "id": "h2",
+                "maxHealth": 8,
+                "movement": 2,
+                "name": "Sentinel",
                 "position": {
                   "x": 3,
                   "y": 3
                 },
                 "sprite": "https://almadar-kflow-assets.web.app/shared/sprite-sheets/archivist-sprite-sheet-se.png",
                 "team": "enemy",
-                "unitType": "guardian"
+                "unitType": "guard"
               }
             ],
             "label": "Units",
-            "description": "Direct unit data — takes priority over entity-derived units.",
+            "description": "Initial hero/unit roster seeded into entity on INIT — team+health drive win/lose conditions.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -606,6 +672,11 @@
                   "name": "modelUrl",
                   "required": false,
                   "type": "string"
+                },
+                "movement": {
+                  "name": "movement",
+                  "required": false,
+                  "type": "number"
                 },
                 "name": {
                   "name": "name",
@@ -723,7 +794,17 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "features",
+            "gridHeight",
+            "gridWidth",
+            "movementRange",
+            "result",
+            "selectedHeroId",
+            "tiles",
+            "turn",
+            "units"
+          ]
         }
       }
     ],
@@ -737,8 +818,10 @@
     "emittedEvents": [
       "BATTLE_ENCOUNTER",
       "FEATURE_ENTER",
+      "GAME_END",
       "HERO_MOVE",
       "HERO_SELECT",
+      "PLAY_AGAIN",
       "TILE_CLICK"
     ],
     "listenedEvents": []

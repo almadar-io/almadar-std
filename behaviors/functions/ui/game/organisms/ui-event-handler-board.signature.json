@@ -7,7 +7,53 @@
     "entities": [
       {
         "name": "EventHandlerBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "objects",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "triggerEvents",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "goalEvent",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "goalCondition",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "hint",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "attempts",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -15,22 +61,40 @@
       {
         "name": "EventHandlerBoardRender",
         "emittedEvents": [
+          "COMPLETE",
           "PLAY",
-          "COMPLETE"
+          "EDIT_RULE",
+          "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
           {
-            "name": "PLAY",
+            "name": "COMPLETE",
             "direction": "emit",
-            "description": "Emits UI:{playEvent}",
+            "description": "Emitted by the component when the animated chain resolves (success or failure).",
             "tier": "essential"
           },
           {
-            "name": "COMPLETE",
+            "name": "PLAY",
             "direction": "emit",
-            "description": "Emits UI:{completeEvent} with { success }",
+            "description": "Player hits Play; component runs the animated simulation and fires COMPLETE.",
             "tier": "essential"
+          },
+          {
+            "name": "EDIT_RULE",
+            "direction": "emit",
+            "description": "Player saves a WHEN/THEN rule set for one object.",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Reset to menu after completing the puzzle.",
+            "tier": "essential"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
           },
           {
             "name": "INIT",
@@ -52,6 +116,14 @@
             "label": "Class Name",
             "description": "Additional CSS classes",
             "tier": "presentation"
+          },
+          {
+            "key": "description",
+            "type": "string",
+            "default": "Set WHEN/THEN rules on each object so the trigger events eventually fire the goal event.",
+            "label": "Description",
+            "description": "One-line puzzle brief shown to the player.",
+            "tier": "domain"
           },
           {
             "key": "error",
@@ -83,12 +155,207 @@
             }
           },
           {
+            "key": "goalCondition",
+            "type": "string",
+            "default": "ALERT_SENT must fire during the simulation",
+            "label": "Goal Condition",
+            "description": "Human-readable description of the win condition shown to the player.",
+            "tier": "domain"
+          },
+          {
+            "key": "goalEvent",
+            "type": "string",
+            "default": "ALERT_SENT",
+            "label": "Goal Event",
+            "description": "The event name that must appear in the simulated chain for the player to win.",
+            "tier": "domain"
+          },
+          {
+            "key": "hint",
+            "type": "string",
+            "default": "The Alarm object needs to react to DOOR_OPEN and fire SIREN_ON. The Siren needs to react to SIREN_ON and fire ALERT_SENT.",
+            "label": "Hint",
+            "description": "Optional hint revealed after 3 failed attempts.",
+            "tier": "domain"
+          },
+          {
             "key": "isLoading",
             "type": "boolean",
             "default": false,
             "label": "Is Loading",
             "description": "Loading state indicator",
             "tier": "presentation"
+          },
+          {
+            "key": "objects",
+            "type": "[EventHandlerBoardObjectsItem]",
+            "default": [
+              {
+                "availableActions": [
+                  {
+                    "id": "SIREN_ON",
+                    "label": "SIREN_ON"
+                  },
+                  {
+                    "id": "LIGHT_ON",
+                    "label": "LIGHT_ON"
+                  }
+                ],
+                "availableEvents": [
+                  {
+                    "id": "DOOR_OPEN",
+                    "label": "DOOR_OPEN"
+                  },
+                  {
+                    "id": "DOOR_CLOSE",
+                    "label": "DOOR_CLOSE"
+                  }
+                ],
+                "currentState": "closed",
+                "icon": "🚪",
+                "id": "obj-door",
+                "maxRules": 2,
+                "name": "Door Sensor",
+                "rules": [],
+                "states": [
+                  "closed",
+                  "open"
+                ]
+              },
+              {
+                "availableActions": [
+                  {
+                    "id": "ALERT_SENT",
+                    "label": "ALERT_SENT"
+                  },
+                  {
+                    "id": "LOG_EVENT",
+                    "label": "LOG_EVENT"
+                  }
+                ],
+                "availableEvents": [
+                  {
+                    "id": "SIREN_ON",
+                    "label": "SIREN_ON"
+                  },
+                  {
+                    "id": "DOOR_OPEN",
+                    "label": "DOOR_OPEN"
+                  }
+                ],
+                "currentState": "silent",
+                "icon": "🔔",
+                "id": "obj-alarm",
+                "maxRules": 2,
+                "name": "Alarm",
+                "rules": [],
+                "states": [
+                  "silent",
+                  "ringing"
+                ]
+              }
+            ],
+            "label": "Objects",
+            "description": "Puzzle world objects each with their editable WHEN/THEN rule slots.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "availableActions": {
+                  "name": "availableActions",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "availableEvents": {
+                  "name": "availableEvents",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "currentState": {
+                  "name": "currentState",
+                  "required": false,
+                  "type": "string"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxRules": {
+                  "name": "maxRules",
+                  "required": false,
+                  "type": "number"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "rules": {
+                  "name": "rules",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "thenAction": {
+                        "name": "thenAction",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "whenEvent": {
+                        "name": "whenEvent",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "states": {
+                  "name": "states",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "pageProp",
@@ -155,19 +422,50 @@
             "tier": "presentation"
           },
           {
+            "key": "title",
+            "type": "string",
+            "default": "Chain the Events",
+            "label": "Title",
+            "description": "Puzzle title shown above the board.",
+            "tier": "domain"
+          },
+          {
             "key": "totalCount",
             "type": "number",
             "default": 0,
             "label": "Total Count",
             "description": "Total number of items",
             "tier": "presentation"
+          },
+          {
+            "key": "triggerEvents",
+            "type": "[string]",
+            "default": [
+              "DOOR_OPEN"
+            ],
+            "label": "Trigger Events",
+            "description": "Events that fire automatically at the start of each simulation run.",
+            "tier": "domain",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "capabilities": [],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "attempts",
+            "description",
+            "goalCondition",
+            "goalEvent",
+            "hint",
+            "objects",
+            "result",
+            "title",
+            "triggerEvents"
+          ]
         }
       }
     ],
@@ -180,7 +478,9 @@
     ],
     "emittedEvents": [
       "COMPLETE",
-      "PLAY"
+      "EDIT_RULE",
+      "PLAY",
+      "PLAY_AGAIN"
     ],
     "listenedEvents": []
   }

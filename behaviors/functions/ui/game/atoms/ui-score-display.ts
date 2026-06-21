@@ -41,6 +41,8 @@ export type StdUiScoreDisplayEventKey = 'INIT';
 export interface StdUiScoreDisplayConfig {
   /** Default: `true` */
   animated?: boolean;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  assetUrl?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `"circle"` */

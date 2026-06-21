@@ -1,0 +1,648 @@
+[
+  {
+    "organism": "ui-tower-defense-board",
+    "orbital": "TowerDefenseBoardOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/organisms/ui-tower-defense-board.ts",
+    "entities": [
+      {
+        "name": "TowerDefenseBoardItem",
+        "fields": [
+          {
+            "name": "tiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "path",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "towers",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "creeps",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "gold",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lives",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "wave",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "maxWaves",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "tick",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "waveActive",
+            "type": "boolean",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "TowerDefenseBoardRender",
+        "emittedEvents": [
+          "PLACE_TOWER",
+          "START_WAVE",
+          "GAME_END",
+          "PLAY_AGAIN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "PLACE_TOWER",
+            "direction": "emit",
+            "description": "Emits UI:{placeTowerEvent} with {x,y} on tile click when player places a tower",
+            "tier": "essential"
+          },
+          {
+            "name": "START_WAVE",
+            "direction": "emit",
+            "description": "Emits UI:{startWaveEvent} with {wave} when player launches a creep wave",
+            "tier": "essential"
+          },
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Emits UI:{gameEndEvent} with {result} when the game reaches won or lost",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "creepBaseHp",
+            "type": "number",
+            "default": 10,
+            "label": "Creep Base HP",
+            "description": "Base HP of the first creep in a wave",
+            "tier": "presentation"
+          },
+          {
+            "key": "creepHpScaling",
+            "type": "number",
+            "default": 2,
+            "label": "Creep HP Scaling",
+            "description": "Additional HP per creep index within a wave",
+            "tier": "presentation"
+          },
+          {
+            "key": "creepSpeed",
+            "type": "number",
+            "default": 1,
+            "label": "Creep Speed",
+            "description": "Waypoints advanced per tick",
+            "tier": "presentation"
+          },
+          {
+            "key": "creepsPerWave",
+            "type": "number",
+            "default": 5,
+            "label": "Creeps Per Wave",
+            "description": "Number of creeps spawned per wave",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "TowerDefenseBoardError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "gold",
+            "type": "number",
+            "default": 100,
+            "label": "Starting Gold",
+            "description": "Gold the player starts each game with",
+            "tier": "presentation"
+          },
+          {
+            "key": "goldPerKill",
+            "type": "number",
+            "default": 10,
+            "label": "Gold Per Kill",
+            "description": "Gold awarded for each creep killed",
+            "tier": "presentation"
+          },
+          {
+            "key": "gridHeight",
+            "type": "number",
+            "default": 8,
+            "label": "Grid Height",
+            "description": "Number of rows in the tile grid",
+            "tier": "presentation"
+          },
+          {
+            "key": "gridWidth",
+            "type": "number",
+            "default": 8,
+            "label": "Grid Width",
+            "description": "Number of columns in the tile grid",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "lives",
+            "type": "number",
+            "default": 20,
+            "label": "Starting Lives",
+            "description": "Lives the player starts with; reaching 0 = defeat",
+            "tier": "presentation"
+          },
+          {
+            "key": "maxWaves",
+            "type": "number",
+            "default": 5,
+            "label": "Max Waves",
+            "description": "Number of waves to survive to win",
+            "tier": "presentation"
+          },
+          {
+            "key": "path",
+            "type": "[TowerDefenseBoardPathItem]",
+            "default": [
+              {
+                "x": 2,
+                "y": 0
+              },
+              {
+                "x": 2,
+                "y": 1
+              },
+              {
+                "x": 2,
+                "y": 2
+              },
+              {
+                "x": 3,
+                "y": 2
+              },
+              {
+                "x": 4,
+                "y": 2
+              },
+              {
+                "x": 4,
+                "y": 3
+              },
+              {
+                "x": 4,
+                "y": 4
+              }
+            ],
+            "label": "Path",
+            "description": "Ordered waypoint coords that creeps follow from entry to exit.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.45,
+            "label": "Scale",
+            "description": "Canvas render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "tiles",
+            "type": "[TowerDefenseBoardTilesItem]",
+            "default": [
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "path",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "passable": false,
+                "terrain": "path",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "passable": false,
+                "terrain": "path",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "passable": false,
+                "terrain": "path",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "passable": false,
+                "terrain": "path",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "passable": false,
+                "terrain": "path",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "wall",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "passable": false,
+                "terrain": "path",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png",
+                "x": 4,
+                "y": 4
+              }
+            ],
+            "label": "Tiles",
+            "description": "Direct tile data — takes priority over entity-derived tiles.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "terrainSprite": {
+                  "name": "terrainSprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "towerCooldown",
+            "type": "number",
+            "default": 1,
+            "label": "Tower Cooldown",
+            "description": "Seconds between tower shots",
+            "tier": "presentation"
+          },
+          {
+            "key": "towerCost",
+            "type": "number",
+            "default": 25,
+            "label": "Tower Cost",
+            "description": "Gold cost to place one tower",
+            "tier": "presentation"
+          },
+          {
+            "key": "towerDamage",
+            "type": "number",
+            "default": 3,
+            "label": "Tower Damage",
+            "description": "Damage per hit per tower",
+            "tier": "presentation"
+          },
+          {
+            "key": "towerRange",
+            "type": "number",
+            "default": 2,
+            "label": "Tower Range",
+            "description": "Attack range in grid units",
+            "tier": "presentation"
+          },
+          {
+            "key": "towers",
+            "type": "[TowerDefenseBoardTowersItem]",
+            "default": [
+              {
+                "cooldown": 1,
+                "damage": 3,
+                "id": "t0",
+                "lastFiredAt": 0,
+                "range": 2,
+                "x": 1,
+                "y": 1
+              },
+              {
+                "cooldown": 1,
+                "damage": 3,
+                "id": "t1",
+                "lastFiredAt": 0,
+                "range": 2,
+                "x": 3,
+                "y": 3
+              }
+            ],
+            "label": "Towers",
+            "description": "Initial tower placements on the board.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "cooldown": {
+                  "name": "cooldown",
+                  "required": true,
+                  "type": "number"
+                },
+                "damage": {
+                  "name": "damage",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "lastFiredAt": {
+                  "name": "lastFiredAt",
+                  "required": false,
+                  "type": "number"
+                },
+                "range": {
+                  "name": "range",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "creeps",
+            "gold",
+            "lives",
+            "maxWaves",
+            "result",
+            "tick",
+            "towers",
+            "wave",
+            "waveActive"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "TowerDefenseBoardPage",
+        "defaultPath": "/tower-defense-board",
+        "primaryEntity": "TowerDefenseBoardItem"
+      }
+    ],
+    "emittedEvents": [
+      "GAME_END",
+      "PLACE_TOWER",
+      "PLAY_AGAIN",
+      "START_WAVE"
+    ],
+    "listenedEvents": []
+  }
+]

@@ -7,7 +7,18 @@
     "entities": [
       {
         "name": "PlatformerCanvasItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "player",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "platforms",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -25,25 +36,25 @@
           {
             "name": "LEFT",
             "direction": "emit",
-            "description": "Event names for keyboard controls",
+            "description": "Left arrow / A key pressed",
             "tier": "essential"
           },
           {
             "name": "RIGHT",
             "direction": "emit",
-            "description": "rightEvent prop",
+            "description": "Right arrow / D key pressed",
             "tier": "essential"
           },
           {
             "name": "JUMP",
             "direction": "emit",
-            "description": "jumpEvent prop",
+            "description": "Up / Space pressed; model checks grounded guard",
             "tier": "essential"
           },
           {
             "name": "STOP",
             "direction": "emit",
-            "description": "stopEvent prop",
+            "description": "Horizontal key released",
             "tier": "essential"
           },
           {
@@ -109,19 +120,72 @@
             "tier": "presentation"
           },
           {
+            "key": "gravity",
+            "type": "number",
+            "default": 0.6,
+            "label": "Gravity",
+            "description": "vy delta applied each 33ms tick",
+            "tier": "presentation"
+          },
+          {
+            "key": "jumpStrength",
+            "type": "number",
+            "default": 12,
+            "label": "Jump Strength",
+            "description": "vy set to -(jumpStrength) on JUMP",
+            "tier": "presentation"
+          },
+          {
+            "key": "maxFallSpeed",
+            "type": "number",
+            "default": 20,
+            "label": "Max Fall Speed",
+            "description": "Terminal velocity cap downward",
+            "tier": "presentation"
+          },
+          {
+            "key": "moveSpeed",
+            "type": "number",
+            "default": 4,
+            "label": "Move Speed",
+            "description": "Horizontal vx magnitude on LEFT/RIGHT",
+            "tier": "presentation"
+          },
+          {
             "key": "platforms",
             "type": "[PlatformerCanvasPlatformsItem]",
             "default": [
               {
-                "height": 1,
+                "height": 32,
                 "type": "ground",
-                "width": 1,
-                "x": 1,
-                "y": 1
+                "width": 800,
+                "x": 0,
+                "y": 368
+              },
+              {
+                "height": 16,
+                "type": "platform",
+                "width": 160,
+                "x": 150,
+                "y": 280
+              },
+              {
+                "height": 16,
+                "type": "platform",
+                "width": 160,
+                "x": 420,
+                "y": 220
+              },
+              {
+                "height": 16,
+                "type": "platform",
+                "width": 140,
+                "x": 620,
+                "y": 300
               }
             ],
             "label": "Platforms",
-            "description": "Static platforms / level geometry",
+            "description": "Level geometry; ground at worldHeight-32",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -164,17 +228,17 @@
             "key": "player",
             "type": "PlatformerCanvasPlayer",
             "default": {
-              "facingRight": false,
+              "facingRight": true,
               "grounded": false,
-              "height": 1,
-              "vx": 1,
-              "vy": 1,
-              "width": 1,
-              "x": 1,
-              "y": 1
+              "height": 48,
+              "vx": 0,
+              "vy": 0,
+              "width": 32,
+              "x": 80,
+              "y": 320
             },
             "label": "Player",
-            "description": "Player state data",
+            "description": "Initial player state",
             "tier": "presentation",
             "properties": {
               "facingRight": {
@@ -251,7 +315,7 @@
             "type": "number",
             "default": 800,
             "label": "World Width",
-            "description": "World dimensions",
+            "description": "World dimensions in pixels",
             "tier": "presentation"
           }
         ],
@@ -259,7 +323,10 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "platforms",
+            "player"
+          ]
         }
       }
     ],

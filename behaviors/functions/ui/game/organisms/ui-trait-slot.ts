@@ -73,7 +73,7 @@ export interface StdUiTraitSlotConfig {
   className?: string;
   /** Default: `false` */
   draggable?: boolean;
-  /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","name":"Name","stateMachine":{"currentState":"Current State","description":"Description","name":"Name","states":["Item"],"transitions":[{"event":"Event","from":"From","guardHint":"Guard Hint","to":"To"}]}}` */
+  /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","name":"Name"}` */
   equippedItem?: EntityRow;
   error?: EntityRow;
   /** Default: `"correct"` */
@@ -217,22 +217,6 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
               'iconUrl': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
               'id': 'Id',
               'name': 'Name',
-              'stateMachine': {
-                'currentState': 'Current State',
-                'description': 'Description',
-                'name': 'Name',
-                'states': [
-                  'Item',
-                ],
-                'transitions': [
-                  {
-                    'event': 'Event',
-                    'from': 'From',
-                    'guardHint': 'Guard Hint',
-                    'to': 'To',
-                  },
-                ],
-              },
             },
             'description': 'Currently equipped item, if any',
             'label': 'Equipped Item',
@@ -269,63 +253,8 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
               },
               'stateMachine': {
                 'name': 'stateMachine',
-                'properties': {
-                  'currentState': {
-                    'name': 'currentState',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  'description': {
-                    'name': 'description',
-                    'required': false,
-                    'type': 'string',
-                  },
-                  'name': {
-                    'name': 'name',
-                    'required': true,
-                    'type': 'string',
-                  },
-                  'states': {
-                    'items': {
-                      'type': 'string',
-                    },
-                    'name': 'states',
-                    'required': true,
-                    'type': 'array',
-                  },
-                  'transitions': {
-                    'items': {
-                      'properties': {
-                        'event': {
-                          'name': 'event',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'from': {
-                          'name': 'from',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        'guardHint': {
-                          'name': 'guardHint',
-                          'required': false,
-                          'type': 'string',
-                        },
-                        'to': {
-                          'name': 'to',
-                          'required': true,
-                          'type': 'string',
-                        },
-                      },
-                      'type': 'object',
-                    },
-                    'name': 'transitions',
-                    'required': true,
-                    'type': 'array',
-                  },
-                },
                 'required': false,
-                'type': 'object',
+                'type': 'string',
               },
             },
             'tier': 'presentation',
@@ -469,54 +398,7 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                   },
                   {
                     'name': 'stateMachine',
-                    'properties': [
-                      {
-                        'name': 'name',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      {
-                        'name': 'states',
-                        'required': true,
-                        'type': '[string]',
-                      },
-                      {
-                        'name': 'currentState',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      {
-                        'name': 'transitions',
-                        'properties': [
-                          {
-                            'name': 'from',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          {
-                            'name': 'to',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          {
-                            'name': 'event',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          {
-                            'name': 'guardHint',
-                            'type': 'string',
-                          },
-                        ],
-                        'required': true,
-                        'type': '[object]',
-                      },
-                      {
-                        'name': 'description',
-                        'type': 'string',
-                      },
-                    ],
-                    'type': 'object',
+                    'type': 'json',
                   },
                 ],
                 'type': 'object',
@@ -561,54 +443,7 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                   },
                   {
                     'name': 'stateMachine',
-                    'properties': [
-                      {
-                        'name': 'name',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      {
-                        'name': 'states',
-                        'required': true,
-                        'type': '[string]',
-                      },
-                      {
-                        'name': 'currentState',
-                        'required': true,
-                        'type': 'string',
-                      },
-                      {
-                        'name': 'transitions',
-                        'properties': [
-                          {
-                            'name': 'from',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          {
-                            'name': 'to',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          {
-                            'name': 'event',
-                            'required': true,
-                            'type': 'string',
-                          },
-                          {
-                            'name': 'guardHint',
-                            'type': 'string',
-                          },
-                        ],
-                        'required': true,
-                        'type': '[object]',
-                      },
-                      {
-                        'name': 'description',
-                        'type': 'string',
-                      },
-                    ],
-                    'type': 'object',
+                    'type': 'json',
                   },
                 ],
                 'type': 'object',
@@ -723,54 +558,7 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                     },
                     {
                       'name': 'stateMachine',
-                      'properties': [
-                        {
-                          'name': 'name',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        {
-                          'name': 'states',
-                          'required': true,
-                          'type': '[string]',
-                        },
-                        {
-                          'name': 'currentState',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        {
-                          'name': 'transitions',
-                          'properties': [
-                            {
-                              'name': 'from',
-                              'required': true,
-                              'type': 'string',
-                            },
-                            {
-                              'name': 'to',
-                              'required': true,
-                              'type': 'string',
-                            },
-                            {
-                              'name': 'event',
-                              'required': true,
-                              'type': 'string',
-                            },
-                            {
-                              'name': 'guardHint',
-                              'type': 'string',
-                            },
-                          ],
-                          'required': true,
-                          'type': '[object]',
-                        },
-                        {
-                          'name': 'description',
-                          'type': 'string',
-                        },
-                      ],
-                      'type': 'object',
+                      'type': 'json',
                     },
                   ],
                   'type': 'object',
@@ -815,54 +603,7 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
                     },
                     {
                       'name': 'stateMachine',
-                      'properties': [
-                        {
-                          'name': 'name',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        {
-                          'name': 'states',
-                          'required': true,
-                          'type': '[string]',
-                        },
-                        {
-                          'name': 'currentState',
-                          'required': true,
-                          'type': 'string',
-                        },
-                        {
-                          'name': 'transitions',
-                          'properties': [
-                            {
-                              'name': 'from',
-                              'required': true,
-                              'type': 'string',
-                            },
-                            {
-                              'name': 'to',
-                              'required': true,
-                              'type': 'string',
-                            },
-                            {
-                              'name': 'event',
-                              'required': true,
-                              'type': 'string',
-                            },
-                            {
-                              'name': 'guardHint',
-                              'type': 'string',
-                            },
-                          ],
-                          'required': true,
-                          'type': '[object]',
-                        },
-                        {
-                          'name': 'description',
-                          'type': 'string',
-                        },
-                      ],
-                      'type': 'object',
+                      'type': 'json',
                     },
                   ],
                   'type': 'object',

@@ -1,5 +1,5 @@
 {
-  "description": "PowerupSlots — UI factory (1:1 with the @almadar/ui powerup-slots pattern).",
+  "description": "PowerupSlots — ticks down remainingTime on each active powerup; drops expired ones.",
   "name": "ui-powerup-slots",
   "orbitals": [
     {
@@ -9,6 +9,35 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "remainingTime": {
+                  "name": "remainingTime",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "active",
+            "type": "array"
           }
         ],
         "name": "PowerupSlotsItem",
@@ -85,7 +114,9 @@
             }
           },
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "active"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -109,10 +140,15 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.active",
+                    "@config.active"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "active": "@config.active",
+                      "active": "@entity.active",
                       "className": "@config.className",
                       "maxSlots": "@config.maxSlots",
                       "type": "powerup-slots"
@@ -124,7 +160,76 @@
                 "to": "idle"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.active",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.active",
+                      [
+                        "fn",
+                        "p",
+                        [
+                          "object/merge",
+                          "@p",
+                          {
+                            "remainingTime": [
+                              "-",
+                              [
+                                "object/get",
+                                "@p",
+                                "remainingTime"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "p",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@p",
+                          "remainingTime"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "active": "@entity.active",
+                    "className": "@config.className",
+                    "maxSlots": "@config.maxSlots",
+                    "type": "powerup-slots"
+                  }
+                ]
+              ],
+              "guard": [
+                ">",
+                [
+                  "array/len",
+                  "@entity.active"
+                ],
+                0.0
+              ],
+              "interval": 1000.0,
+              "name": "powerupTick"
+            }
+          ]
         }
       ]
     }

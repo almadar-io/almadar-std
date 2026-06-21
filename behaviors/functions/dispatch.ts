@@ -284,6 +284,11 @@ import {
   isStdUiGameAudioToggleGameAudioToggleOrbitalParams,
 } from './ui/game/organisms/ui-game-audio-toggle.js';
 import {
+  stdUiGameBoard3dGameBoard3DOrbital,
+  StdUiGameBoard3dGameBoard3DOrbitalManifest,
+  isStdUiGameBoard3dGameBoard3DOrbitalParams,
+} from './ui/game/organisms/ui-game-board-3d.js';
+import {
   stdUiHeroOrganismHeroOrganismOrbital,
   StdUiHeroOrganismHeroOrganismOrbitalManifest,
   isStdUiHeroOrganismHeroOrganismOrbitalParams,
@@ -314,10 +319,20 @@ import {
   isStdUiNegotiatorBoardNegotiatorBoardOrbitalParams,
 } from './ui/game/organisms/ui-negotiator-board.js';
 import {
+  stdUiPlatformerBoardPlatformerBoardOrbital,
+  StdUiPlatformerBoardPlatformerBoardOrbitalManifest,
+  isStdUiPlatformerBoardPlatformerBoardOrbitalParams,
+} from './ui/game/organisms/ui-platformer-board.js';
+import {
   stdUiPricingOrganismPricingOrganismOrbital,
   StdUiPricingOrganismPricingOrganismOrbitalManifest,
   isStdUiPricingOrganismPricingOrganismOrbitalParams,
 } from './ui/marketing/organisms/ui-pricing-organism.js';
+import {
+  stdUiRoguelikeBoardRoguelikeBoardOrbital,
+  StdUiRoguelikeBoardRoguelikeBoardOrbitalManifest,
+  isStdUiRoguelikeBoardRoguelikeBoardOrbitalParams,
+} from './ui/game/organisms/ui-roguelike-board.js';
 import {
   stdUiRuntimeDebuggerRuntimeDebuggerOrbital,
   StdUiRuntimeDebuggerRuntimeDebuggerOrbitalManifest,
@@ -398,6 +413,11 @@ import {
   StdUiToastSlotToastSlotOrbitalManifest,
   isStdUiToastSlotToastSlotOrbitalParams,
 } from './ui/core/organisms/ui-toast-slot.js';
+import {
+  stdUiTowerDefenseBoardTowerDefenseBoardOrbital,
+  StdUiTowerDefenseBoardTowerDefenseBoardOrbitalManifest,
+  isStdUiTowerDefenseBoardTowerDefenseBoardOrbitalParams,
+} from './ui/game/organisms/ui-tower-defense-board.js';
 import {
   stdUiTraitSlotTraitSlotOrbital,
   StdUiTraitSlotTraitSlotOrbitalManifest,
@@ -1042,6 +1062,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiGameAudioToggleGameAudioToggleOrbitalManifest,
   }],
+  ['ui-game-board-3d::GameBoard3DOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiGameBoard3dGameBoard3DOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-game-board-3d::GameBoard3DOrbital');
+      }
+      return stdUiGameBoard3dGameBoard3DOrbital(p);
+    },
+    manifest: StdUiGameBoard3dGameBoard3DOrbitalManifest,
+  }],
   ['ui-hero-organism::HeroOrganismOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiHeroOrganismHeroOrganismOrbitalParams(p)) {
@@ -1096,6 +1125,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiNegotiatorBoardNegotiatorBoardOrbitalManifest,
   }],
+  ['ui-platformer-board::PlatformerBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiPlatformerBoardPlatformerBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-platformer-board::PlatformerBoardOrbital');
+      }
+      return stdUiPlatformerBoardPlatformerBoardOrbital(p);
+    },
+    manifest: StdUiPlatformerBoardPlatformerBoardOrbitalManifest,
+  }],
   ['ui-pricing-organism::PricingOrganismOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiPricingOrganismPricingOrganismOrbitalParams(p)) {
@@ -1104,6 +1142,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiPricingOrganismPricingOrganismOrbital(p);
     },
     manifest: StdUiPricingOrganismPricingOrganismOrbitalManifest,
+  }],
+  ['ui-roguelike-board::RoguelikeBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiRoguelikeBoardRoguelikeBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-roguelike-board::RoguelikeBoardOrbital');
+      }
+      return stdUiRoguelikeBoardRoguelikeBoardOrbital(p);
+    },
+    manifest: StdUiRoguelikeBoardRoguelikeBoardOrbitalManifest,
   }],
   ['ui-runtime-debugger::RuntimeDebuggerOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1248,6 +1295,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiToastSlotToastSlotOrbital(p);
     },
     manifest: StdUiToastSlotToastSlotOrbitalManifest,
+  }],
+  ['ui-tower-defense-board::TowerDefenseBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiTowerDefenseBoardTowerDefenseBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-tower-defense-board::TowerDefenseBoardOrbital');
+      }
+      return stdUiTowerDefenseBoardTowerDefenseBoardOrbital(p);
+    },
+    manifest: StdUiTowerDefenseBoardTowerDefenseBoardOrbitalManifest,
   }],
   ['ui-trait-slot::TraitSlotOrbital', {
     factory: (p: object): OrbitalDefinition => {

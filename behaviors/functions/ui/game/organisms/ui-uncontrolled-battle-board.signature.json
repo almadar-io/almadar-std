@@ -7,16 +7,61 @@
     "entities": [
       {
         "name": "UncontrolledBattleBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "turn",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
     "traits": [
       {
         "name": "UncontrolledBattleBoardRender",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "STEP",
+          "PLAY_AGAIN"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "STEP",
+            "direction": "emit",
+            "description": "stepEvent prop — emitted each battle round with attack result",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "playAgainEvent prop — reset + restart the battle",
+            "tier": "essential"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
+          },
           {
             "name": "INIT",
             "direction": "listen"
@@ -28,8 +73,16 @@
             "type": "string",
             "default": "",
             "label": "Asset Manifest",
-            "description": "Direct asset manifest — takes priority over entity-derived manifest.",
+            "description": "Base asset URL for the battlefield renderer.",
             "tier": "presentation"
+          },
+          {
+            "key": "description",
+            "type": "string",
+            "default": "Watch the units battle to the last one standing.",
+            "label": "Description",
+            "description": "Short scenario description.",
+            "tier": "domain"
           },
           {
             "key": "features",
@@ -51,7 +104,7 @@
               }
             ],
             "label": "Features",
-            "description": "Direct feature data — takes priority over entity-derived features.",
+            "description": "Environmental features on the battlefield.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -99,6 +152,117 @@
                   "name": "z",
                   "required": false,
                   "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "initialUnits",
+            "type": "[UncontrolledBattleBoardUnitsItem]",
+            "default": [
+              {
+                "atk": 5,
+                "def": 2,
+                "hp": 20,
+                "id": "u1",
+                "maxHp": 20,
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb",
+                "name": "Warrior",
+                "position": {
+                  "x": 1,
+                  "y": 2
+                },
+                "team": "player",
+                "unitType": "warrior"
+              },
+              {
+                "atk": 4,
+                "def": 1,
+                "hp": 15,
+                "id": "u2",
+                "maxHp": 15,
+                "modelUrl": "https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb",
+                "name": "Shadow",
+                "position": {
+                  "x": 3,
+                  "y": 2
+                },
+                "team": "enemy",
+                "unitType": "guardian"
+              }
+            ],
+            "label": "Initial Units",
+            "description": "Starting unit roster — each needs id, team (player|enemy), hp, atk, position.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "atk": {
+                  "name": "atk",
+                  "required": true,
+                  "type": "number"
+                },
+                "def": {
+                  "name": "def",
+                  "required": false,
+                  "type": "number"
+                },
+                "hp": {
+                  "name": "hp",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHp": {
+                  "name": "maxHp",
+                  "required": true,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -285,7 +449,7 @@
               }
             ],
             "label": "Tiles",
-            "description": "Direct tile data — takes priority over entity-derived tiles.",
+            "description": "Battlefield tile grid.",
             "tier": "presentation",
             "items": {
               "properties": {
@@ -354,198 +518,25 @@
             }
           },
           {
-            "key": "units",
-            "type": "[UncontrolledBattleBoardUnitsItem]",
-            "default": [
-              {
-                "health": 10,
-                "id": "u1",
-                "maxHealth": 10,
-                "modelUrl": "https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb",
-                "name": "Worker",
-                "position": {
-                  "x": 1,
-                  "y": 1
-                },
-                "team": "player",
-                "unitType": "worker"
-              },
-              {
-                "health": 8,
-                "id": "u2",
-                "maxHealth": 10,
-                "modelUrl": "https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb",
-                "name": "Guardian",
-                "position": {
-                  "x": 3,
-                  "y": 3
-                },
-                "team": "enemy",
-                "unitType": "guardian"
-              }
-            ],
-            "label": "Units",
-            "description": "Direct unit data — takes priority over entity-derived units.",
-            "tier": "presentation",
-            "items": {
-              "properties": {
-                "elevation": {
-                  "name": "elevation",
-                  "required": false,
-                  "type": "number"
-                },
-                "faction": {
-                  "name": "faction",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "health": {
-                  "name": "health",
-                  "required": false,
-                  "type": "number"
-                },
-                "heroId": {
-                  "name": "heroId",
-                  "required": false,
-                  "type": "string"
-                },
-                "id": {
-                  "name": "id",
-                  "required": true,
-                  "type": "string"
-                },
-                "maxHealth": {
-                  "name": "maxHealth",
-                  "required": false,
-                  "type": "number"
-                },
-                "modelUrl": {
-                  "name": "modelUrl",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "position": {
-                  "name": "position",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "previousPosition": {
-                  "name": "previousPosition",
-                  "required": false,
-                  "properties": {
-                    "x": {
-                      "name": "x",
-                      "required": true,
-                      "type": "number"
-                    },
-                    "y": {
-                      "name": "y",
-                      "required": true,
-                      "type": "number"
-                    }
-                  },
-                  "type": "object"
-                },
-                "sprite": {
-                  "name": "sprite",
-                  "required": false,
-                  "type": "string"
-                },
-                "team": {
-                  "name": "team",
-                  "required": false,
-                  "type": "string",
-                  "values": [
-                    "player",
-                    "enemy",
-                    "neutral"
-                  ]
-                },
-                "traits": {
-                  "name": "traits",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "properties": {
-                      "cooldown": {
-                        "name": "cooldown",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "currentState": {
-                        "name": "currentState",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "name": {
-                        "name": "name",
-                        "required": true,
-                        "type": "string"
-                      },
-                      "states": {
-                        "name": "states",
-                        "required": true,
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "type": "object"
-                  }
-                },
-                "unitType": {
-                  "name": "unitType",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": false,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": false,
-                  "type": "number"
-                },
-                "z": {
-                  "name": "z",
-                  "required": false,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            }
+            "key": "title",
+            "type": "string",
+            "default": "Auto Battle",
+            "label": "Title",
+            "description": "Battle scenario title shown above the board.",
+            "tier": "domain"
           }
         ],
         "capabilities": [],
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "description",
+            "result",
+            "title",
+            "turn",
+            "units"
+          ]
         }
       }
     ],
@@ -556,7 +547,10 @@
         "primaryEntity": "UncontrolledBattleBoardItem"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "PLAY_AGAIN",
+      "STEP"
+    ],
     "listenedEvents": []
   }
 ]
