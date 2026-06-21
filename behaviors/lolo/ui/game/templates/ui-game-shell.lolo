@@ -1,6 +1,18 @@
 app ui-game-shell "1.0.0"
-"GameShell — UI factory (1:1 with the @almadar/ui game-shell pattern)."
+"GameShell — full-viewport game layout; hud + children are config-driven."
 orbital GameShellOrbital {
+  type GameShellHudItem = {
+    type : string
+    label : string
+    value : number
+    max : number
+    format : string
+    variant : string
+  }
+  type GameShellCanvasItem = {
+    type : string
+  }
+
   entity GameShellItem [runtime] {
     id : string!
   }
@@ -12,10 +24,10 @@ orbital GameShellOrbital {
       INIT -> idle
         (render-ui main {
           appName: @config.appName
-          hud: [{ content: "Hud", type: typography }]
+          hud: @config.hud
           className: @config.className
           showTopBar: @config.showTopBar
-          children: [{ type: game-canvas-2d }]
+          children: @config.children
           type: game-shell
         })
     }
@@ -32,6 +44,14 @@ orbital GameShellOrbital {
       showTopBar : boolean = true
         @label "Show Top Bar"
         @description "Whether to show the minimal top bar (default: true)"
+        @tier "presentation"
+      hud : [GameShellHudItem] = [{ type: "stat-badge", label: "HP", value: 100, max: 100, format: "bar", variant: "danger" }, { type: "stat-badge", label: "Score", value: 0, format: "number", variant: "warning" }]
+        @label "HUD Items"
+        @description "HUD stat badges rendered in the top bar; each item is a StatBadge descriptor"
+        @tier "presentation"
+      children : [GameShellCanvasItem] = [{ type: "game-canvas-2d" }]
+        @label "Children"
+        @description "Main game content; defaults to a 2D isometric canvas"
         @tier "presentation"
     }
   }
