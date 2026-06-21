@@ -54,7 +54,7 @@ export interface StdUiChoiceButtonConfig {
   index?: number;
   /** Default: `false` */
   selected?: boolean;
-  /** Default: `"Text"` */
+  /** Default: `"Charge forward into the fray"` */
   text?: string;
 }
 

@@ -52,11 +52,11 @@ export interface StdUiItemSlotConfig {
   empty?: boolean;
   /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `"Label"` */
+  /** Default: `"Iron Sword"` */
   label?: string;
   /** Default: `0` */
   quantity?: number;
-  /** Default: `"common"` */
+  /** Default: `"uncommon"` */
   rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
   /** Default: `false` */
   selected?: boolean;

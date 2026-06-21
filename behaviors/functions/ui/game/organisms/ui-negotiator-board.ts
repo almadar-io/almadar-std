@@ -69,11 +69,13 @@ export interface StdUiNegotiatorBoardCompletePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiNegotiatorBoardConfig {
-  /** Default: `[]` */
+  /** Default: `[{"description":"Work together for a moderate mutual gain.","id":"cooperate","label":"Cooperate"},{"description":"Betray your partner for a bigger personal gain — if they cooperate.","id":"defect","label":"Defect"}]` */
   actions?: EntityRow[];
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Choose Cooperate or Defect each round. Reach the target score before rounds run out."` */
+  description?: string;
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
@@ -85,7 +87,7 @@ export interface StdUiNegotiatorBoardConfig {
   pageProp?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `[]` */
+  /** Default: `[{"opponentAction":"cooperate","opponentPayoff":3,"playerAction":"cooperate","playerPayoff":3},{"opponentAction":"defect","opponentPayoff":5,"playerAction":"cooperate","playerPayoff":0},{"opponentAction":"cooperate","opponentPayoff":0,"playerAction":"defect","playerPayoff":5},{"opponentAction":"defect","opponentPayoff":1,"playerAction":"defect","playerPayoff":1}]` */
   payoffMatrix?: EntityRow[];
   /** Default: `"Search Value"` */
   searchValue?: string;
@@ -97,6 +99,8 @@ export interface StdUiNegotiatorBoardConfig {
   sortDirection?: 'asc' | 'desc';
   /** Default: `10` */
   targetScore?: number;
+  /** Default: `"Prisoner's Dilemma"` */
+  title?: string;
   /** Default: `0` */
   totalCount?: number;
 }
@@ -198,7 +202,6 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             'type': 'string',
           },
           {
-            'default': [],
             'items': {
               'properties': {
                 'description': {
@@ -223,7 +226,6 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             'type': 'array',
           },
           {
-            'default': [],
             'items': {
               'properties': {
                 'opponentAction': {
@@ -264,7 +266,18 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
         'category': 'interaction',
         'config': {
           'actions': {
-            'default': [],
+            'default': [
+              {
+                'description': 'Work together for a moderate mutual gain.',
+                'id': 'cooperate',
+                'label': 'Cooperate',
+              },
+              {
+                'description': 'Betray your partner for a bigger personal gain — if they cooperate.',
+                'id': 'defect',
+                'label': 'Defect',
+              },
+            ],
             'description': 'Selectable round actions (id/label/description).',
             'items': {
               'properties': {
@@ -301,6 +314,13 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'description': {
+            'default': 'Choose Cooperate or Defect each round. Reach the target score before rounds run out.',
+            'description': 'One-line game brief shown to the player.',
+            'label': 'Description',
+            'tier': 'domain',
             'type': 'string',
           },
           'error': {
@@ -368,7 +388,32 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             'type': 'number',
           },
           'payoffMatrix': {
-            'default': [],
+            'default': [
+              {
+                'opponentAction': 'cooperate',
+                'opponentPayoff': 3,
+                'playerAction': 'cooperate',
+                'playerPayoff': 3,
+              },
+              {
+                'opponentAction': 'defect',
+                'opponentPayoff': 5,
+                'playerAction': 'cooperate',
+                'playerPayoff': 0,
+              },
+              {
+                'opponentAction': 'cooperate',
+                'opponentPayoff': 0,
+                'playerAction': 'defect',
+                'playerPayoff': 5,
+              },
+              {
+                'opponentAction': 'defect',
+                'opponentPayoff': 1,
+                'playerAction': 'defect',
+                'playerPayoff': 1,
+              },
+            ],
             'description': 'Payoff-matrix cells (playerAction/opponentAction/playerPayoff/opponentPayoff).',
             'items': {
               'properties': {
@@ -440,6 +485,13 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             'label': 'Target Score',
             'tier': 'domain',
             'type': 'number',
+          },
+          'title': {
+            'default': 'Prisoner\'s Dilemma',
+            'description': 'Game title shown above the board.',
+            'label': 'Title',
+            'tier': 'domain',
+            'type': 'string',
           },
           'totalCount': {
             'default': 0,
@@ -531,12 +583,12 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
         'stateMachine': {
           'events': [
             {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
               'key': 'START',
               'name': 'Start',
+            },
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
             },
             {
               'description': 'Emits one negotiation round; the UI resolves the payoff before emitting.',
@@ -602,10 +654,10 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
           'states': [
             {
               'isInitial': true,
-              'name': 'menu',
+              'name': 'playing',
             },
             {
-              'name': 'playing',
+              'name': 'menu',
             },
             {
               'name': 'complete',
@@ -615,10 +667,64 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             {
               'effects': [
                 [
-                  'fetch',
-                  'NegotiatorBoardItem',
-                  {},
+                  'set',
+                  '@entity.score',
+                  0,
                 ],
+                [
+                  'set',
+                  '@entity.round',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.targetScore',
+                  '@config.targetScore',
+                ],
+                [
+                  'set',
+                  '@entity.maxRounds',
+                  '@config.maxRounds',
+                ],
+                [
+                  'set',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'set',
+                  '@entity.actions',
+                  '@config.actions',
+                ],
+                [
+                  'set',
+                  '@entity.payoffMatrix',
+                  '@config.payoffMatrix',
+                ],
+                [
+                  'set',
+                  '@entity.opponentStrategy',
+                  '@config.opponentStrategy',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'finishEvent': 'FINISH',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'playRoundEvent': 'PLAY_ROUND',
+                    'type': 'negotiator-board',
+                  },
+                ],
+              ],
+              'event': 'START',
+              'from': 'menu',
+              'to': 'playing',
+            },
+            {
+              'effects': [
                 [
                   'set',
                   '@entity.score',
@@ -663,72 +769,17 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'render-ui',
                   'main',
                   {
-                    'activeFilters': '@config.activeFilters',
-                    'className': '@config.className',
                     'completeEvent': 'COMPLETE',
                     'entity': '@entity',
-                    'error': '@config.error',
                     'finishEvent': 'FINISH',
-                    'isLoading': '@config.isLoading',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
                     'playAgainEvent': 'PLAY_AGAIN',
                     'playRoundEvent': 'PLAY_ROUND',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'totalCount': '@config.totalCount',
                     'type': 'negotiator-board',
                   },
                 ],
               ],
               'event': 'INIT',
-              'from': 'menu',
-              'to': 'menu',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.score',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.round',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.targetScore',
-                  '@config.targetScore',
-                ],
-                [
-                  'set',
-                  '@entity.maxRounds',
-                  '@config.maxRounds',
-                ],
-                [
-                  'set',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'finishEvent': 'FINISH',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'playRoundEvent': 'PLAY_ROUND',
-                    'type': 'negotiator-board',
-                  },
-                ],
-              ],
-              'event': 'START',
-              'from': 'menu',
+              'from': 'playing',
               'to': 'playing',
             },
             {

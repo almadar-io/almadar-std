@@ -7,6 +7,14 @@ orbital SimulatorBoardOrbital {
     code : string
     stack : string
   }
+  type SimulatorBoardParameterItem = {
+    id : string!
+    label : string
+    unit : string
+    min : number
+    max : number
+    step : number
+  }
 
   entity SimulatorBoardItem [runtime] {
     id : string!
@@ -17,42 +25,23 @@ orbital SimulatorBoardOrbital {
     output : number @intrinsic = derived (+ @entity.paramA (* @entity.paramB 2))
     attempts : number = 0
     result : "none" | "win" = none
+    parameters : [SimulatorBoardParameterItem]
+    title : string
+    description : string
+    outputLabel : string
   }
 
   trait SimulatorBoardRender -> @rebindable SimulatorBoardItem [interaction, instance] {
-    initial: menu
+    initial: playing
 
     state menu {
-      INIT -> menu
-        (set @entity.paramA 0)
-        (set @entity.paramB 0)
-        (set @entity.target 10)
-        (set @entity.tolerance 1)
-        (set @entity.attempts 0)
-        (set @entity.result "none")
-        (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          entity: @entity
-          completeEvent: COMPLETE
-          setAEvent: SET_A
-          setBEvent: SET_B
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: simulator-board
-        })
       START -> playing
         (set @entity.paramA 0)
         (set @entity.paramB 0)
+        (set @entity.parameters @config.parameters)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.outputLabel @config.outputLabel)
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
@@ -67,6 +56,26 @@ orbital SimulatorBoardOrbital {
     }
 
     state playing {
+      INIT -> playing
+        (set @entity.paramA 0)
+        (set @entity.paramB 0)
+        (set @entity.parameters @config.parameters)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.outputLabel @config.outputLabel)
+        (set @entity.target @config.target)
+        (set @entity.tolerance @config.tolerance)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          setAEvent: SET_A
+          setBEvent: SET_B
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: simulator-board
+        })
       SET_A -> playing when (== @entity.result "none")
         (set @entity.paramA ?value)
         (render-ui main {
@@ -121,6 +130,10 @@ orbital SimulatorBoardOrbital {
       PLAY_AGAIN -> menu
         (set @entity.paramA 0)
         (set @entity.paramB 0)
+        (set @entity.parameters @config.parameters)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.outputLabel @config.outputLabel)
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
@@ -209,6 +222,30 @@ orbital SimulatorBoardOrbital {
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
+      title : string = "Tune the Formula"
+        @label "Title"
+        @description "Puzzle title shown above the board."
+        @tier "domain"
+      outputLabel : string = "Output = A + B × 2"
+        @label "Output Label"
+        @description "Human-readable formula label shown next to the output value."
+        @tier "domain"
+      target : number = 10
+        @label "Target"
+        @description "The output value the player must reach (within tolerance)."
+        @tier "domain"
+      tolerance : number = 1
+        @label "Tolerance"
+        @description "Acceptable error margin around the target."
+        @tier "domain"
+      description : string = "Adjust the sliders so the output lands within tolerance of the target."
+        @label "Description"
+        @description "One-line puzzle brief shown to the player."
+        @tier "domain"
+      parameters : [SimulatorBoardParameterItem] = [{ id: "paramA", label: "Base Value (A)", unit: "", min: 0, max: 10, step: 1 }, { id: "paramB", label: "Multiplier (B)", unit: "", min: 0, max: 5, step: 1 }]
+        @label "Parameters"
+        @description "Slider descriptors — index 0 drives parameter A, index 1 drives parameter B."
+        @tier "domain"
     }
   }
 

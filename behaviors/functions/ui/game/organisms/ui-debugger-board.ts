@@ -71,7 +71,11 @@ export interface StdUiDebuggerBoardConfig {
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Flag every line that contains a bug. Flag no clean lines to win."` */
+  description?: string;
   error?: EntityRow;
+  /** Default: `"Check the operator in the return statement and the variable name in the log call."` */
+  hint?: string;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"content":"function add(a, b) {","id":"l1","isBug":false,"isFlagged":false},{"content":"  return a - b;","explanation":"Should be a + b for an add function.","id":"l2","isBug":true,"isFlagged":false},{"content":"}","id":"l3","isBug":false,"isFlagged":false},{"content":"const total = add(2, 3);","id":"l4","isBug":false,"isFlagged":false},{"content":"console.log(totl);","explanation":"Typo: 'totl' should be 'total'.","id":"l5","isBug":true,"isFlagged":false}]` */
@@ -88,6 +92,8 @@ export interface StdUiDebuggerBoardConfig {
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
+  /** Default: `"Debug the Add Function"` */
+  title?: string;
   /** Default: `0` */
   totalCount?: number;
 }
@@ -188,6 +194,18 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
             'type': 'array',
           },
           {
+            'name': 'title',
+            'type': 'string',
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'hint',
+            'type': 'string',
+          },
+          {
             'default': 0,
             'name': 'attempts',
             'type': 'number',
@@ -225,6 +243,13 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
             'tier': 'presentation',
             'type': 'string',
           },
+          'description': {
+            'default': 'Flag every line that contains a bug. Flag no clean lines to win.',
+            'description': 'One-line puzzle brief shown to the player.',
+            'label': 'Description',
+            'tier': 'domain',
+            'type': 'string',
+          },
           'error': {
             'description': 'Error state (UiError)',
             'label': 'Error',
@@ -252,6 +277,13 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
             },
             'tier': 'presentation',
             'type': 'DebuggerBoardError',
+          },
+          'hint': {
+            'default': 'Check the operator in the return statement and the variable name in the log call.',
+            'description': 'Optional hint the player can reveal.',
+            'label': 'Hint',
+            'tier': 'domain',
+            'type': 'string',
           },
           'isLoading': {
             'default': false,
@@ -380,6 +412,13 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
               'desc',
             ],
           },
+          'title': {
+            'default': 'Debug the Add Function',
+            'description': 'Puzzle title shown above the board.',
+            'label': 'Title',
+            'tier': 'domain',
+            'type': 'string',
+          },
           'totalCount': {
             'default': 0,
             'description': 'Total number of items',
@@ -448,8 +487,11 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
         'entityContract': {
           'provides': [
             'attempts',
+            'description',
+            'hint',
             'lines',
             'result',
+            'title',
           ],
           'requires': [],
         },
@@ -460,12 +502,12 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
         'stateMachine': {
           'events': [
             {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
               'key': 'START',
               'name': 'Start',
+            },
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
             },
             {
               'description': 'Flip the flag on a reviewed code line',
@@ -526,10 +568,10 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
           'states': [
             {
               'isInitial': true,
-              'name': 'menu',
+              'name': 'playing',
             },
             {
-              'name': 'playing',
+              'name': 'menu',
             },
             {
               'name': 'complete',
@@ -545,48 +587,18 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                 ],
                 [
                   'set',
-                  '@entity.attempts',
-                  0,
+                  '@entity.title',
+                  '@config.title',
                 ],
                 [
                   'set',
-                  '@entity.result',
-                  'none',
+                  '@entity.description',
+                  '@config.description',
                 ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'activeFilters': '@config.activeFilters',
-                    'checkEvent': 'CHECK',
-                    'className': '@config.className',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'toggleFlagEvent': 'TOGGLE_FLAG',
-                    'totalCount': '@config.totalCount',
-                    'type': 'debugger-board',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'menu',
-              'to': 'menu',
-            },
-            {
-              'effects': [
                 [
                   'set',
-                  '@entity.lines',
-                  '@config.lines',
+                  '@entity.hint',
+                  '@config.hint',
                 ],
                 [
                   'set',
@@ -613,6 +625,55 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
               ],
               'event': 'START',
               'from': 'menu',
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.lines',
+                  '@config.lines',
+                ],
+                [
+                  'set',
+                  '@entity.title',
+                  '@config.title',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@config.description',
+                ],
+                [
+                  'set',
+                  '@entity.hint',
+                  '@config.hint',
+                ],
+                [
+                  'set',
+                  '@entity.attempts',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'checkEvent': 'CHECK',
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'toggleFlagEvent': 'TOGGLE_FLAG',
+                    'type': 'debugger-board',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'playing',
               'to': 'playing',
             },
             {
@@ -870,6 +931,21 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'set',
                   '@entity.lines',
                   '@config.lines',
+                ],
+                [
+                  'set',
+                  '@entity.title',
+                  '@config.title',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@config.description',
+                ],
+                [
+                  'set',
+                  '@entity.hint',
+                  '@config.hint',
                 ],
                 [
                   'set',

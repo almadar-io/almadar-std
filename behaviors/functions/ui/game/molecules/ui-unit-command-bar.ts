@@ -43,7 +43,7 @@ export interface StdUiUnitCommandBarConfig {
   className?: string;
   /** Default: `[{"disabled":false,"hotkey":"Hotkey","icon":"circle","label":"Label"}]` */
   commands?: EntityRow[];
-  /** Default: `"Selected Unit Id"` */
+  /** Default: `"unit-1"` */
   selectedUnitId?: string;
 }
 

@@ -47,7 +47,7 @@ export interface StdUiStateIndicatorConfig {
   label?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `"State"` */
+  /** Default: `"idle"` */
   stateProp?: string;
   /** Default: `{}` */
   stateStyles?: unknown;

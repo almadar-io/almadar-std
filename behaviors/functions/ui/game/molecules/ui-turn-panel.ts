@@ -41,15 +41,15 @@ export type StdUiTurnPanelEventKey = 'INIT';
 export interface StdUiTurnPanelConfig {
   /** Default: `[{"disabled":false,"icon":"circle","label":"Label"}]` */
   actions?: EntityRow[];
-  /** Default: `"Active Team"` */
+  /** Default: `"Heroes"` */
   activeTeam?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `3` */
   currentTurn?: number;
-  /** Default: `0` */
+  /** Default: `10` */
   maxTurns?: number;
-  /** Default: `"Phase"` */
+  /** Default: `"Attack"` */
   phase?: string;
 }
 

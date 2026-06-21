@@ -74,7 +74,11 @@ export interface StdUiClassifierBoardConfig {
   categories?: EntityRow[];
   /** Default: `""` */
   className?: string;
+  /** Default: `"Drag each item into the correct category bucket."` */
+  description?: string;
   error?: EntityRow;
+  /** Default: `"Think about which foods grow on trees versus underground."` */
+  hint?: string;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `[{"assignedCategory":"","correctCategory":"fruit","id":"i1","label":"Apple"},{"assignedCategory":"","correctCategory":"vegetable","id":"i2","label":"Carrot"},{"assignedCategory":"","correctCategory":"fruit","id":"i3","label":"Banana"},{"assignedCategory":"","correctCategory":"vegetable","id":"i4","label":"Potato"}]` */
@@ -91,6 +95,8 @@ export interface StdUiClassifierBoardConfig {
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
+  /** Default: `"Sort the Foods"` */
+  title?: string;
   /** Default: `0` */
   totalCount?: number;
 }
@@ -186,6 +192,42 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             'type': 'array',
           },
           {
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'categories',
+            'type': 'array',
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'hint',
+            'type': 'string',
+          },
+          {
             'default': 0,
             'name': 'attempts',
             'type': 'number',
@@ -259,6 +301,13 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             'tier': 'presentation',
             'type': 'string',
           },
+          'description': {
+            'default': 'Drag each item into the correct category bucket.',
+            'description': 'One-line puzzle brief shown to the player.',
+            'label': 'Description',
+            'tier': 'domain',
+            'type': 'string',
+          },
           'error': {
             'description': 'Error state (UiError)',
             'label': 'Error',
@@ -286,6 +335,13 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
             },
             'tier': 'presentation',
             'type': 'ClassifierBoardError',
+          },
+          'hint': {
+            'default': 'Think about which foods grow on trees versus underground.',
+            'description': 'Optional hint the player can reveal.',
+            'label': 'Hint',
+            'tier': 'domain',
+            'type': 'string',
           },
           'isLoading': {
             'default': false,
@@ -401,6 +457,13 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
               'desc',
             ],
           },
+          'title': {
+            'default': 'Sort the Foods',
+            'description': 'Puzzle title shown above the board.',
+            'label': 'Title',
+            'tier': 'domain',
+            'type': 'string',
+          },
           'totalCount': {
             'default': 0,
             'description': 'Total number of items',
@@ -474,8 +537,12 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
         'entityContract': {
           'provides': [
             'attempts',
+            'categories',
+            'description',
+            'hint',
             'items',
             'result',
+            'title',
           ],
           'requires': [],
         },
@@ -486,12 +553,12 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
         'stateMachine': {
           'events': [
             {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
               'key': 'START',
               'name': 'Start',
+            },
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
             },
             {
               'description': 'Emits UI:{assignEvent} with { itemId, categoryId } when an item is dropped into a category',
@@ -557,10 +624,10 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
           'states': [
             {
               'isInitial': true,
-              'name': 'menu',
+              'name': 'playing',
             },
             {
-              'name': 'playing',
+              'name': 'menu',
             },
             {
               'name': 'complete',
@@ -576,48 +643,23 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                 ],
                 [
                   'set',
-                  '@entity.attempts',
-                  0,
+                  '@entity.categories',
+                  '@config.categories',
                 ],
                 [
                   'set',
-                  '@entity.result',
-                  'none',
+                  '@entity.title',
+                  '@config.title',
                 ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'activeFilters': '@config.activeFilters',
-                    'assignEvent': 'ASSIGN',
-                    'checkEvent': 'CHECK',
-                    'className': '@config.className',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'totalCount': '@config.totalCount',
-                    'type': 'classifier-board',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'menu',
-              'to': 'menu',
-            },
-            {
-              'effects': [
                 [
                   'set',
-                  '@entity.items',
-                  '@config.items',
+                  '@entity.description',
+                  '@config.description',
+                ],
+                [
+                  'set',
+                  '@entity.hint',
+                  '@config.hint',
                 ],
                 [
                   'set',
@@ -644,6 +686,60 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
               ],
               'event': 'START',
               'from': 'menu',
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.items',
+                  '@config.items',
+                ],
+                [
+                  'set',
+                  '@entity.categories',
+                  '@config.categories',
+                ],
+                [
+                  'set',
+                  '@entity.title',
+                  '@config.title',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@config.description',
+                ],
+                [
+                  'set',
+                  '@entity.hint',
+                  '@config.hint',
+                ],
+                [
+                  'set',
+                  '@entity.attempts',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'assignEvent': 'ASSIGN',
+                    'checkEvent': 'CHECK',
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'type': 'classifier-board',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'playing',
               'to': 'playing',
             },
             {
@@ -816,6 +912,26 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'set',
                   '@entity.items',
                   '@config.items',
+                ],
+                [
+                  'set',
+                  '@entity.categories',
+                  '@config.categories',
+                ],
+                [
+                  'set',
+                  '@entity.title',
+                  '@config.title',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@config.description',
+                ],
+                [
+                  'set',
+                  '@entity.hint',
+                  '@config.hint',
                 ],
                 [
                   'set',

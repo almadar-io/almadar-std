@@ -43,7 +43,7 @@ export interface StdUiTurnIndicatorConfig {
   activeTeam?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `1` */
   currentTurn?: number;
   /** Default: `0` */
   maxTurns?: number;

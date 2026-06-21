@@ -43,13 +43,13 @@ export interface StdUiEnemyPlateConfig {
   className?: string;
   /** Default: `[{"icon":"circle","label":"Label","variant":"buff"}]` */
   effects?: EntityRow[];
-  /** Default: `0` */
+  /** Default: `80` */
   health?: number;
-  /** Default: `0` */
+  /** Default: `5` */
   level?: number;
-  /** Default: `0` */
+  /** Default: `100` */
   maxHealth?: number;
-  /** Default: `"Name"` */
+  /** Default: `"Shadow Guard"` */
   name?: string;
 }
 

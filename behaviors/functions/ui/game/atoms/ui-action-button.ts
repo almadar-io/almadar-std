@@ -56,7 +56,7 @@ export interface StdUiActionButtonConfig {
   hotkey?: string;
   /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `"Label"` */
+  /** Default: `"Attack"` */
   label?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';

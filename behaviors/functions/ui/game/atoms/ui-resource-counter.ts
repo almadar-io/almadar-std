@@ -45,13 +45,13 @@ export interface StdUiResourceCounterConfig {
   color?: 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'muted';
   /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `"Label"` */
+  /** Default: `"Gold"` */
   label?: string;
   /** Default: `0` */
   max?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
+  /** Default: `250` */
   value?: number;
 }
 

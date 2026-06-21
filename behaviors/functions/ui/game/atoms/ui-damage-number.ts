@@ -43,7 +43,7 @@ export interface StdUiDamageNumberConfig {
   className?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
+  /** Default: `42` */
   value?: number;
 }
 

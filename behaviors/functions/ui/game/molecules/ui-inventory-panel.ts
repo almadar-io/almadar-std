@@ -62,7 +62,7 @@ export interface StdUiInventoryPanelDropItemPayload {
 export interface StdUiInventoryPanelConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `4` */
   columns?: number;
   /** Default: `[{"description":"Description","id":"Id","name":"Name","quantity":1,"sprite":"Sprite","type":"Type"}]` */
   items?: EntityRow[];
@@ -72,7 +72,7 @@ export interface StdUiInventoryPanelConfig {
   showTooltips?: boolean;
   /** Default: `48` */
   slotSize?: number;
-  /** Default: `0` */
+  /** Default: `12` */
   slots?: number;
 }
 

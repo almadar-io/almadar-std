@@ -41,15 +41,15 @@ export type StdUiHealthPanelEventKey = 'INIT';
 export interface StdUiHealthPanelConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `75` */
   current?: number;
   /** Default: `[{"icon":"circle","label":"Label","variant":"buff"}]` */
   effects?: EntityRow[];
-  /** Default: `"Label"` */
+  /** Default: `"Player HP"` */
   label?: string;
-  /** Default: `0` */
+  /** Default: `100` */
   max?: number;
-  /** Default: `0` */
+  /** Default: `20` */
   shield?: number;
   /** Default: `true` */
   showNumbers?: boolean;

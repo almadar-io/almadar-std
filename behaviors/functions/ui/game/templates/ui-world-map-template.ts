@@ -45,7 +45,7 @@ export interface StdUiWorldMapTemplateConfig {
   assetManifest?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `374` */
   diamondTopY?: number;
   /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":1}]` */
   features?: EntityRow[];

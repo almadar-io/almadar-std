@@ -27,49 +27,27 @@ orbital NegotiatorBoardOrbital {
     maxRounds : number = 5
     result : "none" | "win" | "lose" = none
     opponentStrategy : string = "tit-for-tat"
-    actions : [NegotiatorBoardActionsItem] = []
-    payoffMatrix : [NegotiatorBoardPayoffItem] = []
+    actions : [NegotiatorBoardActionsItem]
+    payoffMatrix : [NegotiatorBoardPayoffItem]
+    title : string
+    description : string
   }
 
   trait NegotiatorBoardRender -> @rebindable NegotiatorBoardItem [interaction, instance] {
-    initial: menu
+    initial: playing
 
     state menu {
-      INIT -> menu
-        (fetch NegotiatorBoardItem {})
-        (set @entity.score 0)
-        (set @entity.round 0)
-        (set @entity.targetScore @config.targetScore)
-        (set @entity.maxRounds @config.maxRounds)
-        (set @entity.result "none")
-        (set @entity.opponentStrategy @config.opponentStrategy)
-        (set @entity.actions @config.actions)
-        (set @entity.payoffMatrix @config.payoffMatrix)
-        (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          entity: @entity
-          completeEvent: COMPLETE
-          playRoundEvent: PLAY_ROUND
-          finishEvent: FINISH
-          playAgainEvent: PLAY_AGAIN
-          type: negotiator-board
-        })
       START -> playing
         (set @entity.score 0)
         (set @entity.round 0)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
         (set @entity.targetScore @config.targetScore)
         (set @entity.maxRounds @config.maxRounds)
         (set @entity.result "none")
+        (set @entity.actions @config.actions)
+        (set @entity.payoffMatrix @config.payoffMatrix)
+        (set @entity.opponentStrategy @config.opponentStrategy)
         (render-ui main {
           entity: @entity
           completeEvent: COMPLETE
@@ -81,6 +59,25 @@ orbital NegotiatorBoardOrbital {
     }
 
     state playing {
+      INIT -> playing
+        (set @entity.score 0)
+        (set @entity.round 0)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.targetScore @config.targetScore)
+        (set @entity.maxRounds @config.maxRounds)
+        (set @entity.result "none")
+        (set @entity.opponentStrategy @config.opponentStrategy)
+        (set @entity.actions @config.actions)
+        (set @entity.payoffMatrix @config.payoffMatrix)
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          playRoundEvent: PLAY_ROUND
+          finishEvent: FINISH
+          playAgainEvent: PLAY_AGAIN
+          type: negotiator-board
+        })
       PLAY_ROUND -> playing when (< @entity.round @entity.maxRounds)
         (set @entity.score (+ @entity.score (if (>= ?payoff 0) ?payoff 0)))
         (set @entity.round (+ @entity.round 1))
@@ -120,6 +117,8 @@ orbital NegotiatorBoardOrbital {
       PLAY_AGAIN -> menu
         (set @entity.score 0)
         (set @entity.round 0)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
         (set @entity.result "none")
         (render-ui main {
           entity: @entity
@@ -214,11 +213,19 @@ orbital NegotiatorBoardOrbital {
         @label "Opponent Strategy"
         @description "AI opponent strategy (always-cooperate | always-defect | tit-for-tat | random)."
         @tier "domain"
-      actions : [NegotiatorBoardActionsItem] = []
+      title : string = "Prisoner's Dilemma"
+        @label "Title"
+        @description "Game title shown above the board."
+        @tier "domain"
+      description : string = "Choose Cooperate or Defect each round. Reach the target score before rounds run out."
+        @label "Description"
+        @description "One-line game brief shown to the player."
+        @tier "domain"
+      actions : [NegotiatorBoardActionsItem] = [{ id: "cooperate", label: "Cooperate", description: "Work together for a moderate mutual gain." }, { id: "defect", label: "Defect", description: "Betray your partner for a bigger personal gain — if they cooperate." }]
         @label "Actions"
         @description "Selectable round actions (id/label/description)."
         @tier "domain"
-      payoffMatrix : [NegotiatorBoardPayoffItem] = []
+      payoffMatrix : [NegotiatorBoardPayoffItem] = [{ playerAction: "cooperate", opponentAction: "cooperate", playerPayoff: 3, opponentPayoff: 3 }, { playerAction: "cooperate", opponentAction: "defect", playerPayoff: 0, opponentPayoff: 5 }, { playerAction: "defect", opponentAction: "cooperate", playerPayoff: 5, opponentPayoff: 0 }, { playerAction: "defect", opponentAction: "defect", playerPayoff: 1, opponentPayoff: 1 }]
         @label "Payoff Matrix"
         @description "Payoff-matrix cells (playerAction/opponentAction/playerPayoff/opponentPayoff)."
         @tier "domain"

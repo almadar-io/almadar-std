@@ -43,6 +43,26 @@
             "name": "result",
             "type": "string",
             "required": false
+          },
+          {
+            "name": "parameters",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "outputLabel",
+            "type": "string",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -91,11 +111,11 @@
             "tier": "essential"
           },
           {
-            "name": "INIT",
+            "name": "START",
             "direction": "listen"
           },
           {
-            "name": "START",
+            "name": "INIT",
             "direction": "listen"
           }
         ],
@@ -114,6 +134,14 @@
             "label": "Class Name",
             "description": "Additional CSS classes",
             "tier": "presentation"
+          },
+          {
+            "key": "description",
+            "type": "string",
+            "default": "Adjust the sliders so the output lands within tolerance of the target.",
+            "label": "Description",
+            "description": "One-line puzzle brief shown to the player.",
+            "tier": "domain"
           },
           {
             "key": "error",
@@ -153,6 +181,14 @@
             "tier": "presentation"
           },
           {
+            "key": "outputLabel",
+            "type": "string",
+            "default": "Output = A + B × 2",
+            "label": "Output Label",
+            "description": "Human-readable formula label shown next to the output value.",
+            "tier": "domain"
+          },
+          {
             "key": "pageProp",
             "type": "number",
             "default": 0,
@@ -168,6 +204,66 @@
             "label": "Page Size",
             "description": "Number of items per page",
             "tier": "presentation"
+          },
+          {
+            "key": "parameters",
+            "type": "[SimulatorBoardParameterItem]",
+            "default": [
+              {
+                "id": "paramA",
+                "label": "Base Value (A)",
+                "max": 10,
+                "min": 0,
+                "step": 1,
+                "unit": ""
+              },
+              {
+                "id": "paramB",
+                "label": "Multiplier (B)",
+                "max": 5,
+                "min": 0,
+                "step": 1,
+                "unit": ""
+              }
+            ],
+            "label": "Parameters",
+            "description": "Slider descriptors — index 0 drives parameter A, index 1 drives parameter B.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "min": {
+                  "name": "min",
+                  "required": false,
+                  "type": "number"
+                },
+                "step": {
+                  "name": "step",
+                  "required": false,
+                  "type": "number"
+                },
+                "unit": {
+                  "name": "unit",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "searchValue",
@@ -209,6 +305,30 @@
             ]
           },
           {
+            "key": "target",
+            "type": "number",
+            "default": 10,
+            "label": "Target",
+            "description": "The output value the player must reach (within tolerance).",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Tune the Formula",
+            "label": "Title",
+            "description": "Puzzle title shown above the board.",
+            "tier": "domain"
+          },
+          {
+            "key": "tolerance",
+            "type": "number",
+            "default": 1,
+            "label": "Tolerance",
+            "description": "Acceptable error margin around the target.",
+            "tier": "domain"
+          },
+          {
             "key": "totalCount",
             "type": "number",
             "default": 0,
@@ -223,10 +343,14 @@
           "requires": [],
           "provides": [
             "attempts",
+            "description",
+            "outputLabel",
             "paramA",
             "paramB",
+            "parameters",
             "result",
             "target",
+            "title",
             "tolerance"
           ]
         }
