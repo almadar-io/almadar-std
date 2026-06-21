@@ -1,0 +1,84 @@
+app ui-platformer-template "1.0.0"
+"PlatformerTemplate — thin layout: PlatformerBoard + HUD (lives/score); config-driven."
+orbital PlatformerTemplateOrbital {
+  type PlatformerTemplatePlatformsItem = {
+    x : number!
+    y : number!
+    width : number!
+    height : number!
+    type : "ground" | "platform" | "hazard" | "goal"
+  }
+
+  entity PlatformerTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait PlatformerTemplateRender -> @rebindable PlatformerTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch PlatformerTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          platforms: @config.platforms
+          goalX: @config.goalX
+          worldWidth: @config.worldWidth
+          worldHeight: @config.worldHeight
+          canvasWidth: @config.canvasWidth
+          canvasHeight: @config.canvasHeight
+          playerSprite: @config.playerSprite
+          tileSprites: @config.tileSprites
+          bgColor: @config.bgColor
+          gameEndEvent: GAME_END
+          type: platformer-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "External styling override"
+        @tier "presentation"
+      platforms : [PlatformerTemplatePlatformsItem] = [{ x: 0, y: 368, width: 800, height: 32, type: ground }, { x: 150, y: 280, width: 160, height: 16, type: platform }, { x: 420, y: 220, width: 160, height: 16, type: platform }, { x: 580, y: 300, width: 80, height: 16, type: hazard }, { x: 700, y: 340, width: 64, height: 28, type: goal }]
+        @label "Platforms"
+        @description "Level geometry including hazard and goal tiles"
+        @tier "presentation"
+      goalX : number = 720
+        @label "Goal X"
+        @description "X pixel of the goal tile"
+        @tier "presentation"
+      worldWidth : number = 800
+        @label "World Width"
+        @description "World pixel width"
+        @tier "presentation"
+      worldHeight : number = 400
+        @label "World Height"
+        @description "World pixel height"
+        @tier "presentation"
+      canvasWidth : number = 800
+        @label "Canvas Width"
+        @description "Canvas display width"
+        @tier "presentation"
+      canvasHeight : number = 400
+        @label "Canvas Height"
+        @description "Canvas display height"
+        @tier "presentation"
+      playerSprite : asset = "https://almadar-kflow-assets.web.app/shared/platformer/characters/platformChar_idle.png"
+        @label "Player Sprite"
+        @description "Player sprite image URL"
+        @tier "presentation"
+      tileSprites : string = ""
+        @label "Tile Sprites"
+        @description "Leave empty to use built-in platformer tile defaults"
+        @tier "presentation"
+      bgColor : string = "#5c94fc"
+        @label "Bg Color"
+        @description "Canvas background color"
+        @tier "presentation"
+    }
+  }
+
+  page "/platformer-template" as PlatformerTemplatePage -> PlatformerTemplateRender
+}

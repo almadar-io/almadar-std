@@ -1,13 +1,30 @@
 app ui-game-canvas-3d-battle-template "1.0.0"
-"GameCanvas3dBattleTemplate — 3D tactical battle view; renders a procedural 5x5 arena with coloured-box fallback tiles/units/features when no entity is provided."
+"GameCanvas3dBattleTemplate — UI factory (1:1 with the @almadar/ui game-canvas-3d-battle-template pattern)."
 orbital GameCanvas3dBattleTemplateOrbital {
-  type GameCanvas3dBattleTemplateValidMovesItem = {
+  type GameCanvas3dBattleTemplateTilesItem = {
+    id : string
     x : number!
-    z : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+    modelUrl : asset
   }
-  type GameCanvas3dBattleTemplateAttackTargetsItem = {
+  type GameCanvas3dBattleTemplateFeaturesItem = {
+    id : string
     x : number!
-    z : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : json
+    assetUrl : json
+    color : string
+    elevation : number
   }
 
   entity GameCanvas3dBattleTemplateItem [runtime] {
@@ -23,19 +40,16 @@ orbital GameCanvas3dBattleTemplateOrbital {
         (render-ui main {
           entity: @entity
           className: @config.className
+          tiles: @config.tiles
+          features: @config.features
           cameraMode: @config.cameraMode
           showGrid: @config.showGrid
           shadows: @config.shadows
           backgroundColor: @config.backgroundColor
           tileClickEvent: @config.tileClickEvent
           unitClickEvent: @config.unitClickEvent
-          unitAttackEvent: @config.unitAttackEvent
-          unitMoveEvent: @config.unitMoveEvent
           endTurnEvent: @config.endTurnEvent
           exitEvent: @config.exitEvent
-          selectedUnitId: @config.selectedUnitId
-          validMoves: @config.validMoves
-          attackTargets: @config.attackTargets
           showTurnIndicator: @config.showTurnIndicator
           type: game-canvas-3d-battle-template
         })
@@ -46,15 +60,23 @@ orbital GameCanvas3dBattleTemplateOrbital {
         @label "Class Name"
         @description "External styling override"
         @tier "presentation"
+      tiles : [GameCanvas3dBattleTemplateTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 2, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 3, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 4, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 1, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 2, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 3, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 4, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 2, y: 2, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 3, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 4, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 2, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 3, y: 3, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 4, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 2, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 3, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 4, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }]
+        @label "Tiles"
+        @description "Fallback tile data when no entity is present"
+        @tier "presentation"
+      features : [GameCanvas3dBattleTemplateFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb" }, { id: "f2", x: 3, y: 1, type: "portal", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb" }]
+        @label "Features"
+        @description "Fallback feature data when no entity is present"
+        @tier "presentation"
       cameraMode : "isometric" | "perspective" | "top-down" = perspective
         @label "Camera Mode"
         @description "3D camera mode - defaults to perspective for dramatic effect"
         @tier "presentation"
-      showGrid : boolean = true
+      showGrid : boolean = false
         @label "Show Grid"
         @description "Show grid helper"
         @tier "presentation"
-      shadows : boolean = true
+      shadows : boolean = false
         @label "Shadows"
         @description "Enable shadows"
         @tier "presentation"
@@ -62,41 +84,21 @@ orbital GameCanvas3dBattleTemplateOrbital {
         @label "Background Color"
         @description "Background color - darker for battle atmosphere"
         @tier "presentation"
-      tileClickEvent : string = TILE_CLICK
+      tileClickEvent : string = "Tile Click Event"
         @label "Tile Click Event"
-        @description "Event name emitted on tile click"
+        @description "Event name for tile clicks — forwarded to the model"
         @tier "presentation"
-      unitClickEvent : string = UNIT_CLICK
+      unitClickEvent : string = "Unit Click Event"
         @label "Unit Click Event"
-        @description "Event name emitted on unit click"
+        @description "Event name for unit clicks — forwarded to the model"
         @tier "presentation"
-      unitAttackEvent : string = ATTACK
-        @label "Unit Attack Event"
-        @description "Event name emitted when a unit attacks"
-        @tier "presentation"
-      unitMoveEvent : string = UNIT_MOVE
-        @label "Unit Move Event"
-        @description "Event name emitted when a unit moves"
-        @tier "presentation"
-      endTurnEvent : string = END_TURN
+      endTurnEvent : string = "End Turn Event"
         @label "End Turn Event"
-        @description "Event name emitted to end the turn"
+        @description "Event name for ending turn"
         @tier "presentation"
-      exitEvent : string = EXIT_BATTLE
+      exitEvent : string = "Exit Event"
         @label "Exit Event"
-        @description "Event name emitted to exit battle"
-        @tier "presentation"
-      selectedUnitId : string = ""
-        @label "Selected Unit Id"
-        @description "Currently selected unit ID (empty = none)"
-        @tier "presentation"
-      validMoves : [GameCanvas3dBattleTemplateValidMovesItem] = [{ x: 1, z: 1 }]
-        @label "Valid Moves"
-        @description "Valid move positions"
-        @tier "presentation"
-      attackTargets : [GameCanvas3dBattleTemplateAttackTargetsItem] = [{ x: 1, z: 1 }]
-        @label "Attack Targets"
-        @description "Valid attack targets"
+        @description "Event name for exiting battle"
         @tier "presentation"
       showTurnIndicator : boolean = false
         @label "Show Turn Indicator"

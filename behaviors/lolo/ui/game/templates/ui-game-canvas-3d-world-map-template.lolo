@@ -1,13 +1,30 @@
 app ui-game-canvas-3d-world-map-template "1.0.0"
-"GameCanvas3dWorldMapTemplate — 3D world-map view; renders a procedural terrain grid with coloured-box fallback tiles/heroes/features when no entity is provided."
+"GameCanvas3dWorldMapTemplate — UI factory (1:1 with the @almadar/ui game-canvas-3d-world-map-template pattern)."
 orbital GameCanvas3dWorldMapTemplateOrbital {
-  type GameCanvas3dWorldMapTemplateValidMovesItem = {
+  type GameCanvas3dWorldMapTemplateTilesItem = {
+    id : string
     x : number!
-    z : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+    modelUrl : asset
   }
-  type GameCanvas3dWorldMapTemplateAttackTargetsItem = {
+  type GameCanvas3dWorldMapTemplateFeaturesItem = {
+    id : string
     x : number!
-    z : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : json
+    assetUrl : json
+    color : string
+    elevation : number
   }
 
   entity GameCanvas3dWorldMapTemplateItem [runtime] {
@@ -23,6 +40,8 @@ orbital GameCanvas3dWorldMapTemplateOrbital {
         (render-ui main {
           entity: @entity
           className: @config.className
+          tiles: @config.tiles
+          features: @config.features
           cameraMode: @config.cameraMode
           showGrid: @config.showGrid
           showCoordinates: @config.showCoordinates
@@ -36,9 +55,6 @@ orbital GameCanvas3dWorldMapTemplateOrbital {
           tileLeaveEvent: @config.tileLeaveEvent
           cameraChangeEvent: @config.cameraChangeEvent
           exitEvent: @config.exitEvent
-          selectedUnitId: @config.selectedUnitId
-          validMoves: @config.validMoves
-          attackTargets: @config.attackTargets
           type: game-canvas-3d-world-map-template
         })
     }
@@ -48,23 +64,31 @@ orbital GameCanvas3dWorldMapTemplateOrbital {
         @label "Class Name"
         @description "External styling override"
         @tier "presentation"
+      tiles : [GameCanvas3dWorldMapTemplateTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 2, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 3, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 4, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 1, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 2, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 3, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 4, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 2, y: 2, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 3, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 4, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 2, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 3, y: 3, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 4, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 2, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 3, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 4, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }]
+        @label "Tiles"
+        @description "Fallback tile data when no entity is present"
+        @tier "presentation"
+      features : [GameCanvas3dWorldMapTemplateFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb" }, { id: "f2", x: 3, y: 1, type: "portal", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb" }]
+        @label "Features"
+        @description "Fallback feature data when no entity is present"
+        @tier "presentation"
       cameraMode : "isometric" | "perspective" | "top-down" = isometric
         @label "Camera Mode"
         @description "3D camera mode"
         @tier "presentation"
-      showGrid : boolean = true
+      showGrid : boolean = false
         @label "Show Grid"
         @description "Show grid helper"
         @tier "presentation"
-      showCoordinates : boolean = true
+      showCoordinates : boolean = false
         @label "Show Coordinates"
         @description "Show coordinate overlay"
         @tier "presentation"
-      showTileInfo : boolean = true
+      showTileInfo : boolean = false
         @label "Show Tile Info"
         @description "Show tile info on hover"
         @tier "presentation"
-      shadows : boolean = true
+      shadows : boolean = false
         @label "Shadows"
         @description "Enable shadows"
         @tier "presentation"
@@ -72,45 +96,33 @@ orbital GameCanvas3dWorldMapTemplateOrbital {
         @label "Background Color"
         @description "Background color"
         @tier "presentation"
-      tileClickEvent : string = TILE_CLICK
+      tileClickEvent : string = "Tile Click Event"
         @label "Tile Click Event"
-        @description "Event name emitted on tile click"
+        @description "Event name for tile clicks — forwarded to the model"
         @tier "presentation"
-      unitClickEvent : string = UNIT_CLICK
+      unitClickEvent : string = "Unit Click Event"
         @label "Unit Click Event"
-        @description "Event name emitted on unit click"
+        @description "Event name for unit clicks — forwarded to the model"
         @tier "presentation"
-      featureClickEvent : string = FEATURE_CLICK
+      featureClickEvent : string = "Feature Click Event"
         @label "Feature Click Event"
-        @description "Event name emitted on feature click"
+        @description "Event name for feature clicks"
         @tier "presentation"
-      tileHoverEvent : string = TILE_HOVER
+      tileHoverEvent : string = "Tile Hover Event"
         @label "Tile Hover Event"
-        @description "Event name emitted on tile hover"
+        @description "Event name for tile hover"
         @tier "presentation"
-      tileLeaveEvent : string = TILE_LEAVE
+      tileLeaveEvent : string = "Tile Leave Event"
         @label "Tile Leave Event"
-        @description "Event name emitted when pointer leaves a tile"
+        @description "Event name for tile leave"
         @tier "presentation"
-      cameraChangeEvent : string = CAMERA_CHANGE
+      cameraChangeEvent : string = "Camera Change Event"
         @label "Camera Change Event"
-        @description "Event name emitted on camera position change"
+        @description "Event name for camera changes"
         @tier "presentation"
-      exitEvent : string = EXIT
+      exitEvent : string = "Exit Event"
         @label "Exit Event"
-        @description "Event name emitted to exit world-map view"
-        @tier "presentation"
-      selectedUnitId : string = ""
-        @label "Selected Unit Id"
-        @description "Currently selected unit ID (empty = none)"
-        @tier "presentation"
-      validMoves : [GameCanvas3dWorldMapTemplateValidMovesItem] = [{ x: 1, z: 1 }]
-        @label "Valid Moves"
-        @description "Valid move positions for selected unit"
-        @tier "presentation"
-      attackTargets : [GameCanvas3dWorldMapTemplateAttackTargetsItem] = [{ x: 1, z: 1 }]
-        @label "Attack Targets"
-        @description "Attack target positions"
+        @description "Exit/back event name"
         @tier "presentation"
     }
   }

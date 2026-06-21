@@ -1,0 +1,126 @@
+app ui-tower-defense-template "1.0.0"
+"TowerDefenseTemplate — isometric tower-defense arena; composes TowerDefenseBoard with HUD (gold/lives/wave)."
+orbital TowerDefenseTemplateOrbital {
+  type TowerDefenseTemplateTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    terrainSprite : asset
+    passable : boolean
+  }
+  type TowerDefenseTemplatePathItem = {
+    x : number!
+    y : number!
+  }
+  type TowerDefenseTemplateTowersItem = {
+    id : string!
+    x : number!
+    y : number!
+    range : number!
+    damage : number!
+    cooldown : number!
+    lastFiredAt : number
+  }
+
+  entity TowerDefenseTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait TowerDefenseTemplateRender -> @rebindable TowerDefenseTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch TowerDefenseTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          title: @config.title
+          tiles: @config.tiles
+          path: @config.path
+          towers: @config.towers
+          gold: @config.gold
+          lives: @config.lives
+          maxWaves: @config.maxWaves
+          towerCost: @config.towerCost
+          towerRange: @config.towerRange
+          towerDamage: @config.towerDamage
+          creepsPerWave: @config.creepsPerWave
+          creepBaseHp: @config.creepBaseHp
+          goldPerKill: @config.goldPerKill
+          scale: @config.scale
+          placeTowerEvent: PLACE_TOWER
+          startWaveEvent: START_WAVE
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: tower-defense-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "External styling override"
+        @tier "presentation"
+      title : string = "Tower Defense"
+        @label "Title"
+        @description "Display title shown in the template header"
+        @tier "presentation"
+      gold : number = 100
+        @label "Starting Gold"
+        @description "Gold the player starts with"
+        @tier "presentation"
+      lives : number = 20
+        @label "Starting Lives"
+        @description "Lives the player starts with"
+        @tier "presentation"
+      maxWaves : number = 5
+        @label "Max Waves"
+        @description "Total waves to survive for victory"
+        @tier "presentation"
+      towerCost : number = 25
+        @label "Tower Cost"
+        @description "Gold cost to place one tower"
+        @tier "presentation"
+      towerRange : number = 2
+        @label "Tower Range"
+        @description "Attack range in grid units"
+        @tier "presentation"
+      towerDamage : number = 3
+        @label "Tower Damage"
+        @description "Damage per hit per tower"
+        @tier "presentation"
+      creepsPerWave : number = 5
+        @label "Creeps Per Wave"
+        @description "Number of creeps spawned per wave"
+        @tier "presentation"
+      creepBaseHp : number = 10
+        @label "Creep Base HP"
+        @description "Base HP of the first creep in a wave"
+        @tier "presentation"
+      goldPerKill : number = 10
+        @label "Gold Per Kill"
+        @description "Gold awarded for each creep killed"
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      tiles : [TowerDefenseTemplateTilesItem] = [{ x: 0, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 1, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 2, y: 0, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 3, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 4, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 0, y: 1, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 1, y: 1, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 2, y: 1, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 3, y: 1, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 4, y: 1, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 0, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 1, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 2, y: 2, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 3, y: 2, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 4, y: 2, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 0, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 1, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 2, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 3, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png" }, { x: 4, y: 3, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }, { x: 0, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 1, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 2, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 3, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png" }, { x: 4, y: 4, terrain: "path", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png" }]
+        @label "Tiles"
+        @description "Tile grid forwarded to TowerDefenseBoard; path cells marked passable:false."
+        @tier "presentation"
+      path : [TowerDefenseTemplatePathItem] = [{ x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }, { x: 3, y: 2 }, { x: 4, y: 2 }, { x: 4, y: 3 }, { x: 4, y: 4 }]
+        @label "Path"
+        @description "Ordered waypoint coords forwarded to TowerDefenseBoard."
+        @tier "presentation"
+      towers : [TowerDefenseTemplateTowersItem] = [{ id: "t0", x: 1, y: 1, range: 2, damage: 3, cooldown: 1, lastFiredAt: 0 }, { id: "t1", x: 3, y: 3, range: 2, damage: 3, cooldown: 1, lastFiredAt: 0 }]
+        @label "Towers"
+        @description "Pre-placed towers forwarded to TowerDefenseBoard."
+        @tier "presentation"
+    }
+  }
+
+  page "/tower-defense-template" as TowerDefenseTemplatePage -> TowerDefenseTemplateRender
+}

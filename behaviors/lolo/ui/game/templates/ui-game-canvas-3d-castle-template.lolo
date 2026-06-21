@@ -1,9 +1,30 @@
 app ui-game-canvas-3d-castle-template "1.0.0"
-"GameCanvas3dCastleTemplate — 3D castle/settlement view; renders a procedural walled arena with coloured-box fallback tiles/units/features when no entity is provided."
+"GameCanvas3dCastleTemplate — UI factory (1:1 with the @almadar/ui game-canvas-3d-castle-template pattern)."
 orbital GameCanvas3dCastleTemplateOrbital {
-  type GameCanvas3dCastleTemplateAvailableBuildSitesItem = {
+  type GameCanvas3dCastleTemplateTilesItem = {
+    id : string
     x : number!
-    z : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+    modelUrl : asset
+  }
+  type GameCanvas3dCastleTemplateFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : json
+    assetUrl : json
+    color : string
+    elevation : number
   }
 
   entity GameCanvas3dCastleTemplateItem [runtime] {
@@ -19,6 +40,8 @@ orbital GameCanvas3dCastleTemplateOrbital {
         (render-ui main {
           entity: @entity
           className: @config.className
+          tiles: @config.tiles
+          features: @config.features
           cameraMode: @config.cameraMode
           showGrid: @config.showGrid
           shadows: @config.shadows
@@ -28,10 +51,7 @@ orbital GameCanvas3dCastleTemplateOrbital {
           buildEvent: @config.buildEvent
           recruitEvent: @config.recruitEvent
           exitEvent: @config.exitEvent
-          selectedBuildingId: @config.selectedBuildingId
-          availableBuildSites: @config.availableBuildSites
           showHeader: @config.showHeader
-          selectedTileIds: @config.selectedTileIds
           type: game-canvas-3d-castle-template
         })
     }
@@ -41,15 +61,23 @@ orbital GameCanvas3dCastleTemplateOrbital {
         @label "Class Name"
         @description "External styling override"
         @tier "presentation"
+      tiles : [GameCanvas3dCastleTemplateTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 2, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 3, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 4, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 1, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 2, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 3, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 4, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 2, y: 2, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 3, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 4, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 2, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 3, y: 3, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 4, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 2, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 3, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 4, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }]
+        @label "Tiles"
+        @description "Fallback tile data when no entity is present"
+        @tier "presentation"
+      features : [GameCanvas3dCastleTemplateFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb" }, { id: "f2", x: 3, y: 1, type: "portal", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb" }]
+        @label "Features"
+        @description "Fallback feature data when no entity is present"
+        @tier "presentation"
       cameraMode : "isometric" | "perspective" | "top-down" = isometric
         @label "Camera Mode"
         @description "3D camera mode"
         @tier "presentation"
-      showGrid : boolean = true
+      showGrid : boolean = false
         @label "Show Grid"
         @description "Show grid helper"
         @tier "presentation"
-      shadows : boolean = true
+      shadows : boolean = false
         @label "Shadows"
         @description "Enable shadows"
         @tier "presentation"
@@ -57,41 +85,29 @@ orbital GameCanvas3dCastleTemplateOrbital {
         @label "Background Color"
         @description "Background color"
         @tier "presentation"
-      buildingClickEvent : string = BUILDING_CLICK
+      buildingClickEvent : string = "Building Click Event"
         @label "Building Click Event"
-        @description "Event name emitted on building/feature click"
+        @description "Event name for building (feature) clicks"
         @tier "presentation"
-      unitClickEvent : string = UNIT_CLICK
+      unitClickEvent : string = "Unit Click Event"
         @label "Unit Click Event"
-        @description "Event name emitted on unit click"
+        @description "Event name for unit clicks"
         @tier "presentation"
-      buildEvent : string = BUILD
+      buildEvent : string = "Build Event"
         @label "Build Event"
-        @description "Event name emitted to build a structure"
+        @description "Event name for build action"
         @tier "presentation"
-      recruitEvent : string = RECRUIT
+      recruitEvent : string = "Recruit Event"
         @label "Recruit Event"
-        @description "Event name emitted to recruit a unit"
+        @description "Event name for recruit action"
         @tier "presentation"
-      exitEvent : string = EXIT
+      exitEvent : string = "Exit Event"
         @label "Exit Event"
-        @description "Event name emitted to exit castle view"
-        @tier "presentation"
-      selectedBuildingId : string = ""
-        @label "Selected Building Id"
-        @description "Currently selected building ID (empty = none)"
-        @tier "presentation"
-      availableBuildSites : [GameCanvas3dCastleTemplateAvailableBuildSitesItem] = [{ x: 1, z: 1 }]
-        @label "Available Build Sites"
-        @description "Available build positions"
+        @description "Event name for exit"
         @tier "presentation"
       showHeader : boolean = true
         @label "Show Header"
         @description "Show castle name header"
-        @tier "presentation"
-      selectedTileIds : [string] = []
-        @label "Selected Tile Ids"
-        @description "Pre-computed selected tile IDs array"
         @tier "presentation"
     }
   }

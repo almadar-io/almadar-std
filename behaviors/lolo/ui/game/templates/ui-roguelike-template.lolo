@@ -1,0 +1,89 @@
+app ui-roguelike-template "1.0.0"
+"RoguelikeTemplate — thin: composes roguelike-board with isometric dungeon assets."
+orbital RoguelikeTemplateOrbital {
+  type RoguelikeTemplateTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    terrainSprite : asset
+    passable : boolean
+    tileType : string
+  }
+  type RoguelikeTemplateEnemiesItem = {
+    id : string!
+    x : number!
+    y : number!
+    hp : number!
+    attack : number!
+  }
+  type RoguelikeTemplateItemsItem = {
+    id : string!
+    x : number!
+    y : number!
+    kind : "health_potion" | "sword" | "shield"
+  }
+
+  entity RoguelikeTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait RoguelikeTemplateRender -> @rebindable RoguelikeTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch RoguelikeTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tiles: @config.tiles
+          enemies: @config.enemies
+          items: @config.items
+          stairsX: @config.stairsX
+          stairsY: @config.stairsY
+          gameEndEvent: GAME_END
+          type: roguelike-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "External styling override"
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+      tiles : [RoguelikeTemplateTilesItem] = [{ x: 0, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 1, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 2, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 3, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 4, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 0, y: 1, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 1, y: 1, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png" }, { x: 2, y: 1, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png" }, { x: 3, y: 1, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png" }, { x: 4, y: 1, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 0, y: 2, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 1, y: 2, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png" }, { x: 2, y: 2, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png" }, { x: 3, y: 2, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png" }, { x: 4, y: 2, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 0, y: 3, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 1, y: 3, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png" }, { x: 2, y: 3, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png" }, { x: 3, y: 3, terrain: "stairs", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stairs_E.png" }, { x: 4, y: 3, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 0, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 1, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 2, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 3, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }, { x: 4, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png" }]
+        @label "Tiles"
+        @description "Dungeon tile grid — forwarded to RoguelikeBoard."
+        @tier "presentation"
+      enemies : [RoguelikeTemplateEnemiesItem] = [{ id: "e1", x: 3, y: 1, hp: 5, attack: 2 }, { id: "e2", x: 1, y: 3, hp: 4, attack: 1 }]
+        @label "Enemies"
+        @description "Initial enemies — forwarded to RoguelikeBoard."
+        @tier "presentation"
+      items : [RoguelikeTemplateItemsItem] = [{ id: "i1", x: 2, y: 2, kind: "health_potion" }]
+        @label "Items"
+        @description "Floor items — forwarded to RoguelikeBoard."
+        @tier "presentation"
+      stairsX : number = 3
+        @label "Stairs X"
+        @description "Stairs tile X — forwarded to RoguelikeBoard."
+        @tier "presentation"
+      stairsY : number = 3
+        @label "Stairs Y"
+        @description "Stairs tile Y — forwarded to RoguelikeBoard."
+        @tier "presentation"
+    }
+  }
+
+  page "/roguelike-template" as RoguelikeTemplatePage -> RoguelikeTemplateRender
+}

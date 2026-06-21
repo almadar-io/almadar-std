@@ -1,0 +1,481 @@
+app ui-game-board-3d "1.0.0"
+"GameBoard3D — 3D tactics board organism; owns full gameplay state (phase/selection/validMoves/attackTargets/result)."
+orbital GameBoard3DOrbital {
+  type GameBoard3DError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type GameBoard3DTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+    modelUrl : asset
+  }
+  type GameBoard3DUnitsItem = {
+    id : string!
+    position : GameBoard3DUnitsItemPosition
+    x : number
+    y : number
+    z : number
+    sprite : asset
+    modelUrl : asset
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [GameBoard3DUnitsItemTraitsItem]
+    previousPosition : GameBoard3DUnitsItemPreviousPosition
+    elevation : number
+  }
+  type GameBoard3DUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type GameBoard3DUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type GameBoard3DUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type GameBoard3DFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : asset
+    assetUrl : asset
+    color : string
+    elevation : number
+  }
+  type GameBoard3DAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
+  type GameBoard3DValidMovesItem = {
+    x : number!
+    z : number!
+  }
+  type GameBoard3DAttackTargetsItem = {
+    x : number!
+    z : number!
+  }
+
+  entity GameBoard3DItem [runtime] {
+    id : string!
+    units : [GameBoard3DUnitsItem]
+    selectedUnitId : string
+    validMoves : [GameBoard3DValidMovesItem]
+    attackTargets : [GameBoard3DAttackTargetsItem]
+    phase : "observation" | "selection" | "movement" | "action" | "enemy_turn" | "game_over" = "observation"
+    turn : number = 0
+    result : "none" | "victory" | "defeat" = none
+    currentTeam : "player" | "enemy" = "player"
+    gridWidth : number = 5
+    gridHeight : number = 5
+    movementRange : number = 2
+    enemyTurn : boolean = false
+  }
+
+  trait GameBoard3DRender -> @rebindable GameBoard3DItem [interaction, instance] {
+    initial: playing
+
+    state menu {
+      START -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: game-board-3d
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (set @entity.gridWidth 5)
+        (set @entity.gridHeight 5)
+        (set @entity.movementRange 2)
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: game-board-3d
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.phase "action")
+        (set @entity.attackTargets (array/map (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn s (== @s.id @entity.selectedUnitId))) position) (object/get @u position)) 1)))) (fn u { x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y) })))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: game-board-3d
+        })
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.phase "selection")
+        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0)))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
+        (set @entity.attackTargets [])
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: game-board-3d
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?z } }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: game-board-3d
+        })
+
+      ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get ap x) (object/get tp x))) 1) (and (<= (math/abs (- (object/get ap y) (object/get tp y))) 1) (!= ap tp))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)) }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: game-board-3d
+        })
+
+      END_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.enemyTurn true)
+        (set @entity.currentTeam "enemy")
+        (set @entity.phase "enemy_turn")
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: game-board-3d
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.phase "observation")
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: game-board-3d
+        })
+
+      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
+        (set @entity.phase "game_over")
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: game-board-3d
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.attackTargets [])
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.currentTeam "player")
+        (set @entity.enemyTurn false)
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: game-board-3d
+        })
+    }
+
+    ticks {
+      enemyAiTick every 1s
+        when (and (== @entity.enemyTurn true) (== @entity.result "none"))
+        # attack pass: each live enemy adjacent to a player unit deals 1 damage
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)) }) @u) @u))))
+        # move pass: each live enemy without an adjacent player steps one cell toward nearest live player
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) } })) @u) @u))))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
+        (set @entity.enemyTurn false)
+        (set @entity.currentTeam "player")
+        (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: game-board-3d
+        })
+    }
+
+    emits {
+      ATTACK -> external {
+        attacker : object
+        target : object
+        damage : number
+        attackerId : string!
+        targetId : string!
+      }
+        @description "-- Callbacks --"
+        @tier "essential"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when the match ends"
+        @tier "essential"
+      UNIT_MOVE -> external {
+        unit : object
+        to : GameBoard3DValidMovesItem
+      }
+        @description "Called after a unit moves"
+        @tier "essential"
+      TILE_CLICK -> external {
+        x : number!
+        z : number!
+      }
+        @description "-- Declarative event props --"
+        @tier "essential"
+      UNIT_CLICK -> external {
+        unitId : string!
+      }
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+      END_TURN -> external {
+        id : string
+      }
+        @description "Emits UI:{endTurnEvent} with {} on end turn"
+        @tier "essential"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : GameBoard3DError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      tiles : [GameBoard3DTilesItem] = [{ id: "t00", x: 0, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t10", x: 1, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t20", x: 2, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t30", x: 3, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t40", x: 4, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t01", x: 0, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t11", x: 1, y: 1, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { id: "t21", x: 2, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { id: "t31", x: 3, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { id: "t41", x: 4, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t02", x: 0, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t12", x: 1, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { id: "t22", x: 2, y: 2, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { id: "t32", x: 3, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { id: "t42", x: 4, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t03", x: 0, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t13", x: 1, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { id: "t23", x: 2, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { id: "t33", x: 3, y: 3, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { id: "t43", x: 4, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t04", x: 0, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t14", x: 1, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t24", x: 2, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t34", x: 3, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { id: "t44", x: 4, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }]
+        @label "Tiles"
+        @description "5×5 grid tile data — takes priority over entity-derived tiles."
+        @tier "presentation"
+      units : [GameBoard3DUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "worker", name: "Worker", team: player, health: 10, maxHealth: 10, modelUrl: "https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb" }, { id: "u2", position: { x: 1, y: 3 }, unitType: "warrior", name: "Warrior", team: player, health: 10, maxHealth: 10, modelUrl: "https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb" }, { id: "e1", position: { x: 3, y: 3 }, unitType: "guardian", name: "Guardian", team: enemy, health: 8, maxHealth: 10, modelUrl: "https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb" }, { id: "e2", position: { x: 3, y: 1 }, unitType: "scout", name: "Scout", team: enemy, health: 6, maxHealth: 8, modelUrl: "https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb" }]
+        @label "Units"
+        @description "Initial unit roster (2 player + 2 enemy) — takes priority over entity-derived units."
+        @tier "presentation"
+      features : [GameBoard3DFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb" }, { id: "f2", x: 3, y: 0, type: "portal", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb" }]
+        @label "Features"
+        @description "Decorative features on the board."
+        @tier "presentation"
+      assetManifest : GameBoard3DAssetManifest = { terrains: { grass: "isometric-dungeon/Isometric/dirt_E.png", dirt: "isometric-dungeon/Isometric/dirtTiles_E.png", stone: "isometric-dungeon/Isometric/stoneInset_E.png", forest: "isometric-dungeon/Isometric/planks_E.png", castle: "isometric-dungeon/Isometric/stoneTile_E.png" }, units: { worker: "units/worker.png", guardian: "units/guardian.png", warrior: "units/warrior.png", scout: "units/scout.png" }, features: { gold_mine: "world-map/gold_mine.png", portal: "world-map/portal_open.png" }, effects: { melee: "effects/particles/slash_03.png", ranged: "effects/particles/spark_06.png", magic: "effects/particles/magic_02.png", hit: "effects/particles/spark_06.png", heal: "effects/particles/magic_02.png", death: "effects/explosions/pixel/pixelExplosion07.png" } }
+        @label "Asset Manifest"
+        @description "Asset manifest for terrain/unit/feature/effect sprites."
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-board-3d" as GameBoard3DPage -> GameBoard3DRender
+}
