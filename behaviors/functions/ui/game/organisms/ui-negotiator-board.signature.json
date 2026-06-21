@@ -88,11 +88,11 @@
             "tier": "essential"
           },
           {
-            "name": "INIT",
+            "name": "START",
             "direction": "listen"
           },
           {
-            "name": "START",
+            "name": "INIT",
             "direction": "listen"
           }
         ],
@@ -100,7 +100,18 @@
           {
             "key": "actions",
             "type": "[NegotiatorBoardActionsItem]",
-            "default": [],
+            "default": [
+              {
+                "description": "Work together for a moderate mutual gain.",
+                "id": "cooperate",
+                "label": "Cooperate"
+              },
+              {
+                "description": "Betray your partner for a bigger personal gain — if they cooperate.",
+                "id": "defect",
+                "label": "Defect"
+              }
+            ],
             "label": "Actions",
             "description": "Selectable round actions (id/label/description).",
             "tier": "domain",
@@ -139,6 +150,14 @@
             "label": "Class Name",
             "description": "Additional CSS classes",
             "tier": "presentation"
+          },
+          {
+            "key": "description",
+            "type": "string",
+            "default": "Choose Cooperate or Defect each round. Reach the target score before rounds run out.",
+            "label": "Description",
+            "description": "One-line game brief shown to the player.",
+            "tier": "domain"
           },
           {
             "key": "error",
@@ -213,7 +232,32 @@
           {
             "key": "payoffMatrix",
             "type": "[NegotiatorBoardPayoffItem]",
-            "default": [],
+            "default": [
+              {
+                "opponentAction": "cooperate",
+                "opponentPayoff": 3,
+                "playerAction": "cooperate",
+                "playerPayoff": 3
+              },
+              {
+                "opponentAction": "defect",
+                "opponentPayoff": 5,
+                "playerAction": "cooperate",
+                "playerPayoff": 0
+              },
+              {
+                "opponentAction": "cooperate",
+                "opponentPayoff": 0,
+                "playerAction": "defect",
+                "playerPayoff": 5
+              },
+              {
+                "opponentAction": "defect",
+                "opponentPayoff": 1,
+                "playerAction": "defect",
+                "playerPayoff": 1
+              }
+            ],
             "label": "Payoff Matrix",
             "description": "Payoff-matrix cells (playerAction/opponentAction/playerPayoff/opponentPayoff).",
             "tier": "domain",
@@ -288,6 +332,14 @@
             "default": 10,
             "label": "Target Score",
             "description": "Total payoff the player must reach to win.",
+            "tier": "domain"
+          },
+          {
+            "key": "title",
+            "type": "string",
+            "default": "Prisoner's Dilemma",
+            "label": "Title",
+            "description": "Game title shown above the board.",
             "tier": "domain"
           },
           {

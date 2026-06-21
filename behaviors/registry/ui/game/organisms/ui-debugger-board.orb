@@ -45,6 +45,18 @@
             "type": "array"
           },
           {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "name": "hint",
+            "type": "string"
+          },
+          {
             "default": 0.0,
             "name": "attempts",
             "type": "number"
@@ -91,6 +103,13 @@
               "tier": "presentation",
               "type": "string"
             },
+            "description": {
+              "default": "Flag every line that contains a bug. Flag no clean lines to win.",
+              "description": "One-line puzzle brief shown to the player.",
+              "label": "Description",
+              "tier": "domain",
+              "type": "string"
+            },
             "error": {
               "description": "Error state (UiError)",
               "label": "Error",
@@ -118,6 +137,13 @@
               },
               "tier": "presentation",
               "type": "DebuggerBoardError"
+            },
+            "hint": {
+              "default": "Check the operator in the return statement and the variable name in the log call.",
+              "description": "Optional hint the player can reveal.",
+              "label": "Hint",
+              "tier": "domain",
+              "type": "string"
             },
             "isLoading": {
               "default": false,
@@ -246,6 +272,13 @@
                 "desc"
               ]
             },
+            "title": {
+              "default": "Debug the Add Function",
+              "description": "Puzzle title shown above the board.",
+              "label": "Title",
+              "tier": "domain",
+              "type": "string"
+            },
             "totalCount": {
               "default": 0.0,
               "description": "Total number of items",
@@ -314,8 +347,11 @@
           "entityContract": {
             "provides": [
               "attempts",
+              "description",
+              "hint",
               "lines",
-              "result"
+              "result",
+              "title"
             ],
             "requires": []
           },
@@ -326,12 +362,12 @@
           "stateMachine": {
             "events": [
               {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
                 "key": "START",
                 "name": "Start"
+              },
+              {
+                "key": "INIT",
+                "name": "Initialize"
               },
               {
                 "description": "Flip the flag on a reviewed code line",
@@ -392,10 +428,10 @@
             "states": [
               {
                 "isInitial": true,
-                "name": "menu"
+                "name": "playing"
               },
               {
-                "name": "playing"
+                "name": "menu"
               },
               {
                 "name": "complete"
@@ -411,48 +447,18 @@
                   ],
                   [
                     "set",
-                    "@entity.attempts",
-                    0.0
+                    "@entity.title",
+                    "@config.title"
                   ],
                   [
                     "set",
-                    "@entity.result",
-                    "none"
+                    "@entity.description",
+                    "@config.description"
                   ],
                   [
-                    "render-ui",
-                    "main",
-                    {
-                      "activeFilters": "@config.activeFilters",
-                      "checkEvent": "CHECK",
-                      "className": "@config.className",
-                      "completeEvent": "COMPLETE",
-                      "entity": "@entity",
-                      "error": "@config.error",
-                      "isLoading": "@config.isLoading",
-                      "page": "@config.pageProp",
-                      "pageSize": "@config.pageSize",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "searchValue": "@config.searchValue",
-                      "selectedIds": "@config.selectedIds",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "toggleFlagEvent": "TOGGLE_FLAG",
-                      "totalCount": "@config.totalCount",
-                      "type": "debugger-board"
-                    }
-                  ]
-                ],
-                "event": "INIT",
-                "from": "menu",
-                "to": "menu"
-              },
-              {
-                "effects": [
-                  [
                     "set",
-                    "@entity.lines",
-                    "@config.lines"
+                    "@entity.hint",
+                    "@config.hint"
                   ],
                   [
                     "set",
@@ -479,6 +485,55 @@
                 ],
                 "event": "START",
                 "from": "menu",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lines",
+                    "@config.lines"
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@config.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.hint",
+                    "@config.hint"
+                  ],
+                  [
+                    "set",
+                    "@entity.attempts",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "checkEvent": "CHECK",
+                      "completeEvent": "COMPLETE",
+                      "entity": "@entity",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "toggleFlagEvent": "TOGGLE_FLAG",
+                      "type": "debugger-board"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "playing",
                 "to": "playing"
               },
               {
@@ -736,6 +791,21 @@
                     "set",
                     "@entity.lines",
                     "@config.lines"
+                  ],
+                  [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.description",
+                    "@config.description"
+                  ],
+                  [
+                    "set",
+                    "@entity.hint",
+                    "@config.hint"
                   ],
                   [
                     "set",

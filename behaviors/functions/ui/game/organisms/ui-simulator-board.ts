@@ -78,13 +78,19 @@ export interface StdUiSimulatorBoardConfig {
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
+  /** Default: `"Adjust the sliders so the output lands within tolerance of the target."` */
+  description?: string;
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `"Output = A + B × 2"` */
+  outputLabel?: string;
   /** Default: `0` */
   pageProp?: number;
   /** Default: `0` */
   pageSize?: number;
+  /** Default: `[{"id":"paramA","label":"Base Value (A)","max":10,"min":0,"step":1,"unit":""},{"id":"paramB","label":"Multiplier (B)","max":5,"min":0,"step":1,"unit":""}]` */
+  parameters?: EntityRow[];
   /** Default: `"Search Value"` */
   searchValue?: string;
   /** Default: `[]` */
@@ -93,6 +99,12 @@ export interface StdUiSimulatorBoardConfig {
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
+  /** Default: `10` */
+  target?: number;
+  /** Default: `"Tune the Formula"` */
+  title?: string;
+  /** Default: `1` */
+  tolerance?: number;
   /** Default: `0` */
   totalCount?: number;
 }
@@ -197,6 +209,57 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               'win',
             ],
           },
+          {
+            'items': {
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'max': {
+                  'name': 'max',
+                  'required': false,
+                  'type': 'number',
+                },
+                'min': {
+                  'name': 'min',
+                  'required': false,
+                  'type': 'number',
+                },
+                'step': {
+                  'name': 'step',
+                  'required': false,
+                  'type': 'number',
+                },
+                'unit': {
+                  'name': 'unit',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'parameters',
+            'type': 'array',
+          },
+          {
+            'name': 'title',
+            'type': 'string',
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'outputLabel',
+            'type': 'string',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -219,6 +282,13 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'description': 'Additional CSS classes',
             'label': 'Class Name',
             'tier': 'presentation',
+            'type': 'string',
+          },
+          'description': {
+            'default': 'Adjust the sliders so the output lands within tolerance of the target.',
+            'description': 'One-line puzzle brief shown to the player.',
+            'label': 'Description',
+            'tier': 'domain',
             'type': 'string',
           },
           'error': {
@@ -256,6 +326,13 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'tier': 'presentation',
             'type': 'boolean',
           },
+          'outputLabel': {
+            'default': 'Output = A + B × 2',
+            'description': 'Human-readable formula label shown next to the output value.',
+            'label': 'Output Label',
+            'tier': 'domain',
+            'type': 'string',
+          },
           'pageProp': {
             'default': 0,
             'description': 'Current page number',
@@ -270,6 +347,65 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
             'label': 'Page Size',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'parameters': {
+            'default': [
+              {
+                'id': 'paramA',
+                'label': 'Base Value (A)',
+                'max': 10,
+                'min': 0,
+                'step': 1,
+                'unit': '',
+              },
+              {
+                'id': 'paramB',
+                'label': 'Multiplier (B)',
+                'max': 5,
+                'min': 0,
+                'step': 1,
+                'unit': '',
+              },
+            ],
+            'description': 'Slider descriptors — index 0 drives parameter A, index 1 drives parameter B.',
+            'items': {
+              'properties': {
+                'id': {
+                  'name': 'id',
+                  'required': true,
+                  'type': 'string',
+                },
+                'label': {
+                  'name': 'label',
+                  'required': false,
+                  'type': 'string',
+                },
+                'max': {
+                  'name': 'max',
+                  'required': false,
+                  'type': 'number',
+                },
+                'min': {
+                  'name': 'min',
+                  'required': false,
+                  'type': 'number',
+                },
+                'step': {
+                  'name': 'step',
+                  'required': false,
+                  'type': 'number',
+                },
+                'unit': {
+                  'name': 'unit',
+                  'required': false,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Parameters',
+            'tier': 'domain',
+            'type': '[SimulatorBoardParameterItem]',
           },
           'searchValue': {
             'default': 'Search Value',
@@ -305,6 +441,27 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               'asc',
               'desc',
             ],
+          },
+          'target': {
+            'default': 10,
+            'description': 'The output value the player must reach (within tolerance).',
+            'label': 'Target',
+            'tier': 'domain',
+            'type': 'number',
+          },
+          'title': {
+            'default': 'Tune the Formula',
+            'description': 'Puzzle title shown above the board.',
+            'label': 'Title',
+            'tier': 'domain',
+            'type': 'string',
+          },
+          'tolerance': {
+            'default': 1,
+            'description': 'Acceptable error margin around the target.',
+            'label': 'Tolerance',
+            'tier': 'domain',
+            'type': 'number',
           },
           'totalCount': {
             'default': 0,
@@ -387,10 +544,14 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
         'entityContract': {
           'provides': [
             'attempts',
+            'description',
+            'outputLabel',
             'paramA',
             'paramB',
+            'parameters',
             'result',
             'target',
+            'title',
             'tolerance',
           ],
           'requires': [],
@@ -402,12 +563,12 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
         'stateMachine': {
           'events': [
             {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
               'key': 'START',
               'name': 'Start',
+            },
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
             },
             {
               'description': 'Sets parameter A from { value } during play.',
@@ -481,10 +642,10 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
           'states': [
             {
               'isInitial': true,
-              'name': 'menu',
+              'name': 'playing',
             },
             {
-              'name': 'playing',
+              'name': 'menu',
             },
             {
               'name': 'complete',
@@ -505,64 +666,23 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                 ],
                 [
                   'set',
-                  '@entity.target',
-                  10,
+                  '@entity.parameters',
+                  '@config.parameters',
                 ],
                 [
                   'set',
-                  '@entity.tolerance',
-                  1,
+                  '@entity.title',
+                  '@config.title',
                 ],
                 [
                   'set',
-                  '@entity.attempts',
-                  0,
+                  '@entity.description',
+                  '@config.description',
                 ],
                 [
                   'set',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'activeFilters': '@config.activeFilters',
-                    'checkEvent': 'CHECK',
-                    'className': '@config.className',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'setAEvent': 'SET_A',
-                    'setBEvent': 'SET_B',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'totalCount': '@config.totalCount',
-                    'type': 'simulator-board',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'menu',
-              'to': 'menu',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.paramA',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.paramB',
-                  0,
+                  '@entity.outputLabel',
+                  '@config.outputLabel',
                 ],
                 [
                   'set',
@@ -590,6 +710,76 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               ],
               'event': 'START',
               'from': 'menu',
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.paramA',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.paramB',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.parameters',
+                  '@config.parameters',
+                ],
+                [
+                  'set',
+                  '@entity.title',
+                  '@config.title',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@config.description',
+                ],
+                [
+                  'set',
+                  '@entity.outputLabel',
+                  '@config.outputLabel',
+                ],
+                [
+                  'set',
+                  '@entity.target',
+                  '@config.target',
+                ],
+                [
+                  'set',
+                  '@entity.tolerance',
+                  '@config.tolerance',
+                ],
+                [
+                  'set',
+                  '@entity.attempts',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'checkEvent': 'CHECK',
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'setAEvent': 'SET_A',
+                    'setBEvent': 'SET_B',
+                    'type': 'simulator-board',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'playing',
               'to': 'playing',
             },
             {
@@ -750,6 +940,26 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'set',
                   '@entity.paramB',
                   0,
+                ],
+                [
+                  'set',
+                  '@entity.parameters',
+                  '@config.parameters',
+                ],
+                [
+                  'set',
+                  '@entity.title',
+                  '@config.title',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@config.description',
+                ],
+                [
+                  'set',
+                  '@entity.outputLabel',
+                  '@config.outputLabel',
                 ],
                 [
                   'set',

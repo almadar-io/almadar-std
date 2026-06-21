@@ -18,39 +18,22 @@ orbital DebuggerBoardOrbital {
   entity DebuggerBoardItem [runtime] {
     id : string!
     lines : [DebuggerBoardLinesItem]
+    title : string
+    description : string
+    hint : string
     attempts : number = 0
     result : "none" | "win" = none
   }
 
   trait DebuggerBoardRender -> @rebindable DebuggerBoardItem [interaction, instance] {
-    initial: menu
+    initial: playing
 
     state menu {
-      INIT -> menu
-        (set @entity.lines @config.lines)
-        (set @entity.attempts 0)
-        (set @entity.result "none")
-        (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          entity: @entity
-          completeEvent: COMPLETE
-          toggleFlagEvent: TOGGLE_FLAG
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: debugger-board
-        })
       START -> playing
         (set @entity.lines @config.lines)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.hint @config.hint)
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
@@ -64,6 +47,21 @@ orbital DebuggerBoardOrbital {
     }
 
     state playing {
+      INIT -> playing
+        (set @entity.lines @config.lines)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.hint @config.hint)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          toggleFlagEvent: TOGGLE_FLAG
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: debugger-board
+        })
       TOGGLE_FLAG -> playing
         (set @entity.lines (array/map @entity.lines (fn l (if (== (object/get l id) ?lineId) (object/merge l { isFlagged: (not (object/get l isFlagged)) }) l))))
         (render-ui main {
@@ -102,6 +100,9 @@ orbital DebuggerBoardOrbital {
     state complete {
       PLAY_AGAIN -> menu
         (set @entity.lines @config.lines)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.hint @config.hint)
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
@@ -184,6 +185,18 @@ orbital DebuggerBoardOrbital {
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
+      title : string = "Debug the Add Function"
+        @label "Title"
+        @description "Puzzle title shown above the board."
+        @tier "domain"
+      description : string = "Flag every line that contains a bug. Flag no clean lines to win."
+        @label "Description"
+        @description "One-line puzzle brief shown to the player."
+        @tier "domain"
+      hint : string = "Check the operator in the return statement and the variable name in the log call."
+        @label "Hint"
+        @description "Optional hint the player can reveal."
+        @tier "domain"
       lines : [DebuggerBoardLinesItem] = [{ id: "l1", content: "function add(a, b) {", isBug: false, isFlagged: false }, { id: "l2", content: "  return a - b;", isBug: true, isFlagged: false, explanation: "Should be a + b for an add function." }, { id: "l3", content: "}", isBug: false, isFlagged: false }, { id: "l4", content: "const total = add(2, 3);", isBug: false, isFlagged: false }, { id: "l5", content: "console.log(totl);", isBug: true, isFlagged: false, explanation: "Typo: 'totl' should be 'total'." }]
         @label "Lines"
         @description "Direct code-line data — takes priority over entity-derived lines."

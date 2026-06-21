@@ -45,9 +45,9 @@ export interface StdUiDialogueBubbleConfig {
   portrait?: unknown;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
-  /** Default: `"Speaker"` */
+  /** Default: `"Hero"` */
   speaker?: string;
-  /** Default: `"Text"` */
+  /** Default: `"The dungeon awaits. Choose your path wisely."` */
   text?: string;
 }
 

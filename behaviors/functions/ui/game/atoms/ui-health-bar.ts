@@ -43,11 +43,11 @@ export interface StdUiHealthBarConfig {
   animated?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `3` */
   current?: number;
   /** Default: `"hearts"` */
   format?: 'hearts' | 'bar' | 'numeric';
-  /** Default: `0` */
+  /** Default: `5` */
   max?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';

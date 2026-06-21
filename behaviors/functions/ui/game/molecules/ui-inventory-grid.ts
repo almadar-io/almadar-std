@@ -56,7 +56,7 @@ export interface StdUiInventoryGridConfig {
   selectedId?: string;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
+  /** Default: `12` */
   totalSlots?: number;
 }
 

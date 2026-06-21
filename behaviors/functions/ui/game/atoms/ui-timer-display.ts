@@ -45,9 +45,9 @@ export interface StdUiTimerDisplayConfig {
   format?: 'mm:ss' | 'ss' | 'countdown';
   /** Default: `0` */
   lowThreshold?: number;
-  /** Default: `false` */
+  /** Default: `true` */
   running?: boolean;
-  /** Default: `0` */
+  /** Default: `90` */
   seconds?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';

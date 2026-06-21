@@ -43,13 +43,13 @@ export interface StdUiXpBarConfig {
   animated?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `350` */
   current?: number;
-  /** Default: `0` */
+  /** Default: `5` */
   level?: number;
-  /** Default: `0` */
+  /** Default: `1000` */
   max?: number;
-  /** Default: `false` */
+  /** Default: `true` */
   showLabel?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';

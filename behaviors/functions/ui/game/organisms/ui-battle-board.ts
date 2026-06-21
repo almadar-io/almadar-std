@@ -1282,12 +1282,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         'stateMachine': {
           'events': [
             {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
               'key': 'START',
               'name': 'Start',
+            },
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
             },
             {
               'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
@@ -1430,95 +1430,16 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
           'states': [
             {
               'isInitial': true,
-              'name': 'menu',
+              'name': 'playing',
             },
             {
-              'name': 'playing',
+              'name': 'menu',
             },
             {
               'name': 'gameover',
             },
           ],
           'transitions': [
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.units',
-                  '@config.units',
-                ],
-                [
-                  'set',
-                  '@entity.selectedUnitId',
-                  '',
-                ],
-                [
-                  'set',
-                  '@entity.turn',
-                  0,
-                ],
-                [
-                  'set',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  'set',
-                  '@entity.gridWidth',
-                  5,
-                ],
-                [
-                  'set',
-                  '@entity.gridHeight',
-                  5,
-                ],
-                [
-                  'set',
-                  '@entity.movementRange',
-                  2,
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'activeFilters': '@config.activeFilters',
-                    'assetManifest': '@config.assetManifest',
-                    'attackEvent': 'ATTACK',
-                    'cancelEvent': 'CANCEL',
-                    'className': '@config.className',
-                    'effectSpriteUrls': '@config.effectSpriteUrls',
-                    'endTurnEvent': 'END_TURN',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'features': '@config.features',
-                    'gameEndEvent': 'GAME_END',
-                    'hasActiveEffects': '@config.hasActiveEffects',
-                    'isLoading': '@config.isLoading',
-                    'onAttack': 'ATTACK',
-                    'onGameEnd': 'GAME_END',
-                    'onUnitMove': 'UNIT_MOVE',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'scale': '@config.scale',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'tileClickEvent': 'TILE_CLICK',
-                    'tiles': '@config.tiles',
-                    'totalCount': '@config.totalCount',
-                    'type': 'battle-board',
-                    'unitClickEvent': 'UNIT_CLICK',
-                    'unitScale': '@config.unitScale',
-                    'units': '@entity.units',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'menu',
-              'to': 'menu',
-            },
             {
               'effects': [
                 [
@@ -1568,6 +1489,74 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               ],
               'event': 'START',
               'from': 'menu',
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.units',
+                  '@config.units',
+                ],
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.turn',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'set',
+                  '@entity.gridWidth',
+                  5,
+                ],
+                [
+                  'set',
+                  '@entity.gridHeight',
+                  5,
+                ],
+                [
+                  'set',
+                  '@entity.movementRange',
+                  2,
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'assetManifest': '@config.assetManifest',
+                    'attackEvent': 'ATTACK',
+                    'cancelEvent': 'CANCEL',
+                    'effectSpriteUrls': '@config.effectSpriteUrls',
+                    'endTurnEvent': 'END_TURN',
+                    'entity': '@entity',
+                    'features': '@config.features',
+                    'gameEndEvent': 'GAME_END',
+                    'hasActiveEffects': '@config.hasActiveEffects',
+                    'onAttack': 'ATTACK',
+                    'onGameEnd': 'GAME_END',
+                    'onUnitMove': 'UNIT_MOVE',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'scale': '@config.scale',
+                    'tileClickEvent': 'TILE_CLICK',
+                    'tiles': '@config.tiles',
+                    'type': 'battle-board',
+                    'unitClickEvent': 'UNIT_CLICK',
+                    'unitScale': '@config.unitScale',
+                    'units': '@entity.units',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'playing',
               'to': 'playing',
             },
             {

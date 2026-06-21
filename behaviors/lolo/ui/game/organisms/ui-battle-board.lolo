@@ -89,50 +89,9 @@ orbital BattleBoardOrbital {
   }
 
   trait BattleBoardRender -> @rebindable BattleBoardItem [interaction, instance] {
-    initial: menu
+    initial: playing
 
     state menu {
-      INIT -> menu
-        (set @entity.units @config.units)
-        (set @entity.selectedUnitId "")
-        (set @entity.turn 0)
-        (set @entity.result "none")
-        (set @entity.gridWidth 5)
-        (set @entity.gridHeight 5)
-        (set @entity.movementRange 2)
-        (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          hasActiveEffects: @config.hasActiveEffects
-          effectSpriteUrls: @config.effectSpriteUrls
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
-        })
       START -> playing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
@@ -161,6 +120,36 @@ orbital BattleBoardOrbital {
     }
 
     state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.gridWidth 5)
+        (set @entity.gridHeight 5)
+        (set @entity.movementRange 2)
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          units: @entity.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          scale: @config.scale
+          unitScale: @config.unitScale
+          onAttack: ATTACK
+          onGameEnd: GAME_END
+          onUnitMove: UNIT_MOVE
+          hasActiveEffects: @config.hasActiveEffects
+          effectSpriteUrls: @config.effectSpriteUrls
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          endTurnEvent: END_TURN
+          cancelEvent: CANCEL
+          gameEndEvent: GAME_END
+          playAgainEvent: PLAY_AGAIN
+          attackEvent: ATTACK
+          type: battle-board
+        })
       UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
         (set @entity.selectedUnitId ?unitId)
         (render-ui main {

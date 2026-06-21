@@ -60,9 +60,9 @@ export interface StdUiGameOverScreenConfig {
   message?: string;
   /** Default: `[{"bind":"Bind","format":"number","icon":"circle","label":"Label","value":"Value"}]` */
   stats?: EntityRow[];
-  /** Default: `"Title"` */
+  /** Default: `"Game Over"` */
   title?: string;
-  /** Default: `"neutral"` */
+  /** Default: `"defeat"` */
   variant?: 'victory' | 'defeat' | 'neutral';
 }
 

@@ -46,7 +46,7 @@ export interface StdUiCraftingRecipeCraftPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCraftingRecipeConfig {
-  /** Default: `false` */
+  /** Default: `true` */
   canCraft?: boolean;
   /** Default: `""` */
   className?: string;

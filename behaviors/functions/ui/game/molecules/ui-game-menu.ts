@@ -58,7 +58,7 @@ export interface StdUiGameMenuConfig {
   options?: EntityRow[];
   /** Default: `"Subtitle"` */
   subtitle?: string;
-  /** Default: `"Title"` */
+  /** Default: `"Epic Quest"` */
   title?: string;
 }
 

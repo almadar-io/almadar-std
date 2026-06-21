@@ -63,9 +63,9 @@ export interface StdUiSpriteConfig {
   flipY?: boolean;
   /** Default: `0` */
   frame?: number;
-  /** Default: `0` */
+  /** Default: `64` */
   frameHeight?: number;
-  /** Default: `0` */
+  /** Default: `64` */
   frameWidth?: number;
   /** Default: `1` */
   opacity?: number;

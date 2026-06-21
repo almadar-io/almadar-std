@@ -75,7 +75,7 @@ export interface StdUiIsometricCanvasConfig {
   assetManifest?: EntityRow;
   /** Default: `[{"x":1,"y":1}]` */
   attackTargets?: EntityRow[];
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/scenes/dark_clouds_from_above.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
   backgroundImage?: unknown;
   /** Default: `0` */
   boardHeight?: number;

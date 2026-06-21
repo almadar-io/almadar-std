@@ -22,39 +22,24 @@ orbital ClassifierBoardOrbital {
   entity ClassifierBoardItem [runtime] {
     id : string!
     items : [ClassifierBoardItemsItem]
+    categories : [ClassifierBoardCategoriesItem]
+    title : string
+    description : string
+    hint : string
     attempts : number = 0
     result : "none" | "win" = none
   }
 
   trait ClassifierBoardRender -> @rebindable ClassifierBoardItem [interaction, instance] {
-    initial: menu
+    initial: playing
 
     state menu {
-      INIT -> menu
-        (set @entity.items @config.items)
-        (set @entity.attempts 0)
-        (set @entity.result "none")
-        (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          entity: @entity
-          completeEvent: COMPLETE
-          assignEvent: ASSIGN
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: classifier-board
-        })
       START -> playing
         (set @entity.items @config.items)
+        (set @entity.categories @config.categories)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.hint @config.hint)
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
@@ -68,6 +53,22 @@ orbital ClassifierBoardOrbital {
     }
 
     state playing {
+      INIT -> playing
+        (set @entity.items @config.items)
+        (set @entity.categories @config.categories)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.hint @config.hint)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          assignEvent: ASSIGN
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: classifier-board
+        })
       ASSIGN -> playing
         (set @entity.items (array/map @entity.items (fn i (if (== @i.id ?itemId) (object/merge @i { assignedCategory: ?categoryId }) @i))))
         (render-ui main {
@@ -106,6 +107,10 @@ orbital ClassifierBoardOrbital {
     state complete {
       PLAY_AGAIN -> menu
         (set @entity.items @config.items)
+        (set @entity.categories @config.categories)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.hint @config.hint)
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
@@ -189,6 +194,18 @@ orbital ClassifierBoardOrbital {
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
+      title : string = "Sort the Foods"
+        @label "Title"
+        @description "Puzzle title shown above the board."
+        @tier "domain"
+      description : string = "Drag each item into the correct category bucket."
+        @label "Description"
+        @description "One-line puzzle brief shown to the player."
+        @tier "domain"
+      hint : string = "Think about which foods grow on trees versus underground."
+        @label "Hint"
+        @description "Optional hint the player can reveal."
+        @tier "domain"
       items : [ClassifierBoardItemsItem] = [{ id: "i1", label: "Apple", correctCategory: "fruit", assignedCategory: "" }, { id: "i2", label: "Carrot", correctCategory: "vegetable", assignedCategory: "" }, { id: "i3", label: "Banana", correctCategory: "fruit", assignedCategory: "" }, { id: "i4", label: "Potato", correctCategory: "vegetable", assignedCategory: "" }]
         @label "Items"
         @description "Sortable items — each carries its correct category and the player's current assignment."

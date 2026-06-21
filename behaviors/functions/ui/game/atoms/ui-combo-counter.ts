@@ -41,7 +41,7 @@ export type StdUiComboCounterEventKey = 'INIT';
 export interface StdUiComboCounterConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `5` */
   combo?: number;
   /** Default: `0` */
   multiplier?: number;

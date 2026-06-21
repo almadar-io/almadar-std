@@ -25,41 +25,23 @@ orbital BuilderBoardOrbital {
     id : string!
     components : [BuilderBoardComponentsItem]
     slots : [BuilderBoardSlotsItem]
+    title : string
+    description : string
+    hint : string
     attempts : number = 0
     result : "none" | "win" = none
   }
 
   trait BuilderBoardRender -> @rebindable BuilderBoardItem [interaction, instance] {
-    initial: menu
+    initial: playing
 
     state menu {
-      INIT -> menu
-        (set @entity.components @config.components)
-        (set @entity.slots @config.slots)
-        (set @entity.attempts 0)
-        (set @entity.result "none")
-        (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          entity: @entity
-          completeEvent: COMPLETE
-          placeEvent: PLACE
-          checkEvent: CHECK
-          playAgainEvent: PLAY_AGAIN
-          type: builder-board
-        })
       START -> playing
         (set @entity.components @config.components)
         (set @entity.slots @config.slots)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.hint @config.hint)
         (set @entity.attempts 0)
         (set @entity.result "none")
         (render-ui main {
@@ -73,6 +55,22 @@ orbital BuilderBoardOrbital {
     }
 
     state playing {
+      INIT -> playing
+        (set @entity.components @config.components)
+        (set @entity.slots @config.slots)
+        (set @entity.title @config.title)
+        (set @entity.description @config.description)
+        (set @entity.hint @config.hint)
+        (set @entity.attempts 0)
+        (set @entity.result "none")
+        (render-ui main {
+          entity: @entity
+          completeEvent: COMPLETE
+          placeEvent: PLACE
+          checkEvent: CHECK
+          playAgainEvent: PLAY_AGAIN
+          type: builder-board
+        })
       PLACE -> playing
         (set @entity.slots (array/map @entity.slots (fn s (if (== @s.id ?slotId) (object/merge @s { placedComponentId: ?componentId }) @s))))
         (render-ui main {
@@ -194,6 +192,18 @@ orbital BuilderBoardOrbital {
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
+      title : string = "Build a Web App"
+        @label "Title"
+        @description "Puzzle title shown above the board."
+        @tier "domain"
+      description : string = "Drag each component into its correct slot to assemble the architecture."
+        @label "Description"
+        @description "One-line puzzle brief shown to the player."
+        @tier "domain"
+      hint : string = "Frontend goes first, then API, then Database."
+        @label "Hint"
+        @description "Optional hint the player can reveal."
+        @tier "domain"
       components : [BuilderBoardComponentsItem] = [{ id: "comp-a", label: "Frontend", description: "User-facing layer", iconEmoji: "🖥️" }, { id: "comp-b", label: "API", description: "Service boundary", iconEmoji: "🔌" }, { id: "comp-c", label: "Database", description: "Persistence layer", iconEmoji: "🗄️" }]
         @label "Components"
         @description "Draggable build components the player snaps into slots."

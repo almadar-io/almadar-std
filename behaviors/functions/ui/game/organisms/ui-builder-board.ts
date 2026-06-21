@@ -74,7 +74,11 @@ export interface StdUiBuilderBoardConfig {
   className?: string;
   /** Default: `[{"description":"User-facing layer","iconEmoji":"🖥️","id":"comp-a","label":"Frontend"},{"description":"Service boundary","iconEmoji":"🔌","id":"comp-b","label":"API"},{"description":"Persistence layer","iconEmoji":"🗄️","id":"comp-c","label":"Database"}]` */
   components?: EntityRow[];
+  /** Default: `"Drag each component into its correct slot to assemble the architecture."` */
+  description?: string;
   error?: EntityRow;
+  /** Default: `"Frontend goes first, then API, then Database."` */
+  hint?: string;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `0` */
@@ -91,6 +95,8 @@ export interface StdUiBuilderBoardConfig {
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
+  /** Default: `"Build a Web App"` */
+  title?: string;
   /** Default: `0` */
   totalCount?: number;
 }
@@ -220,6 +226,18 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
             'type': 'array',
           },
           {
+            'name': 'title',
+            'type': 'string',
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'name': 'hint',
+            'type': 'string',
+          },
+          {
             'default': 0,
             'name': 'attempts',
             'type': 'number',
@@ -318,6 +336,13 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
             'tier': 'presentation',
             'type': '[BuilderBoardComponentsItem]',
           },
+          'description': {
+            'default': 'Drag each component into its correct slot to assemble the architecture.',
+            'description': 'One-line puzzle brief shown to the player.',
+            'label': 'Description',
+            'tier': 'domain',
+            'type': 'string',
+          },
           'error': {
             'description': 'Error state (UiError)',
             'label': 'Error',
@@ -345,6 +370,13 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
             },
             'tier': 'presentation',
             'type': 'BuilderBoardError',
+          },
+          'hint': {
+            'default': 'Frontend goes first, then API, then Database.',
+            'description': 'Optional hint the player can reveal.',
+            'label': 'Hint',
+            'tier': 'domain',
+            'type': 'string',
           },
           'isLoading': {
             'default': false,
@@ -443,6 +475,13 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               'desc',
             ],
           },
+          'title': {
+            'default': 'Build a Web App',
+            'description': 'Puzzle title shown above the board.',
+            'label': 'Title',
+            'tier': 'domain',
+            'type': 'string',
+          },
           'totalCount': {
             'default': 0,
             'description': 'Total number of items',
@@ -517,8 +556,11 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
           'provides': [
             'attempts',
             'components',
+            'description',
+            'hint',
             'result',
             'slots',
+            'title',
           ],
           'requires': [],
         },
@@ -529,12 +571,12 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
         'stateMachine': {
           'events': [
             {
-              'key': 'INIT',
-              'name': 'Initialize',
-            },
-            {
               'key': 'START',
               'name': 'Start',
+            },
+            {
+              'key': 'INIT',
+              'name': 'Initialize',
             },
             {
               'description': 'Emits UI:{placeEvent} with { slotId, componentId } on component placement',
@@ -600,10 +642,10 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
           'states': [
             {
               'isInitial': true,
-              'name': 'menu',
+              'name': 'playing',
             },
             {
-              'name': 'playing',
+              'name': 'menu',
             },
             {
               'name': 'complete',
@@ -624,53 +666,18 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                 ],
                 [
                   'set',
-                  '@entity.attempts',
-                  0,
+                  '@entity.title',
+                  '@config.title',
                 ],
                 [
                   'set',
-                  '@entity.result',
-                  'none',
-                ],
-                [
-                  'render-ui',
-                  'main',
-                  {
-                    'activeFilters': '@config.activeFilters',
-                    'checkEvent': 'CHECK',
-                    'className': '@config.className',
-                    'completeEvent': 'COMPLETE',
-                    'entity': '@entity',
-                    'error': '@config.error',
-                    'isLoading': '@config.isLoading',
-                    'page': '@config.pageProp',
-                    'pageSize': '@config.pageSize',
-                    'placeEvent': 'PLACE',
-                    'playAgainEvent': 'PLAY_AGAIN',
-                    'searchValue': '@config.searchValue',
-                    'selectedIds': '@config.selectedIds',
-                    'sortBy': '@config.sortBy',
-                    'sortDirection': '@config.sortDirection',
-                    'totalCount': '@config.totalCount',
-                    'type': 'builder-board',
-                  },
-                ],
-              ],
-              'event': 'INIT',
-              'from': 'menu',
-              'to': 'menu',
-            },
-            {
-              'effects': [
-                [
-                  'set',
-                  '@entity.components',
-                  '@config.components',
+                  '@entity.description',
+                  '@config.description',
                 ],
                 [
                   'set',
-                  '@entity.slots',
-                  '@config.slots',
+                  '@entity.hint',
+                  '@config.hint',
                 ],
                 [
                   'set',
@@ -697,6 +704,60 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               ],
               'event': 'START',
               'from': 'menu',
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.components',
+                  '@config.components',
+                ],
+                [
+                  'set',
+                  '@entity.slots',
+                  '@config.slots',
+                ],
+                [
+                  'set',
+                  '@entity.title',
+                  '@config.title',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@config.description',
+                ],
+                [
+                  'set',
+                  '@entity.hint',
+                  '@config.hint',
+                ],
+                [
+                  'set',
+                  '@entity.attempts',
+                  0,
+                ],
+                [
+                  'set',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'checkEvent': 'CHECK',
+                    'completeEvent': 'COMPLETE',
+                    'entity': '@entity',
+                    'placeEvent': 'PLACE',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'type': 'builder-board',
+                  },
+                ],
+              ],
+              'event': 'INIT',
+              'from': 'playing',
               'to': 'playing',
             },
             {
