@@ -254,6 +254,14 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             'name': 'payoffMatrix',
             'type': 'array',
           },
+          {
+            'name': 'title',
+            'type': 'string',
+          },
+          {
+            'name': 'description',
+            'type': 'string',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -566,6 +574,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
         'entityContract': {
           'provides': [
             'actions',
+            'description',
             'maxRounds',
             'opponentStrategy',
             'payoffMatrix',
@@ -573,6 +582,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
             'round',
             'score',
             'targetScore',
+            'title',
           ],
           'requires': [],
         },
@@ -678,6 +688,16 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                 ],
                 [
                   'set',
+                  '@entity.title',
+                  '@config.title',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@config.description',
+                ],
+                [
+                  'set',
                   '@entity.targetScore',
                   '@config.targetScore',
                 ],
@@ -734,6 +754,16 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'set',
                   '@entity.round',
                   0,
+                ],
+                [
+                  'set',
+                  '@entity.title',
+                  '@config.title',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@config.description',
                 ],
                 [
                   'set',
@@ -902,6 +932,16 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'set',
                   '@entity.round',
                   0,
+                ],
+                [
+                  'set',
+                  '@entity.title',
+                  '@config.title',
+                ],
+                [
+                  'set',
+                  '@entity.description',
+                  '@config.description',
                 ],
                 [
                   'set',

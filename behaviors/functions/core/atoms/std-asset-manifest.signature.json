@@ -1,0 +1,115 @@
+[
+  {
+    "organism": "std-asset-manifest",
+    "orbital": "AssetManifestOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/core/atoms/std-asset-manifest.ts",
+    "entities": [
+      {
+        "name": "AssetEntry",
+        "fields": [
+          {
+            "name": "key",
+            "type": "string",
+            "required": true,
+            "description": "Logical asset key used by game atoms to reference sprites and textures.",
+            "synonyms": "asset key, sprite key, lookup key, identifier"
+          },
+          {
+            "name": "url",
+            "type": "string",
+            "required": true,
+            "description": "Absolute CDN URL for the asset.",
+            "synonyms": "asset url, cdn url, image url, sprite url"
+          },
+          {
+            "name": "category",
+            "type": "string",
+            "required": false,
+            "description": "Asset type classification.",
+            "synonyms": "asset type, kind, media type"
+          },
+          {
+            "name": "pendingKey",
+            "type": "string",
+            "required": false,
+            "description": "Scratch: key being resolved in the current lookup.",
+            "synonyms": "lookup key, resolving key"
+          },
+          {
+            "name": "resolvedUrl",
+            "type": "string",
+            "required": false,
+            "description": "Scratch: URL found for the pending key lookup.",
+            "synonyms": "found url, asset result"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "AssetManifestRegistry",
+        "emittedEvents": [
+          "AssetResolved",
+          "AssetEntryLoaded",
+          "AssetLookupLoaded",
+          "AssetEntryLoadFailed"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "AssetResolved",
+            "direction": "emit"
+          },
+          {
+            "name": "AssetEntryLoaded",
+            "direction": "emit"
+          },
+          {
+            "name": "AssetLookupLoaded",
+            "direction": "emit"
+          },
+          {
+            "name": "AssetEntryLoadFailed",
+            "direction": "emit"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          },
+          {
+            "name": "RESOLVE_ASSET",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "baseUrl",
+            "type": "string",
+            "default": "https://almadar-kflow-assets.web.app/shared",
+            "label": "Asset base URL",
+            "description": "CDN base URL prepended to relative asset paths.",
+            "synonyms": "cdn base, asset host, base path, image host",
+            "tier": "infra"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "AssetManifestPage",
+        "defaultPath": "/assets/manifest",
+        "primaryEntity": "AssetEntry"
+      }
+    ],
+    "emittedEvents": [
+      "AssetEntryLoadFailed",
+      "AssetEntryLoaded",
+      "AssetLookupLoaded",
+      "AssetResolved"
+    ],
+    "listenedEvents": []
+  }
+]

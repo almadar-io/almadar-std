@@ -1,0 +1,394 @@
+{
+  "description": "std-asset-manifest — logical-key→CDN-URL registry; compose into game orbitals to keep art consistent across scenes.",
+  "name": "std-asset-manifest",
+  "orbitals": [
+    {
+      "entity": {
+        "collection": "asset_entries",
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "description": "Logical asset key used by game atoms to reference sprites and textures.",
+            "name": "key",
+            "required": true,
+            "synonyms": "asset key, sprite key, lookup key, identifier",
+            "type": "string"
+          },
+          {
+            "description": "Absolute CDN URL for the asset.",
+            "name": "url",
+            "required": true,
+            "synonyms": "asset url, cdn url, image url, sprite url",
+            "type": "string"
+          },
+          {
+            "default": "sprite",
+            "description": "Asset type classification.",
+            "name": "category",
+            "synonyms": "asset type, kind, media type",
+            "type": "string",
+            "values": [
+              "sprite",
+              "model",
+              "sound",
+              "texture"
+            ]
+          },
+          {
+            "default": "",
+            "description": "Scratch: key being resolved in the current lookup.",
+            "name": "pendingKey",
+            "synonyms": "lookup key, resolving key",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "description": "Scratch: URL found for the pending key lookup.",
+            "name": "resolvedUrl",
+            "synonyms": "found url, asset result",
+            "type": "string"
+          }
+        ],
+        "name": "AssetEntry",
+        "persistence": "persistent"
+      },
+      "name": "AssetManifestOrbital",
+      "pages": [
+        {
+          "name": "AssetManifestPage",
+          "path": "/assets/manifest",
+          "traits": [
+            {
+              "ref": "AssetManifestRegistry"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "lifecycle",
+          "config": {
+            "baseUrl": {
+              "default": "https://almadar-kflow-assets.web.app/shared",
+              "description": "CDN base URL prepended to relative asset paths.",
+              "label": "Asset base URL",
+              "synonyms": "cdn base, asset host, base path, image host",
+              "tier": "infra",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "event": "AssetResolved",
+              "payloadSchema": [
+                {
+                  "name": "key",
+                  "type": "string"
+                },
+                {
+                  "name": "url",
+                  "type": "string"
+                }
+              ],
+              "scope": "external"
+            },
+            {
+              "event": "AssetEntryLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[object]"
+                }
+              ]
+            },
+            {
+              "event": "AssetLookupLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[object]"
+                }
+              ]
+            },
+            {
+              "event": "AssetEntryLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ]
+            }
+          ],
+          "linkedEntity": "AssetEntry",
+          "name": "AssetManifestRegistry",
+          "scope": "collection",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "AssetEntryLoaded",
+                "name": "AssetEntry loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[AssetEntry]"
+                  }
+                ]
+              },
+              {
+                "key": "AssetEntryLoadFailed",
+                "name": "AssetEntry load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "RESOLVE_ASSET",
+                "name": "Resolve Asset",
+                "payloadSchema": [
+                  {
+                    "name": "key",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "AssetLookupLoaded",
+                "name": "Asset lookup loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[AssetEntry]"
+                  }
+                ]
+              },
+              {
+                "key": "AssetResolved",
+                "name": "Asset resolved",
+                "payloadSchema": [
+                  {
+                    "name": "key",
+                    "type": "string"
+                  },
+                  {
+                    "name": "url",
+                    "type": "string"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "loaded"
+              },
+              {
+                "name": "resolving"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "AssetEntry",
+                    {
+                      "emit": {
+                        "failure": "AssetEntryLoadFailed",
+                        "success": "AssetEntryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "loaded",
+                "to": "loaded"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "entity": "@payload.data",
+                      "type": "data-grid"
+                    }
+                  ]
+                ],
+                "event": "AssetEntryLoaded",
+                "from": "loaded",
+                "to": "loaded"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "color": "error",
+                      "content": "@payload.error",
+                      "type": "typography",
+                      "variant": "caption"
+                    }
+                  ]
+                ],
+                "event": "AssetEntryLoadFailed",
+                "from": "loaded",
+                "to": "loaded"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingKey",
+                    "@payload.key"
+                  ],
+                  [
+                    "fetch",
+                    "AssetEntry",
+                    {
+                      "emit": {
+                        "failure": "AssetEntryLoadFailed",
+                        "success": "AssetLookupLoaded"
+                      },
+                      "filter": [
+                        "=",
+                        [
+                          "object/get",
+                          "@entity",
+                          "key"
+                        ],
+                        "@entity.pendingKey"
+                      ],
+                      "limit": 1.0
+                    }
+                  ]
+                ],
+                "event": "RESOLVE_ASSET",
+                "from": "loaded",
+                "guard": [
+                  "not",
+                  [
+                    "=",
+                    [
+                      "str/default",
+                      "@payload.key",
+                      ""
+                    ],
+                    ""
+                  ]
+                ],
+                "to": "resolving"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.resolvedUrl",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        "@payload.data"
+                      ],
+                      "url"
+                    ]
+                  ],
+                  [
+                    "emit",
+                    "AssetResolved",
+                    {
+                      "key": "@entity.pendingKey",
+                      "url": "@entity.resolvedUrl"
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.pendingKey",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.resolvedUrl",
+                    ""
+                  ]
+                ],
+                "event": "AssetLookupLoaded",
+                "from": "resolving",
+                "guard": [
+                  ">",
+                  [
+                    "array/len",
+                    "@payload.data"
+                  ],
+                  0.0
+                ],
+                "to": "loaded"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingKey",
+                    ""
+                  ]
+                ],
+                "event": "AssetLookupLoaded",
+                "from": "resolving",
+                "guard": [
+                  "=",
+                  [
+                    "array/len",
+                    "@payload.data"
+                  ],
+                  0.0
+                ],
+                "to": "loaded"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pendingKey",
+                    ""
+                  ]
+                ],
+                "event": "AssetEntryLoadFailed",
+                "from": "resolving",
+                "to": "loaded"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

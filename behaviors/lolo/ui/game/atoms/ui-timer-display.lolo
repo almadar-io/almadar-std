@@ -1,8 +1,10 @@
 app ui-timer-display "1.0.0"
-"TimerDisplay — UI factory (1:1 with the @almadar/ui timer-display pattern)."
+"TimerDisplay — counts down every second while running; re-renders on each tick."
 orbital TimerDisplayOrbital {
   entity TimerDisplayItem [runtime] {
-    id : string!
+    id      : string!
+    seconds : number = 90
+    running : boolean = true
   }
 
   trait TimerDisplayRender -> @rebindable TimerDisplayItem [interaction, instance] {
@@ -10,9 +12,26 @@ orbital TimerDisplayOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.seconds @config.seconds)
+        (set @entity.running @config.running)
         (render-ui main {
-          seconds: @config.seconds
-          running: @config.running
+          seconds: @entity.seconds
+          running: @entity.running
+          format: @config.format
+          size: @config.size
+          className: @config.className
+          lowThreshold: @config.lowThreshold
+          type: timer-display
+        })
+    }
+
+    ticks {
+      timerTick every 1s
+        when (and (== @entity.running true) (> @entity.seconds 0))
+        (set @entity.seconds (- @entity.seconds 1))
+        (render-ui main {
+          seconds: @entity.seconds
+          running: @entity.running
           format: @config.format
           size: @config.size
           className: @config.className

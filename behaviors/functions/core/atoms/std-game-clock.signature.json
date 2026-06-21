@@ -1,0 +1,79 @@
+[
+  {
+    "organism": "std-game-clock",
+    "orbital": "GameClockOrbital",
+    "tier": "atoms",
+    "factoryPath": "behaviors/functions/core/atoms/std-game-clock.ts",
+    "entities": [
+      {
+        "name": "GameClockRecord",
+        "fields": [
+          {
+            "name": "elapsedMs",
+            "type": "number",
+            "required": false,
+            "description": "Total milliseconds elapsed since the clock started.",
+            "synonyms": "elapsed, time, ms, total time"
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false,
+            "description": "Whether the clock is currently ticking.",
+            "synonyms": "active, playing, started"
+          }
+        ],
+        "persistence": "persistent"
+      }
+    ],
+    "traits": [
+      {
+        "name": "GameClock",
+        "emittedEvents": [
+          "GameClockTicked"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "GameClockTicked",
+            "direction": "emit",
+            "description": "Fires every clock tick while running; consumers use elapsedMs to drive animations and game logic.",
+            "synonyms": "clock-tick, time-advance, tick, frame, elapsed",
+            "tier": "primary"
+          },
+          {
+            "name": "PAUSE",
+            "direction": "listen"
+          },
+          {
+            "name": "RESUME",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "autoStart",
+            "type": "boolean",
+            "default": true,
+            "label": "Auto-start clock",
+            "description": "When true the clock begins ticking immediately on INIT without waiting for a RESUME event.",
+            "synonyms": "start on init, auto-run, begin immediately",
+            "tier": "domain"
+          }
+        ],
+        "capabilities": []
+      }
+    ],
+    "pages": [
+      {
+        "name": "GameClockPage",
+        "defaultPath": "/game/clock",
+        "primaryEntity": "GameClockRecord"
+      }
+    ],
+    "emittedEvents": [
+      "GameClockTicked"
+    ],
+    "listenedEvents": []
+  }
+]
