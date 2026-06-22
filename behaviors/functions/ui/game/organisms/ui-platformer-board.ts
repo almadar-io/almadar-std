@@ -254,47 +254,6 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
             'type': 'object',
           },
           {
-            'default': [],
-            'items': {
-              'properties': {
-                'height': {
-                  'name': 'height',
-                  'required': true,
-                  'type': 'number',
-                },
-                'type': {
-                  'name': 'type',
-                  'required': false,
-                  'type': 'string',
-                  'values': [
-                    'ground',
-                    'platform',
-                    'hazard',
-                    'goal',
-                  ],
-                },
-                'width': {
-                  'name': 'width',
-                  'required': true,
-                  'type': 'number',
-                },
-                'x': {
-                  'name': 'x',
-                  'required': true,
-                  'type': 'number',
-                },
-                'y': {
-                  'name': 'y',
-                  'required': true,
-                  'type': 'number',
-                },
-              },
-              'type': 'object',
-            },
-            'name': 'platforms',
-            'type': 'array',
-          },
-          {
             'default': 720,
             'name': 'goalX',
             'type': 'number',
@@ -581,7 +540,6 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
             'goalX',
             'level',
             'lives',
-            'platforms',
             'player',
             'result',
             'score',
@@ -727,11 +685,6 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 ],
                 [
                   'set',
-                  '@entity.platforms',
-                  '@config.platforms',
-                ],
-                [
-                  'set',
                   '@entity.goalX',
                   '@config.goalX',
                 ],
@@ -759,7 +712,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'leftEvent': 'LEFT',
                     'level': '@entity.level',
                     'lives': '@entity.lives',
-                    'platforms': '@entity.platforms',
+                    'platforms': '@config.platforms',
                     'playAgainEvent': 'PLAY_AGAIN',
                     'player': '@entity.player',
                     'playerSprite': '@config.playerSprite',
@@ -940,11 +893,6 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   },
                 ],
                 [
-                  'set',
-                  '@entity.platforms',
-                  '@config.platforms',
-                ],
-                [
                   'render-ui',
                   'main',
                   {
@@ -958,7 +906,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'leftEvent': 'LEFT',
                     'level': '@entity.level',
                     'lives': '@entity.lives',
-                    'platforms': '@entity.platforms',
+                    'platforms': '@config.platforms',
                     'playAgainEvent': 'PLAY_AGAIN',
                     'player': '@entity.player',
                     'playerSprite': '@config.playerSprite',
@@ -1014,11 +962,6 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   },
                 ],
                 [
-                  'set',
-                  '@entity.platforms',
-                  '@config.platforms',
-                ],
-                [
                   'render-ui',
                   'main',
                   {
@@ -1032,7 +975,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'leftEvent': 'LEFT',
                     'level': '@entity.level',
                     'lives': '@entity.lives',
-                    'platforms': '@entity.platforms',
+                    'platforms': '@config.platforms',
                     'playAgainEvent': 'PLAY_AGAIN',
                     'player': '@entity.player',
                     'playerSprite': '@config.playerSprite',
@@ -1122,7 +1065,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'hit',
                     [
                       'array/find',
-                      '@entity.platforms',
+                      '@config.platforms',
                       [
                         'fn',
                         'p',
@@ -1244,7 +1187,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'hazardHit',
                     [
                       'array/find',
-                      '@entity.platforms',
+                      '@config.platforms',
                       [
                         'fn',
                         'p',
@@ -1277,7 +1220,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'goalHit',
                     [
                       'array/find',
-                      '@entity.platforms',
+                      '@config.platforms',
                       [
                         'fn',
                         'p',
@@ -1460,7 +1403,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'leftEvent': 'LEFT',
                       'level': '@entity.level',
                       'lives': '@entity.lives',
-                      'platforms': '@entity.platforms',
+                      'platforms': '@config.platforms',
                       'playAgainEvent': 'PLAY_AGAIN',
                       'player': '@entity.player',
                       'playerSprite': '@config.playerSprite',

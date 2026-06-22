@@ -26,7 +26,6 @@ orbital PlatformerBoardOrbital {
     lives : number = 3
     result : "none" | "won" | "lost" = none
     player : PlatformerBoardPlayer = { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true }
-    platforms : [PlatformerBoardPlatformsItem] = []
     goalX : number = 720
     worldWidth : number = 800
     worldHeight : number = 400
@@ -42,14 +41,13 @@ orbital PlatformerBoardOrbital {
         (set @entity.lives 3)
         (set @entity.result "none")
         (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true })
-        (set @entity.platforms @config.platforms)
         (set @entity.goalX @config.goalX)
         (set @entity.worldWidth @config.worldWidth)
         (set @entity.worldHeight @config.worldHeight)
         (render-ui main {
           entity: @entity
           player: @entity.player
-          platforms: @entity.platforms
+          platforms: @config.platforms
           level: @entity.level
           score: @entity.score
           lives: @entity.lives
@@ -93,11 +91,10 @@ orbital PlatformerBoardOrbital {
         (set @entity.level (+ @entity.level 1))
         (set @entity.result "none")
         (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true })
-        (set @entity.platforms @config.platforms)
         (render-ui main {
           entity: @entity
           player: @entity.player
-          platforms: @entity.platforms
+          platforms: @config.platforms
           level: @entity.level
           score: @entity.score
           lives: @entity.lives
@@ -127,11 +124,10 @@ orbital PlatformerBoardOrbital {
         (set @entity.lives 3)
         (set @entity.result "none")
         (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true })
-        (set @entity.platforms @config.platforms)
         (render-ui main {
           entity: @entity
           player: @entity.player
-          platforms: @entity.platforms
+          platforms: @config.platforms
           level: @entity.level
           score: @entity.score
           lives: @entity.lives
@@ -163,7 +159,7 @@ orbital PlatformerBoardOrbital {
               (pw @entity.player.width)
               (ph @entity.player.height)
               (playerRect { x: @px1, y: @py1, w: @pw, h: @ph })
-              (hit (array/find @entity.platforms (fn p (and (!= (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))
+              (hit (array/find @config.platforms (fn p (and (!= (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))
               (hitY (object/get @hit "y" @entity.worldHeight))
               (landed (and (!= @hit null) (> @vy1 0)))
               (py2 (if @landed (- @hitY @ph) @py1))
@@ -172,8 +168,8 @@ orbital PlatformerBoardOrbital {
               (py3 (if @atGround (- @entity.worldHeight @ph) @py2))
               (vy3 (if @atGround 0 @vy2))
               (grounded (or @landed @atGround))
-              (hazardHit (array/find @entity.platforms (fn p (and (== (object/get @p type) "hazard") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))
-              (goalHit (array/find @entity.platforms (fn p (and (== (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))
+              (hazardHit (array/find @config.platforms (fn p (and (== (object/get @p type) "hazard") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))
+              (goalHit (array/find @config.platforms (fn p (and (== (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))
               (fell (> @py3 @entity.worldHeight))
               (damaged (or (!= @hazardHit null) @fell))
               (livesLeft (- @entity.lives 1)))
@@ -186,7 +182,7 @@ orbital PlatformerBoardOrbital {
             (render-ui main {
               entity: @entity
               player: @entity.player
-              platforms: @entity.platforms
+              platforms: @config.platforms
               level: @entity.level
               score: @entity.score
               lives: @entity.lives
