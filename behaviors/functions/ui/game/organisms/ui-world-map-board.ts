@@ -111,13 +111,13 @@ export interface StdUiWorldMapBoardConfig {
   features?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `0.4` */
+  /** Default: `0.25` */
   scale?: number;
   /** Default: `[{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":0,"y":0},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":1,"y":0},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":2,"y":0},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":3,"y":0},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":4,"y":0},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":0,"y":1},{"passable":true,"terrain":"dirt","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png","x":1,"y":1},{"passable":true,"terrain":"grass","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png","x":2,"y":1},{"passable":true,"terrain":"grass","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png","x":3,"y":1},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":4,"y":1},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":0,"y":2},{"passable":true,"terrain":"grass","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png","x":1,"y":2},{"passable":true,"terrain":"dirt","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png","x":2,"y":2},{"passable":true,"terrain":"grass","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png","x":3,"y":2},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":4,"y":2},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":0,"y":3},{"passable":true,"terrain":"grass","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png","x":1,"y":3},{"passable":true,"terrain":"grass","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png","x":2,"y":3},{"passable":true,"terrain":"dirt","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png","x":3,"y":3},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":4,"y":3},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":0,"y":4},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":1,"y":4},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":2,"y":4},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":3,"y":4},{"passable":false,"terrain":"stone","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":4,"y":4}]` */
   tiles?: EntityRow[];
   /** Default: `2.5` */
   unitScale?: number;
-  /** Default: `[{"health":10,"id":"h1","maxHealth":10,"movement":3,"name":"Amir","position":{"x":1,"y":1},"sprite":"https://almadar-kflow-assets.web.app/shared/sprite-sheets/amir-sprite-sheet-se.png","team":"player","unitType":"hero"},{"health":8,"id":"h2","maxHealth":8,"movement":2,"name":"Sentinel","position":{"x":3,"y":3},"sprite":"https://almadar-kflow-assets.web.app/shared/sprite-sheets/archivist-sprite-sheet-se.png","team":"enemy","unitType":"guard"}]` */
+  /** Default: `[{"health":10,"id":"h1","maxHealth":10,"movement":3,"name":"Amir","position":{"x":1,"y":1},"sprite":"https://almadar-kflow-assets.web.app/shared/sprite-sheets/amir-sprite-sheet-se.png","team":"player","unitType":"hero"},{"health":8,"id":"h2","maxHealth":8,"movement":2,"name":"Sentinel","position":{"x":14,"y":14},"sprite":"https://almadar-kflow-assets.web.app/shared/sprite-sheets/archivist-sprite-sheet-se.png","team":"enemy","unitType":"guard"},{"health":6,"id":"h3","maxHealth":8,"movement":2,"name":"Patrol","position":{"x":8,"y":8},"sprite":"https://almadar-kflow-assets.web.app/shared/sprite-sheets/shadow-legion-sprite-sheet-se.png","team":"enemy","unitType":"guard"}]` */
   units?: EntityRow[];
 }
 
@@ -487,12 +487,12 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             ],
           },
           {
-            'default': 5,
+            'default': 16,
             'name': 'gridWidth',
             'type': 'number',
           },
           {
-            'default': 5,
+            'default': 16,
             'name': 'gridHeight',
             'type': 'number',
           },
@@ -720,7 +720,7 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
             'type': 'boolean',
           },
           'scale': {
-            'default': 0.4,
+            'default': 0.25,
             'description': 'Canvas render scale',
             'label': 'Scale',
             'tier': 'presentation',
@@ -1004,10 +1004,24 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 'movement': 2,
                 'name': 'Sentinel',
                 'position': {
-                  'x': 3,
-                  'y': 3,
+                  'x': 14,
+                  'y': 14,
                 },
                 'sprite': 'https://almadar-kflow-assets.web.app/shared/sprite-sheets/archivist-sprite-sheet-se.png',
+                'team': 'enemy',
+                'unitType': 'guard',
+              },
+              {
+                'health': 6,
+                'id': 'h3',
+                'maxHealth': 8,
+                'movement': 2,
+                'name': 'Patrol',
+                'position': {
+                  'x': 8,
+                  'y': 8,
+                },
+                'sprite': 'https://almadar-kflow-assets.web.app/shared/sprite-sheets/shadow-legion-sprite-sheet-se.png',
                 'team': 'enemy',
                 'unitType': 'guard',
               },
@@ -1492,12 +1506,12 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 [
                   'set',
                   '@entity.gridWidth',
-                  5,
+                  16,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  5,
+                  16,
                 ],
                 [
                   'set',
@@ -1571,12 +1585,12 @@ export function stdUiWorldMapBoardWorldMapBoardOrbital(params: StdUiWorldMapBoar
                 [
                   'set',
                   '@entity.gridWidth',
-                  5,
+                  16,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  5,
+                  16,
                 ],
                 [
                   'set',

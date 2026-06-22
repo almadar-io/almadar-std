@@ -59,6 +59,8 @@ export interface StdUiGameCanvas3dBattleTemplateConfig {
   gameEndEvent?: string;
   /** Default: `"Play Again Event"` */
   playAgainEvent?: string;
+  /** Default: `0` */
+  scale?: number;
   /** Default: `false` */
   shadows?: boolean;
   /** Default: `false` */
@@ -71,6 +73,8 @@ export interface StdUiGameCanvas3dBattleTemplateConfig {
   tiles?: EntityRow[];
   /** Default: `"Unit Click Event"` */
   unitClickEvent?: string;
+  /** Default: `0` */
+  unitScale?: number;
 }
 
 /**
