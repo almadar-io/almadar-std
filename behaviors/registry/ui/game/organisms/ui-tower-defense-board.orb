@@ -157,6 +157,27 @@
             "type": "array"
           },
           {
+            "name": "hero",
+            "properties": {
+              "id": {
+                "name": "id",
+                "required": true,
+                "type": "string"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            },
+            "type": "object"
+          },
+          {
             "default": 100.0,
             "name": "gold",
             "type": "number"
@@ -306,6 +327,34 @@
               "label": "Grid Width",
               "tier": "presentation",
               "type": "number"
+            },
+            "hero": {
+              "default": {
+                "id": "hero",
+                "x": 8.0,
+                "y": 8.0
+              },
+              "description": "Controllable player hero; seeded at map center",
+              "label": "Hero",
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "tier": "presentation",
+              "type": "TowerDefenseBoardHero"
             },
             "isLoading": {
               "default": false,
@@ -938,12 +987,31 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{moveHeroEvent} with {dx,dy} on arrow-key press to move the player hero",
+              "event": "MOVE_HERO",
+              "payloadSchema": [
+                {
+                  "name": "dx",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "dy",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
             "provides": [
               "creeps",
               "gold",
+              "hero",
               "lives",
               "maxWaves",
               "result",
@@ -989,6 +1057,24 @@
                 "payloadSchema": [
                   {
                     "name": "wave",
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{moveHeroEvent} with {dx,dy} on arrow-key press to move the player hero",
+                "key": "MOVE_HERO",
+                "name": "Move Hero",
+                "payloadSchema": [
+                  {
+                    "name": "dx",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "dy",
+                    "required": true,
                     "type": "number"
                   }
                 ],
@@ -1078,6 +1164,11 @@
                     []
                   ],
                   [
+                    "set",
+                    "@entity.hero",
+                    "@config.hero"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -1085,8 +1176,10 @@
                       "entity": "@entity",
                       "gameEndEvent": "GAME_END",
                       "gold": "@entity.gold",
+                      "hero": "@entity.hero",
                       "lives": "@entity.lives",
                       "maxWaves": "@entity.maxWaves",
+                      "moveHeroEvent": "MOVE_HERO",
                       "path": "@config.path",
                       "placeTowerEvent": "PLACE_TOWER",
                       "playAgainEvent": "PLAY_AGAIN",
@@ -1155,8 +1248,10 @@
                       "entity": "@entity",
                       "gameEndEvent": "GAME_END",
                       "gold": "@entity.gold",
+                      "hero": "@entity.hero",
                       "lives": "@entity.lives",
                       "maxWaves": "@entity.maxWaves",
+                      "moveHeroEvent": "MOVE_HERO",
                       "path": "@config.path",
                       "placeTowerEvent": "PLACE_TOWER",
                       "playAgainEvent": "PLAY_AGAIN",
@@ -1341,8 +1436,10 @@
                       "entity": "@entity",
                       "gameEndEvent": "GAME_END",
                       "gold": "@entity.gold",
+                      "hero": "@entity.hero",
                       "lives": "@entity.lives",
                       "maxWaves": "@entity.maxWaves",
+                      "moveHeroEvent": "MOVE_HERO",
                       "path": "@config.path",
                       "placeTowerEvent": "PLACE_TOWER",
                       "playAgainEvent": "PLAY_AGAIN",
@@ -1379,6 +1476,58 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.hero",
+                    [
+                      "object/merge",
+                      "@entity.hero",
+                      {
+                        "x": [
+                          "math/max",
+                          0.0,
+                          [
+                            "math/min",
+                            [
+                              "-",
+                              "@config.gridWidth",
+                              1.0
+                            ],
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@entity.hero",
+                                "x"
+                              ],
+                              "@payload.dx"
+                            ]
+                          ]
+                        ],
+                        "y": [
+                          "math/max",
+                          0.0,
+                          [
+                            "math/min",
+                            [
+                              "-",
+                              "@config.gridHeight",
+                              1.0
+                            ],
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@entity.hero",
+                                "y"
+                              ],
+                              "@payload.dy"
+                            ]
+                          ]
+                        ]
+                      }
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -1386,8 +1535,49 @@
                       "entity": "@entity",
                       "gameEndEvent": "GAME_END",
                       "gold": "@entity.gold",
+                      "hero": "@entity.hero",
                       "lives": "@entity.lives",
                       "maxWaves": "@entity.maxWaves",
+                      "moveHeroEvent": "MOVE_HERO",
+                      "path": "@config.path",
+                      "placeTowerEvent": "PLACE_TOWER",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "result": "@entity.result",
+                      "scale": "@config.scale",
+                      "startWaveEvent": "START_WAVE",
+                      "tiles": "@config.tiles",
+                      "towerCost": "@config.towerCost",
+                      "towers": "@entity.towers",
+                      "type": "tower-defense-board",
+                      "unitScale": "@config.unitScale",
+                      "wave": "@entity.wave",
+                      "waveActive": "@entity.waveActive"
+                    }
+                  ]
+                ],
+                "event": "MOVE_HERO",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "creeps": "@entity.creeps",
+                      "entity": "@entity",
+                      "gameEndEvent": "GAME_END",
+                      "gold": "@entity.gold",
+                      "hero": "@entity.hero",
+                      "lives": "@entity.lives",
+                      "maxWaves": "@entity.maxWaves",
+                      "moveHeroEvent": "MOVE_HERO",
                       "path": "@config.path",
                       "placeTowerEvent": "PLACE_TOWER",
                       "playAgainEvent": "PLAY_AGAIN",
@@ -1464,6 +1654,11 @@
                     []
                   ],
                   [
+                    "set",
+                    "@entity.hero",
+                    "@config.hero"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -1471,8 +1666,10 @@
                       "entity": "@entity",
                       "gameEndEvent": "GAME_END",
                       "gold": "@entity.gold",
+                      "hero": "@entity.hero",
                       "lives": "@entity.lives",
                       "maxWaves": "@entity.maxWaves",
+                      "moveHeroEvent": "MOVE_HERO",
                       "path": "@config.path",
                       "placeTowerEvent": "PLACE_TOWER",
                       "playAgainEvent": "PLAY_AGAIN",
@@ -1772,8 +1969,10 @@
                     "entity": "@entity",
                     "gameEndEvent": "GAME_END",
                     "gold": "@entity.gold",
+                    "hero": "@entity.hero",
                     "lives": "@entity.lives",
                     "maxWaves": "@entity.maxWaves",
+                    "moveHeroEvent": "MOVE_HERO",
                     "path": "@config.path",
                     "placeTowerEvent": "PLACE_TOWER",
                     "playAgainEvent": "PLAY_AGAIN",
@@ -1981,8 +2180,10 @@
                     "entity": "@entity",
                     "gameEndEvent": "GAME_END",
                     "gold": "@entity.gold",
+                    "hero": "@entity.hero",
                     "lives": "@entity.lives",
                     "maxWaves": "@entity.maxWaves",
+                    "moveHeroEvent": "MOVE_HERO",
                     "path": "@config.path",
                     "placeTowerEvent": "PLACE_TOWER",
                     "playAgainEvent": "PLAY_AGAIN",
