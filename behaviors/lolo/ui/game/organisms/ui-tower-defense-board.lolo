@@ -37,6 +37,11 @@ orbital TowerDefenseBoardOrbital {
     pathIndex : number!
     speed : number!
   }
+  type TowerDefenseBoardHero = {
+    id : string!
+    x : number!
+    y : number!
+  }
 
   entity TowerDefenseBoardItem [runtime] {
     id : string!
@@ -44,6 +49,7 @@ orbital TowerDefenseBoardOrbital {
     path : [TowerDefenseBoardPathItem]
     towers : [TowerDefenseBoardTowersItem]
     creeps : [TowerDefenseBoardCreepsItem]
+    hero : TowerDefenseBoardHero
     gold : number = 100
     lives : number = 20
     wave : number = 1
@@ -67,12 +73,14 @@ orbital TowerDefenseBoardOrbital {
         (set @entity.waveActive false)
         (set @entity.towers @config.towers)
         (set @entity.creeps [])
+        (set @entity.hero @config.hero)
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
           path: @config.path
           towers: @entity.towers
           creeps: @entity.creeps
+          hero: @entity.hero
           gold: @entity.gold
           lives: @entity.lives
           wave: @entity.wave
@@ -84,6 +92,7 @@ orbital TowerDefenseBoardOrbital {
           startWaveEvent: START_WAVE
           playAgainEvent: PLAY_AGAIN
           gameEndEvent: GAME_END
+          moveHeroEvent: MOVE_HERO
           scale: @config.scale
           unitScale: @config.unitScale
           type: tower-defense-board
@@ -98,6 +107,7 @@ orbital TowerDefenseBoardOrbital {
           path: @config.path
           towers: @entity.towers
           creeps: @entity.creeps
+          hero: @entity.hero
           gold: @entity.gold
           lives: @entity.lives
           wave: @entity.wave
@@ -109,6 +119,7 @@ orbital TowerDefenseBoardOrbital {
           startWaveEvent: START_WAVE
           playAgainEvent: PLAY_AGAIN
           gameEndEvent: GAME_END
+          moveHeroEvent: MOVE_HERO
           scale: @config.scale
           unitScale: @config.unitScale
           type: tower-defense-board
@@ -123,6 +134,7 @@ orbital TowerDefenseBoardOrbital {
           path: @config.path
           towers: @entity.towers
           creeps: @entity.creeps
+          hero: @entity.hero
           gold: @entity.gold
           lives: @entity.lives
           wave: @entity.wave
@@ -134,6 +146,33 @@ orbital TowerDefenseBoardOrbital {
           startWaveEvent: START_WAVE
           playAgainEvent: PLAY_AGAIN
           gameEndEvent: GAME_END
+          moveHeroEvent: MOVE_HERO
+          scale: @config.scale
+          unitScale: @config.unitScale
+          type: tower-defense-board
+        })
+
+      MOVE_HERO -> playing when (== @entity.result "none")
+        (set @entity.hero (object/merge @entity.hero { x: (math/max 0 (math/min (- @config.gridWidth 1) (+ (object/get @entity.hero x) ?dx))), y: (math/max 0 (math/min (- @config.gridHeight 1) (+ (object/get @entity.hero y) ?dy))) }))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          path: @config.path
+          towers: @entity.towers
+          creeps: @entity.creeps
+          hero: @entity.hero
+          gold: @entity.gold
+          lives: @entity.lives
+          wave: @entity.wave
+          maxWaves: @entity.maxWaves
+          result: @entity.result
+          waveActive: @entity.waveActive
+          towerCost: @config.towerCost
+          placeTowerEvent: PLACE_TOWER
+          startWaveEvent: START_WAVE
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          moveHeroEvent: MOVE_HERO
           scale: @config.scale
           unitScale: @config.unitScale
           type: tower-defense-board
@@ -146,6 +185,7 @@ orbital TowerDefenseBoardOrbital {
           path: @config.path
           towers: @entity.towers
           creeps: @entity.creeps
+          hero: @entity.hero
           gold: @entity.gold
           lives: @entity.lives
           wave: @entity.wave
@@ -157,6 +197,7 @@ orbital TowerDefenseBoardOrbital {
           startWaveEvent: START_WAVE
           playAgainEvent: PLAY_AGAIN
           gameEndEvent: GAME_END
+          moveHeroEvent: MOVE_HERO
           scale: @config.scale
           unitScale: @config.unitScale
           type: tower-defense-board
@@ -173,12 +214,14 @@ orbital TowerDefenseBoardOrbital {
         (set @entity.waveActive false)
         (set @entity.towers @config.towers)
         (set @entity.creeps [])
+        (set @entity.hero @config.hero)
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
           path: @config.path
           towers: @entity.towers
           creeps: @entity.creeps
+          hero: @entity.hero
           gold: @entity.gold
           lives: @entity.lives
           wave: @entity.wave
@@ -190,6 +233,7 @@ orbital TowerDefenseBoardOrbital {
           startWaveEvent: START_WAVE
           playAgainEvent: PLAY_AGAIN
           gameEndEvent: GAME_END
+          moveHeroEvent: MOVE_HERO
           scale: @config.scale
           unitScale: @config.unitScale
           type: tower-defense-board
@@ -217,6 +261,7 @@ orbital TowerDefenseBoardOrbital {
           path: @config.path
           towers: @entity.towers
           creeps: @entity.creeps
+          hero: @entity.hero
           gold: @entity.gold
           lives: @entity.lives
           wave: @entity.wave
@@ -228,6 +273,7 @@ orbital TowerDefenseBoardOrbital {
           startWaveEvent: START_WAVE
           playAgainEvent: PLAY_AGAIN
           gameEndEvent: GAME_END
+          moveHeroEvent: MOVE_HERO
           scale: @config.scale
           unitScale: @config.unitScale
           type: tower-defense-board
@@ -246,6 +292,7 @@ orbital TowerDefenseBoardOrbital {
           path: @config.path
           towers: @entity.towers
           creeps: @entity.creeps
+          hero: @entity.hero
           gold: @entity.gold
           lives: @entity.lives
           wave: @entity.wave
@@ -257,6 +304,7 @@ orbital TowerDefenseBoardOrbital {
           startWaveEvent: START_WAVE
           playAgainEvent: PLAY_AGAIN
           gameEndEvent: GAME_END
+          moveHeroEvent: MOVE_HERO
           scale: @config.scale
           unitScale: @config.unitScale
           type: tower-defense-board
@@ -284,6 +332,12 @@ orbital TowerDefenseBoardOrbital {
         id : string
       }
         @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "essential"
+      MOVE_HERO -> external {
+        dx : number!
+        dy : number!
+      }
+        @description "Emits UI:{moveHeroEvent} with {dx,dy} on arrow-key press to move the player hero"
         @tier "essential"
     }
 
@@ -375,6 +429,10 @@ orbital TowerDefenseBoardOrbital {
       unitScale : number = 0.6
         @label "Unit Scale"
         @description "Unit draw-size multiplier"
+        @tier "presentation"
+      hero : TowerDefenseBoardHero = { id: "hero", x: 8, y: 8 }
+        @label "Hero"
+        @description "Controllable player hero; seeded at map center"
         @tier "presentation"
     }
   }
