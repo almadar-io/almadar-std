@@ -2018,12 +2018,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                         '-',
                         [
                           'object/get',
-                          'ap',
+                          '@ap',
                           'x',
                         ],
                         [
                           'object/get',
-                          'tp',
+                          '@tp',
                           'x',
                         ],
                       ],
@@ -2040,12 +2040,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                           '-',
                           [
                             'object/get',
-                            'ap',
+                            '@ap',
                             'y',
                           ],
                           [
                             'object/get',
-                            'tp',
+                            '@tp',
                             'y',
                           ],
                         ],
@@ -2054,8 +2054,8 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                     ],
                     [
                       '!=',
-                      'ap',
-                      'tp',
+                      '@ap',
+                      '@tp',
                     ],
                   ],
                 ],
@@ -2605,7 +2605,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                                           'object/get',
                                           [
                                             'object/get',
-                                            'target',
+                                            '@target',
                                             'position',
                                           ],
                                           'x',
@@ -2650,7 +2650,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                                           'object/get',
                                           [
                                             'object/get',
-                                            'target',
+                                            '@target',
                                             'position',
                                           ],
                                           'y',

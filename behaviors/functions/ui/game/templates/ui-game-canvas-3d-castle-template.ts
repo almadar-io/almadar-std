@@ -39,6 +39,8 @@ export type StdUiGameCanvas3dCastleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas3dCastleTemplateConfig {
+  /** Default: `"Attack Event"` */
+  attackEvent?: string;
   /** Default: `"#1e1e2e"` */
   backgroundColor?: string;
   /** Default: `"Build Event"` */
@@ -47,12 +49,20 @@ export interface StdUiGameCanvas3dCastleTemplateConfig {
   buildingClickEvent?: string;
   /** Default: `"isometric"` */
   cameraMode?: 'isometric' | 'perspective' | 'top-down';
+  /** Default: `"Cancel Event"` */
+  cancelEvent?: string;
   /** Default: `""` */
   className?: string;
+  /** Default: `"End Turn Event"` */
+  endTurnEvent?: string;
   /** Default: `"Exit Event"` */
   exitEvent?: string;
   /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":1}]` */
   features?: EntityRow[];
+  /** Default: `"Game End Event"` */
+  gameEndEvent?: string;
+  /** Default: `"Play Again Event"` */
+  playAgainEvent?: string;
   /** Default: `"Recruit Event"` */
   recruitEvent?: string;
   /** Default: `false` */
