@@ -26,6 +26,20 @@ orbital GameCanvas3dWorldMapTemplateOrbital {
     color : string
     elevation : number
   }
+  type GameCanvas3dWorldMapTemplateUnitsItem = {
+    id : string!
+    position : GameCanvas3dWorldMapTemplateUnitsItemPosition
+    unitType : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    modelUrl : asset
+  }
+  type GameCanvas3dWorldMapTemplateUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
 
   entity GameCanvas3dWorldMapTemplateItem [runtime] {
     id : string!
@@ -41,7 +55,10 @@ orbital GameCanvas3dWorldMapTemplateOrbital {
           entity: @entity
           className: @config.className
           tiles: @config.tiles
+          units: @config.units
           features: @config.features
+          scale: @config.scale
+          unitScale: @config.unitScale
           cameraMode: @config.cameraMode
           showGrid: @config.showGrid
           showCoordinates: @config.showCoordinates
@@ -76,6 +93,18 @@ orbital GameCanvas3dWorldMapTemplateOrbital {
       features : [GameCanvas3dWorldMapTemplateFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb" }, { id: "f2", x: 3, y: 1, type: "portal", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb" }]
         @label "Features"
         @description "Fallback feature data when no entity is present"
+        @tier "presentation"
+      units : [GameCanvas3dWorldMapTemplateUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "hero", name: "Amir", team: player, health: 10, maxHealth: 10, modelUrl: "https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb" }, { id: "u2", position: { x: 3, y: 3 }, unitType: "guard", name: "Sentinel", team: enemy, health: 8, maxHealth: 8, modelUrl: "https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb" }]
+        @label "Units"
+        @description "Initial unit roster forwarded to the canvas"
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
         @tier "presentation"
       cameraMode : "isometric" | "perspective" | "top-down" = isometric
         @label "Camera Mode"
