@@ -119,7 +119,7 @@ export interface StdUiBattleBoardConfig {
   pageProp?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `0.45` */
+  /** Default: `0.25` */
   scale?: number;
   /** Default: `"Search Value"` */
   searchValue?: string;
@@ -135,7 +135,7 @@ export interface StdUiBattleBoardConfig {
   totalCount?: number;
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","name":"Worker","position":{"x":1,"y":1},"team":"player","unitType":"worker"},{"health":8,"id":"u2","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Guardian","position":{"x":3,"y":3},"team":"enemy","unitType":"guardian"}]` */
+  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","name":"Worker","position":{"x":1,"y":1},"team":"player","unitType":"worker"},{"health":8,"id":"u2","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","name":"Mender","position":{"x":3,"y":2},"team":"player","unitType":"mender"},{"health":8,"id":"u3","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Guardian","position":{"x":12,"y":12},"team":"enemy","unitType":"guardian"},{"health":6,"id":"u4","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Scrapper","position":{"x":14,"y":13},"team":"enemy","unitType":"scrapper"}]` */
   units?: EntityRow[];
 }
 
@@ -381,12 +381,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'type': 'string',
           },
           {
-            'default': 5,
+            'default': 16,
             'name': 'gridWidth',
             'type': 'number',
           },
           {
-            'default': 5,
+            'default': 16,
             'name': 'gridHeight',
             'type': 'number',
           },
@@ -644,7 +644,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
             'type': 'number',
           },
           'scale': {
-            'default': 0.45,
+            'default': 0.25,
             'description': 'Canvas render scale',
             'label': 'Scale',
             'tier': 'presentation',
@@ -966,14 +966,40 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 'health': 8,
                 'id': 'u2',
                 'maxHealth': 10,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb',
+                'name': 'Mender',
+                'position': {
+                  'x': 3,
+                  'y': 2,
+                },
+                'team': 'player',
+                'unitType': 'mender',
+              },
+              {
+                'health': 8,
+                'id': 'u3',
+                'maxHealth': 10,
                 'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb',
                 'name': 'Guardian',
                 'position': {
-                  'x': 3,
-                  'y': 3,
+                  'x': 12,
+                  'y': 12,
                 },
                 'team': 'enemy',
                 'unitType': 'guardian',
+              },
+              {
+                'health': 6,
+                'id': 'u4',
+                'maxHealth': 10,
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb',
+                'name': 'Scrapper',
+                'position': {
+                  'x': 14,
+                  'y': 13,
+                },
+                'team': 'enemy',
+                'unitType': 'scrapper',
               },
             ],
             'description': 'Direct unit data — takes priority over entity-derived units.',
@@ -1548,12 +1574,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 [
                   'set',
                   '@entity.gridWidth',
-                  5,
+                  16,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  5,
+                  16,
                 ],
                 [
                   'set',

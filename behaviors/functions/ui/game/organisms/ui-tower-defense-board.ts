@@ -83,9 +83,9 @@ export interface StdUiTowerDefenseBoardConfig {
   gold?: number;
   /** Default: `10` */
   goldPerKill?: number;
-  /** Default: `8` */
+  /** Default: `16` */
   gridHeight?: number;
-  /** Default: `8` */
+  /** Default: `16` */
   gridWidth?: number;
   /** Default: `false` */
   isLoading?: boolean;
@@ -93,9 +93,9 @@ export interface StdUiTowerDefenseBoardConfig {
   lives?: number;
   /** Default: `5` */
   maxWaves?: number;
-  /** Default: `[{"x":2,"y":0},{"x":2,"y":1},{"x":2,"y":2},{"x":3,"y":2},{"x":4,"y":2},{"x":4,"y":3},{"x":4,"y":4}]` */
+  /** Default: `[{"x":2,"y":0},{"x":2,"y":1},{"x":2,"y":2},{"x":2,"y":3},{"x":3,"y":3},{"x":4,"y":3},{"x":5,"y":3},{"x":6,"y":3},{"x":7,"y":3},{"x":8,"y":3},{"x":9,"y":3},{"x":10,"y":3},{"x":11,"y":3},{"x":12,"y":3},{"x":13,"y":3},{"x":13,"y":4},{"x":13,"y":5},{"x":13,"y":6},{"x":13,"y":7},{"x":12,"y":7},{"x":11,"y":7},{"x":10,"y":7},{"x":9,"y":7},{"x":8,"y":7},{"x":7,"y":7},{"x":6,"y":7},{"x":5,"y":7},{"x":4,"y":7},{"x":3,"y":7},{"x":2,"y":7},{"x":2,"y":8},{"x":2,"y":9},{"x":2,"y":10},{"x":2,"y":11},{"x":3,"y":11},{"x":4,"y":11},{"x":5,"y":11},{"x":6,"y":11},{"x":7,"y":11},{"x":8,"y":11},{"x":9,"y":11},{"x":10,"y":11},{"x":11,"y":11},{"x":12,"y":11},{"x":13,"y":11},{"x":13,"y":12},{"x":13,"y":13},{"x":13,"y":14},{"x":13,"y":15}]` */
   path?: EntityRow[];
-  /** Default: `0.45` */
+  /** Default: `0.25` */
   scale?: number;
   /** Default: `[{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png","x":0,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png","x":1,"y":0},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png","x":2,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png","x":3,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png","x":4,"y":0},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png","x":0,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png","x":1,"y":1},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png","x":2,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png","x":3,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png","x":4,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png","x":0,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png","x":1,"y":2},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png","x":2,"y":2},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png","x":3,"y":2},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png","x":4,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png","x":0,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png","x":1,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png","x":2,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_01.png","x":3,"y":3},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png","x":4,"y":3},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png","x":0,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png","x":1,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png","x":2,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_05.png","x":3,"y":4},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-blocks/PNG/Platformer tiles/platformerTile_09.png","x":4,"y":4}]` */
   tiles?: EntityRow[];
@@ -107,8 +107,10 @@ export interface StdUiTowerDefenseBoardConfig {
   towerDamage?: number;
   /** Default: `2` */
   towerRange?: number;
-  /** Default: `[{"cooldown":1,"damage":3,"id":"t0","lastFiredAt":0,"range":2,"x":1,"y":1},{"cooldown":1,"damage":3,"id":"t1","lastFiredAt":0,"range":2,"x":3,"y":3}]` */
+  /** Default: `[{"cooldown":1,"damage":3,"id":"t0","lastFiredAt":0,"range":2,"x":1,"y":2},{"cooldown":1,"damage":3,"id":"t1","lastFiredAt":0,"range":2,"x":5,"y":5},{"cooldown":1,"damage":3,"id":"t2","lastFiredAt":0,"range":2,"x":10,"y":9}]` */
   towers?: EntityRow[];
+  /** Default: `0.6` */
+  unitScale?: number;
 }
 
 /**
@@ -447,14 +449,14 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             'type': 'number',
           },
           'gridHeight': {
-            'default': 8,
+            'default': 16,
             'description': 'Number of rows in the tile grid',
             'label': 'Grid Height',
             'tier': 'presentation',
             'type': 'number',
           },
           'gridWidth': {
-            'default': 8,
+            'default': 16,
             'description': 'Number of columns in the tile grid',
             'label': 'Grid Width',
             'tier': 'presentation',
@@ -496,20 +498,188 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                 'y': 2,
               },
               {
-                'x': 3,
-                'y': 2,
+                'x': 2,
+                'y': 3,
               },
               {
-                'x': 4,
-                'y': 2,
+                'x': 3,
+                'y': 3,
               },
               {
                 'x': 4,
                 'y': 3,
               },
               {
-                'x': 4,
+                'x': 5,
+                'y': 3,
+              },
+              {
+                'x': 6,
+                'y': 3,
+              },
+              {
+                'x': 7,
+                'y': 3,
+              },
+              {
+                'x': 8,
+                'y': 3,
+              },
+              {
+                'x': 9,
+                'y': 3,
+              },
+              {
+                'x': 10,
+                'y': 3,
+              },
+              {
+                'x': 11,
+                'y': 3,
+              },
+              {
+                'x': 12,
+                'y': 3,
+              },
+              {
+                'x': 13,
+                'y': 3,
+              },
+              {
+                'x': 13,
                 'y': 4,
+              },
+              {
+                'x': 13,
+                'y': 5,
+              },
+              {
+                'x': 13,
+                'y': 6,
+              },
+              {
+                'x': 13,
+                'y': 7,
+              },
+              {
+                'x': 12,
+                'y': 7,
+              },
+              {
+                'x': 11,
+                'y': 7,
+              },
+              {
+                'x': 10,
+                'y': 7,
+              },
+              {
+                'x': 9,
+                'y': 7,
+              },
+              {
+                'x': 8,
+                'y': 7,
+              },
+              {
+                'x': 7,
+                'y': 7,
+              },
+              {
+                'x': 6,
+                'y': 7,
+              },
+              {
+                'x': 5,
+                'y': 7,
+              },
+              {
+                'x': 4,
+                'y': 7,
+              },
+              {
+                'x': 3,
+                'y': 7,
+              },
+              {
+                'x': 2,
+                'y': 7,
+              },
+              {
+                'x': 2,
+                'y': 8,
+              },
+              {
+                'x': 2,
+                'y': 9,
+              },
+              {
+                'x': 2,
+                'y': 10,
+              },
+              {
+                'x': 2,
+                'y': 11,
+              },
+              {
+                'x': 3,
+                'y': 11,
+              },
+              {
+                'x': 4,
+                'y': 11,
+              },
+              {
+                'x': 5,
+                'y': 11,
+              },
+              {
+                'x': 6,
+                'y': 11,
+              },
+              {
+                'x': 7,
+                'y': 11,
+              },
+              {
+                'x': 8,
+                'y': 11,
+              },
+              {
+                'x': 9,
+                'y': 11,
+              },
+              {
+                'x': 10,
+                'y': 11,
+              },
+              {
+                'x': 11,
+                'y': 11,
+              },
+              {
+                'x': 12,
+                'y': 11,
+              },
+              {
+                'x': 13,
+                'y': 11,
+              },
+              {
+                'x': 13,
+                'y': 12,
+              },
+              {
+                'x': 13,
+                'y': 13,
+              },
+              {
+                'x': 13,
+                'y': 14,
+              },
+              {
+                'x': 13,
+                'y': 15,
               },
             ],
             'description': 'Ordered waypoint coords that creeps follow from entry to exit.',
@@ -533,7 +703,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             'type': '[TowerDefenseBoardPathItem]',
           },
           'scale': {
-            'default': 0.45,
+            'default': 0.25,
             'description': 'Canvas render scale',
             'label': 'Scale',
             'tier': 'presentation',
@@ -794,7 +964,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                 'lastFiredAt': 0,
                 'range': 2,
                 'x': 1,
-                'y': 1,
+                'y': 2,
               },
               {
                 'cooldown': 1,
@@ -802,8 +972,17 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                 'id': 't1',
                 'lastFiredAt': 0,
                 'range': 2,
-                'x': 3,
-                'y': 3,
+                'x': 5,
+                'y': 5,
+              },
+              {
+                'cooldown': 1,
+                'damage': 3,
+                'id': 't2',
+                'lastFiredAt': 0,
+                'range': 2,
+                'x': 10,
+                'y': 9,
               },
             ],
             'description': 'Initial tower placements on the board.',
@@ -850,6 +1029,13 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             'label': 'Towers',
             'tier': 'presentation',
             'type': '[TowerDefenseBoardTowersItem]',
+          },
+          'unitScale': {
+            'default': 0.6,
+            'description': 'Unit draw-size multiplier',
+            'label': 'Unit Scale',
+            'tier': 'presentation',
+            'type': 'number',
           },
         },
         'emits': [
@@ -1060,11 +1246,13 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     'placeTowerEvent': 'PLACE_TOWER',
                     'playAgainEvent': 'PLAY_AGAIN',
                     'result': '@entity.result',
+                    'scale': '@config.scale',
                     'startWaveEvent': 'START_WAVE',
                     'tiles': '@config.tiles',
                     'towerCost': '@config.towerCost',
                     'towers': '@entity.towers',
                     'type': 'tower-defense-board',
+                    'unitScale': '@config.unitScale',
                     'wave': '@entity.wave',
                     'waveActive': '@entity.waveActive',
                   },
@@ -1128,11 +1316,13 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     'placeTowerEvent': 'PLACE_TOWER',
                     'playAgainEvent': 'PLAY_AGAIN',
                     'result': '@entity.result',
+                    'scale': '@config.scale',
                     'startWaveEvent': 'START_WAVE',
                     'tiles': '@config.tiles',
                     'towerCost': '@config.towerCost',
                     'towers': '@entity.towers',
                     'type': 'tower-defense-board',
+                    'unitScale': '@config.unitScale',
                     'wave': '@entity.wave',
                     'waveActive': '@entity.waveActive',
                   },
@@ -1312,11 +1502,13 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     'placeTowerEvent': 'PLACE_TOWER',
                     'playAgainEvent': 'PLAY_AGAIN',
                     'result': '@entity.result',
+                    'scale': '@config.scale',
                     'startWaveEvent': 'START_WAVE',
                     'tiles': '@config.tiles',
                     'towerCost': '@config.towerCost',
                     'towers': '@entity.towers',
                     'type': 'tower-defense-board',
+                    'unitScale': '@config.unitScale',
                     'wave': '@entity.wave',
                     'waveActive': '@entity.waveActive',
                   },
@@ -1355,11 +1547,13 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     'placeTowerEvent': 'PLACE_TOWER',
                     'playAgainEvent': 'PLAY_AGAIN',
                     'result': '@entity.result',
+                    'scale': '@config.scale',
                     'startWaveEvent': 'START_WAVE',
                     'tiles': '@config.tiles',
                     'towerCost': '@config.towerCost',
                     'towers': '@entity.towers',
                     'type': 'tower-defense-board',
+                    'unitScale': '@config.unitScale',
                     'wave': '@entity.wave',
                     'waveActive': '@entity.waveActive',
                   },
@@ -1438,11 +1632,13 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     'placeTowerEvent': 'PLACE_TOWER',
                     'playAgainEvent': 'PLAY_AGAIN',
                     'result': '@entity.result',
+                    'scale': '@config.scale',
                     'startWaveEvent': 'START_WAVE',
                     'tiles': '@config.tiles',
                     'towerCost': '@config.towerCost',
                     'towers': '@entity.towers',
                     'type': 'tower-defense-board',
+                    'unitScale': '@config.unitScale',
                     'wave': '@entity.wave',
                     'waveActive': '@entity.waveActive',
                   },
@@ -1737,11 +1933,13 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                   'placeTowerEvent': 'PLACE_TOWER',
                   'playAgainEvent': 'PLAY_AGAIN',
                   'result': '@entity.result',
+                  'scale': '@config.scale',
                   'startWaveEvent': 'START_WAVE',
                   'tiles': '@config.tiles',
                   'towerCost': '@config.towerCost',
                   'towers': '@entity.towers',
                   'type': 'tower-defense-board',
+                  'unitScale': '@config.unitScale',
                   'wave': '@entity.wave',
                   'waveActive': '@entity.waveActive',
                 },
@@ -1944,11 +2142,13 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                   'placeTowerEvent': 'PLACE_TOWER',
                   'playAgainEvent': 'PLAY_AGAIN',
                   'result': '@entity.result',
+                  'scale': '@config.scale',
                   'startWaveEvent': 'START_WAVE',
                   'tiles': '@config.tiles',
                   'towerCost': '@config.towerCost',
                   'towers': '@entity.towers',
                   'type': 'tower-defense-board',
+                  'unitScale': '@config.unitScale',
                   'wave': '@entity.wave',
                   'waveActive': '@entity.waveActive',
                 },

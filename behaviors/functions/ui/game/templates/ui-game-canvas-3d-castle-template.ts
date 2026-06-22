@@ -65,6 +65,8 @@ export interface StdUiGameCanvas3dCastleTemplateConfig {
   playAgainEvent?: string;
   /** Default: `"Recruit Event"` */
   recruitEvent?: string;
+  /** Default: `0` */
+  scale?: number;
   /** Default: `false` */
   shadows?: boolean;
   /** Default: `false` */
@@ -75,6 +77,8 @@ export interface StdUiGameCanvas3dCastleTemplateConfig {
   tiles?: EntityRow[];
   /** Default: `"Unit Click Event"` */
   unitClickEvent?: string;
+  /** Default: `0` */
+  unitScale?: number;
 }
 
 /**

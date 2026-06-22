@@ -49,6 +49,10 @@ export interface StdUiTowerDefenseTemplateConfig {
   gold?: number;
   /** Default: `10` */
   goldPerKill?: number;
+  /** Default: `5` */
+  gridHeight?: number;
+  /** Default: `5` */
+  gridWidth?: number;
   /** Default: `20` */
   lives?: number;
   /** Default: `5` */
@@ -69,6 +73,8 @@ export interface StdUiTowerDefenseTemplateConfig {
   towerRange?: number;
   /** Default: `[{"cooldown":1,"damage":3,"id":"t0","lastFiredAt":0,"range":2,"x":1,"y":1},{"cooldown":1,"damage":3,"id":"t1","lastFiredAt":0,"range":2,"x":3,"y":3}]` */
   towers?: EntityRow[];
+  /** Default: `0.6` */
+  unitScale?: number;
 }
 
 /**

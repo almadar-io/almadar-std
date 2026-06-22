@@ -65,12 +65,12 @@ export interface StdUiRoguelikeBoardConfig {
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"attack":2,"hp":5,"id":"e1","x":3,"y":1},{"attack":1,"hp":4,"id":"e2","x":1,"y":3}]` */
+  /** Default: `[{"attack":2,"hp":5,"id":"e1","x":5,"y":2},{"attack":1,"hp":4,"id":"e2","x":9,"y":6},{"attack":2,"hp":6,"id":"e3","x":3,"y":10},{"attack":3,"hp":5,"id":"e4","x":12,"y":8}]` */
   enemies?: EntityRow[];
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"id":"i1","kind":"health_potion","x":2,"y":2}]` */
+  /** Default: `[{"id":"i1","kind":"health_potion","x":3,"y":3},{"id":"i2","kind":"sword","x":7,"y":9},{"id":"i3","kind":"shield","x":11,"y":5}]` */
   items?: EntityRow[];
   /** Default: `{"x":1,"y":1}` */
   player?: EntityRow;
@@ -78,11 +78,11 @@ export interface StdUiRoguelikeBoardConfig {
   playerAttack?: number;
   /** Default: `10` */
   playerMaxHp?: number;
-  /** Default: `0.45` */
+  /** Default: `0.25` */
   scale?: number;
-  /** Default: `3` */
+  /** Default: `14` */
   stairsX?: number;
-  /** Default: `3` */
+  /** Default: `14` */
   stairsY?: number;
   /** Default: `[{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":0,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":1,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":2,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":3,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":4,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":0,"y":1},{"passable":true,"terrain":"floor","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png","x":1,"y":1},{"passable":true,"terrain":"floor","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png","x":2,"y":1},{"passable":true,"terrain":"floor","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png","x":3,"y":1},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":4,"y":1},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":0,"y":2},{"passable":true,"terrain":"floor","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png","x":1,"y":2},{"passable":true,"terrain":"floor","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png","x":2,"y":2},{"passable":true,"terrain":"floor","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png","x":3,"y":2},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":4,"y":2},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":0,"y":3},{"passable":true,"terrain":"floor","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirt_E.png","x":1,"y":3},{"passable":true,"terrain":"floor","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/dirtTiles_E.png","x":2,"y":3},{"passable":true,"terrain":"stairs","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stairs_E.png","x":3,"y":3},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":4,"y":3},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":0,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":1,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":2,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":3,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/isometric-dungeon/Isometric/stoneInset_E.png","x":4,"y":4}]` */
   tiles?: EntityRow[];
@@ -329,12 +329,12 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
             'type': 'number',
           },
           {
-            'default': 5,
+            'default': 16,
             'name': 'gridWidth',
             'type': 'number',
           },
           {
-            'default': 5,
+            'default': 16,
             'name': 'gridHeight',
             'type': 'number',
           },
@@ -417,15 +417,29 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                 'attack': 2,
                 'hp': 5,
                 'id': 'e1',
-                'x': 3,
-                'y': 1,
+                'x': 5,
+                'y': 2,
               },
               {
                 'attack': 1,
                 'hp': 4,
                 'id': 'e2',
-                'x': 1,
-                'y': 3,
+                'x': 9,
+                'y': 6,
+              },
+              {
+                'attack': 2,
+                'hp': 6,
+                'id': 'e3',
+                'x': 3,
+                'y': 10,
+              },
+              {
+                'attack': 3,
+                'hp': 5,
+                'id': 'e4',
+                'x': 12,
+                'y': 8,
               },
             ],
             'description': 'Initial enemy positions, hp, and attack values.',
@@ -503,8 +517,20 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
               {
                 'id': 'i1',
                 'kind': 'health_potion',
-                'x': 2,
-                'y': 2,
+                'x': 3,
+                'y': 3,
+              },
+              {
+                'id': 'i2',
+                'kind': 'sword',
+                'x': 7,
+                'y': 9,
+              },
+              {
+                'id': 'i3',
+                'kind': 'shield',
+                'x': 11,
+                'y': 5,
               },
             ],
             'description': 'Floor items (health_potion / sword / shield).',
@@ -579,21 +605,21 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
             'type': 'number',
           },
           'scale': {
-            'default': 0.45,
+            'default': 0.25,
             'description': 'Canvas render scale',
             'label': 'Scale',
             'tier': 'presentation',
             'type': 'number',
           },
           'stairsX': {
-            'default': 3,
+            'default': 14,
             'description': 'Stairs tile X coordinate',
             'label': 'Stairs X',
             'tier': 'presentation',
             'type': 'number',
           },
           'stairsY': {
-            'default': 3,
+            'default': 14,
             'description': 'Stairs tile Y coordinate',
             'label': 'Stairs Y',
             'tier': 'presentation',
@@ -1021,12 +1047,12 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                 [
                   'set',
                   '@entity.gridWidth',
-                  5,
+                  16,
                 ],
                 [
                   'set',
                   '@entity.gridHeight',
-                  5,
+                  16,
                 ],
                 [
                   'render-ui',
