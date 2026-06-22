@@ -191,7 +191,7 @@ orbital TowerDefenseBoardOrbital {
         when (and (== @entity.waveActive true) (and (== @entity.result "none") (> (array/len @entity.creeps) 0)))
         (set @entity.tick (+ @entity.tick 1))
         # advance each creep one step along the path waypoints
-        (set @entity.creeps (array/map @entity.creeps (fn c (let ((nextIndex (math/min (+ (object/get @c pathIndex) 1) (- (array/len @config.path) 1))) (nextWaypoint (array/nth @config.path (math/min (+ (object/get @c pathIndex) 1) (- (array/len @config.path) 1))))) (object/merge @c { x: (object/get nextWaypoint x), y: (object/get nextWaypoint y), pathIndex: nextIndex })))))
+        (set @entity.creeps (array/map @entity.creeps (fn c (let ((nextIndex (math/min (+ (object/get @c pathIndex) 1) (- (array/len @config.path) 1))) (nextWaypoint (array/nth @config.path (math/min (+ (object/get @c pathIndex) 1) (- (array/len @config.path) 1))))) (object/merge @c { x: (object/get @nextWaypoint x), y: (object/get @nextWaypoint y), pathIndex: @nextIndex })))))
         # creeps that reached the last waypoint drain lives
         (set @entity.lives (- @entity.lives (array/len (array/filter @entity.creeps (fn c (== (object/get @c pathIndex) (- (array/len @config.path) 1)))))))
         # remove creeps that reached the end
@@ -224,7 +224,7 @@ orbital TowerDefenseBoardOrbital {
       towerFireTick every 1s
         when (and (== @entity.waveActive true) (and (== @entity.result "none") (> (array/len @entity.creeps) 0)))
         # each tower finds the nearest creep in range and deals damage
-        (set @entity.creeps (array/map @entity.creeps (fn c (let ((inRangeTowers (array/filter @entity.towers (fn t (<= (vec/distance { x: (object/get @t x), y: (object/get @t y) } { x: (object/get @c x), y: (object/get @c y) }) (object/get @t range)))))) (if (> (array/len inRangeTowers) 0) (object/merge @c { hp: (math/max 0 (- (object/get @c hp) (object/get (array/first inRangeTowers) damage))) }) @c)))))
+        (set @entity.creeps (array/map @entity.creeps (fn c (let ((inRangeTowers (array/filter @entity.towers (fn t (<= (vec/distance { x: (object/get @t x), y: (object/get @t y) } { x: (object/get @c x), y: (object/get @c y) }) (object/get @t range)))))) (if (> (array/len @inRangeTowers) 0) (object/merge @c { hp: (math/max 0 (- (object/get @c hp) (object/get (array/first @inRangeTowers) damage))) }) @c)))))
         # remove dead creeps, award gold per kill
         (set @entity.gold (+ @entity.gold (* @config.goldPerKill (array/len (array/filter @entity.creeps (fn c (<= (object/get @c hp) 0)))))))
         (set @entity.creeps (array/filter @entity.creeps (fn c (> (object/get @c hp) 0))))

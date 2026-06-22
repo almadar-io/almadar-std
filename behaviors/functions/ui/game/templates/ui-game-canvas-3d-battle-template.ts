@@ -39,10 +39,14 @@ export type StdUiGameCanvas3dBattleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas3dBattleTemplateConfig {
+  /** Default: `"Attack Event"` */
+  attackEvent?: string;
   /** Default: `"#2a1a1a"` */
   backgroundColor?: string;
   /** Default: `"perspective"` */
   cameraMode?: 'isometric' | 'perspective' | 'top-down';
+  /** Default: `"Cancel Event"` */
+  cancelEvent?: string;
   /** Default: `""` */
   className?: string;
   /** Default: `"End Turn Event"` */
@@ -51,6 +55,10 @@ export interface StdUiGameCanvas3dBattleTemplateConfig {
   exitEvent?: string;
   /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":1}]` */
   features?: EntityRow[];
+  /** Default: `"Game End Event"` */
+  gameEndEvent?: string;
+  /** Default: `"Play Again Event"` */
+  playAgainEvent?: string;
   /** Default: `false` */
   shadows?: boolean;
   /** Default: `false` */

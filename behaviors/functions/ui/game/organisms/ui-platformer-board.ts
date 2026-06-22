@@ -1098,7 +1098,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     [
                       '+',
                       '@entity.player.y',
-                      'vy1',
+                      '@vy1',
                     ],
                   ],
                   [
@@ -1112,10 +1112,10 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   [
                     'playerRect',
                     {
-                      'h': 'ph',
-                      'w': 'pw',
-                      'x': 'px1',
-                      'y': 'py1',
+                      'h': '@ph',
+                      'w': '@pw',
+                      'x': '@px1',
+                      'y': '@py1',
                     },
                   ],
                   [
@@ -1139,7 +1139,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           ],
                           [
                             'geo/aabb-overlap',
-                            'playerRect',
+                            '@playerRect',
                             {
                               'h': '@p.height',
                               'w': '@p.width',
@@ -1155,7 +1155,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'hitY',
                     [
                       'object/get',
-                      'hit',
+                      '@hit',
                       'y',
                       '@entity.worldHeight',
                     ],
@@ -1166,12 +1166,12 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'and',
                       [
                         '!=',
-                        'hit',
+                        '@hit',
                         null,
                       ],
                       [
                         '>',
-                        'vy1',
+                        '@vy1',
                         0,
                       ],
                     ],
@@ -1180,22 +1180,22 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'py2',
                     [
                       'if',
-                      'landed',
+                      '@landed',
                       [
                         '-',
-                        'hitY',
-                        'ph',
+                        '@hitY',
+                        '@ph',
                       ],
-                      'py1',
+                      '@py1',
                     ],
                   ],
                   [
                     'vy2',
                     [
                       'if',
-                      'landed',
+                      '@landed',
                       0,
-                      'vy1',
+                      '@vy1',
                     ],
                   ],
                   [
@@ -1204,8 +1204,8 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       '>=',
                       [
                         '+',
-                        'py2',
-                        'ph',
+                        '@py2',
+                        '@ph',
                       ],
                       '@entity.worldHeight',
                     ],
@@ -1214,30 +1214,30 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'py3',
                     [
                       'if',
-                      'atGround',
+                      '@atGround',
                       [
                         '-',
                         '@entity.worldHeight',
-                        'ph',
+                        '@ph',
                       ],
-                      'py2',
+                      '@py2',
                     ],
                   ],
                   [
                     'vy3',
                     [
                       'if',
-                      'atGround',
+                      '@atGround',
                       0,
-                      'vy2',
+                      '@vy2',
                     ],
                   ],
                   [
                     'grounded',
                     [
                       'or',
-                      'landed',
-                      'atGround',
+                      '@landed',
+                      '@atGround',
                     ],
                   ],
                   [
@@ -1261,7 +1261,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           ],
                           [
                             'geo/aabb-overlap',
-                            'playerRect',
+                            '@playerRect',
                             {
                               'h': '@p.height',
                               'w': '@p.width',
@@ -1294,7 +1294,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           ],
                           [
                             'geo/aabb-overlap',
-                            'playerRect',
+                            '@playerRect',
                             {
                               'h': '@p.height',
                               'w': '@p.width',
@@ -1310,7 +1310,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                     'fell',
                     [
                       '>',
-                      'py3',
+                      '@py3',
                       '@entity.worldHeight',
                     ],
                   ],
@@ -1320,10 +1320,10 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'or',
                       [
                         '!=',
-                        'hazardHit',
+                        '@hazardHit',
                         null,
                       ],
-                      'fell',
+                      '@fell',
                     ],
                   ],
                   [
@@ -1344,10 +1344,10 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'object/merge',
                       '@entity.player',
                       {
-                        'grounded': 'grounded',
-                        'vy': 'vy3',
-                        'x': 'px1',
-                        'y': 'py3',
+                        'grounded': '@grounded',
+                        'vy': '@vy3',
+                        'x': '@px1',
+                        'y': '@py3',
                       },
                     ],
                   ],
@@ -1358,7 +1358,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'if',
                       [
                         '!=',
-                        'goalHit',
+                        '@goalHit',
                         null,
                       ],
                       'won',
@@ -1366,10 +1366,10 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                         'if',
                         [
                           'and',
-                          'damaged',
+                          '@damaged',
                           [
                             '<=',
-                            'livesLeft',
+                            '@livesLeft',
                             0,
                           ],
                         ],
@@ -1385,7 +1385,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'if',
                       [
                         '!=',
-                        'goalHit',
+                        '@goalHit',
                         null,
                       ],
                       [
@@ -1403,7 +1403,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'if',
                       [
                         'and',
-                        'damaged',
+                        '@damaged',
                         [
                           '>',
                           '@entity.lives',
@@ -1415,7 +1415,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                           'none',
                         ],
                       ],
-                      'livesLeft',
+                      '@livesLeft',
                       '@entity.lives',
                     ],
                   ],
@@ -1426,7 +1426,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                       'if',
                       [
                         'and',
-                        'damaged',
+                        '@damaged',
                         [
                           '==',
                           '@entity.result',

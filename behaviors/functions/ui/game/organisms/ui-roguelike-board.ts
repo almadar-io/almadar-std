@@ -1098,12 +1098,12 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                             'and',
                             [
                               '>=',
-                              'tx',
+                              '@tx',
                               0,
                             ],
                             [
                               '<',
-                              'tx',
+                              '@tx',
                               '@entity.gridWidth',
                             ],
                           ],
@@ -1111,12 +1111,12 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                             'and',
                             [
                               '>=',
-                              'ty',
+                              '@ty',
                               0,
                             ],
                             [
                               '<',
-                              'ty',
+                              '@ty',
                               '@entity.gridHeight',
                             ],
                           ],
@@ -1139,7 +1139,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                   '@t',
                                   'x',
                                 ],
-                                'tx',
+                                '@tx',
                               ],
                               [
                                 '==',
@@ -1148,7 +1148,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                   '@t',
                                   'y',
                                 ],
-                                'ty',
+                                '@ty',
                               ],
                             ],
                           ],
@@ -1160,13 +1160,13 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           'if',
                           [
                             '==',
-                            'tile',
+                            '@tile',
                             null,
                           ],
                           false,
                           [
                             'object/get',
-                            'tile',
+                            '@tile',
                             'passable',
                           ],
                         ],
@@ -1186,12 +1186,12 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                 [
                                   '==',
                                   '@e.x',
-                                  'tx',
+                                  '@tx',
                                 ],
                                 [
                                   '==',
                                   '@e.y',
-                                  'ty',
+                                  '@ty',
                                 ],
                               ],
                               [
@@ -1216,12 +1216,12 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                               [
                                 '==',
                                 '@i.x',
-                                'tx',
+                                '@tx',
                               ],
                               [
                                 '==',
                                 '@i.y',
-                                'ty',
+                                '@ty',
                               ],
                             ],
                           ],
@@ -1232,10 +1232,10 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                       'if',
                       [
                         'and',
-                        'inBounds',
+                        '@inBounds',
                         [
                           '==',
-                          'hitEnemy',
+                          '@hitEnemy',
                           null,
                         ],
                       ],
@@ -1245,7 +1245,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           'if',
                           [
                             '==',
-                            'hitItem',
+                            '@hitItem',
                             null,
                           ],
                           true,
@@ -1257,7 +1257,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                 '==',
                                 [
                                   'object/get',
-                                  'hitItem',
+                                  '@hitItem',
                                   'kind',
                                 ],
                                 'health_potion',
@@ -1283,7 +1283,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                 '==',
                                 [
                                   'object/get',
-                                  'hitItem',
+                                  '@hitItem',
                                   'kind',
                                 ],
                                 'sword',
@@ -1313,7 +1313,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                     '@i.id',
                                     [
                                       'object/get',
-                                      'hitItem',
+                                      '@hitItem',
                                       'id',
                                     ],
                                   ],
@@ -1326,15 +1326,15 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           'if',
                           [
                             'and',
-                            'walkable',
-                            'inBounds',
+                            '@walkable',
+                            '@inBounds',
                           ],
                           [
                             'set',
                             '@entity.player',
                             {
-                              'x': 'tx',
-                              'y': 'ty',
+                              'x': '@tx',
+                              'y': '@ty',
                             },
                           ],
                           true,
@@ -1344,7 +1344,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                         'if',
                         [
                           '!=',
-                          'hitEnemy',
+                          '@hitEnemy',
                           null,
                         ],
                         [
@@ -1363,7 +1363,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                   '@e.id',
                                   [
                                     'object/get',
-                                    'hitEnemy',
+                                    '@hitEnemy',
                                     'id',
                                   ],
                                 ],
@@ -1721,16 +1721,16 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                   'math/abs',
                                   [
                                     '-',
-                                    'ex',
-                                    'px',
+                                    '@ex',
+                                    '@px',
                                   ],
                                 ],
                                 1,
                               ],
                               [
                                 '==',
-                                'ey',
-                                'py',
+                                '@ey',
+                                '@py',
                               ],
                             ],
                           ],
@@ -1740,8 +1740,8 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                               'and',
                               [
                                 '==',
-                                'ex',
-                                'px',
+                                '@ex',
+                                '@px',
                               ],
                               [
                                 '==',
@@ -1749,8 +1749,8 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                   'math/abs',
                                   [
                                     '-',
-                                    'ey',
-                                    'py',
+                                    '@ey',
+                                    '@py',
                                   ],
                                 ],
                                 1,
@@ -1762,8 +1762,8 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           'if',
                           [
                             'or',
-                            'adjP',
-                            'adjQ',
+                            '@adjP',
+                            '@adjQ',
                           ],
                           [
                             'object/merge',
@@ -1778,13 +1778,13 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                 'math/clamp',
                                 [
                                   '+',
-                                  'ex',
+                                  '@ex',
                                   [
                                     'math/sign',
                                     [
                                       '-',
-                                      'px',
-                                      'ex',
+                                      '@px',
+                                      '@ex',
                                     ],
                                   ],
                                 ],
@@ -1799,13 +1799,13 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                 'math/clamp',
                                 [
                                   '+',
-                                  'ey',
+                                  '@ey',
                                   [
                                     'math/sign',
                                     [
                                       '-',
-                                      'py',
-                                      'ey',
+                                      '@py',
+                                      '@ey',
                                     ],
                                   ],
                                 ],
@@ -1917,14 +1917,14 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           '==',
                           [
                             'array/len',
-                            'adjEnemies',
+                            '@adjEnemies',
                           ],
                           0,
                         ],
                         0,
                         [
                           'array/reduce',
-                          'adjEnemies',
+                          '@adjEnemies',
                           [
                             'fn',
                             [
@@ -1948,7 +1948,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                     [
                       '-',
                       '@entity.playerHp',
-                      'dmg',
+                      '@dmg',
                     ],
                   ],
                 ],

@@ -1533,15 +1533,15 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                         'object/merge',
                         '@c',
                         {
-                          'pathIndex': 'nextIndex',
+                          'pathIndex': '@nextIndex',
                           'x': [
                             'object/get',
-                            'nextWaypoint',
+                            '@nextWaypoint',
                             'x',
                           ],
                           'y': [
                             'object/get',
-                            'nextWaypoint',
+                            '@nextWaypoint',
                             'y',
                           ],
                         },
@@ -1841,7 +1841,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                           '>',
                           [
                             'array/len',
-                            'inRangeTowers',
+                            '@inRangeTowers',
                           ],
                           0,
                         ],
@@ -1863,7 +1863,7 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                                   'object/get',
                                   [
                                     'array/first',
-                                    'inRangeTowers',
+                                    '@inRangeTowers',
                                   ],
                                   'damage',
                                 ],

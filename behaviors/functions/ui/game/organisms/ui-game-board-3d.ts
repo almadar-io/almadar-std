@@ -2267,12 +2267,12 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                         '-',
                         [
                           'object/get',
-                          'ap',
+                          '@ap',
                           'x',
                         ],
                         [
                           'object/get',
-                          'tp',
+                          '@tp',
                           'x',
                         ],
                       ],
@@ -2289,12 +2289,12 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                           '-',
                           [
                             'object/get',
-                            'ap',
+                            '@ap',
                             'y',
                           ],
                           [
                             'object/get',
-                            'tp',
+                            '@tp',
                             'y',
                           ],
                         ],
@@ -2303,8 +2303,8 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                     ],
                     [
                       '!=',
-                      'ap',
-                      'tp',
+                      '@ap',
+                      '@tp',
                     ],
                   ],
                 ],
@@ -2897,7 +2897,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                                           'object/get',
                                           [
                                             'object/get',
-                                            'target',
+                                            '@target',
                                             'position',
                                           ],
                                           'x',
@@ -2942,7 +2942,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                                           'object/get',
                                           [
                                             'object/get',
-                                            'target',
+                                            '@target',
                                             'position',
                                           ],
                                           'y',
