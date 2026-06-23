@@ -29,6 +29,11 @@
             "required": false
           },
           {
+            "name": "hero",
+            "type": "object",
+            "required": false
+          },
+          {
             "name": "gold",
             "type": "number",
             "required": false
@@ -74,7 +79,8 @@
           "PLACE_TOWER",
           "START_WAVE",
           "GAME_END",
-          "PLAY_AGAIN"
+          "PLAY_AGAIN",
+          "MOVE_HERO"
         ],
         "listenedEvents": [],
         "events": [
@@ -100,6 +106,12 @@
             "name": "PLAY_AGAIN",
             "direction": "emit",
             "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "essential"
+          },
+          {
+            "name": "MOVE_HERO",
+            "direction": "emit",
+            "description": "Emits UI:{moveHeroEvent} with {dx,dy} on arrow-key press to move the player hero",
             "tier": "essential"
           },
           {
@@ -208,6 +220,35 @@
             "label": "Grid Width",
             "description": "Number of columns in the tile grid",
             "tier": "presentation"
+          },
+          {
+            "key": "hero",
+            "type": "TowerDefenseBoardHero",
+            "default": {
+              "id": "hero",
+              "x": 8,
+              "y": 8
+            },
+            "label": "Hero",
+            "description": "Controllable player hero; seeded at map center",
+            "tier": "presentation",
+            "properties": {
+              "id": {
+                "name": "id",
+                "required": true,
+                "type": "string"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            }
           },
           {
             "key": "isLoading",
@@ -804,6 +845,7 @@
           "provides": [
             "creeps",
             "gold",
+            "hero",
             "lives",
             "maxWaves",
             "result",
@@ -824,6 +866,7 @@
     ],
     "emittedEvents": [
       "GAME_END",
+      "MOVE_HERO",
       "PLACE_TOWER",
       "PLAY_AGAIN",
       "START_WAVE"
