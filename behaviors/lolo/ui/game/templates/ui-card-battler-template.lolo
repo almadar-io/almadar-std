@@ -1,0 +1,72 @@
+app ui-card-battler-template "1.0.0"
+"CardBattlerTemplate — HUD-deck card battler; composes CardBattlerBoard with a mana/turn HUD and a card hand."
+orbital CardBattlerTemplateOrbital {
+  type CardBattlerTemplateCard = {
+    id : string!
+    iconKey : string
+    title : string
+    cost : number
+    attack : number
+    defense : number
+  }
+  type CardBattlerTemplateAssetManifest = {
+    baseUrl : asset
+    cards : Map string asset
+  }
+
+  entity CardBattlerTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait CardBattlerTemplateRender -> @rebindable CardBattlerTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch CardBattlerTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          title: @config.title
+          deck: @config.deck
+          hand: @config.hand
+          maxMana: @config.maxMana
+          assetManifest: @config.assetManifest
+          playCardEvent: PLAY_CARD
+          endTurnEvent: END_TURN
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: card-battler-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "External styling override"
+        @tier "presentation"
+      title : string = "Card Battler"
+        @label "Title"
+        @description "Display title shown in the template header"
+        @tier "presentation"
+      maxMana : number = 3
+        @label "Starting Mana"
+        @description "Mana the player starts each match with"
+        @tier "presentation"
+      deck : [CardBattlerTemplateCard] = [{ id: "d1", iconKey: "rhino", title: "Rhino", cost: 3, attack: 4, defense: 5 }, { id: "d2", iconKey: "whale", title: "Whale", cost: 5, attack: 7, defense: 6 }, { id: "d3", iconKey: "parrot", title: "Parrot", cost: 2, attack: 3, defense: 2 }, { id: "d4", iconKey: "panda", title: "Panda", cost: 2, attack: 2, defense: 4 }, { id: "d5", iconKey: "monkey", title: "Monkey", cost: 1, attack: 2, defense: 1 }, { id: "d6", iconKey: "penguin", title: "Penguin", cost: 1, attack: 1, defense: 2 }, { id: "d7", iconKey: "elephant", title: "Elephant", cost: 4, attack: 5, defense: 6 }]
+        @label "Deck"
+        @description "Draw deck forwarded to CardBattlerBoard."
+        @tier "presentation"
+      hand : [CardBattlerTemplateCard] = [{ id: "c1", iconKey: "bear", title: "Bear", cost: 3, attack: 5, defense: 4 }, { id: "c2", iconKey: "owl", title: "Owl", cost: 1, attack: 2, defense: 1 }, { id: "c3", iconKey: "gorilla", title: "Gorilla", cost: 4, attack: 6, defense: 5 }, { id: "c4", iconKey: "frog", title: "Frog", cost: 1, attack: 1, defense: 2 }, { id: "c5", iconKey: "snake", title: "Snake", cost: 2, attack: 4, defense: 1 }]
+        @label "Hand"
+        @description "Opening hand forwarded to CardBattlerBoard."
+        @tier "presentation"
+      assetManifest : CardBattlerTemplateAssetManifest = { baseUrl: "https://almadar-kflow-assets.web.app/shared/", cards: { bear: "cards/bear.png", owl: "cards/owl.png", gorilla: "cards/gorilla.png", rhino: "cards/rhino.png", whale: "cards/whale.png", parrot: "cards/parrot.png", panda: "cards/panda.png", monkey: "cards/monkey.png", penguin: "cards/penguin.png", snake: "cards/snake.png", frog: "cards/frog.png", elephant: "cards/elephant.png" } }
+        @label "Asset Manifest"
+        @description "Base-url + per-iconKey card-art sprite map forwarded to CardBattlerBoard."
+        @tier "presentation"
+    }
+  }
+
+  page "/card-battler-template" as CardBattlerTemplatePage -> CardBattlerTemplateRender
+}
