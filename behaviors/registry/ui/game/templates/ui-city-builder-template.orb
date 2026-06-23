@@ -1,0 +1,504 @@
+{
+  "description": "CityBuilderTemplate — isometric build-and-manage city; composes CityBuilderBoard with HUD (gold/wood/population).",
+  "name": "ui-city-builder-template",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "CityBuilderTemplateItem",
+        "persistence": "runtime"
+      },
+      "name": "CityBuilderTemplateOrbital",
+      "pages": [
+        {
+          "name": "CityBuilderTemplatePage",
+          "path": "/city-builder-template",
+          "traits": [
+            {
+              "ref": "CityBuilderTemplateRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "buildTypes": {
+              "default": [
+                {
+                  "cost": 20.0,
+                  "label": "House",
+                  "type": "house"
+                },
+                {
+                  "cost": 15.0,
+                  "label": "Farm",
+                  "type": "farm"
+                },
+                {
+                  "cost": 40.0,
+                  "label": "Barracks",
+                  "type": "barracks"
+                },
+                {
+                  "cost": 30.0,
+                  "label": "Library",
+                  "type": "library"
+                }
+              ],
+              "description": "Placeable building types forwarded to CityBuilderBoard.",
+              "items": {
+                "properties": {
+                  "cost": {
+                    "name": "cost",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Build Types",
+              "tier": "presentation",
+              "type": "[CityBuilderTemplateBuildTypesItem]"
+            },
+            "buildings": {
+              "default": [
+                {
+                  "id": "bld-0",
+                  "type": "house",
+                  "x": 1.0,
+                  "y": 1.0
+                },
+                {
+                  "id": "bld-1",
+                  "type": "farm",
+                  "x": 3.0,
+                  "y": 3.0
+                }
+              ],
+              "description": "Pre-placed buildings forwarded to CityBuilderBoard.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Buildings",
+              "tier": "presentation",
+              "type": "[CityBuilderTemplateBuildingsItem]"
+            },
+            "className": {
+              "default": "",
+              "description": "External styling override",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "gold": {
+              "default": 100.0,
+              "description": "Gold the player starts with",
+              "label": "Starting Gold",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "goldPerBuilding": {
+              "default": 2.0,
+              "description": "Gold income per building per tick",
+              "label": "Gold Per Building",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "gridHeight": {
+              "default": 5.0,
+              "description": "Number of rows in the tile grid",
+              "label": "Grid Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "gridWidth": {
+              "default": 5.0,
+              "description": "Number of columns in the tile grid",
+              "label": "Grid Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pendingBuildType": {
+              "default": "house",
+              "description": "Initially selected building type from the palette",
+              "label": "Pending Build Type",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "populationPerBuilding": {
+              "default": 2.0,
+              "description": "Population added per placed building",
+              "label": "Population Per Building",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "scale": {
+              "default": 0.45,
+              "description": "Canvas render scale",
+              "label": "Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "targetPopulation": {
+              "default": 12.0,
+              "description": "Population to reach for victory",
+              "label": "Target Population",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "tiles": {
+              "default": [
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "stone",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stone_E.png",
+                  "x": 2.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 3.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "dirt",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png",
+                  "x": 4.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 1.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 2.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "dirt",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png",
+                  "x": 3.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 4.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "dirt",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png",
+                  "x": 0.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 1.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "water",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png",
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 3.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "stone",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stone_E.png",
+                  "x": 4.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 0.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 1.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "dirt",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png",
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "stone",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stone_E.png",
+                  "x": 0.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 1.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 2.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png",
+                  "x": 3.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "dirt",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png",
+                  "x": 4.0,
+                  "y": 4.0
+                }
+              ],
+              "description": "Tile grid forwarded to CityBuilderBoard.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "passable": {
+                    "name": "passable",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "terrain": {
+                    "name": "terrain",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "terrainSprite": {
+                    "name": "terrainSprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tiles",
+              "tier": "presentation",
+              "type": "[CityBuilderTemplateTilesItem]"
+            },
+            "title": {
+              "default": "City Builder",
+              "description": "Display title shown in the template header",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "unitScale": {
+              "default": 0.6,
+              "description": "Unit draw-size multiplier",
+              "label": "Unit Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "wood": {
+              "default": 80.0,
+              "description": "Wood the player starts with",
+              "label": "Starting Wood",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "woodPerBuilding": {
+              "default": 1.0,
+              "description": "Wood income per building per tick",
+              "label": "Wood Per Building",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "CityBuilderTemplateItem",
+          "name": "CityBuilderTemplateRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "CityBuilderTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "buildTypes": "@config.buildTypes",
+                      "buildings": "@config.buildings",
+                      "className": "@config.className",
+                      "entity": "@entity",
+                      "gameEndEvent": "GAME_END",
+                      "gold": "@config.gold",
+                      "goldPerBuilding": "@config.goldPerBuilding",
+                      "gridHeight": "@config.gridHeight",
+                      "gridWidth": "@config.gridWidth",
+                      "pendingBuildType": "@config.pendingBuildType",
+                      "placeBuildingEvent": "PLACE_BUILDING",
+                      "populationPerBuilding": "@config.populationPerBuilding",
+                      "scale": "@config.scale",
+                      "selectBuildTypeEvent": "SELECT_BUILD_TYPE",
+                      "targetPopulation": "@config.targetPopulation",
+                      "tiles": "@config.tiles",
+                      "title": "@config.title",
+                      "type": "city-builder-template",
+                      "unitScale": "@config.unitScale",
+                      "wood": "@config.wood",
+                      "woodPerBuilding": "@config.woodPerBuilding"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

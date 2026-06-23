@@ -1,0 +1,111 @@
+app ui-top-down-shooter-template "1.0.0"
+"TopDownShooterTemplate — top-down arena shooter; composes TopDownShooterBoard with HUD (score/wave/lives)."
+orbital TopDownShooterTemplateOrbital {
+  type TopDownShooterTemplateAssetManifest = {
+    baseUrl : asset
+    units : Map string asset
+    features : Map string asset
+    background : asset
+  }
+
+  entity TopDownShooterTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait TopDownShooterTemplateRender -> @rebindable TopDownShooterTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch TopDownShooterTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          title: @config.title
+          width: @config.width
+          height: @config.height
+          spriteSize: @config.spriteSize
+          lives: @config.lives
+          maxWaves: @config.maxWaves
+          enemiesPerWave: @config.enemiesPerWave
+          enemyHp: @config.enemyHp
+          enemySpeed: @config.enemySpeed
+          projectileSpeed: @config.projectileSpeed
+          moveStep: @config.moveStep
+          hitRadius: @config.hitRadius
+          scorePerKill: @config.scorePerKill
+          assetManifest: @config.assetManifest
+          moveEvent: MOVE
+          fireEvent: FIRE
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: top-down-shooter-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "External styling override"
+        @tier "presentation"
+      title : string = "Arena Shooter"
+        @label "Title"
+        @description "Display title shown in the template header"
+        @tier "presentation"
+      width : number = 640
+        @label "Width"
+        @description "Arena / canvas width in pixels"
+        @tier "presentation"
+      height : number = 480
+        @label "Height"
+        @description "Arena / canvas height in pixels"
+        @tier "presentation"
+      spriteSize : number = 32
+        @label "Sprite Size"
+        @description "Pixel draw-size of player/enemy sprites"
+        @tier "presentation"
+      lives : number = 3
+        @label "Starting Lives"
+        @description "Lives the player starts with"
+        @tier "presentation"
+      maxWaves : number = 5
+        @label "Max Waves"
+        @description "Number of waves to clear for victory"
+        @tier "presentation"
+      enemiesPerWave : number = 6
+        @label "Enemies Per Wave"
+        @description "Enemies spawned per wave"
+        @tier "presentation"
+      enemyHp : number = 1
+        @label "Enemy HP"
+        @description "Hit points each enemy starts with"
+        @tier "presentation"
+      enemySpeed : number = 6
+        @label "Enemy Speed"
+        @description "Pixels an enemy advances per tick"
+        @tier "presentation"
+      projectileSpeed : number = 24
+        @label "Projectile Speed"
+        @description "Pixels a projectile travels per tick"
+        @tier "presentation"
+      moveStep : number = 16
+        @label "Move Step"
+        @description "Pixels the player moves per key press"
+        @tier "presentation"
+      hitRadius : number = 24
+        @label "Hit Radius"
+        @description "Projectile-to-enemy collision radius in pixels"
+        @tier "presentation"
+      scorePerKill : number = 10
+        @label "Score Per Kill"
+        @description "Score awarded for each enemy destroyed"
+        @tier "presentation"
+      assetManifest : TopDownShooterTemplateAssetManifest = { baseUrl: "https://almadar-kflow-assets.web.app/shared/", units: { player: "platformer/characters/platformChar_duck.png", enemy: "platformer/items/platformPack_item003.png" }, features: { projectile: "platformer/items/platformPack_item007.png" }, background: "platformer/items/platformPack_item007.png" }
+        @label "Asset Manifest"
+        @description "Base-url + unit/feature sprite maps + background forwarded to TopDownShooterBoard."
+        @tier "presentation"
+    }
+  }
+
+  page "/top-down-shooter-template" as TopDownShooterTemplatePage -> TopDownShooterTemplateRender
+}

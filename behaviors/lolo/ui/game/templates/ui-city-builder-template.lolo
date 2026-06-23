@@ -1,0 +1,128 @@
+app ui-city-builder-template "1.0.0"
+"CityBuilderTemplate — isometric build-and-manage city; composes CityBuilderBoard with HUD (gold/wood/population)."
+orbital CityBuilderTemplateOrbital {
+  type CityBuilderTemplateTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    terrainSprite : asset
+    passable : boolean
+  }
+  type CityBuilderTemplateBuildingsItem = {
+    id : string!
+    x : number!
+    y : number!
+    type : string!
+  }
+  type CityBuilderTemplateBuildTypesItem = {
+    type : string!
+    label : string!
+    cost : number!
+  }
+
+  entity CityBuilderTemplateItem [runtime] {
+    id : string!
+  }
+
+  trait CityBuilderTemplateRender -> @rebindable CityBuilderTemplateItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch CityBuilderTemplateItem {})
+        (render-ui main {
+          entity: @entity
+          className: @config.className
+          title: @config.title
+          tiles: @config.tiles
+          buildings: @config.buildings
+          buildTypes: @config.buildTypes
+          gold: @config.gold
+          wood: @config.wood
+          targetPopulation: @config.targetPopulation
+          populationPerBuilding: @config.populationPerBuilding
+          goldPerBuilding: @config.goldPerBuilding
+          woodPerBuilding: @config.woodPerBuilding
+          pendingBuildType: @config.pendingBuildType
+          scale: @config.scale
+          unitScale: @config.unitScale
+          gridWidth: @config.gridWidth
+          gridHeight: @config.gridHeight
+          selectBuildTypeEvent: SELECT_BUILD_TYPE
+          placeBuildingEvent: PLACE_BUILDING
+          gameEndEvent: GAME_END
+          type: city-builder-template
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "External styling override"
+        @tier "presentation"
+      title : string = "City Builder"
+        @label "Title"
+        @description "Display title shown in the template header"
+        @tier "presentation"
+      gold : number = 100
+        @label "Starting Gold"
+        @description "Gold the player starts with"
+        @tier "presentation"
+      wood : number = 80
+        @label "Starting Wood"
+        @description "Wood the player starts with"
+        @tier "presentation"
+      targetPopulation : number = 12
+        @label "Target Population"
+        @description "Population to reach for victory"
+        @tier "presentation"
+      populationPerBuilding : number = 2
+        @label "Population Per Building"
+        @description "Population added per placed building"
+        @tier "presentation"
+      goldPerBuilding : number = 2
+        @label "Gold Per Building"
+        @description "Gold income per building per tick"
+        @tier "presentation"
+      woodPerBuilding : number = 1
+        @label "Wood Per Building"
+        @description "Wood income per building per tick"
+        @tier "presentation"
+      pendingBuildType : string = "house"
+        @label "Pending Build Type"
+        @description "Initially selected building type from the palette"
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 0.6
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+      gridWidth : number = 5
+        @label "Grid Width"
+        @description "Number of columns in the tile grid"
+        @tier "presentation"
+      gridHeight : number = 5
+        @label "Grid Height"
+        @description "Number of rows in the tile grid"
+        @tier "presentation"
+      buildTypes : [CityBuilderTemplateBuildTypesItem] = [{ type: "house", label: "House", cost: 20 }, { type: "farm", label: "Farm", cost: 15 }, { type: "barracks", label: "Barracks", cost: 40 }, { type: "library", label: "Library", cost: 30 }]
+        @label "Build Types"
+        @description "Placeable building types forwarded to CityBuilderBoard."
+        @tier "presentation"
+      buildings : [CityBuilderTemplateBuildingsItem] = [{ id: "bld-0", x: 1, y: 1, type: "house" }, { id: "bld-1", x: 3, y: 3, type: "farm" }]
+        @label "Buildings"
+        @description "Pre-placed buildings forwarded to CityBuilderBoard."
+        @tier "presentation"
+      tiles : [CityBuilderTemplateTilesItem] = [{ x: 0, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 1, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 2, y: 0, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stone_E.png" }, { x: 3, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 4, y: 0, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png" }, { x: 0, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 1, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 2, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 3, y: 1, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png" }, { x: 4, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 0, y: 2, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png" }, { x: 1, y: 2, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 2, y: 2, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png" }, { x: 3, y: 2, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 4, y: 2, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stone_E.png" }, { x: 0, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 1, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 2, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 3, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 4, y: 3, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png" }, { x: 0, y: 4, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stone_E.png" }, { x: 1, y: 4, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 2, y: 4, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 3, y: 4, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 4, y: 4, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png" }]
+        @label "Tiles"
+        @description "Tile grid forwarded to CityBuilderBoard."
+        @tier "presentation"
+    }
+  }
+
+  page "/city-builder-template" as CityBuilderTemplatePage -> CityBuilderTemplateRender
+}

@@ -1,0 +1,1405 @@
+{
+  "description": "TopDownShooterBoard — UI factory (1:1 with the @almadar/ui top-down-shooter-board pattern).",
+  "name": "ui-top-down-shooter-board",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "player",
+            "properties": {
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            },
+            "type": "object"
+          },
+          {
+            "items": {
+              "properties": {
+                "hp": {
+                  "name": "hp",
+                  "required": true,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "enemies",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": true,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "projectiles",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "default": 1.0,
+            "name": "wave",
+            "type": "number"
+          },
+          {
+            "default": 3.0,
+            "name": "lives",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "won",
+              "lost"
+            ]
+          },
+          {
+            "default": 0.0,
+            "name": "tick",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "nextId",
+            "type": "number"
+          }
+        ],
+        "name": "TopDownShooterBoardItem",
+        "persistence": "runtime"
+      },
+      "name": "TopDownShooterBoardOrbital",
+      "pages": [
+        {
+          "name": "TopDownShooterBoardPage",
+          "path": "/top-down-shooter-board",
+          "traits": [
+            {
+              "ref": "TopDownShooterBoardRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "assetManifest": {
+              "default": {
+                "background": "platformer/items/platformPack_item007.png",
+                "baseUrl": "https://almadar-kflow-assets.web.app/shared/",
+                "features": {
+                  "projectile": "platformer/items/platformPack_item007.png"
+                },
+                "units": {
+                  "enemy": "platformer/items/platformPack_item003.png",
+                  "player": "platformer/characters/platformChar_duck.png"
+                }
+              },
+              "description": "Base-url + unit/feature sprite maps + background; player/enemy/projectile draw from these URLs.",
+              "label": "Asset Manifest",
+              "properties": {
+                "background": {
+                  "name": "background",
+                  "required": false,
+                  "type": "string"
+                },
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
+              "tier": "presentation",
+              "type": "TopDownShooterBoardAssetManifest"
+            },
+            "className": {
+              "default": "",
+              "description": "className prop",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "enemiesPerWave": {
+              "default": 6.0,
+              "description": "Enemies spawned at the top of each wave",
+              "label": "Enemies Per Wave",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "enemyHp": {
+              "default": 1.0,
+              "description": "Hit points each enemy starts with",
+              "label": "Enemy HP",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "enemySpeed": {
+              "default": 6.0,
+              "description": "Pixels an enemy advances downward per tick",
+              "label": "Enemy Speed",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "error": {
+              "description": "Error state (UiError)",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "TopDownShooterBoardError"
+            },
+            "height": {
+              "default": 480.0,
+              "description": "Arena / canvas height in pixels",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "hitRadius": {
+              "default": 24.0,
+              "description": "Projectile-to-enemy collision radius in pixels",
+              "label": "Hit Radius",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "lives": {
+              "default": 3.0,
+              "description": "Lives the player starts with; reaching 0 = defeat",
+              "label": "Starting Lives",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "maxWaves": {
+              "default": 5.0,
+              "description": "Number of waves to clear to win",
+              "label": "Max Waves",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "moveStep": {
+              "default": 16.0,
+              "description": "Pixels the player moves per key press",
+              "label": "Move Step",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "projectileSpeed": {
+              "default": 24.0,
+              "description": "Pixels a projectile travels per tick",
+              "label": "Projectile Speed",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "scorePerKill": {
+              "default": 10.0,
+              "description": "Score awarded for each enemy destroyed",
+              "label": "Score Per Kill",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "spriteSize": {
+              "default": 32.0,
+              "description": "Pixel draw-size of player/enemy sprites",
+              "label": "Sprite Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "width": {
+              "default": 640.0,
+              "description": "Arena / canvas width in pixels",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Emits UI:{moveEvent} with {dx,dy} on arrow/WASD key press to move the player",
+              "event": "MOVE",
+              "payloadSchema": [
+                {
+                  "name": "dx",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "dy",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{fireEvent} with {tx,ty} on space / arena click to fire a projectile",
+              "event": "FIRE",
+              "payloadSchema": [
+                {
+                  "name": "tx",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "ty",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{gameEndEvent} with {result} when the game reaches won or lost",
+              "event": "GAME_END",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [
+              "enemies",
+              "lives",
+              "nextId",
+              "player",
+              "projectiles",
+              "result",
+              "score",
+              "tick",
+              "wave"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TopDownShooterBoardItem",
+          "name": "TopDownShooterBoardRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Emits UI:{moveEvent} with {dx,dy} on arrow/WASD key press to move the player",
+                "key": "MOVE",
+                "name": "Move",
+                "payloadSchema": [
+                  {
+                    "name": "dx",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "dy",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{fireEvent} with {tx,ty} on space / arena click to fire a projectile",
+                "key": "FIRE",
+                "name": "Fire",
+                "payloadSchema": [
+                  {
+                    "name": "tx",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "ty",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{gameEndEvent} with {result} when the game reaches won or lost",
+                "key": "GAME_END",
+                "name": "Game End",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "playing"
+              },
+              {
+                "name": "gameover"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    {
+                      "x": [
+                        "/",
+                        "@config.width",
+                        2.0
+                      ],
+                      "y": [
+                        "-",
+                        "@config.height",
+                        "@config.spriteSize"
+                      ]
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.enemies",
+                    [
+                      "array/map",
+                      [
+                        "array/range",
+                        0.0,
+                        "@config.enemiesPerWave"
+                      ],
+                      [
+                        "fn",
+                        "i",
+                        {
+                          "hp": "@config.enemyHp",
+                          "id": [
+                            "string/concat",
+                            "enemy-",
+                            [
+                              "string/from-number",
+                              "@i"
+                            ]
+                          ],
+                          "x": [
+                            "+",
+                            "@config.spriteSize",
+                            [
+                              "*",
+                              "@i",
+                              [
+                                "/",
+                                "@config.width",
+                                "@config.enemiesPerWave"
+                              ]
+                            ]
+                          ],
+                          "y": "@config.spriteSize"
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.projectiles",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.wave",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lives",
+                    "@config.lives"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.tick",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.nextId",
+                    0.0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "assetManifest": "@config.assetManifest",
+                      "enemies": "@entity.enemies",
+                      "entity": "@entity",
+                      "fireEvent": "FIRE",
+                      "gameEndEvent": "GAME_END",
+                      "height": "@config.height",
+                      "lives": "@entity.lives",
+                      "moveEvent": "MOVE",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "player": "@entity.player",
+                      "projectiles": "@entity.projectiles",
+                      "result": "@entity.result",
+                      "score": "@entity.score",
+                      "spriteSize": "@config.spriteSize",
+                      "type": "top-down-shooter-board",
+                      "wave": "@entity.wave",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    {
+                      "x": [
+                        "math/max",
+                        0.0,
+                        [
+                          "math/min",
+                          "@config.width",
+                          [
+                            "+",
+                            [
+                              "object/get",
+                              "@entity.player",
+                              "x"
+                            ],
+                            [
+                              "*",
+                              "@payload.dx",
+                              "@config.moveStep"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "y": [
+                        "math/max",
+                        0.0,
+                        [
+                          "math/min",
+                          "@config.height",
+                          [
+                            "+",
+                            [
+                              "object/get",
+                              "@entity.player",
+                              "y"
+                            ],
+                            [
+                              "*",
+                              "@payload.dy",
+                              "@config.moveStep"
+                            ]
+                          ]
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "assetManifest": "@config.assetManifest",
+                      "enemies": "@entity.enemies",
+                      "entity": "@entity",
+                      "fireEvent": "FIRE",
+                      "gameEndEvent": "GAME_END",
+                      "height": "@config.height",
+                      "lives": "@entity.lives",
+                      "moveEvent": "MOVE",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "player": "@entity.player",
+                      "projectiles": "@entity.projectiles",
+                      "result": "@entity.result",
+                      "score": "@entity.score",
+                      "spriteSize": "@config.spriteSize",
+                      "type": "top-down-shooter-board",
+                      "wave": "@entity.wave",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "MOVE",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.projectiles",
+                    [
+                      "array/concat",
+                      "@entity.projectiles",
+                      [
+                        {
+                          "id": [
+                            "string/concat",
+                            "proj-",
+                            [
+                              "string/from-number",
+                              "@entity.nextId"
+                            ]
+                          ],
+                          "vx": 0.0,
+                          "vy": [
+                            "-",
+                            0.0,
+                            "@config.projectileSpeed"
+                          ],
+                          "x": [
+                            "object/get",
+                            "@entity.player",
+                            "x"
+                          ],
+                          "y": [
+                            "object/get",
+                            "@entity.player",
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.nextId",
+                    [
+                      "+",
+                      "@entity.nextId",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "assetManifest": "@config.assetManifest",
+                      "enemies": "@entity.enemies",
+                      "entity": "@entity",
+                      "fireEvent": "FIRE",
+                      "gameEndEvent": "GAME_END",
+                      "height": "@config.height",
+                      "lives": "@entity.lives",
+                      "moveEvent": "MOVE",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "player": "@entity.player",
+                      "projectiles": "@entity.projectiles",
+                      "result": "@entity.result",
+                      "score": "@entity.score",
+                      "spriteSize": "@config.spriteSize",
+                      "type": "top-down-shooter-board",
+                      "wave": "@entity.wave",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "FIRE",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "assetManifest": "@config.assetManifest",
+                      "enemies": "@entity.enemies",
+                      "entity": "@entity",
+                      "fireEvent": "FIRE",
+                      "gameEndEvent": "GAME_END",
+                      "height": "@config.height",
+                      "lives": "@entity.lives",
+                      "moveEvent": "MOVE",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "player": "@entity.player",
+                      "projectiles": "@entity.projectiles",
+                      "result": "@entity.result",
+                      "score": "@entity.score",
+                      "spriteSize": "@config.spriteSize",
+                      "type": "top-down-shooter-board",
+                      "wave": "@entity.wave",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "GAME_END",
+                "from": "playing",
+                "guard": [
+                  "or",
+                  [
+                    "==",
+                    "@entity.result",
+                    "won"
+                  ],
+                  [
+                    "==",
+                    "@entity.result",
+                    "lost"
+                  ]
+                ],
+                "to": "gameover"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    {
+                      "x": [
+                        "/",
+                        "@config.width",
+                        2.0
+                      ],
+                      "y": [
+                        "-",
+                        "@config.height",
+                        "@config.spriteSize"
+                      ]
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.enemies",
+                    [
+                      "array/map",
+                      [
+                        "array/range",
+                        0.0,
+                        "@config.enemiesPerWave"
+                      ],
+                      [
+                        "fn",
+                        "i",
+                        {
+                          "hp": "@config.enemyHp",
+                          "id": [
+                            "string/concat",
+                            "enemy-",
+                            [
+                              "string/from-number",
+                              "@i"
+                            ]
+                          ],
+                          "x": [
+                            "+",
+                            "@config.spriteSize",
+                            [
+                              "*",
+                              "@i",
+                              [
+                                "/",
+                                "@config.width",
+                                "@config.enemiesPerWave"
+                              ]
+                            ]
+                          ],
+                          "y": "@config.spriteSize"
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.projectiles",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.wave",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lives",
+                    "@config.lives"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.tick",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.nextId",
+                    0.0
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "assetManifest": "@config.assetManifest",
+                      "enemies": "@entity.enemies",
+                      "entity": "@entity",
+                      "fireEvent": "FIRE",
+                      "gameEndEvent": "GAME_END",
+                      "height": "@config.height",
+                      "lives": "@entity.lives",
+                      "moveEvent": "MOVE",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "player": "@entity.player",
+                      "projectiles": "@entity.projectiles",
+                      "result": "@entity.result",
+                      "score": "@entity.score",
+                      "spriteSize": "@config.spriteSize",
+                      "type": "top-down-shooter-board",
+                      "wave": "@entity.wave",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "gameover",
+                "to": "playing"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.tick",
+                  [
+                    "+",
+                    "@entity.tick",
+                    1.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.projectiles",
+                  [
+                    "array/map",
+                    "@entity.projectiles",
+                    [
+                      "fn",
+                      "p",
+                      [
+                        "object/merge",
+                        "@p",
+                        {
+                          "x": [
+                            "+",
+                            [
+                              "object/get",
+                              "@p",
+                              "x"
+                            ],
+                            [
+                              "object/get",
+                              "@p",
+                              "vx"
+                            ]
+                          ],
+                          "y": [
+                            "+",
+                            [
+                              "object/get",
+                              "@p",
+                              "y"
+                            ],
+                            [
+                              "object/get",
+                              "@p",
+                              "vy"
+                            ]
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.projectiles",
+                  [
+                    "array/filter",
+                    "@entity.projectiles",
+                    [
+                      "fn",
+                      "p",
+                      [
+                        "and",
+                        [
+                          ">=",
+                          [
+                            "object/get",
+                            "@p",
+                            "y"
+                          ],
+                          0.0
+                        ],
+                        [
+                          "<=",
+                          [
+                            "object/get",
+                            "@p",
+                            "y"
+                          ],
+                          "@config.height"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.enemies",
+                  [
+                    "array/map",
+                    "@entity.enemies",
+                    [
+                      "fn",
+                      "e",
+                      [
+                        "object/merge",
+                        "@e",
+                        {
+                          "y": [
+                            "+",
+                            [
+                              "object/get",
+                              "@e",
+                              "y"
+                            ],
+                            "@config.enemySpeed"
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.score",
+                  [
+                    "+",
+                    "@entity.score",
+                    [
+                      "*",
+                      "@config.scorePerKill",
+                      [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.enemies",
+                          [
+                            "fn",
+                            "e",
+                            [
+                              ">",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@entity.projectiles",
+                                  [
+                                    "fn",
+                                    "p",
+                                    [
+                                      "<=",
+                                      [
+                                        "vec/distance",
+                                        {
+                                          "x": [
+                                            "object/get",
+                                            "@e",
+                                            "x"
+                                          ],
+                                          "y": [
+                                            "object/get",
+                                            "@e",
+                                            "y"
+                                          ]
+                                        },
+                                        {
+                                          "x": [
+                                            "object/get",
+                                            "@p",
+                                            "x"
+                                          ],
+                                          "y": [
+                                            "object/get",
+                                            "@p",
+                                            "y"
+                                          ]
+                                        }
+                                      ],
+                                      "@config.hitRadius"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              0.0
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.enemies",
+                  [
+                    "array/filter",
+                    "@entity.enemies",
+                    [
+                      "fn",
+                      "e",
+                      [
+                        "==",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@entity.projectiles",
+                            [
+                              "fn",
+                              "p",
+                              [
+                                "<=",
+                                [
+                                  "vec/distance",
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@e",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@e",
+                                      "y"
+                                    ]
+                                  },
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@p",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@p",
+                                      "y"
+                                    ]
+                                  }
+                                ],
+                                "@config.hitRadius"
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.lives",
+                  [
+                    "-",
+                    "@entity.lives",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.enemies",
+                        [
+                          "fn",
+                          "e",
+                          [
+                            ">=",
+                            [
+                              "object/get",
+                              "@e",
+                              "y"
+                            ],
+                            "@config.height"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.enemies",
+                  [
+                    "array/filter",
+                    "@entity.enemies",
+                    [
+                      "fn",
+                      "e",
+                      [
+                        "<",
+                        [
+                          "object/get",
+                          "@e",
+                          "y"
+                        ],
+                        "@config.height"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.result",
+                  [
+                    "if",
+                    [
+                      "<=",
+                      "@entity.lives",
+                      0.0
+                    ],
+                    "lost",
+                    "@entity.result"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.wave",
+                  [
+                    "if",
+                    [
+                      "and",
+                      [
+                        "==",
+                        [
+                          "array/len",
+                          "@entity.enemies"
+                        ],
+                        0.0
+                      ],
+                      [
+                        "==",
+                        "@entity.result",
+                        "none"
+                      ]
+                    ],
+                    [
+                      "+",
+                      "@entity.wave",
+                      1.0
+                    ],
+                    "@entity.wave"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.result",
+                  [
+                    "if",
+                    [
+                      "and",
+                      [
+                        "==",
+                        [
+                          "array/len",
+                          "@entity.enemies"
+                        ],
+                        0.0
+                      ],
+                      [
+                        "and",
+                        [
+                          "==",
+                          "@entity.result",
+                          "none"
+                        ],
+                        [
+                          ">",
+                          "@entity.wave",
+                          "@config.maxWaves"
+                        ]
+                      ]
+                    ],
+                    "won",
+                    "@entity.result"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.enemies",
+                  [
+                    "if",
+                    [
+                      "and",
+                      [
+                        "==",
+                        [
+                          "array/len",
+                          "@entity.enemies"
+                        ],
+                        0.0
+                      ],
+                      [
+                        "==",
+                        "@entity.result",
+                        "none"
+                      ]
+                    ],
+                    [
+                      "array/map",
+                      [
+                        "array/range",
+                        0.0,
+                        "@config.enemiesPerWave"
+                      ],
+                      [
+                        "fn",
+                        "i",
+                        {
+                          "hp": "@config.enemyHp",
+                          "id": [
+                            "string/concat",
+                            "enemy-",
+                            [
+                              "string/from-number",
+                              [
+                                "+",
+                                [
+                                  "*",
+                                  "@entity.wave",
+                                  100.0
+                                ],
+                                "@i"
+                              ]
+                            ]
+                          ],
+                          "x": [
+                            "+",
+                            "@config.spriteSize",
+                            [
+                              "*",
+                              "@i",
+                              [
+                                "/",
+                                "@config.width",
+                                "@config.enemiesPerWave"
+                              ]
+                            ]
+                          ],
+                          "y": "@config.spriteSize"
+                        }
+                      ]
+                    ],
+                    "@entity.enemies"
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "assetManifest": "@config.assetManifest",
+                    "enemies": "@entity.enemies",
+                    "entity": "@entity",
+                    "fireEvent": "FIRE",
+                    "gameEndEvent": "GAME_END",
+                    "height": "@config.height",
+                    "lives": "@entity.lives",
+                    "moveEvent": "MOVE",
+                    "playAgainEvent": "PLAY_AGAIN",
+                    "player": "@entity.player",
+                    "projectiles": "@entity.projectiles",
+                    "result": "@entity.result",
+                    "score": "@entity.score",
+                    "spriteSize": "@config.spriteSize",
+                    "type": "top-down-shooter-board",
+                    "wave": "@entity.wave",
+                    "width": "@config.width"
+                  }
+                ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
+              ],
+              "interval": 100.0,
+              "name": "simulateTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

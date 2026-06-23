@@ -1,0 +1,245 @@
+{
+  "description": "TopDownShooterTemplate — top-down arena shooter; composes TopDownShooterBoard with HUD (score/wave/lives).",
+  "name": "ui-top-down-shooter-template",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "TopDownShooterTemplateItem",
+        "persistence": "runtime"
+      },
+      "name": "TopDownShooterTemplateOrbital",
+      "pages": [
+        {
+          "name": "TopDownShooterTemplatePage",
+          "path": "/top-down-shooter-template",
+          "traits": [
+            {
+              "ref": "TopDownShooterTemplateRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "assetManifest": {
+              "default": {
+                "background": "platformer/items/platformPack_item007.png",
+                "baseUrl": "https://almadar-kflow-assets.web.app/shared/",
+                "features": {
+                  "projectile": "platformer/items/platformPack_item007.png"
+                },
+                "units": {
+                  "enemy": "platformer/items/platformPack_item003.png",
+                  "player": "platformer/characters/platformChar_duck.png"
+                }
+              },
+              "description": "Base-url + unit/feature sprite maps + background forwarded to TopDownShooterBoard.",
+              "label": "Asset Manifest",
+              "properties": {
+                "background": {
+                  "name": "background",
+                  "required": false,
+                  "type": "string"
+                },
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
+              "tier": "presentation",
+              "type": "TopDownShooterTemplateAssetManifest"
+            },
+            "className": {
+              "default": "",
+              "description": "External styling override",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "enemiesPerWave": {
+              "default": 6.0,
+              "description": "Enemies spawned per wave",
+              "label": "Enemies Per Wave",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "enemyHp": {
+              "default": 1.0,
+              "description": "Hit points each enemy starts with",
+              "label": "Enemy HP",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "enemySpeed": {
+              "default": 6.0,
+              "description": "Pixels an enemy advances per tick",
+              "label": "Enemy Speed",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "height": {
+              "default": 480.0,
+              "description": "Arena / canvas height in pixels",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "hitRadius": {
+              "default": 24.0,
+              "description": "Projectile-to-enemy collision radius in pixels",
+              "label": "Hit Radius",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "lives": {
+              "default": 3.0,
+              "description": "Lives the player starts with",
+              "label": "Starting Lives",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "maxWaves": {
+              "default": 5.0,
+              "description": "Number of waves to clear for victory",
+              "label": "Max Waves",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "moveStep": {
+              "default": 16.0,
+              "description": "Pixels the player moves per key press",
+              "label": "Move Step",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "projectileSpeed": {
+              "default": 24.0,
+              "description": "Pixels a projectile travels per tick",
+              "label": "Projectile Speed",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "scorePerKill": {
+              "default": 10.0,
+              "description": "Score awarded for each enemy destroyed",
+              "label": "Score Per Kill",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "spriteSize": {
+              "default": 32.0,
+              "description": "Pixel draw-size of player/enemy sprites",
+              "label": "Sprite Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "title": {
+              "default": "Arena Shooter",
+              "description": "Display title shown in the template header",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "width": {
+              "default": 640.0,
+              "description": "Arena / canvas width in pixels",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "TopDownShooterTemplateItem",
+          "name": "TopDownShooterTemplateRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "TopDownShooterTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "assetManifest": "@config.assetManifest",
+                      "className": "@config.className",
+                      "enemiesPerWave": "@config.enemiesPerWave",
+                      "enemyHp": "@config.enemyHp",
+                      "enemySpeed": "@config.enemySpeed",
+                      "entity": "@entity",
+                      "fireEvent": "FIRE",
+                      "gameEndEvent": "GAME_END",
+                      "height": "@config.height",
+                      "hitRadius": "@config.hitRadius",
+                      "lives": "@config.lives",
+                      "maxWaves": "@config.maxWaves",
+                      "moveEvent": "MOVE",
+                      "moveStep": "@config.moveStep",
+                      "playAgainEvent": "PLAY_AGAIN",
+                      "projectileSpeed": "@config.projectileSpeed",
+                      "scorePerKill": "@config.scorePerKill",
+                      "spriteSize": "@config.spriteSize",
+                      "title": "@config.title",
+                      "type": "top-down-shooter-template",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

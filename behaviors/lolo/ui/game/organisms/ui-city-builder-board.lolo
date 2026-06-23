@@ -1,0 +1,271 @@
+app ui-city-builder-board "1.0.0"
+"CityBuilderBoard — UI factory (1:1 with the @almadar/ui city-builder-board pattern)."
+orbital CityBuilderBoardOrbital {
+  type CityBuilderBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type CityBuilderBoardTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    terrainSprite : asset
+    passable : boolean
+  }
+  type CityBuilderBoardBuildingsItem = {
+    id : string!
+    x : number!
+    y : number!
+    type : string!
+  }
+  type CityBuilderBoardBuildTypesItem = {
+    type : string!
+    label : string!
+    cost : number!
+  }
+  type CityBuilderBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+  }
+
+  entity CityBuilderBoardItem [runtime] {
+    id : string!
+    tiles : [CityBuilderBoardTilesItem]
+    buildings : [CityBuilderBoardBuildingsItem]
+    gold : number = 100
+    wood : number = 80
+    population : number = 0
+    pendingBuildType : string = "house"
+    result : "none" | "won" | "lost" = none
+    tick : number = 0
+  }
+
+  trait CityBuilderBoardRender -> @rebindable CityBuilderBoardItem [interaction, instance] {
+    initial: building
+
+    state building {
+      INIT -> building
+        (set @entity.gold @config.gold)
+        (set @entity.wood @config.wood)
+        (set @entity.population 0)
+        (set @entity.buildings @config.buildings)
+        (set @entity.pendingBuildType @config.pendingBuildType)
+        (set @entity.result "none")
+        (set @entity.tick 0)
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          buildings: @entity.buildings
+          buildTypes: @config.buildTypes
+          pendingBuildType: @entity.pendingBuildType
+          gold: @entity.gold
+          wood: @entity.wood
+          population: @entity.population
+          result: @entity.result
+          selectBuildTypeEvent: SELECT_BUILD_TYPE
+          placeBuildingEvent: PLACE_BUILDING
+          gameEndEvent: GAME_END
+          scale: @config.scale
+          unitScale: @config.unitScale
+          assetManifest: @config.assetManifest
+          type: city-builder-board
+        })
+
+      SELECT_BUILD_TYPE -> building when (== @entity.result "none")
+        (set @entity.pendingBuildType ?buildType)
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          buildings: @entity.buildings
+          buildTypes: @config.buildTypes
+          pendingBuildType: @entity.pendingBuildType
+          gold: @entity.gold
+          wood: @entity.wood
+          population: @entity.population
+          result: @entity.result
+          selectBuildTypeEvent: SELECT_BUILD_TYPE
+          placeBuildingEvent: PLACE_BUILDING
+          gameEndEvent: GAME_END
+          scale: @config.scale
+          unitScale: @config.unitScale
+          assetManifest: @config.assetManifest
+          type: city-builder-board
+        })
+
+      PLACE_BUILDING -> building when (and (== @entity.result "none") (and (>= @entity.gold (object/get (array/first (array/filter @config.buildTypes (fn b (== (object/get @b type) @entity.pendingBuildType)))) cost)) (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (== (array/len (array/filter @entity.buildings (fn b (and (== @b.x ?x) (== @b.y ?y))))) 0) (== (array/len (array/filter @config.tiles (fn tl (and (== (object/get @tl x) ?x) (and (== (object/get @tl y) ?y) (== (object/get @tl passable) false)))))) 0)))))
+        (set @entity.gold (- @entity.gold (object/get (array/first (array/filter @config.buildTypes (fn b (== (object/get @b type) @entity.pendingBuildType)))) cost)))
+        (set @entity.buildings (array/concat @entity.buildings [{ id: (string/concat "bld-" (string/from-number (array/len @entity.buildings))), x: ?x, y: ?y, type: @entity.pendingBuildType }]))
+        (set @entity.population (+ @entity.population @config.populationPerBuilding))
+        (set @entity.result (if (>= @entity.population @config.targetPopulation) "won" @entity.result))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          buildings: @entity.buildings
+          buildTypes: @config.buildTypes
+          pendingBuildType: @entity.pendingBuildType
+          gold: @entity.gold
+          wood: @entity.wood
+          population: @entity.population
+          result: @entity.result
+          selectBuildTypeEvent: SELECT_BUILD_TYPE
+          placeBuildingEvent: PLACE_BUILDING
+          gameEndEvent: GAME_END
+          scale: @config.scale
+          unitScale: @config.unitScale
+          assetManifest: @config.assetManifest
+          type: city-builder-board
+        })
+
+      GAME_END -> gameover when (or (== @entity.result "won") (== @entity.result "lost"))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          buildings: @entity.buildings
+          buildTypes: @config.buildTypes
+          pendingBuildType: @entity.pendingBuildType
+          gold: @entity.gold
+          wood: @entity.wood
+          population: @entity.population
+          result: @entity.result
+          selectBuildTypeEvent: SELECT_BUILD_TYPE
+          placeBuildingEvent: PLACE_BUILDING
+          gameEndEvent: GAME_END
+          scale: @config.scale
+          unitScale: @config.unitScale
+          assetManifest: @config.assetManifest
+          type: city-builder-board
+        })
+    }
+
+    state gameover {
+    }
+
+    ticks {
+      resourceIncomeTick every 1s
+        when (== @entity.result "none")
+        (set @entity.tick (+ @entity.tick 1))
+        # each building yields gold + wood income per tick
+        (set @entity.gold (+ @entity.gold (* (array/len @entity.buildings) @config.goldPerBuilding)))
+        (set @entity.wood (+ @entity.wood (* (array/len @entity.buildings) @config.woodPerBuilding)))
+        (render-ui main {
+          entity: @entity
+          tiles: @config.tiles
+          buildings: @entity.buildings
+          buildTypes: @config.buildTypes
+          pendingBuildType: @entity.pendingBuildType
+          gold: @entity.gold
+          wood: @entity.wood
+          population: @entity.population
+          result: @entity.result
+          selectBuildTypeEvent: SELECT_BUILD_TYPE
+          placeBuildingEvent: PLACE_BUILDING
+          gameEndEvent: GAME_END
+          scale: @config.scale
+          unitScale: @config.unitScale
+          assetManifest: @config.assetManifest
+          type: city-builder-board
+        })
+    }
+
+    emits {
+      SELECT_BUILD_TYPE -> external {
+        buildType : string!
+      }
+        @description "Emits UI:{selectBuildTypeEvent} with {buildType} when player picks a building from the palette"
+        @tier "essential"
+      PLACE_BUILDING -> external {
+        x : number!
+        y : number!
+      }
+        @description "Emits UI:{placeBuildingEvent} with {x,y} on tile click when player places a building"
+        @tier "essential"
+      GAME_END -> external {
+        result : string!
+      }
+        @description "Emits UI:{gameEndEvent} with {result} when the city reaches its goal or collapses"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : CityBuilderBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      gridWidth : number = 12
+        @label "Grid Width"
+        @description "Number of columns in the tile grid"
+        @tier "presentation"
+      gridHeight : number = 12
+        @label "Grid Height"
+        @description "Number of rows in the tile grid"
+        @tier "presentation"
+      gold : number = 100
+        @label "Starting Gold"
+        @description "Gold the player starts each game with"
+        @tier "presentation"
+      wood : number = 80
+        @label "Starting Wood"
+        @description "Wood the player starts each game with"
+        @tier "presentation"
+      targetPopulation : number = 12
+        @label "Target Population"
+        @description "Population to reach for victory"
+        @tier "presentation"
+      populationPerBuilding : number = 2
+        @label "Population Per Building"
+        @description "Population added per placed building"
+        @tier "presentation"
+      goldPerBuilding : number = 2
+        @label "Gold Per Building"
+        @description "Gold income per building per tick"
+        @tier "presentation"
+      woodPerBuilding : number = 1
+        @label "Wood Per Building"
+        @description "Wood income per building per tick"
+        @tier "presentation"
+      pendingBuildType : string = "house"
+        @label "Pending Build Type"
+        @description "Initially selected building type from the palette"
+        @tier "presentation"
+      scale : number = 0.3
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      unitScale : number = 0.6
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
+        @tier "presentation"
+      buildTypes : [CityBuilderBoardBuildTypesItem] = [{ type: "house", label: "House", cost: 20 }, { type: "farm", label: "Farm", cost: 15 }, { type: "barracks", label: "Barracks", cost: 40 }, { type: "library", label: "Library", cost: 30 }]
+        @label "Build Types"
+        @description "Placeable building types shown in the build palette with cost."
+        @tier "presentation"
+      buildings : [CityBuilderBoardBuildingsItem] = [{ id: "bld-0", x: 5, y: 5, type: "house" }, { id: "bld-1", x: 6, y: 6, type: "farm" }]
+        @label "Buildings"
+        @description "Initial building placements on the board."
+        @tier "presentation"
+      tiles : [CityBuilderBoardTilesItem] = [{ x: 0, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 1, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 2, y: 0, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stone_E.png" }, { x: 3, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 4, y: 0, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png" }, { x: 0, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 1, y: 1, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stone_E.png" }, { x: 2, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 3, y: 1, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png" }, { x: 4, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 0, y: 2, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png" }, { x: 1, y: 2, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 2, y: 2, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png" }, { x: 3, y: 2, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 4, y: 2, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stone_E.png" }, { x: 0, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 1, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 2, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 3, y: 3, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png" }, { x: 4, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 0, y: 4, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stone_E.png" }, { x: 1, y: 4, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 2, y: 4, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 3, y: 4, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png" }, { x: 4, y: 4, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirtTiles_E.png" }]
+        @label "Tiles"
+        @description "Direct tile data — takes priority over entity-derived tiles."
+        @tier "presentation"
+      assetManifest : CityBuilderBoardAssetManifest = { baseUrl: "https://almadar-kflow-assets.web.app/shared/", terrains: { grass: "terrain/Isometric/dirt_E.png", stone: "terrain/Isometric/stone_E.png", dirt: "terrain/Isometric/dirtTiles_E.png", water: "terrain/Isometric/planks_E.png", road: "terrain/Isometric/planks_E.png" }, units: { citizen: "sprite-sheets/amir-sprite-sheet-se.png" }, features: { house: "buildings/town_hall.png", farm: "buildings/marketplace.png", barracks: "buildings/barracks.png", library: "buildings/library.png", treasury: "buildings/treasury.png", tower: "buildings/arcane_tower.png", mine: "terrain/Isometric/stoneColumn_E.png" } }
+        @label "Asset Manifest"
+        @description "Base-url + terrain/unit/structure sprite maps; buildings render as the structure asset."
+        @tier "presentation"
+    }
+  }
+
+  page "/city-builder-board" as CityBuilderBoardPage -> CityBuilderBoardRender
+}
