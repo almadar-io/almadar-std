@@ -30,7 +30,7 @@ const ALIAS = 'UiTowerDefenseBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTowerDefenseBoardEventKey = 'GAME_END' | 'INIT' | 'PLACE_TOWER' | 'PLAY_AGAIN' | 'START_WAVE';
+export type StdUiTowerDefenseBoardEventKey = 'GAME_END' | 'INIT' | 'MOVE_HERO' | 'PLACE_TOWER' | 'PLAY_AGAIN' | 'START_WAVE';
 
 /**
  * Payload shape for the `PLACE_TOWER` event.
@@ -62,6 +62,14 @@ export interface StdUiTowerDefenseBoardPlayAgainPayload {
 }
 
 /**
+ * Payload shape for the `MOVE_HERO` event.
+ */
+export interface StdUiTowerDefenseBoardMoveHeroPayload {
+  dx: number;
+  dy: number;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
@@ -87,6 +95,8 @@ export interface StdUiTowerDefenseBoardConfig {
   gridHeight?: number;
   /** Default: `16` */
   gridWidth?: number;
+  /** Default: `{"id":"hero","x":8,"y":8}` */
+  hero?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `20` */
@@ -321,6 +331,27 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             'type': 'array',
           },
           {
+            'name': 'hero',
+            'properties': {
+              'id': {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              'x': {
+                'name': 'x',
+                'required': true,
+                'type': 'number',
+              },
+              'y': {
+                'name': 'y',
+                'required': true,
+                'type': 'number',
+              },
+            },
+            'type': 'object',
+          },
+          {
             'default': 100,
             'name': 'gold',
             'type': 'number',
@@ -461,6 +492,34 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             'label': 'Grid Width',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'hero': {
+            'default': {
+              'id': 'hero',
+              'x': 8,
+              'y': 8,
+            },
+            'description': 'Controllable player hero; seeded at map center',
+            'label': 'Hero',
+            'properties': {
+              'id': {
+                'name': 'id',
+                'required': true,
+                'type': 'string',
+              },
+              'x': {
+                'name': 'x',
+                'required': true,
+                'type': 'number',
+              },
+              'y': {
+                'name': 'y',
+                'required': true,
+                'type': 'number',
+              },
+            },
+            'tier': 'presentation',
+            'type': 'TowerDefenseBoardHero',
           },
           'isLoading': {
             'default': false,
@@ -1094,11 +1153,30 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             'scope': 'external',
             'tier': 'essential',
           },
+          {
+            'description': 'Emits UI:{moveHeroEvent} with {dx,dy} on arrow-key press to move the player hero',
+            'event': 'MOVE_HERO',
+            'payloadSchema': [
+              {
+                'name': 'dx',
+                'required': true,
+                'type': 'number',
+              },
+              {
+                'name': 'dy',
+                'required': true,
+                'type': 'number',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'essential',
+          },
         ],
         'entityContract': {
           'provides': [
             'creeps',
             'gold',
+            'hero',
             'lives',
             'maxWaves',
             'result',
@@ -1144,6 +1222,24 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
               'payloadSchema': [
                 {
                   'name': 'wave',
+                  'type': 'number',
+                },
+              ],
+              'tier': 'essential',
+            },
+            {
+              'description': 'Emits UI:{moveHeroEvent} with {dx,dy} on arrow-key press to move the player hero',
+              'key': 'MOVE_HERO',
+              'name': 'Move Hero',
+              'payloadSchema': [
+                {
+                  'name': 'dx',
+                  'required': true,
+                  'type': 'number',
+                },
+                {
+                  'name': 'dy',
+                  'required': true,
                   'type': 'number',
                 },
               ],
@@ -1233,6 +1329,11 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                   [],
                 ],
                 [
+                  'set',
+                  '@entity.hero',
+                  '@config.hero',
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -1240,8 +1341,10 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     'entity': '@entity',
                     'gameEndEvent': 'GAME_END',
                     'gold': '@entity.gold',
+                    'hero': '@entity.hero',
                     'lives': '@entity.lives',
                     'maxWaves': '@entity.maxWaves',
+                    'moveHeroEvent': 'MOVE_HERO',
                     'path': '@config.path',
                     'placeTowerEvent': 'PLACE_TOWER',
                     'playAgainEvent': 'PLAY_AGAIN',
@@ -1310,8 +1413,10 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     'entity': '@entity',
                     'gameEndEvent': 'GAME_END',
                     'gold': '@entity.gold',
+                    'hero': '@entity.hero',
                     'lives': '@entity.lives',
                     'maxWaves': '@entity.maxWaves',
+                    'moveHeroEvent': 'MOVE_HERO',
                     'path': '@config.path',
                     'placeTowerEvent': 'PLACE_TOWER',
                     'playAgainEvent': 'PLAY_AGAIN',
@@ -1496,8 +1601,10 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     'entity': '@entity',
                     'gameEndEvent': 'GAME_END',
                     'gold': '@entity.gold',
+                    'hero': '@entity.hero',
                     'lives': '@entity.lives',
                     'maxWaves': '@entity.maxWaves',
+                    'moveHeroEvent': 'MOVE_HERO',
                     'path': '@config.path',
                     'placeTowerEvent': 'PLACE_TOWER',
                     'playAgainEvent': 'PLAY_AGAIN',
@@ -1534,6 +1641,58 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.hero',
+                  [
+                    'object/merge',
+                    '@entity.hero',
+                    {
+                      'x': [
+                        'math/max',
+                        0,
+                        [
+                          'math/min',
+                          [
+                            '-',
+                            '@config.gridWidth',
+                            1,
+                          ],
+                          [
+                            '+',
+                            [
+                              'object/get',
+                              '@entity.hero',
+                              'x',
+                            ],
+                            '@payload.dx',
+                          ],
+                        ],
+                      ],
+                      'y': [
+                        'math/max',
+                        0,
+                        [
+                          'math/min',
+                          [
+                            '-',
+                            '@config.gridHeight',
+                            1,
+                          ],
+                          [
+                            '+',
+                            [
+                              'object/get',
+                              '@entity.hero',
+                              'y',
+                            ],
+                            '@payload.dy',
+                          ],
+                        ],
+                      ],
+                    },
+                  ],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -1541,8 +1700,49 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     'entity': '@entity',
                     'gameEndEvent': 'GAME_END',
                     'gold': '@entity.gold',
+                    'hero': '@entity.hero',
                     'lives': '@entity.lives',
                     'maxWaves': '@entity.maxWaves',
+                    'moveHeroEvent': 'MOVE_HERO',
+                    'path': '@config.path',
+                    'placeTowerEvent': 'PLACE_TOWER',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'result': '@entity.result',
+                    'scale': '@config.scale',
+                    'startWaveEvent': 'START_WAVE',
+                    'tiles': '@config.tiles',
+                    'towerCost': '@config.towerCost',
+                    'towers': '@entity.towers',
+                    'type': 'tower-defense-board',
+                    'unitScale': '@config.unitScale',
+                    'wave': '@entity.wave',
+                    'waveActive': '@entity.waveActive',
+                  },
+                ],
+              ],
+              'event': 'MOVE_HERO',
+              'from': 'playing',
+              'guard': [
+                '==',
+                '@entity.result',
+                'none',
+              ],
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'creeps': '@entity.creeps',
+                    'entity': '@entity',
+                    'gameEndEvent': 'GAME_END',
+                    'gold': '@entity.gold',
+                    'hero': '@entity.hero',
+                    'lives': '@entity.lives',
+                    'maxWaves': '@entity.maxWaves',
+                    'moveHeroEvent': 'MOVE_HERO',
                     'path': '@config.path',
                     'placeTowerEvent': 'PLACE_TOWER',
                     'playAgainEvent': 'PLAY_AGAIN',
@@ -1619,6 +1819,11 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                   [],
                 ],
                 [
+                  'set',
+                  '@entity.hero',
+                  '@config.hero',
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -1626,8 +1831,10 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     'entity': '@entity',
                     'gameEndEvent': 'GAME_END',
                     'gold': '@entity.gold',
+                    'hero': '@entity.hero',
                     'lives': '@entity.lives',
                     'maxWaves': '@entity.maxWaves',
+                    'moveHeroEvent': 'MOVE_HERO',
                     'path': '@config.path',
                     'placeTowerEvent': 'PLACE_TOWER',
                     'playAgainEvent': 'PLAY_AGAIN',
@@ -1927,8 +2134,10 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                   'entity': '@entity',
                   'gameEndEvent': 'GAME_END',
                   'gold': '@entity.gold',
+                  'hero': '@entity.hero',
                   'lives': '@entity.lives',
                   'maxWaves': '@entity.maxWaves',
+                  'moveHeroEvent': 'MOVE_HERO',
                   'path': '@config.path',
                   'placeTowerEvent': 'PLACE_TOWER',
                   'playAgainEvent': 'PLAY_AGAIN',
@@ -2136,8 +2345,10 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                   'entity': '@entity',
                   'gameEndEvent': 'GAME_END',
                   'gold': '@entity.gold',
+                  'hero': '@entity.hero',
                   'lives': '@entity.lives',
                   'maxWaves': '@entity.maxWaves',
+                  'moveHeroEvent': 'MOVE_HERO',
                   'path': '@config.path',
                   'placeTowerEvent': 'PLACE_TOWER',
                   'playAgainEvent': 'PLAY_AGAIN',
