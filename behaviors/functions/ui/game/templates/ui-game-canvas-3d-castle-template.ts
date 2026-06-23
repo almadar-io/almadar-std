@@ -39,6 +39,7 @@ export type StdUiGameCanvas3dCastleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas3dCastleTemplateConfig {
+  assetManifest?: EntityRow;
   /** Default: `"Attack Event"` */
   attackEvent?: string;
   /** Default: `"#1e1e2e"` */

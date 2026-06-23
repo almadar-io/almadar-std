@@ -1,0 +1,316 @@
+[
+  {
+    "organism": "ui-top-down-shooter-board",
+    "orbital": "TopDownShooterBoardOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/organisms/ui-top-down-shooter-board.ts",
+    "entities": [
+      {
+        "name": "TopDownShooterBoardItem",
+        "fields": [
+          {
+            "name": "player",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "enemies",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "projectiles",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "wave",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "lives",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "tick",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "nextId",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "TopDownShooterBoardRender",
+        "emittedEvents": [
+          "MOVE",
+          "FIRE",
+          "GAME_END",
+          "PLAY_AGAIN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "MOVE",
+            "direction": "emit",
+            "description": "Emits UI:{moveEvent} with {dx,dy} on arrow/WASD key press to move the player",
+            "tier": "essential"
+          },
+          {
+            "name": "FIRE",
+            "direction": "emit",
+            "description": "Emits UI:{fireEvent} with {tx,ty} on space / arena click to fire a projectile",
+            "tier": "essential"
+          },
+          {
+            "name": "GAME_END",
+            "direction": "emit",
+            "description": "Emits UI:{gameEndEvent} with {result} when the game reaches won or lost",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "TopDownShooterBoardAssetManifest",
+            "default": {
+              "background": "platformer/items/platformPack_item007.png",
+              "baseUrl": "https://almadar-kflow-assets.web.app/shared/",
+              "features": {
+                "projectile": "platformer/items/platformPack_item007.png"
+              },
+              "units": {
+                "enemy": "platformer/items/platformPack_item003.png",
+                "player": "platformer/characters/platformChar_duck.png"
+              }
+            },
+            "label": "Asset Manifest",
+            "description": "Base-url + unit/feature sprite maps + background; player/enemy/projectile draw from these URLs.",
+            "tier": "presentation",
+            "properties": {
+              "background": {
+                "name": "background",
+                "required": false,
+                "type": "string"
+              },
+              "baseUrl": {
+                "name": "baseUrl",
+                "required": false,
+                "type": "string"
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object"
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object"
+              }
+            }
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "enemiesPerWave",
+            "type": "number",
+            "default": 6,
+            "label": "Enemies Per Wave",
+            "description": "Enemies spawned at the top of each wave",
+            "tier": "presentation"
+          },
+          {
+            "key": "enemyHp",
+            "type": "number",
+            "default": 1,
+            "label": "Enemy HP",
+            "description": "Hit points each enemy starts with",
+            "tier": "presentation"
+          },
+          {
+            "key": "enemySpeed",
+            "type": "number",
+            "default": 6,
+            "label": "Enemy Speed",
+            "description": "Pixels an enemy advances downward per tick",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "TopDownShooterBoardError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 480,
+            "label": "Height",
+            "description": "Arena / canvas height in pixels",
+            "tier": "presentation"
+          },
+          {
+            "key": "hitRadius",
+            "type": "number",
+            "default": 24,
+            "label": "Hit Radius",
+            "description": "Projectile-to-enemy collision radius in pixels",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "lives",
+            "type": "number",
+            "default": 3,
+            "label": "Starting Lives",
+            "description": "Lives the player starts with; reaching 0 = defeat",
+            "tier": "presentation"
+          },
+          {
+            "key": "maxWaves",
+            "type": "number",
+            "default": 5,
+            "label": "Max Waves",
+            "description": "Number of waves to clear to win",
+            "tier": "presentation"
+          },
+          {
+            "key": "moveStep",
+            "type": "number",
+            "default": 16,
+            "label": "Move Step",
+            "description": "Pixels the player moves per key press",
+            "tier": "presentation"
+          },
+          {
+            "key": "projectileSpeed",
+            "type": "number",
+            "default": 24,
+            "label": "Projectile Speed",
+            "description": "Pixels a projectile travels per tick",
+            "tier": "presentation"
+          },
+          {
+            "key": "scorePerKill",
+            "type": "number",
+            "default": 10,
+            "label": "Score Per Kill",
+            "description": "Score awarded for each enemy destroyed",
+            "tier": "presentation"
+          },
+          {
+            "key": "spriteSize",
+            "type": "number",
+            "default": 32,
+            "label": "Sprite Size",
+            "description": "Pixel draw-size of player/enemy sprites",
+            "tier": "presentation"
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 640,
+            "label": "Width",
+            "description": "Arena / canvas width in pixels",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "enemies",
+            "lives",
+            "nextId",
+            "player",
+            "projectiles",
+            "result",
+            "score",
+            "tick",
+            "wave"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "TopDownShooterBoardPage",
+        "defaultPath": "/top-down-shooter-board",
+        "primaryEntity": "TopDownShooterBoardItem"
+      }
+    ],
+    "emittedEvents": [
+      "FIRE",
+      "GAME_END",
+      "MOVE",
+      "PLAY_AGAIN"
+    ],
+    "listenedEvents": []
+  }
+]

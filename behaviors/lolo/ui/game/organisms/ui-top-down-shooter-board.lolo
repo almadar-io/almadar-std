@@ -50,7 +50,7 @@ orbital TopDownShooterBoardOrbital {
     state playing {
       INIT -> playing
         (set @entity.player { x: (/ @config.width 2), y: (- @config.height @config.spriteSize) })
-        (set @entity.enemies (array/map (array/range 0 @config.enemiesPerWave) (fn i { id: (string/concat "enemy-" (string/from-number @i)), x: (+ @config.spriteSize (* @i (/ @config.width @config.enemiesPerWave))), y: @config.spriteSize, hp: @config.enemyHp })))
+        (set @entity.enemies (array/map (array/range 0 @config.enemiesPerWave) (fn i { id: (str/concat "enemy-" @i), x: (+ @config.spriteSize (* @i (/ @config.width @config.enemiesPerWave))), y: @config.spriteSize, hp: @config.enemyHp })))
         (set @entity.projectiles [])
         (set @entity.score 0)
         (set @entity.wave 1)
@@ -101,7 +101,7 @@ orbital TopDownShooterBoardOrbital {
         })
 
       FIRE -> playing when (== @entity.result "none")
-        (set @entity.projectiles (array/concat @entity.projectiles [{ id: (string/concat "proj-" (string/from-number @entity.nextId)), x: (object/get @entity.player x), y: (object/get @entity.player y), vx: 0, vy: (- 0 @config.projectileSpeed) }]))
+        (set @entity.projectiles (array/concat @entity.projectiles [{ id: (str/concat "proj-" @entity.nextId), x: (object/get @entity.player x), y: (object/get @entity.player y), vx: 0, vy: (- 0 @config.projectileSpeed) }]))
         (set @entity.nextId (+ @entity.nextId 1))
         (render-ui main {
           entity: @entity
@@ -148,7 +148,7 @@ orbital TopDownShooterBoardOrbital {
     state gameover {
       PLAY_AGAIN -> playing
         (set @entity.player { x: (/ @config.width 2), y: (- @config.height @config.spriteSize) })
-        (set @entity.enemies (array/map (array/range 0 @config.enemiesPerWave) (fn i { id: (string/concat "enemy-" (string/from-number @i)), x: (+ @config.spriteSize (* @i (/ @config.width @config.enemiesPerWave))), y: @config.spriteSize, hp: @config.enemyHp })))
+        (set @entity.enemies (array/map (array/range 0 @config.enemiesPerWave) (fn i { id: (str/concat "enemy-" @i), x: (+ @config.spriteSize (* @i (/ @config.width @config.enemiesPerWave))), y: @config.spriteSize, hp: @config.enemyHp })))
         (set @entity.projectiles [])
         (set @entity.score 0)
         (set @entity.wave 1)
@@ -198,7 +198,7 @@ orbital TopDownShooterBoardOrbital {
         # wave cleared: advance wave + respawn; win after maxWaves
         (set @entity.wave (if (and (== (array/len @entity.enemies) 0) (== @entity.result "none")) (+ @entity.wave 1) @entity.wave))
         (set @entity.result (if (and (== (array/len @entity.enemies) 0) (and (== @entity.result "none") (> @entity.wave @config.maxWaves))) "won" @entity.result))
-        (set @entity.enemies (if (and (== (array/len @entity.enemies) 0) (== @entity.result "none")) (array/map (array/range 0 @config.enemiesPerWave) (fn i { id: (string/concat "enemy-" (string/from-number (+ (* @entity.wave 100) @i))), x: (+ @config.spriteSize (* @i (/ @config.width @config.enemiesPerWave))), y: @config.spriteSize, hp: @config.enemyHp })) @entity.enemies))
+        (set @entity.enemies (if (and (== (array/len @entity.enemies) 0) (== @entity.result "none")) (array/map (array/range 0 @config.enemiesPerWave) (fn i { id: (str/concat "enemy-" (+ (* @entity.wave 100) @i)), x: (+ @config.spriteSize (* @i (/ @config.width @config.enemiesPerWave))), y: @config.spriteSize, hp: @config.enemyHp })) @entity.enemies))
         (render-ui main {
           entity: @entity
           player: @entity.player

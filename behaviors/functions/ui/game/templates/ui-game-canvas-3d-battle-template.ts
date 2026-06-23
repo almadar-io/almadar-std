@@ -39,6 +39,7 @@ export type StdUiGameCanvas3dBattleTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas3dBattleTemplateConfig {
+  assetManifest?: EntityRow;
   /** Default: `"Attack Event"` */
   attackEvent?: string;
   /** Default: `"#2a1a1a"` */
