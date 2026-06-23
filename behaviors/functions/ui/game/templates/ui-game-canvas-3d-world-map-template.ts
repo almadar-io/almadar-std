@@ -39,6 +39,7 @@ export type StdUiGameCanvas3dWorldMapTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas3dWorldMapTemplateConfig {
+  assetManifest?: EntityRow;
   /** Default: `"Attack Event"` */
   attackEvent?: string;
   /** Default: `"#1a1a2e"` */

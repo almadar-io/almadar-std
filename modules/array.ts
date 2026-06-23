@@ -27,6 +27,21 @@ export const ARRAY_OPERATORS: Record<string, StdOperatorMeta> = {
     params: [{ name: 'arr', type: 'array', description: 'The array' }],
     example: '["array/len", [1, 2, 3]] // => 3',
   },
+  'array/range': {
+    module: 'array',
+    category: 'std-array',
+    minArity: 1,
+    maxArity: 3,
+    description: 'Generate numbers: (range n) => [0,n); (range start end) => [start,end); optional step',
+    hasSideEffects: false,
+    returnType: 'array',
+    params: [
+      { name: 'start', type: 'number', description: 'Start (inclusive); when alone, this is the exclusive end from 0' },
+      { name: 'end', type: 'number', description: 'End value (exclusive)' },
+      { name: 'step', type: 'number', description: 'Step between values (default 1)' },
+    ],
+    example: '["array/range", 0, 5] // => [0, 1, 2, 3, 4]',
+  },
   'array/empty?': {
     module: 'array',
     category: 'std-array',

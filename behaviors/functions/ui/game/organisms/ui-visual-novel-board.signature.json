@@ -1,0 +1,311 @@
+[
+  {
+    "organism": "ui-visual-novel-board",
+    "orbital": "VisualNovelBoardOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/organisms/ui-visual-novel-board.ts",
+    "entities": [
+      {
+        "name": "VisualNovelBoardItem",
+        "fields": [
+          {
+            "name": "nodes",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "currentNodeId",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "VisualNovelBoardRender",
+        "emittedEvents": [
+          "CHOOSE",
+          "ADVANCE",
+          "RESTART"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CHOOSE",
+            "direction": "emit",
+            "description": "Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice",
+            "tier": "essential"
+          },
+          {
+            "name": "ADVANCE",
+            "direction": "emit",
+            "description": "Emits UI:{advanceEvent} with {} to advance to the first choice's target node",
+            "tier": "essential"
+          },
+          {
+            "name": "RESTART",
+            "direction": "emit",
+            "description": "Emits UI:{restartEvent} with {} to reset the scene to the start node",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "assetManifest",
+            "type": "VisualNovelBoardAssetManifest",
+            "default": {
+              "backgrounds": {
+                "chamber": "scenes/vn-villain-closeup.png",
+                "core": "scenes/vn-foundry-forge.png",
+                "corridor": "scenes/vn-corridor-sentinel.png",
+                "forge": "scenes/vn-foundry-golem.png"
+              },
+              "baseUrl": "https://almadar-kflow-assets.web.app/shared/",
+              "portraits": {
+                "emissary": "portraits/vn-lyra.png",
+                "guide": "portraits/vn-amir.png",
+                "rival": "portraits/vn-dr-aris.png"
+              }
+            },
+            "label": "Asset Manifest",
+            "description": "Base-url + scene-background and character-portrait sprite maps keyed by node backgroundKey/portraitKey.",
+            "tier": "presentation",
+            "properties": {
+              "backgrounds": {
+                "name": "backgrounds",
+                "required": false,
+                "type": "object"
+              },
+              "baseUrl": {
+                "name": "baseUrl",
+                "required": false,
+                "type": "string"
+              },
+              "portraits": {
+                "name": "portraits",
+                "required": false,
+                "type": "object"
+              }
+            }
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "VisualNovelBoardError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "nodes",
+            "type": "[VisualNovelBoardNodesItem]",
+            "default": [
+              {
+                "backgroundKey": "corridor",
+                "choices": [
+                  {
+                    "label": "Approach the sentinel.",
+                    "nextId": "meet"
+                  },
+                  {
+                    "label": "Turn back.",
+                    "nextId": "retreat"
+                  }
+                ],
+                "id": "start",
+                "portraitKey": "guide",
+                "speaker": "Narrator",
+                "text": "The corridor stretches into shadow. A lone sentinel blocks your path."
+              },
+              {
+                "backgroundKey": "forge",
+                "choices": [
+                  {
+                    "label": "I seek the core.",
+                    "nextId": "end"
+                  },
+                  {
+                    "label": "I am only passing through.",
+                    "nextId": "retreat"
+                  }
+                ],
+                "id": "meet",
+                "portraitKey": "rival",
+                "speaker": "Sentinel",
+                "text": "You carry the old marks. Speak your purpose, traveler."
+              },
+              {
+                "backgroundKey": "corridor",
+                "choices": [
+                  {
+                    "label": "Begin again.",
+                    "nextId": "start"
+                  }
+                ],
+                "id": "retreat",
+                "portraitKey": "guide",
+                "speaker": "Narrator",
+                "text": "You withdraw into the dark. The path will wait for braver feet."
+              },
+              {
+                "backgroundKey": "core",
+                "choices": [
+                  {
+                    "label": "Begin again.",
+                    "nextId": "start"
+                  }
+                ],
+                "id": "end",
+                "portraitKey": "rival",
+                "speaker": "Sentinel",
+                "text": "Then the way is open. Walk it well."
+              }
+            ],
+            "label": "Nodes",
+            "description": "Dialogue graph: each node has speaker text, scene/portrait keys, and branching choices.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "backgroundKey": {
+                  "name": "backgroundKey",
+                  "required": false,
+                  "type": "string"
+                },
+                "choices": {
+                  "name": "choices",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "nextId": {
+                        "name": "nextId",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "portraitKey": {
+                  "name": "portraitKey",
+                  "required": false,
+                  "type": "string"
+                },
+                "speaker": {
+                  "name": "speaker",
+                  "required": true,
+                  "type": "string"
+                },
+                "text": {
+                  "name": "text",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "portraitScale",
+            "type": "number",
+            "default": 1,
+            "label": "Portrait Scale",
+            "description": "Character portrait draw-size multiplier",
+            "tier": "presentation"
+          },
+          {
+            "key": "startNodeId",
+            "type": "string",
+            "default": "start",
+            "label": "Start Node Id",
+            "description": "Id of the dialogue node shown first / on restart",
+            "tier": "presentation"
+          },
+          {
+            "key": "typewriterSpeed",
+            "type": "number",
+            "default": 30,
+            "label": "Typewriter Speed",
+            "description": "Milliseconds per character of dialogue text reveal (0 = instant)",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": [
+            "currentNodeId",
+            "nodes"
+          ]
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "VisualNovelBoardPage",
+        "defaultPath": "/visual-novel-board",
+        "primaryEntity": "VisualNovelBoardItem"
+      }
+    ],
+    "emittedEvents": [
+      "ADVANCE",
+      "CHOOSE",
+      "RESTART"
+    ],
+    "listenedEvents": []
+  }
+]

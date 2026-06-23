@@ -99,7 +99,7 @@ orbital CityBuilderBoardOrbital {
 
       PLACE_BUILDING -> building when (and (== @entity.result "none") (and (>= @entity.gold (object/get (array/first (array/filter @config.buildTypes (fn b (== (object/get @b type) @entity.pendingBuildType)))) cost)) (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (== (array/len (array/filter @entity.buildings (fn b (and (== @b.x ?x) (== @b.y ?y))))) 0) (== (array/len (array/filter @config.tiles (fn tl (and (== (object/get @tl x) ?x) (and (== (object/get @tl y) ?y) (== (object/get @tl passable) false)))))) 0)))))
         (set @entity.gold (- @entity.gold (object/get (array/first (array/filter @config.buildTypes (fn b (== (object/get @b type) @entity.pendingBuildType)))) cost)))
-        (set @entity.buildings (array/concat @entity.buildings [{ id: (string/concat "bld-" (string/from-number (array/len @entity.buildings))), x: ?x, y: ?y, type: @entity.pendingBuildType }]))
+        (set @entity.buildings (array/concat @entity.buildings [{ id: (str/concat "bld-" (array/len @entity.buildings)), x: ?x, y: ?y, type: @entity.pendingBuildType }]))
         (set @entity.population (+ @entity.population @config.populationPerBuilding))
         (set @entity.result (if (>= @entity.population @config.targetPopulation) "won" @entity.result))
         (render-ui main {

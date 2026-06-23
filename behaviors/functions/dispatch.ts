@@ -194,6 +194,11 @@ import {
   isStdUiCanvasEffectCanvasEffectOrbitalParams,
 } from './ui/game/organisms/ui-canvas-effect.js';
 import {
+  stdUiCardBattlerBoardCardBattlerBoardOrbital,
+  StdUiCardBattlerBoardCardBattlerBoardOrbitalManifest,
+  isStdUiCardBattlerBoardCardBattlerBoardOrbitalParams,
+} from './ui/game/organisms/ui-card-battler-board.js';
+import {
   stdUiCaseStudyOrganismCaseStudyOrganismOrbital,
   StdUiCaseStudyOrganismCaseStudyOrganismOrbitalManifest,
   isStdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams,
@@ -203,6 +208,11 @@ import {
   StdUiCastleBoardCastleBoardOrbitalManifest,
   isStdUiCastleBoardCastleBoardOrbitalParams,
 } from './ui/game/organisms/ui-castle-board.js';
+import {
+  stdUiCityBuilderBoardCityBuilderBoardOrbital,
+  StdUiCityBuilderBoardCityBuilderBoardOrbitalManifest,
+  isStdUiCityBuilderBoardCityBuilderBoardOrbitalParams,
+} from './ui/game/organisms/ui-city-builder-board.js';
 import {
   stdUiClassifierBoardClassifierBoardOrbital,
   StdUiClassifierBoardClassifierBoardOrbitalManifest,
@@ -414,6 +424,11 @@ import {
   isStdUiToastSlotToastSlotOrbitalParams,
 } from './ui/core/organisms/ui-toast-slot.js';
 import {
+  stdUiTopDownShooterBoardTopDownShooterBoardOrbital,
+  StdUiTopDownShooterBoardTopDownShooterBoardOrbitalManifest,
+  isStdUiTopDownShooterBoardTopDownShooterBoardOrbitalParams,
+} from './ui/game/organisms/ui-top-down-shooter-board.js';
+import {
   stdUiTowerDefenseBoardTowerDefenseBoardOrbital,
   StdUiTowerDefenseBoardTowerDefenseBoardOrbitalManifest,
   isStdUiTowerDefenseBoardTowerDefenseBoardOrbitalParams,
@@ -433,6 +448,11 @@ import {
   StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalManifest,
   isStdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalParams,
 } from './ui/game/organisms/ui-uncontrolled-battle-board.js';
+import {
+  stdUiVisualNovelBoardVisualNovelBoardOrbital,
+  StdUiVisualNovelBoardVisualNovelBoardOrbitalManifest,
+  isStdUiVisualNovelBoardVisualNovelBoardOrbitalParams,
+} from './ui/game/organisms/ui-visual-novel-board.js';
 import {
   stdUiWorldMapBoardWorldMapBoardOrbital,
   StdUiWorldMapBoardWorldMapBoardOrbitalManifest,
@@ -900,6 +920,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiCanvasEffectCanvasEffectOrbitalManifest,
   }],
+  ['ui-card-battler-board::CardBattlerBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiCardBattlerBoardCardBattlerBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-card-battler-board::CardBattlerBoardOrbital');
+      }
+      return stdUiCardBattlerBoardCardBattlerBoardOrbital(p);
+    },
+    manifest: StdUiCardBattlerBoardCardBattlerBoardOrbitalManifest,
+  }],
   ['ui-case-study-organism::CaseStudyOrganismOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiCaseStudyOrganismCaseStudyOrganismOrbitalParams(p)) {
@@ -917,6 +946,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiCastleBoardCastleBoardOrbital(p);
     },
     manifest: StdUiCastleBoardCastleBoardOrbitalManifest,
+  }],
+  ['ui-city-builder-board::CityBuilderBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiCityBuilderBoardCityBuilderBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-city-builder-board::CityBuilderBoardOrbital');
+      }
+      return stdUiCityBuilderBoardCityBuilderBoardOrbital(p);
+    },
+    manifest: StdUiCityBuilderBoardCityBuilderBoardOrbitalManifest,
   }],
   ['ui-classifier-board::ClassifierBoardOrbital', {
     factory: (p: object): OrbitalDefinition => {
@@ -1296,6 +1334,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
     },
     manifest: StdUiToastSlotToastSlotOrbitalManifest,
   }],
+  ['ui-top-down-shooter-board::TopDownShooterBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiTopDownShooterBoardTopDownShooterBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-top-down-shooter-board::TopDownShooterBoardOrbital');
+      }
+      return stdUiTopDownShooterBoardTopDownShooterBoardOrbital(p);
+    },
+    manifest: StdUiTopDownShooterBoardTopDownShooterBoardOrbitalManifest,
+  }],
   ['ui-tower-defense-board::TowerDefenseBoardOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdUiTowerDefenseBoardTowerDefenseBoardOrbitalParams(p)) {
@@ -1331,6 +1378,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(p);
     },
     manifest: StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalManifest,
+  }],
+  ['ui-visual-novel-board::VisualNovelBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiVisualNovelBoardVisualNovelBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-visual-novel-board::VisualNovelBoardOrbital');
+      }
+      return stdUiVisualNovelBoardVisualNovelBoardOrbital(p);
+    },
+    manifest: StdUiVisualNovelBoardVisualNovelBoardOrbitalManifest,
   }],
   ['ui-world-map-board::WorldMapBoardOrbital', {
     factory: (p: object): OrbitalDefinition => {

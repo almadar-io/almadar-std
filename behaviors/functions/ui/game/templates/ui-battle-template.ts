@@ -51,7 +51,7 @@ export interface StdUiBattleTemplateConfig {
   tiles?: EntityRow[];
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"name":"Worker","position":{"x":1,"y":1},"sprite":"https://almadar-kflow-assets.web.app/shared/sprite-sheets/amir-sprite-sheet-se.png","team":"player","unitType":"worker"},{"health":8,"id":"u2","maxHealth":10,"name":"Guardian","position":{"x":3,"y":3},"sprite":"https://almadar-kflow-assets.web.app/shared/sprite-sheets/destroyer-sprite-sheet-sw.png","team":"enemy","unitType":"guardian"}]` */
+  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","name":"Worker","position":{"x":1,"y":1},"team":"player","unitType":"worker"},{"health":8,"id":"u2","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Guardian","position":{"x":3,"y":3},"team":"enemy","unitType":"guardian"}]` */
   units?: EntityRow[];
 }
 

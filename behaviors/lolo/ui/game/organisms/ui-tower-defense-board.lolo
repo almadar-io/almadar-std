@@ -107,7 +107,7 @@ orbital TowerDefenseBoardOrbital {
 
       PLACE_TOWER -> playing when (and (>= @entity.gold @config.towerCost) (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (== (array/len (array/filter @entity.towers (fn t (and (== @t.x ?x) (== @t.y ?y))))) 0) (== (array/len (array/filter @config.path (fn p (and (== (object/get @p x) ?x) (== (object/get @p y) ?y))))) 0))))
         (set @entity.gold (- @entity.gold @config.towerCost))
-        (set @entity.towers (array/concat @entity.towers [{ id: (string/concat "tower-" (string/from-number (array/len @entity.towers))), x: ?x, y: ?y, range: @config.towerRange, damage: @config.towerDamage, cooldown: @config.towerCooldown, lastFiredAt: 0 }]))
+        (set @entity.towers (array/concat @entity.towers [{ id: (str/concat "tower-" (array/len @entity.towers)), x: ?x, y: ?y, range: @config.towerRange, damage: @config.towerDamage, cooldown: @config.towerCooldown, lastFiredAt: 0 }]))
         (render-ui main {
           entity: @entity
           tiles: @config.tiles
@@ -135,7 +135,7 @@ orbital TowerDefenseBoardOrbital {
 
       START_WAVE -> playing when (and (== @entity.waveActive false) (== @entity.result "none"))
         (set @entity.waveActive true)
-        (set @entity.creeps (array/map (array/range 0 @config.creepsPerWave) (fn i { id: (string/concat "creep-" (string/from-number @i)), x: (object/get (array/first @config.path) x), y: (object/get (array/first @config.path) y), hp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), maxHp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), pathIndex: 0, speed: @config.creepSpeed })))
+        (set @entity.creeps (array/map (array/range 0 @config.creepsPerWave) (fn i { id: (str/concat "creep-" @i), x: (object/get (array/first @config.path) x), y: (object/get (array/first @config.path) y), hp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), maxHp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), pathIndex: 0, speed: @config.creepSpeed })))
         (render-ui main {
           entity: @entity
           tiles: @config.tiles

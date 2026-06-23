@@ -60,10 +60,16 @@ export interface StdUiDialogueBoxAdvancePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDialogueBoxConfig {
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  backgroundImage?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `{"autoAdvance":1,"choices":[{"action":"Action","disabled":false,"next":"Next","text":"Text"}],"id":"Id","portrait":"Portrait","speaker":"Speaker","text":"Text"}` */
   dialogue?: EntityRow;
+  /** Default: `1` */
+  portraitScale?: number;
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  portraitUrl?: unknown;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';
   /** Default: `30` */
