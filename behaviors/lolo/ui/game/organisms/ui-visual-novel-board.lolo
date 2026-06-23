@@ -1,0 +1,159 @@
+app ui-visual-novel-board "1.0.0"
+"VisualNovelBoard — UI factory (1:1 with the @almadar/ui visual-novel-board pattern)."
+orbital VisualNovelBoardOrbital {
+  type VisualNovelBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type VisualNovelBoardChoicesItem = {
+    label : string!
+    nextId : string!
+  }
+  type VisualNovelBoardNodesItem = {
+    id : string!
+    speaker : string!
+    text : string!
+    backgroundKey : string
+    portraitKey : string
+    choices : [VisualNovelBoardChoicesItem]
+  }
+  type VisualNovelBoardAssetManifest = {
+    baseUrl : asset
+    backgrounds : Map string asset
+    portraits : Map string asset
+  }
+
+  entity VisualNovelBoardItem [runtime] {
+    id : string!
+    nodes : [VisualNovelBoardNodesItem]
+    currentNodeId : string = "start"
+  }
+
+  trait VisualNovelBoardRender -> @rebindable VisualNovelBoardItem [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.nodes @config.nodes)
+        (set @entity.currentNodeId @config.startNodeId)
+        (render-ui main {
+          entity: @entity
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
+          assetManifest: @config.assetManifest
+          typewriterSpeed: @config.typewriterSpeed
+          portraitScale: @config.portraitScale
+          chooseEvent: CHOOSE
+          advanceEvent: ADVANCE
+          restartEvent: RESTART
+          className: @config.className
+          type: visual-novel-board
+        })
+
+      CHOOSE -> playing when (and (>= ?choiceIndex 0) (< ?choiceIndex (array/len (object/get (array/first (array/filter @entity.nodes (fn n (== (object/get @n id) @entity.currentNodeId)))) choices))))
+        (set @entity.currentNodeId (object/get (array/nth (object/get (array/first (array/filter @entity.nodes (fn n (== (object/get @n id) @entity.currentNodeId)))) choices) ?choiceIndex) nextId))
+        (render-ui main {
+          entity: @entity
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
+          assetManifest: @config.assetManifest
+          typewriterSpeed: @config.typewriterSpeed
+          portraitScale: @config.portraitScale
+          chooseEvent: CHOOSE
+          advanceEvent: ADVANCE
+          restartEvent: RESTART
+          className: @config.className
+          type: visual-novel-board
+        })
+
+      ADVANCE -> playing when (> (array/len (object/get (array/first (array/filter @entity.nodes (fn n (== (object/get @n id) @entity.currentNodeId)))) choices)) 0)
+        (set @entity.currentNodeId (object/get (array/nth (object/get (array/first (array/filter @entity.nodes (fn n (== (object/get @n id) @entity.currentNodeId)))) choices) 0) nextId))
+        (render-ui main {
+          entity: @entity
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
+          assetManifest: @config.assetManifest
+          typewriterSpeed: @config.typewriterSpeed
+          portraitScale: @config.portraitScale
+          chooseEvent: CHOOSE
+          advanceEvent: ADVANCE
+          restartEvent: RESTART
+          className: @config.className
+          type: visual-novel-board
+        })
+
+      RESTART -> playing
+        (set @entity.currentNodeId @config.startNodeId)
+        (render-ui main {
+          entity: @entity
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
+          assetManifest: @config.assetManifest
+          typewriterSpeed: @config.typewriterSpeed
+          portraitScale: @config.portraitScale
+          chooseEvent: CHOOSE
+          advanceEvent: ADVANCE
+          restartEvent: RESTART
+          className: @config.className
+          type: visual-novel-board
+        })
+    }
+
+    emits {
+      CHOOSE -> external {
+        choiceIndex : number!
+      }
+        @description "Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice"
+        @tier "essential"
+      ADVANCE -> external {
+        id : string
+      }
+        @description "Emits UI:{advanceEvent} with {} to advance to the first choice's target node"
+        @tier "essential"
+      RESTART -> external {
+        id : string
+      }
+        @description "Emits UI:{restartEvent} with {} to reset the scene to the start node"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : VisualNovelBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      startNodeId : string = "start"
+        @label "Start Node Id"
+        @description "Id of the dialogue node shown first / on restart"
+        @tier "presentation"
+      typewriterSpeed : number = 30
+        @label "Typewriter Speed"
+        @description "Milliseconds per character of dialogue text reveal (0 = instant)"
+        @tier "presentation"
+      portraitScale : number = 1
+        @label "Portrait Scale"
+        @description "Character portrait draw-size multiplier"
+        @tier "presentation"
+      nodes : [VisualNovelBoardNodesItem] = [{ id: "start", speaker: "Narrator", text: "The corridor stretches into shadow. A lone sentinel blocks your path.", backgroundKey: "corridor", portraitKey: "guide", choices: [{ label: "Approach the sentinel.", nextId: "meet" }, { label: "Turn back.", nextId: "retreat" }] }, { id: "meet", speaker: "Sentinel", text: "You carry the old marks. Speak your purpose, traveler.", backgroundKey: "forge", portraitKey: "rival", choices: [{ label: "I seek the core.", nextId: "end" }, { label: "I am only passing through.", nextId: "retreat" }] }, { id: "retreat", speaker: "Narrator", text: "You withdraw into the dark. The path will wait for braver feet.", backgroundKey: "corridor", portraitKey: "guide", choices: [{ label: "Begin again.", nextId: "start" }] }, { id: "end", speaker: "Sentinel", text: "Then the way is open. Walk it well.", backgroundKey: "core", portraitKey: "rival", choices: [{ label: "Begin again.", nextId: "start" }] }]
+        @label "Nodes"
+        @description "Dialogue graph: each node has speaker text, scene/portrait keys, and branching choices."
+        @tier "presentation"
+      assetManifest : VisualNovelBoardAssetManifest = { baseUrl: "https://almadar-kflow-assets.web.app/shared/", backgrounds: { corridor: "scenes/vn-corridor-sentinel.png", forge: "scenes/vn-foundry-golem.png", core: "scenes/vn-foundry-forge.png", chamber: "scenes/vn-villain-closeup.png" }, portraits: { guide: "portraits/vn-amir.png", rival: "portraits/vn-dr-aris.png", emissary: "portraits/vn-lyra.png" } }
+        @label "Asset Manifest"
+        @description "Base-url + scene-background and character-portrait sprite maps keyed by node backgroundKey/portraitKey."
+        @tier "presentation"
+    }
+  }
+
+  page "/visual-novel-board" as VisualNovelBoardPage -> VisualNovelBoardRender
+}

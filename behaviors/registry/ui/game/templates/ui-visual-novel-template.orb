@@ -1,0 +1,245 @@
+{
+  "description": "VisualNovelTemplate — dialogue-scene arena; composes VisualNovelBoard with a titled header.",
+  "name": "ui-visual-novel-template",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "VisualNovelTemplateItem",
+        "persistence": "runtime"
+      },
+      "name": "VisualNovelTemplateOrbital",
+      "pages": [
+        {
+          "name": "VisualNovelTemplatePage",
+          "path": "/visual-novel-template",
+          "traits": [
+            {
+              "ref": "VisualNovelTemplateRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "className": {
+              "default": "",
+              "description": "External styling override",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "currentNodeId": {
+              "default": "start",
+              "description": "Id of the dialogue node shown first",
+              "label": "Current Node Id",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "nodes": {
+              "default": [
+                {
+                  "backgroundKey": "corridor",
+                  "choices": [
+                    {
+                      "label": "Approach the sentinel.",
+                      "nextId": "meet"
+                    },
+                    {
+                      "label": "Turn back.",
+                      "nextId": "retreat"
+                    }
+                  ],
+                  "id": "start",
+                  "portraitKey": "guide",
+                  "speaker": "Narrator",
+                  "text": "The corridor stretches into shadow. A lone sentinel blocks your path."
+                },
+                {
+                  "backgroundKey": "forge",
+                  "choices": [
+                    {
+                      "label": "I seek the core.",
+                      "nextId": "end"
+                    },
+                    {
+                      "label": "I am only passing through.",
+                      "nextId": "retreat"
+                    }
+                  ],
+                  "id": "meet",
+                  "portraitKey": "rival",
+                  "speaker": "Sentinel",
+                  "text": "You carry the old marks. Speak your purpose, traveler."
+                },
+                {
+                  "backgroundKey": "corridor",
+                  "choices": [
+                    {
+                      "label": "Begin again.",
+                      "nextId": "start"
+                    }
+                  ],
+                  "id": "retreat",
+                  "portraitKey": "guide",
+                  "speaker": "Narrator",
+                  "text": "You withdraw into the dark. The path will wait for braver feet."
+                },
+                {
+                  "backgroundKey": "core",
+                  "choices": [
+                    {
+                      "label": "Begin again.",
+                      "nextId": "start"
+                    }
+                  ],
+                  "id": "end",
+                  "portraitKey": "rival",
+                  "speaker": "Sentinel",
+                  "text": "Then the way is open. Walk it well."
+                }
+              ],
+              "description": "Dialogue graph forwarded to VisualNovelBoard.",
+              "items": {
+                "properties": {
+                  "backgroundKey": {
+                    "name": "backgroundKey",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "choices": {
+                    "items": {
+                      "properties": {
+                        "label": {
+                          "name": "label",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "nextId": {
+                          "name": "nextId",
+                          "required": true,
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "choices",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "portraitKey": {
+                    "name": "portraitKey",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "speaker": {
+                    "name": "speaker",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "text": {
+                    "name": "text",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Nodes",
+              "tier": "presentation",
+              "type": "[VisualNovelTemplateNodesItem]"
+            },
+            "portraitScale": {
+              "default": 1.0,
+              "description": "Character portrait draw-size multiplier",
+              "label": "Portrait Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "title": {
+              "default": "Visual Novel",
+              "description": "Display title shown in the template header",
+              "label": "Title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "typewriterSpeed": {
+              "default": 30.0,
+              "description": "Milliseconds per character of dialogue text reveal (0 = instant)",
+              "label": "Typewriter Speed",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "VisualNovelTemplateItem",
+          "name": "VisualNovelTemplateRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "VisualNovelTemplateItem",
+                    {}
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "advanceEvent": "ADVANCE",
+                      "chooseEvent": "CHOOSE",
+                      "className": "@config.className",
+                      "currentNodeId": "@config.currentNodeId",
+                      "entity": "@entity",
+                      "nodes": "@config.nodes",
+                      "portraitScale": "@config.portraitScale",
+                      "restartEvent": "RESTART",
+                      "title": "@config.title",
+                      "type": "visual-novel-template",
+                      "typewriterSpeed": "@config.typewriterSpeed"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

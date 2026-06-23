@@ -1,0 +1,222 @@
+app ui-card-battler-board "1.0.0"
+"CardBattlerBoard — UI factory (1:1 with the @almadar/ui card-battler-board pattern)."
+orbital CardBattlerBoardOrbital {
+  type CardBattlerBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type CardBattlerBoardCard = {
+    id : string!
+    iconKey : string
+    title : string
+    cost : number
+    attack : number
+    defense : number
+  }
+  type CardBattlerBoardAssetManifest = {
+    baseUrl : asset
+    cards : Map string asset
+  }
+
+  entity CardBattlerBoardItem [runtime] {
+    id : string!
+    deck : [CardBattlerBoardCard]
+    hand : [CardBattlerBoardCard]
+    board : [CardBattlerBoardCard]
+    mana : number = 3
+    maxMana : number = 3
+    turn : number = 1
+    result : "none" | "won" | "lost" = none
+  }
+
+  trait CardBattlerBoardRender -> @rebindable CardBattlerBoardItem [interaction, instance] {
+    initial: playing
+
+    state playing {
+      INIT -> playing
+        (set @entity.mana @config.maxMana)
+        (set @entity.maxMana @config.maxMana)
+        (set @entity.turn 1)
+        (set @entity.result "none")
+        (set @entity.deck @config.deck)
+        (set @entity.hand @config.hand)
+        (set @entity.board [])
+        (render-ui main {
+          entity: @entity
+          deck: @entity.deck
+          hand: @entity.hand
+          board: @entity.board
+          mana: @entity.mana
+          maxMana: @entity.maxMana
+          turn: @entity.turn
+          result: @entity.result
+          assetManifest: @config.assetManifest
+          playCardEvent: PLAY_CARD
+          endTurnEvent: END_TURN
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: card-battler-board
+        })
+
+      PLAY_CARD -> playing when (and (== @entity.result "none") (> (array/len (array/filter @entity.hand (fn c (and (== @c.id ?cardId) (<= (object/get @c cost) @entity.mana))))) 0))
+        (set @entity.mana (- @entity.mana (object/get (array/first (array/filter @entity.hand (fn c (== @c.id ?cardId)))) cost)))
+        (set @entity.board (array/concat @entity.board (array/filter @entity.hand (fn c (== @c.id ?cardId)))))
+        (set @entity.hand (array/filter @entity.hand (fn c (not (== @c.id ?cardId)))))
+        (render-ui main {
+          entity: @entity
+          deck: @entity.deck
+          hand: @entity.hand
+          board: @entity.board
+          mana: @entity.mana
+          maxMana: @entity.maxMana
+          turn: @entity.turn
+          result: @entity.result
+          assetManifest: @config.assetManifest
+          playCardEvent: PLAY_CARD
+          endTurnEvent: END_TURN
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: card-battler-board
+        })
+
+      END_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.maxMana (math/min @config.manaCap (+ @entity.maxMana 1)))
+        (set @entity.mana @entity.maxMana)
+        (set @entity.hand (array/concat @entity.hand (array/slice @entity.deck 0 @config.drawPerTurn)))
+        (set @entity.deck (array/slice @entity.deck @config.drawPerTurn (array/len @entity.deck)))
+        (set @entity.result (if (>= @entity.turn @config.turnsToWin) "won" @entity.result))
+        (render-ui main {
+          entity: @entity
+          deck: @entity.deck
+          hand: @entity.hand
+          board: @entity.board
+          mana: @entity.mana
+          maxMana: @entity.maxMana
+          turn: @entity.turn
+          result: @entity.result
+          assetManifest: @config.assetManifest
+          playCardEvent: PLAY_CARD
+          endTurnEvent: END_TURN
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: card-battler-board
+        })
+
+      GAME_END -> gameover when (or (== @entity.result "won") (== @entity.result "lost"))
+        (render-ui main {
+          entity: @entity
+          deck: @entity.deck
+          hand: @entity.hand
+          board: @entity.board
+          mana: @entity.mana
+          maxMana: @entity.maxMana
+          turn: @entity.turn
+          result: @entity.result
+          assetManifest: @config.assetManifest
+          playCardEvent: PLAY_CARD
+          endTurnEvent: END_TURN
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: card-battler-board
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> playing
+        (set @entity.mana @config.maxMana)
+        (set @entity.maxMana @config.maxMana)
+        (set @entity.turn 1)
+        (set @entity.result "none")
+        (set @entity.deck @config.deck)
+        (set @entity.hand @config.hand)
+        (set @entity.board [])
+        (render-ui main {
+          entity: @entity
+          deck: @entity.deck
+          hand: @entity.hand
+          board: @entity.board
+          mana: @entity.mana
+          maxMana: @entity.maxMana
+          turn: @entity.turn
+          result: @entity.result
+          assetManifest: @config.assetManifest
+          playCardEvent: PLAY_CARD
+          endTurnEvent: END_TURN
+          playAgainEvent: PLAY_AGAIN
+          gameEndEvent: GAME_END
+          type: card-battler-board
+        })
+    }
+
+    emits {
+      PLAY_CARD -> external {
+        cardId : string!
+      }
+        @description "Emits UI:{playCardEvent} with {cardId} when the player plays a card from hand"
+        @tier "essential"
+      END_TURN -> external {
+        id : string
+      }
+        @description "Emits UI:{endTurnEvent} with {} when the player ends the turn"
+        @tier "essential"
+      GAME_END -> external {
+        result : string!
+      }
+        @description "Emits UI:{gameEndEvent} with {result} when the match reaches won or lost"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : CardBattlerBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      maxMana : number = 3
+        @label "Starting Mana"
+        @description "Mana the player starts each match with; also refills each turn."
+        @tier "presentation"
+      manaCap : number = 10
+        @label "Mana Cap"
+        @description "Maximum mana the per-turn ramp can reach."
+        @tier "presentation"
+      drawPerTurn : number = 1
+        @label "Draw Per Turn"
+        @description "Cards drawn from the deck at the end of each turn."
+        @tier "presentation"
+      turnsToWin : number = 8
+        @label "Turns To Win"
+        @description "Survive this many turns to win the match."
+        @tier "presentation"
+      deck : [CardBattlerBoardCard] = [{ id: "d1", iconKey: "rhino", title: "Rhino", cost: 3, attack: 4, defense: 5 }, { id: "d2", iconKey: "whale", title: "Whale", cost: 5, attack: 7, defense: 6 }, { id: "d3", iconKey: "parrot", title: "Parrot", cost: 2, attack: 3, defense: 2 }, { id: "d4", iconKey: "panda", title: "Panda", cost: 2, attack: 2, defense: 4 }, { id: "d5", iconKey: "monkey", title: "Monkey", cost: 1, attack: 2, defense: 1 }, { id: "d6", iconKey: "penguin", title: "Penguin", cost: 1, attack: 1, defense: 2 }, { id: "d7", iconKey: "elephant", title: "Elephant", cost: 4, attack: 5, defense: 6 }]
+        @label "Deck"
+        @description "Draw deck — cards moved into hand at end of turn."
+        @tier "presentation"
+      hand : [CardBattlerBoardCard] = [{ id: "c1", iconKey: "bear", title: "Bear", cost: 3, attack: 5, defense: 4 }, { id: "c2", iconKey: "owl", title: "Owl", cost: 1, attack: 2, defense: 1 }, { id: "c3", iconKey: "gorilla", title: "Gorilla", cost: 4, attack: 6, defense: 5 }, { id: "c4", iconKey: "frog", title: "Frog", cost: 1, attack: 1, defense: 2 }, { id: "c5", iconKey: "snake", title: "Snake", cost: 2, attack: 4, defense: 1 }]
+        @label "Hand"
+        @description "Opening hand dealt at INIT; takes priority over entity-derived hand."
+        @tier "presentation"
+      assetManifest : CardBattlerBoardAssetManifest = { baseUrl: "https://almadar-kflow-assets.web.app/shared/", cards: { bear: "cards/bear.png", owl: "cards/owl.png", gorilla: "cards/gorilla.png", rhino: "cards/rhino.png", whale: "cards/whale.png", parrot: "cards/parrot.png", panda: "cards/panda.png", monkey: "cards/monkey.png", penguin: "cards/penguin.png", snake: "cards/snake.png", frog: "cards/frog.png", elephant: "cards/elephant.png" } }
+        @label "Asset Manifest"
+        @description "Base-url + per-iconKey card-art sprite map for the hand and battlefield."
+        @tier "presentation"
+    }
+  }
+
+  page "/card-battler-board" as CardBattlerBoardPage -> CardBattlerBoardRender
+}
