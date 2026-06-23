@@ -38,6 +38,15 @@ orbital GraphCanvasOrbital {
     x : number
     y : number
   }
+  type GraphCanvasNODEDOUBLECLICKNode = {
+    id : string!
+    label : string
+    group : string
+    color : string
+    size : number
+    x : number
+    y : number
+  }
 
   entity GraphCanvasItem [runtime] {
     id : string!
@@ -59,7 +68,11 @@ orbital GraphCanvasOrbital {
           draggable: @config.draggable
           actions: @config.actions
           onNodeClick: NODE_CLICK
+          onNodeDoubleClick: NODE_DOUBLE_CLICK
           nodeClickEvent: NODE_CLICK
+          selectedNodeId: @config.selectedNodeId
+          repulsion: @config.repulsion
+          linkDistance: @config.linkDistance
           layout: @config.layout
           entity: GraphCanvasItem
           isLoading: @config.isLoading
@@ -75,6 +88,11 @@ orbital GraphCanvasOrbital {
         id : string!
       }
         @description "On node click"
+        @tier "essential"
+      NODE_DOUBLE_CLICK -> external {
+        node : GraphCanvasNODEDOUBLECLICKNode
+      }
+        @description "On node double-click (e.g. to drill in)"
         @tier "essential"
     }
 
@@ -110,6 +128,18 @@ orbital GraphCanvasOrbital {
       actions : [GraphCanvasActionsItem] = [{ label: "Label", navigatesTo: "Navigates To", variant: primary }]
         @label "Actions"
         @description "Actions"
+        @tier "presentation"
+      selectedNodeId : string = "Selected Node Id"
+        @label "Selected Node Id"
+        @description "Currently selected node id (rendered emphasized)"
+        @tier "presentation"
+      repulsion : number = 800
+        @label "Repulsion"
+        @description "Force-sim repulsion strength between nodes (larger ⇒ more spread out)"
+        @tier "presentation"
+      linkDistance : number = 100
+        @label "Link Distance"
+        @description "Force-sim target edge length (larger ⇒ more spread out)"
         @tier "presentation"
       layout : "force" | "circular" | "grid" = force
         @label "Layout"

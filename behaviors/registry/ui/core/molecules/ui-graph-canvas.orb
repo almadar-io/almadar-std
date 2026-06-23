@@ -193,6 +193,13 @@
                 "grid"
               ]
             },
+            "linkDistance": {
+              "default": 100.0,
+              "description": "Force-sim target edge length (larger ⇒ more spread out)",
+              "label": "Link Distance",
+              "tier": "presentation",
+              "type": "number"
+            },
             "nodes": {
               "default": [
                 {
@@ -249,6 +256,20 @@
               "label": "Nodes",
               "tier": "presentation",
               "type": "[GraphCanvasNodesItem]"
+            },
+            "repulsion": {
+              "default": 800.0,
+              "description": "Force-sim repulsion strength between nodes (larger ⇒ more spread out)",
+              "label": "Repulsion",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "selectedNodeId": {
+              "default": "Selected Node Id",
+              "description": "Currently selected node id (rendered emphasized)",
+              "label": "Selected Node Id",
+              "tier": "presentation",
+              "type": "string"
             },
             "showLabels": {
               "default": true,
@@ -309,6 +330,49 @@
                   "name": "id",
                   "required": true,
                   "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "On node double-click (e.g. to drill in)",
+              "event": "NODE_DOUBLE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "node",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "label",
+                      "type": "string"
+                    },
+                    {
+                      "name": "group",
+                      "type": "string"
+                    },
+                    {
+                      "name": "color",
+                      "type": "string"
+                    },
+                    {
+                      "name": "size",
+                      "type": "number"
+                    },
+                    {
+                      "name": "x",
+                      "type": "number"
+                    },
+                    {
+                      "name": "y",
+                      "type": "number"
+                    }
+                  ],
+                  "type": "object"
                 }
               ],
               "scope": "external",
@@ -376,6 +440,49 @@
                   }
                 ],
                 "tier": "essential"
+              },
+              {
+                "description": "On node double-click (e.g. to drill in)",
+                "key": "NODE_DOUBLE_CLICK",
+                "name": "Node Double Click",
+                "payloadSchema": [
+                  {
+                    "name": "node",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "label",
+                        "type": "string"
+                      },
+                      {
+                        "name": "group",
+                        "type": "string"
+                      },
+                      {
+                        "name": "color",
+                        "type": "string"
+                      },
+                      {
+                        "name": "size",
+                        "type": "number"
+                      },
+                      {
+                        "name": "x",
+                        "type": "number"
+                      },
+                      {
+                        "name": "y",
+                        "type": "number"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
@@ -406,9 +513,13 @@
                       "interactive": "@config.interactive",
                       "isLoading": "@config.isLoading",
                       "layout": "@config.layout",
+                      "linkDistance": "@config.linkDistance",
                       "nodeClickEvent": "NODE_CLICK",
                       "nodes": "@config.nodes",
                       "onNodeClick": "NODE_CLICK",
+                      "onNodeDoubleClick": "NODE_DOUBLE_CLICK",
+                      "repulsion": "@config.repulsion",
+                      "selectedNodeId": "@config.selectedNodeId",
                       "showLabels": "@config.showLabels",
                       "title": "@config.title",
                       "type": "graph-canvas"
