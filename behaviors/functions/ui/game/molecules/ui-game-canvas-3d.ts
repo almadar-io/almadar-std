@@ -126,7 +126,7 @@ export interface StdUiGameCanvas3dCameraChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCanvas3dConfig {
-  /** Default: `[{"x":1,"z":1}]` */
+  /** Default: `[{"x":1,"z":1},{"x":2,"z":2}]` */
   attackTargets?: EntityRow[];
   /** Default: `"#1a1a2e"` */
   backgroundColor?: string;
@@ -174,7 +174,7 @@ export interface StdUiGameCanvas3dConfig {
   units?: EntityRow[];
   /** Default: `true` */
   useInstancing?: boolean;
-  /** Default: `[{"x":1,"z":1}]` */
+  /** Default: `[{"x":1,"z":1},{"x":2,"z":2}]` */
   validMoves?: EntityRow[];
 }
 

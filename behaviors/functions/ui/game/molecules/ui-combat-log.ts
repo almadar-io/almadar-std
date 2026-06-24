@@ -43,7 +43,7 @@ export interface StdUiCombatLogConfig {
   autoScroll?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"actorName":"Actor Name","id":"Id","message":"Message","targetName":"Target Name","timestamp":1,"turn":1,"type":"attack","value":1}]` */
+  /** Default: `[{"actorName":"Actor Name","id":"Id","message":"Message","targetName":"Target Name","timestamp":1,"turn":1,"type":"attack","value":1},{"actorName":"Actor Name 2","id":"Id 2","message":"Message 2","targetName":"Target Name 2","timestamp":2,"turn":2,"type":"defend","value":2}]` */
   events?: EntityRow[];
   /** Default: `50` */
   maxVisible?: number;

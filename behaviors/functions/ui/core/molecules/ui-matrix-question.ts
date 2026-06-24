@@ -49,11 +49,11 @@ export interface StdUiMatrixQuestionChangePayload {
 export interface StdUiMatrixQuestionConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"label":"Label","value":"Value"}]` */
+  /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
   columns?: EntityRow[];
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `[{"id":"Id","label":"Label"}]` */
+  /** Default: `[{"id":"Id","label":"Label"},{"id":"Id 2","label":"Label 2"}]` */
   rows?: EntityRow[];
   /** Default: `"md"` */
   size?: 'sm' | 'md';

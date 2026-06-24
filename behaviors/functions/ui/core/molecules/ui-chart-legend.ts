@@ -43,7 +43,7 @@ export interface StdUiChartLegendConfig {
   className?: string;
   /** Default: `"horizontal"` */
   direction?: 'horizontal' | 'vertical';
-  /** Default: `[{"color":"Color","label":"Label"}]` */
+  /** Default: `[{"color":"Color","label":"Label"},{"color":"Color 2","label":"Label 2"}]` */
   items?: EntityRow[];
 }
 

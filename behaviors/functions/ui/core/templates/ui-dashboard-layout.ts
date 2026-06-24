@@ -74,9 +74,9 @@ export interface StdUiDashboardLayoutConfig {
   headerActions?: unknown;
   /** Default: `"sidebar"` */
   layoutMode?: 'sidebar' | 'topnav' | 'bottomnav' | 'minimal';
-  /** Default: `[{"badge":"Badge","children":[],"href":"Href","icon":"circle","label":"Label"}]` */
+  /** Default: `[{"badge":"Badge","children":[],"href":"Href","icon":"circle","label":"Label"},{"badge":"Badge 2","children":[],"href":"Href 2","icon":"circle","label":"Label 2"}]` */
   navItems?: EntityRow[];
-  /** Default: `[{"createdAt":"Created At","description":"Description","id":"Id","message":"Message","read":false}]` */
+  /** Default: `[{"createdAt":"Created At","description":"Description","id":"Id","message":"Message","read":false},{"createdAt":"Created At 2","description":"Description 2","id":"Id 2","message":"Message 2","read":true}]` */
   notifications?: EntityRow[];
   /** Default: `false` */
   showSearch?: boolean;

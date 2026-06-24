@@ -46,7 +46,7 @@ export interface StdUiGameOverScreenActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameOverScreenConfig {
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
   actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
@@ -54,11 +54,11 @@ export interface StdUiGameOverScreenConfig {
   currentScore?: string;
   /** Default: `"High Score"` */
   highScore?: string;
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
   menuItems?: EntityRow[];
   /** Default: `"Message"` */
   message?: string;
-  /** Default: `[{"bind":"Bind","format":"number","icon":"circle","label":"Label","value":"Value"}]` */
+  /** Default: `[{"bind":"Bind","format":"number","icon":"circle","label":"Label","value":"Value"},{"bind":"Bind 2","format":"time","icon":"circle","label":"Label 2","value":"Value 2"}]` */
   stats?: EntityRow[];
   /** Default: `"Game Over"` */
   title?: string;

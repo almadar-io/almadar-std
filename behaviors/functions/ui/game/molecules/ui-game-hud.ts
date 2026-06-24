@@ -41,15 +41,15 @@ export type StdUiGameHudEventKey = 'INIT';
 export interface StdUiGameHudConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"bind":"Bind","format":"Format","icon":"circle","label":"Label","max":1,"position":"Position","type":"Type","value":"Value"}]` */
+  /** Default: `[{"bind":"Bind","format":"Format","icon":"circle","label":"Label","max":1,"position":"Position","type":"Type","value":"Value"},{"bind":"Bind 2","format":"Format 2","icon":"circle","label":"Label 2","max":2,"position":"Position 2","type":"Type 2","value":"Value 2"}]` */
   elements?: EntityRow[];
-  /** Default: `[{"field":"Field","source":"Source"}]` */
+  /** Default: `[{"field":"Field","source":"Source"},{"field":"Field 2","source":"Source 2"}]` */
   items?: EntityRow[];
   /** Default: `"top"` */
   position?: 'top' | 'bottom' | 'corners';
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `[{"field":"Field","source":"Source"}]` */
+  /** Default: `[{"field":"Field","source":"Source"},{"field":"Field 2","source":"Source 2"}]` */
   stats?: EntityRow[];
   /** Default: `true` */
   transparent?: boolean;

@@ -55,11 +55,11 @@ export interface StdUiGraphViewNodeHoverPayload {
 export interface StdUiGraphViewConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"color":"Color","label":"Label","source":"Source","target":"Target"}]` */
+  /** Default: `[{"color":"Color","label":"Label","source":"Source","target":"Target"},{"color":"Color 2","label":"Label 2","source":"Source 2","target":"Target 2"}]` */
   edges?: EntityRow[];
   /** Default: `0` */
   height?: number;
-  /** Default: `[{"color":"Color","group":"Group","id":"Id","label":"Label","size":1}]` */
+  /** Default: `[{"color":"Color","group":"Group","id":"Id","label":"Label","size":1},{"color":"Color 2","group":"Group 2","id":"Id 2","label":"Label 2","size":2}]` */
   nodes?: EntityRow[];
   /** Default: `true` */
   showLabels?: boolean;

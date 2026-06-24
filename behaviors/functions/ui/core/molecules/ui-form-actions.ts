@@ -41,7 +41,7 @@ export type StdUiFormActionsEventKey = 'INIT';
 export interface StdUiFormActionsConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"field":"Field","label":"Label","options":["Item"],"type":"checkbox"}]` */
+  /** Default: `[{"field":"Field","label":"Label","options":["Item","Item 2"],"type":"checkbox"},{"field":"Field 2","label":"Label 2","options":["Item","Item 2"],"type":"select"}]` */
   filters?: EntityRow[];
   /** Default: `"right-aligned-buttons"` */
   look?: 'right-aligned-buttons' | 'floating-bar' | 'inline-row' | 'dropdown-menu' | 'command-palette-trigger';
@@ -49,7 +49,7 @@ export interface StdUiFormActionsConfig {
   orientation?: 'horizontal' | 'vertical';
   /** Default: `{"actionType":"Action Type","label":"Label","navigatesTo":"Navigates To","variant":"Variant"}` */
   primary?: EntityRow;
-  /** Default: `[{"actionType":"Action Type","label":"Label","navigatesTo":"Navigates To","variant":"Variant"}]` */
+  /** Default: `[{"actionType":"Action Type","label":"Label","navigatesTo":"Navigates To","variant":"Variant"},{"actionType":"Action Type 2","label":"Label 2","navigatesTo":"Navigates To 2","variant":"Variant 2"}]` */
   secondary?: EntityRow[];
   /** Default: `"default"` */
   variant?: 'default' | 'segmented' | 'toggle';

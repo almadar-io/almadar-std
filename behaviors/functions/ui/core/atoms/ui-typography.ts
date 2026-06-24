@@ -51,6 +51,7 @@ export interface StdUiTypographyConfig {
   overflow?: 'visible' | 'hidden' | 'wrap' | 'clamp-2' | 'clamp-3';
   /** Default: `"xs"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+  /** Default: `{}` */
   style?: unknown;
   /** Default: `false` */
   truncate?: boolean;

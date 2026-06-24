@@ -66,11 +66,11 @@ export interface StdUiSelectConfig {
   clearable?: boolean;
   /** Default: `""` */
   error?: string;
-  /** Default: `[{"label":"Label","options":[{"label":"Label","value":"Value"}]}]` */
+  /** Default: `[{"label":"Label","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]},{"label":"Label 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]}]` */
   groups?: EntityRow[];
   /** Default: `false` */
   multiple?: boolean;
-  /** Default: `[{"label":"Label","value":"Value"}]` */
+  /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
   options?: EntityRow[];
   /** Default: `"Placeholder"` */
   placeholder?: string;

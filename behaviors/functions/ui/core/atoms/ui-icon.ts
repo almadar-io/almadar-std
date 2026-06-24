@@ -53,6 +53,7 @@ export interface StdUiIconConfig {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   /** Default: `0` */
   strokeWidth?: number;
+  /** Default: `{}` */
   style?: unknown;
 }
 

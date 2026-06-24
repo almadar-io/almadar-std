@@ -50,7 +50,7 @@ export interface StdUiInventoryGridConfig {
   className?: string;
   /** Default: `4` */
   columns?: number;
-  /** Default: `[{"icon":"circle","id":"Id","label":"Label","quantity":1,"rarity":"common"}]` */
+  /** Default: `[{"icon":"circle","id":"Id","label":"Label","quantity":1,"rarity":"common"},{"icon":"circle","id":"Id 2","label":"Label 2","quantity":2,"rarity":"uncommon"}]` */
   items?: EntityRow[];
   /** Default: `"Selected Id"` */
   selectedId?: string;

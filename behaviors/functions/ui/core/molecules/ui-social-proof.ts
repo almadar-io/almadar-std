@@ -41,7 +41,7 @@ export type StdUiSocialProofEventKey = 'INIT';
 export interface StdUiSocialProofConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"logo":"Logo","name":"Name","quote":"Quote"}]` */
+  /** Default: `[{"logo":"Logo","name":"Name","quote":"Quote"},{"logo":"Logo 2","name":"Name 2","quote":"Quote 2"}]` */
   items?: EntityRow[];
   /** Default: `"logos"` */
   variant?: 'logos' | 'quotes' | 'badges';

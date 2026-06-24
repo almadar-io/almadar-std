@@ -39,6 +39,7 @@ export type StdUiCaseStudyOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCaseStudyOrganismConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
@@ -126,6 +127,36 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
             'required': true,
             'type': 'string',
           },
+          {
+            'default': 'Title',
+            'name': 'title',
+            'type': 'string',
+          },
+          {
+            'default': 'Description',
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'default': 'Category',
+            'name': 'category',
+            'type': 'string',
+          },
+          {
+            'default': 'Category Color',
+            'name': 'categoryColor',
+            'type': 'string',
+          },
+          {
+            'default': 'Href',
+            'name': 'href',
+            'type': 'string',
+          },
+          {
+            'default': 'Link Label',
+            'name': 'linkLabel',
+            'type': 'string',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -138,6 +169,7 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',

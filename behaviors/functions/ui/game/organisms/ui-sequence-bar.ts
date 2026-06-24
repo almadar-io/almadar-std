@@ -68,7 +68,7 @@ export interface StdUiSequenceBarConfig {
   size?: 'sm' | 'md' | 'lg';
   /** Default: `[]` */
   slotFeedback?: string[];
-  /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name"}]` */
+  /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name"},{"category":"Category 2","description":"Description 2","iconEmoji":"Icon Emoji 2","id":"Id 2","name":"Name 2"}]` */
   slots?: EntityRow[];
 }
 
@@ -228,6 +228,13 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                 'iconEmoji': 'Icon Emoji',
                 'id': 'Id',
                 'name': 'Name',
+              },
+              {
+                'category': 'Category 2',
+                'description': 'Description 2',
+                'iconEmoji': 'Icon Emoji 2',
+                'id': 'Id 2',
+                'name': 'Name 2',
               },
             ],
             'description': 'The current sequence (sparse — undefined means empty slot)',

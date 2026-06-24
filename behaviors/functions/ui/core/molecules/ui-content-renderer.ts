@@ -39,6 +39,7 @@ export type StdUiContentRendererEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiContentRendererConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
@@ -55,7 +56,7 @@ export interface StdUiContentRendererConfig {
   pageSize?: number;
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `[{"content":"Content","type":"markdown"}]` */
+  /** Default: `[{"content":"Content","type":"markdown"},{"content":"Content 2","type":"code"}]` */
   segments?: EntityRow[];
   /** Default: `[]` */
   selectedIds?: string[];

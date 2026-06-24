@@ -70,7 +70,7 @@ export interface StdUiTagInputConfig {
   placeholder?: string;
   /** Default: `true` */
   unique?: boolean;
-  /** Default: `["Item"]` */
+  /** Default: `["Item","Item 2"]` */
   value?: string[];
   /** Default: `"default"` */
   variant?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'error' | 'info' | 'neutral';

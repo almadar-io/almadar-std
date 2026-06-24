@@ -64,7 +64,7 @@ export interface StdUiInventoryPanelConfig {
   className?: string;
   /** Default: `4` */
   columns?: number;
-  /** Default: `[{"description":"Description","id":"Id","name":"Name","quantity":1,"sprite":"Sprite","type":"Type"}]` */
+  /** Default: `[{"description":"Description","id":"Id","name":"Name","quantity":1,"sprite":"Sprite","type":"Type"},{"description":"Description 2","id":"Id 2","name":"Name 2","quantity":2,"sprite":"Sprite 2","type":"Type 2"}]` */
   items?: EntityRow[];
   /** Default: `0` */
   selectedSlot?: number;

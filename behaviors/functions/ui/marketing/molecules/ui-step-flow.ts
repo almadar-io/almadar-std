@@ -45,7 +45,7 @@ export interface StdUiStepFlowConfig {
   orientation?: 'horizontal' | 'vertical';
   /** Default: `true` */
   showConnectors?: boolean;
-  /** Default: `[{"description":"Description","icon":"circle","number":1,"title":"Title"}]` */
+  /** Default: `[{"description":"Description","icon":"circle","number":1,"title":"Title"},{"description":"Description 2","icon":"circle","number":2,"title":"Title 2"}]` */
   steps?: EntityRow[];
 }
 

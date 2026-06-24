@@ -43,7 +43,7 @@ export interface StdUiDocTocConfig {
   activeId?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"id":"Id","label":"Label","level":1}]` */
+  /** Default: `[{"id":"Id","label":"Label","level":1},{"id":"Id 2","label":"Label 2","level":2}]` */
   items?: EntityRow[];
 }
 

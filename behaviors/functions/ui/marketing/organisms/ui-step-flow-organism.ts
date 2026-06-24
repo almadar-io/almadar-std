@@ -39,6 +39,7 @@ export type StdUiStepFlowOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStepFlowOrganismConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
@@ -130,6 +131,26 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'required': true,
             'type': 'string',
           },
+          {
+            'default': 'Title',
+            'name': 'title',
+            'type': 'string',
+          },
+          {
+            'default': 0,
+            'name': 'number',
+            'type': 'number',
+          },
+          {
+            'default': 'Description',
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'default': 'Icon',
+            'name': 'icon',
+            'type': 'string',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -142,6 +163,7 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',

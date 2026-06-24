@@ -39,7 +39,7 @@ export type StdUiTurnPanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTurnPanelConfig {
-  /** Default: `[{"disabled":false,"icon":"circle","label":"Label"}]` */
+  /** Default: `[{"disabled":false,"icon":"circle","label":"Label"},{"disabled":true,"icon":"circle","label":"Label 2"}]` */
   actions?: EntityRow[];
   /** Default: `"Heroes"` */
   activeTeam?: string;

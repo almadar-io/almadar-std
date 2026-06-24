@@ -52,7 +52,7 @@ export interface StdUiOptionConstraintGroupConfig {
   description?: string;
   /** Default: `"Group Id"` */
   groupId?: string;
-  /** Default: `[{"disabled":false,"id":"Id","label":"Label","outOfStock":false,"priceDelta":1}]` */
+  /** Default: `[{"disabled":false,"id":"Id","label":"Label","outOfStock":false,"priceDelta":1},{"disabled":true,"id":"Id 2","label":"Label 2","outOfStock":true,"priceDelta":2}]` */
   options?: EntityRow[];
   /** Default: `[]` */
   selected?: string[];

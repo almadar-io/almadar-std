@@ -43,9 +43,9 @@ export interface StdUiSegmentRendererConfig {
   className?: string;
   /** Default: `"Container Class Name"` */
   containerClassName?: string;
-  /** Default: `[{"content":"Content","type":"Type"}]` */
+  /** Default: `[{"content":"Content","type":"Type"},{"content":"Content 2","type":"Type 2"}]` */
   segments?: EntityRow[];
-  /** Default: `{"activationResponse":"Activation Response","reflectionNotes":["Item"]}` */
+  /** Default: `{"activationResponse":"Activation Response","reflectionNotes":["Item","Item 2"]}` */
   userProgress?: EntityRow;
 }
 
@@ -141,6 +141,10 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
                 'content': 'Content',
                 'type': 'Type',
               },
+              {
+                'content': 'Content 2',
+                'type': 'Type 2',
+              },
             ],
             'description': 'Parsed lesson segments (see `parseLessonSegments`)',
             'items': {
@@ -167,6 +171,7 @@ export function stdUiSegmentRendererSegmentRendererOrbital(params: StdUiSegmentR
               'activationResponse': 'Activation Response',
               'reflectionNotes': [
                 'Item',
+                'Item 2',
               ],
             },
             'description': 'User progress for restoring activation/reflection state',

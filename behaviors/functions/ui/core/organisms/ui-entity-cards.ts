@@ -46,17 +46,18 @@ export interface StdUiEntityCardsViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiEntityCardsConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `"stretch"` */
   alignItems?: 'start' | 'center' | 'end' | 'stretch';
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"}]` */
+  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2"}]` */
   columns?: EntityRow[];
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"}]` */
+  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2"}]` */
   fields?: EntityRow[];
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
@@ -64,7 +65,7 @@ export interface StdUiEntityCardsConfig {
   imageField?: string;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"action":"Action","label":"Label","navigatesTo":"Navigates To","placement":"card","variant":"primary"}]` */
+  /** Default: `[{"action":"Action","label":"Label","navigatesTo":"Navigates To","placement":"card","variant":"primary"},{"action":"Action 2","label":"Label 2","navigatesTo":"Navigates To 2","placement":"footer","variant":"secondary"}]` */
   itemActions?: EntityRow[];
   /** Default: `1` */
   maxCols?: number;
@@ -165,6 +166,7 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',
@@ -197,6 +199,12 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                 'key': 'Key',
                 'label': 'Label',
                 'name': 'Name',
+              },
+              {
+                'header': 'Header 2',
+                'key': 'Key 2',
+                'label': 'Label 2',
+                'name': 'Name 2',
               },
             ],
             'description': 'Alias for fields - backwards compatibility',
@@ -275,6 +283,12 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                 'label': 'Label',
                 'name': 'Name',
               },
+              {
+                'header': 'Header 2',
+                'key': 'Key 2',
+                'label': 'Label 2',
+                'name': 'Name 2',
+              },
             ],
             'description': 'Fields to display - required for schema-driven rendering',
             'items': {
@@ -342,6 +356,13 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                 'navigatesTo': 'Navigates To',
                 'placement': 'card',
                 'variant': 'primary',
+              },
+              {
+                'action': 'Action 2',
+                'label': 'Label 2',
+                'navigatesTo': 'Navigates To 2',
+                'placement': 'footer',
+                'variant': 'secondary',
               },
             ],
             'description': 'Actions for each card item (schema-driven)',

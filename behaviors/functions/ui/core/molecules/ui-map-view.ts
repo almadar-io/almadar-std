@@ -69,9 +69,9 @@ export interface StdUiMapViewConfig {
   className?: string;
   /** Default: `"400px"` */
   height?: string;
-  /** Default: `[{"category":"Category","id":"Id","label":"Label","lat":1,"lng":1}]` */
+  /** Default: `[{"category":"Category","id":"Id","label":"Label","lat":1,"lng":1},{"category":"Category 2","id":"Id 2","label":"Label 2","lat":2,"lng":2}]` */
   markers?: EntityRow[];
-  /** Default: `[{"color":"Color","dashArray":"Dash Array","id":"Id","label":"Label","opacity":1,"waypoints":[{"lat":1,"lng":1}],"weight":1}]` */
+  /** Default: `[{"color":"Color","dashArray":"Dash Array","id":"Id","label":"Label","opacity":1,"waypoints":[{"lat":1,"lng":1},{"lat":2,"lng":2}],"weight":1},{"color":"Color 2","dashArray":"Dash Array 2","id":"Id 2","label":"Label 2","opacity":2,"waypoints":[{"lat":1,"lng":1},{"lat":2,"lng":2}],"weight":2}]` */
   routes?: EntityRow[];
   /** Default: `true` */
   showAttribution?: boolean;

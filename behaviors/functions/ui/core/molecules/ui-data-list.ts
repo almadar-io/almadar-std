@@ -92,7 +92,7 @@ export interface StdUiDataListConfig {
   accepts?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"}]` */
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
   columns?: EntityRow[];
   /** Default: `"Current User"` */
   currentUser?: string;
@@ -105,7 +105,7 @@ export interface StdUiDataListConfig {
   /** Default: `"Drop Event"` */
   dropEvent?: string;
   error?: EntityRow;
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"}]` */
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
   fields?: EntityRow[];
   /** Default: `"none"` */
   gap?: 'none' | 'sm' | 'md' | 'lg';
@@ -133,9 +133,9 @@ export interface StdUiDataListConfig {
   senderField?: string;
   /** Default: `false` */
   sortable?: boolean;
-  /** Default: `[{"icon":"circle","label":"Label","variant":"primary"}]` */
+  /** Default: `[{"icon":"circle","label":"Label","variant":"primary"},{"icon":"circle","label":"Label 2","variant":"secondary"}]` */
   swipeLeftActions?: EntityRow[];
-  /** Default: `[{"icon":"circle","label":"Label","variant":"primary"}]` */
+  /** Default: `[{"icon":"circle","label":"Label","variant":"primary"},{"icon":"circle","label":"Label 2","variant":"secondary"}]` */
   swipeRightActions?: EntityRow[];
   /** Default: `"default"` */
   variant?: 'default' | 'card' | 'compact' | 'message';

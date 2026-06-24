@@ -51,6 +51,7 @@ export interface StdUiCenterConfig {
   inline?: boolean;
   /** Default: `"Min Height"` */
   minHeight?: string;
+  /** Default: `{}` */
   style?: unknown;
   /** Default: `true` */
   vertical?: boolean;

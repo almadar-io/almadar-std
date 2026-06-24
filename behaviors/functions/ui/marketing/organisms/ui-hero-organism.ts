@@ -39,6 +39,7 @@ export type StdUiHeroOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiHeroOrganismConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
@@ -122,6 +123,111 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'required': true,
             'type': 'string',
           },
+          {
+            'default': 'Title',
+            'name': 'title',
+            'type': 'string',
+          },
+          {
+            'default': 'Tag',
+            'name': 'tag',
+            'type': 'string',
+          },
+          {
+            'default': 'Title Accent',
+            'name': 'titleAccent',
+            'type': 'string',
+          },
+          {
+            'default': 'Subtitle',
+            'name': 'subtitle',
+            'type': 'string',
+          },
+          {
+            'default': {
+              'href': 'Href',
+              'label': 'Label',
+            },
+            'name': 'primaryAction',
+            'properties': {
+              'href': {
+                'name': 'href',
+                'required': false,
+                'type': 'string',
+              },
+              'label': {
+                'name': 'label',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'type': 'object',
+          },
+          {
+            'default': {
+              'href': 'Href',
+              'label': 'Label',
+            },
+            'name': 'secondaryAction',
+            'properties': {
+              'href': {
+                'name': 'href',
+                'required': false,
+                'type': 'string',
+              },
+              'label': {
+                'name': 'label',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'type': 'object',
+          },
+          {
+            'default': 'Install Command',
+            'name': 'installCommand',
+            'type': 'string',
+          },
+          {
+            'default': {
+              'alt': 'Alt',
+              'src': 'Src',
+            },
+            'name': 'image',
+            'properties': {
+              'alt': {
+                'name': 'alt',
+                'required': false,
+                'type': 'string',
+              },
+              'src': {
+                'name': 'src',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'type': 'object',
+          },
+          {
+            'default': 'below',
+            'name': 'imagePosition',
+            'type': 'string',
+            'values': [
+              'below',
+              'right',
+              'background',
+            ],
+          },
+          {
+            'default': 'dark',
+            'name': 'background',
+            'type': 'string',
+            'values': [
+              'dark',
+              'gradient',
+              'subtle',
+            ],
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -134,6 +240,7 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',

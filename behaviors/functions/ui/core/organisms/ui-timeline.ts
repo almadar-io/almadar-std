@@ -49,13 +49,13 @@ export interface StdUiTimelineConfig {
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `["Item"]` */
+  /** Default: `["Item","Item 2"]` */
   fields?: string[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
   itemActions?: EntityRow[];
-  /** Default: `[{"date":"Date","description":"Description","icon":"circle","id":"Id","status":"complete","tags":["Item"],"title":"Title"}]` */
+  /** Default: `[{"date":"Date","description":"Description","icon":"circle","id":"Id","status":"complete","tags":["Item","Item 2"],"title":"Title"},{"date":"Date 2","description":"Description 2","icon":"circle","id":"Id 2","status":"active","tags":["Item","Item 2"],"title":"Title 2"}]` */
   items?: EntityRow[];
   /** Default: `"vertical-spacious"` */
   look?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
@@ -173,6 +173,7 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
           'fields': {
             'default': [
               'Item',
+              'Item 2',
             ],
             'description': 'Fields to display',
             'items': {
@@ -195,6 +196,11 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                 'label': 'Label',
                 'navigatesTo': 'Navigates To',
                 'variant': 'primary',
+              },
+              {
+                'label': 'Label 2',
+                'navigatesTo': 'Navigates To 2',
+                'variant': 'secondary',
               },
             ],
             'description': 'Actions per item',
@@ -242,8 +248,21 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                 'status': 'complete',
                 'tags': [
                   'Item',
+                  'Item 2',
                 ],
                 'title': 'Title',
+              },
+              {
+                'date': 'Date 2',
+                'description': 'Description 2',
+                'icon': 'circle',
+                'id': 'Id 2',
+                'status': 'active',
+                'tags': [
+                  'Item',
+                  'Item 2',
+                ],
+                'title': 'Title 2',
               },
             ],
             'description': 'Timeline items',

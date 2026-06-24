@@ -77,7 +77,7 @@ export interface StdUiInputConfig {
   /** Default: `"Label"` */
   label?: string;
   leftIcon?: unknown;
-  /** Default: `[{"label":"Label","value":"Value"}]` */
+  /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
   options?: EntityRow[];
   /** Default: `"Placeholder"` */
   placeholder?: string;

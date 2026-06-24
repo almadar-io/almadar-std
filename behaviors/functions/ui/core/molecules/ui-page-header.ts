@@ -53,11 +53,11 @@ export interface StdUiPageHeaderTabChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiPageHeaderConfig {
-  /** Default: `[{"disabled":false,"icon":"circle","label":"Label","loading":false,"navigatesTo":"Navigates To","variant":"primary"}]` */
+  /** Default: `[{"disabled":false,"icon":"circle","label":"Label","loading":false,"navigatesTo":"Navigates To","variant":"primary"},{"disabled":true,"icon":"circle","label":"Label 2","loading":true,"navigatesTo":"Navigates To 2","variant":"secondary"}]` */
   actions?: EntityRow[];
   /** Default: `"Active Tab"` */
   activeTab?: string;
-  /** Default: `[{"href":"Href","label":"Label"}]` */
+  /** Default: `[{"href":"Href","label":"Label"},{"href":"Href 2","label":"Label 2"}]` */
   breadcrumbs?: EntityRow[];
   /** Default: `""` */
   className?: string;
@@ -67,9 +67,11 @@ export interface StdUiPageHeaderConfig {
   /** Default: `false` */
   showBack?: boolean;
   status?: EntityRow;
+  /** Default: `{}` */
   subtitle?: unknown;
-  /** Default: `[{"count":1,"label":"Label","value":"Value"}]` */
+  /** Default: `[{"count":1,"label":"Label","value":"Value"},{"count":2,"label":"Label 2","value":"Value 2"}]` */
   tabs?: EntityRow[];
+  /** Default: `{}` */
   title?: unknown;
 }
 

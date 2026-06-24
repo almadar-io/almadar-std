@@ -39,6 +39,7 @@ export type StdUiMasterDetailEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiMasterDetailConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
@@ -49,7 +50,7 @@ export interface StdUiMasterDetailConfig {
   isLoading?: boolean;
   /** Default: `false` */
   loading?: boolean;
-  /** Default: `["Item"]` */
+  /** Default: `["Item","Item 2"]` */
   masterFields?: string[];
   /** Default: `0` */
   pageProp?: number;
@@ -140,6 +141,7 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',
@@ -207,6 +209,7 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
           'masterFields': {
             'default': [
               'Item',
+              'Item 2',
             ],
             'description': 'Fields to show in the master list (maps to DataTable columns)',
             'items': {

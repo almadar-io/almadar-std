@@ -68,7 +68,7 @@ export interface StdUiVersionDiffConfig {
   className?: string;
   /** Default: `"Language"` */
   language?: string;
-  /** Default: `[{"author":"Author","content":"Content","id":"Id","label":"Label","timestamp":"Timestamp"}]` */
+  /** Default: `[{"author":"Author","content":"Content","id":"Id","label":"Label","timestamp":"Timestamp"},{"author":"Author 2","content":"Content 2","id":"Id 2","label":"Label 2","timestamp":"Timestamp 2"}]` */
   revisions?: EntityRow[];
   /** Default: `"side-by-side"` */
   view?: 'side-by-side' | 'inline';

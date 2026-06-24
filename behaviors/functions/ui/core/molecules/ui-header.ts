@@ -81,7 +81,7 @@ export interface StdUiHeaderConfig {
   logoSrc?: unknown;
   /** Default: `"compact-bar"` */
   look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
-  /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","label":"Label"}]` */
+  /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","label":"Label"},{"active":true,"badge":"Badge 2","href":"Href 2","icon":"circle","label":"Label 2"}]` */
   navigationItems?: EntityRow[];
   /** Default: `"Search Placeholder"` */
   searchPlaceholder?: string;
