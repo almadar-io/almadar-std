@@ -102,14 +102,14 @@ export interface StdUiBattleBoardPlayAgainPayload {
  */
 export interface StdUiBattleBoardConfig {
   activeFilters?: unknown;
-  /** Default: `{"effects":{"death":"effects/explosions/pixel/pixelExplosion07.png","fire":"effects/particles/fire_02.png","heal":"effects/particles/magic_02.png","hit":"effects/particles/spark_06.png","magic":"effects/particles/magic_02.png","melee":"effects/particles/slash_03.png","ranged":"effects/particles/spark_06.png","smoke":"effects/particles/smoke_02.png"},"features":{"castle":"castle/resonator_citadel.png","gold_mine":"world-map/gold_mine.png","portal":"world-map/portal_open.png"},"terrains":{"castle":"isometric-dungeon/Isometric/stoneTile_E.png","dirt":"isometric-dungeon/Isometric/dirtTiles_E.png","forest":"isometric-dungeon/Isometric/planks_E.png","grass":"isometric-dungeon/Isometric/dirt_E.png","stone":"isometric-dungeon/Isometric/stoneInset_E.png"},"units":{"guardian":"units/guardian.png","mender":"units/mender.png","scrapper":"units/scrapper.png","worker":"units/worker.png"}}` */
+  /** Default: `{"effects":{"death":"effects/explosions/pixel/pixelExplosion07.png","fire":"effects/particles/fire_02.png","heal":"effects/particles/magic_02.png","hit":"effects/particles/spark_06.png","magic":"effects/particles/magic_02.png","melee":"effects/particles/slash_03.png","ranged":"effects/particles/spark_06.png","smoke":"effects/particles/smoke_02.png"},"features":{"castle":"terrain/Isometric/woodenCrates_N.png","gold_mine":"terrain/Isometric/woodenCrates_S.png","portal":"terrain/Isometric/woodenCrates_N.png"},"terrains":{"castle":"terrain/Isometric/stoneMissingTiles_N.png","dirt":"terrain/Isometric/dirtTiles_N.png","forest":"terrain/Isometric/woodenPile_N.png","grass":"terrain/Isometric/dirtTiles_N.png","stone":"terrain/Isometric/stoneTile_N.png"},"units":{"guardian":"sprite-sheets/guardian-sprite-sheet-sw.png","mender":"sprite-sheets/mender-sprite-sheet-sw.png","scrapper":"sprite-sheets/scrapper-sprite-sheet-sw.png","worker":"sprite-sheets/worker-sprite-sheet-sw.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `["https://almadar-kflow-assets.web.app/shared/effects/particles/slash_03.png","https://almadar-kflow-assets.web.app/shared/effects/particles/magic_02.png","https://almadar-kflow-assets.web.app/shared/effects/particles/spark_06.png","https://almadar-kflow-assets.web.app/shared/effects/explosions/pixel/pixelExplosion07.png"]` */
   effectSpriteUrls?: EntityRow[];
   error?: EntityRow;
-  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":1}]` */
+  /** Default: `[{"id":"f1","sprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneColumn_E.png","type":"gold_mine","x":2,"y":2},{"id":"f2","sprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stairsAged_E.png","type":"portal","x":3,"y":1}]` */
   features?: EntityRow[];
   /** Default: `false` */
   hasActiveEffects?: boolean;
@@ -135,7 +135,7 @@ export interface StdUiBattleBoardConfig {
   totalCount?: number;
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","name":"Worker","position":{"x":1,"y":1},"team":"player","unitType":"worker"},{"health":8,"id":"u2","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","name":"Mender","position":{"x":3,"y":2},"team":"player","unitType":"mender"},{"health":8,"id":"u3","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Guardian","position":{"x":12,"y":12},"team":"enemy","unitType":"guardian"},{"health":6,"id":"u4","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Scrapper","position":{"x":14,"y":13},"team":"enemy","unitType":"scrapper"}]` */
+  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"name":"Worker","position":{"x":1,"y":1},"sprite":"https://almadar-kflow-assets.web.app/shared/sprite-sheets/breaker-sprite-sheet-sw.png","team":"player","unitType":"worker"},{"health":8,"id":"u2","maxHealth":10,"name":"Mender","position":{"x":3,"y":2},"sprite":"https://almadar-kflow-assets.web.app/shared/sprite-sheets/mender-sprite-sheet-sw.png","team":"player","unitType":"mender"},{"health":8,"id":"u3","maxHealth":10,"name":"Guardian","position":{"x":12,"y":12},"sprite":"https://almadar-kflow-assets.web.app/shared/sprite-sheets/guardian-sprite-sheet-sw.png","team":"enemy","unitType":"guardian"},{"health":6,"id":"u4","maxHealth":10,"name":"Scrapper","position":{"x":14,"y":13},"sprite":"https://almadar-kflow-assets.web.app/shared/sprite-sheets/destroyer-sprite-sheet-sw.png","team":"enemy","unitType":"scrapper"}]` */
   units?: EntityRow[];
 }
 
@@ -430,22 +430,22 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 'smoke': 'effects/particles/smoke_02.png',
               },
               'features': {
-                'castle': 'castle/resonator_citadel.png',
-                'gold_mine': 'world-map/gold_mine.png',
-                'portal': 'world-map/portal_open.png',
+                'castle': 'terrain/Isometric/woodenCrates_N.png',
+                'gold_mine': 'terrain/Isometric/woodenCrates_S.png',
+                'portal': 'terrain/Isometric/woodenCrates_N.png',
               },
               'terrains': {
-                'castle': 'isometric-dungeon/Isometric/stoneTile_E.png',
-                'dirt': 'isometric-dungeon/Isometric/dirtTiles_E.png',
-                'forest': 'isometric-dungeon/Isometric/planks_E.png',
-                'grass': 'isometric-dungeon/Isometric/dirt_E.png',
-                'stone': 'isometric-dungeon/Isometric/stoneInset_E.png',
+                'castle': 'terrain/Isometric/stoneMissingTiles_N.png',
+                'dirt': 'terrain/Isometric/dirtTiles_N.png',
+                'forest': 'terrain/Isometric/woodenPile_N.png',
+                'grass': 'terrain/Isometric/dirtTiles_N.png',
+                'stone': 'terrain/Isometric/stoneTile_N.png',
               },
               'units': {
-                'guardian': 'units/guardian.png',
-                'mender': 'units/mender.png',
-                'scrapper': 'units/scrapper.png',
-                'worker': 'units/worker.png',
+                'guardian': 'sprite-sheets/guardian-sprite-sheet-sw.png',
+                'mender': 'sprite-sheets/mender-sprite-sheet-sw.png',
+                'scrapper': 'sprite-sheets/scrapper-sprite-sheet-sw.png',
+                'worker': 'sprite-sheets/worker-sprite-sheet-sw.png',
               },
             },
             'description': 'Direct asset manifest — takes priority over entity-derived manifest.',
@@ -545,15 +545,15 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
           'features': {
             'default': [
               {
-                'assetUrl': 'https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb',
                 'id': 'f1',
+                'sprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneColumn_E.png',
                 'type': 'gold_mine',
                 'x': 2,
                 'y': 2,
               },
               {
-                'assetUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb',
                 'id': 'f2',
+                'sprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stairsAged_E.png',
                 'type': 'portal',
                 'x': 3,
                 'y': 1,
@@ -2570,12 +2570,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 'health': 10,
                 'id': 'u1',
                 'maxHealth': 10,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb',
                 'name': 'Worker',
                 'position': {
                   'x': 1,
                   'y': 1,
                 },
+                'sprite': 'https://almadar-kflow-assets.web.app/shared/sprite-sheets/breaker-sprite-sheet-sw.png',
                 'team': 'player',
                 'unitType': 'worker',
               },
@@ -2583,12 +2583,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 'health': 8,
                 'id': 'u2',
                 'maxHealth': 10,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb',
                 'name': 'Mender',
                 'position': {
                   'x': 3,
                   'y': 2,
                 },
+                'sprite': 'https://almadar-kflow-assets.web.app/shared/sprite-sheets/mender-sprite-sheet-sw.png',
                 'team': 'player',
                 'unitType': 'mender',
               },
@@ -2596,12 +2596,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 'health': 8,
                 'id': 'u3',
                 'maxHealth': 10,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb',
                 'name': 'Guardian',
                 'position': {
                   'x': 12,
                   'y': 12,
                 },
+                'sprite': 'https://almadar-kflow-assets.web.app/shared/sprite-sheets/guardian-sprite-sheet-sw.png',
                 'team': 'enemy',
                 'unitType': 'guardian',
               },
@@ -2609,12 +2609,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
                 'health': 6,
                 'id': 'u4',
                 'maxHealth': 10,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb',
                 'name': 'Scrapper',
                 'position': {
                   'x': 14,
                   'y': 13,
                 },
+                'sprite': 'https://almadar-kflow-assets.web.app/shared/sprite-sheets/destroyer-sprite-sheet-sw.png',
                 'team': 'enemy',
                 'unitType': 'scrapper',
               },

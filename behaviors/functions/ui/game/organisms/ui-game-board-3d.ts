@@ -101,7 +101,7 @@ export interface StdUiGameBoard3dPlayAgainPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameBoard3dConfig {
-  /** Default: `{"effects":{"death":"effects/explosions/pixel/pixelExplosion07.png","heal":"effects/particles/magic_02.png","hit":"effects/particles/spark_06.png","magic":"effects/particles/magic_02.png","melee":"effects/particles/slash_03.png","ranged":"effects/particles/spark_06.png"},"features":{"gold_mine":"world-map/gold_mine.png","portal":"world-map/portal_open.png"},"terrains":{"castle":"isometric-dungeon/Isometric/stoneTile_E.png","dirt":"isometric-dungeon/Isometric/dirtTiles_E.png","forest":"isometric-dungeon/Isometric/planks_E.png","grass":"isometric-dungeon/Isometric/dirt_E.png","stone":"isometric-dungeon/Isometric/stoneInset_E.png"},"units":{"guardian":"units/guardian.png","scout":"units/scout.png","warrior":"units/warrior.png","worker":"units/worker.png"}}` */
+  /** Default: `{"effects":{"death":"effects/explosions/pixel/pixelExplosion07.png","heal":"effects/particles/magic_02.png","hit":"effects/particles/spark_06.png","magic":"effects/particles/magic_02.png","melee":"effects/particles/slash_03.png","ranged":"effects/particles/spark_06.png"},"features":{"gold_mine":"3d/dungeon/floor/template-floor-detail-a.glb","portal":"3d/dungeon/gates/gate-door.glb"},"terrains":{"castle":"isometric-dungeon/Isometric/stoneTile_E.png","dirt":"isometric-dungeon/Isometric/dirtTiles_E.png","forest":"isometric-dungeon/Isometric/planks_E.png","grass":"isometric-dungeon/Isometric/dirt_E.png","stone":"isometric-dungeon/Isometric/stoneInset_E.png"},"units":{"guardian":"units/guardian.png","scout":"units/scout.png","warrior":"units/warrior.png","worker":"units/worker.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
@@ -458,8 +458,8 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 'ranged': 'effects/particles/spark_06.png',
               },
               'features': {
-                'gold_mine': 'world-map/gold_mine.png',
-                'portal': 'world-map/portal_open.png',
+                'gold_mine': '3d/dungeon/floor/template-floor-detail-a.glb',
+                'portal': '3d/dungeon/gates/gate-door.glb',
               },
               'terrains': {
                 'castle': 'isometric-dungeon/Isometric/stoneTile_E.png',

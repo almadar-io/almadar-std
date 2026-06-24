@@ -304,6 +304,11 @@ import {
   isStdUiHeroOrganismHeroOrganismOrbitalParams,
 } from './ui/marketing/organisms/ui-hero-organism.js';
 import {
+  stdUiHexStrategyBoardHexStrategyBoardOrbital,
+  StdUiHexStrategyBoardHexStrategyBoardOrbitalManifest,
+  isStdUiHexStrategyBoardHexStrategyBoardOrbitalParams,
+} from './ui/game/organisms/ui-hex-strategy-board.js';
+import {
   stdUiMasterDetailMasterDetailOrbital,
   StdUiMasterDetailMasterDetailOrbitalManifest,
   isStdUiMasterDetailMasterDetailOrbitalParams,
@@ -1117,6 +1122,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiHeroOrganismHeroOrganismOrbital(p);
     },
     manifest: StdUiHeroOrganismHeroOrganismOrbitalManifest,
+  }],
+  ['ui-hex-strategy-board::HexStrategyBoardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiHexStrategyBoardHexStrategyBoardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-hex-strategy-board::HexStrategyBoardOrbital');
+      }
+      return stdUiHexStrategyBoardHexStrategyBoardOrbital(p);
+    },
+    manifest: StdUiHexStrategyBoardHexStrategyBoardOrbitalManifest,
   }],
   ['ui-master-detail::MasterDetailOrbital', {
     factory: (p: object): OrbitalDefinition => {

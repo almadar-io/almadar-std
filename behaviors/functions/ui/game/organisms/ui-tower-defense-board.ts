@@ -76,7 +76,7 @@ export interface StdUiTowerDefenseBoardMoveHeroPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTowerDefenseBoardConfig {
-  /** Default: `{"baseUrl":"https://almadar-kflow-assets.web.app/shared/","features":{"tower":"buildings/arcane_tower.png"},"terrains":{"grass":"terrain/Isometric/dirtTiles_E.png","ground":"terrain/Isometric/dirt_E.png","path":"terrain/Isometric/planks_E.png","stone":"terrain/Isometric/stone_E.png","wall":"terrain/Isometric/stoneWall_E.png"},"units":{"creep":"sprite-sheets/scrapper-sprite-sheet-se.png","hero":"sprite-sheets/amir-sprite-sheet-se.png"}}` */
+  /** Default: `{"baseUrl":"https://almadar-kflow-assets.web.app/shared/","features":{"tower":"terrain/Isometric/woodenCrates_N.png"},"terrains":{"grass":"terrain/Isometric/dirtTiles_N.png","ground":"terrain/Isometric/dirtTiles_N.png","path":"terrain/Isometric/dirtTiles_N.png","stone":"terrain/Isometric/stoneTile_N.png","wall":"terrain/Isometric/dirtTiles_N.png"},"units":{"creep":"sprite-sheets/forger-sprite-sheet-se.png","hero":"sprite-sheets/shadow-legion-sprite-sheet-sw.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
@@ -408,18 +408,18 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             'default': {
               'baseUrl': 'https://almadar-kflow-assets.web.app/shared/',
               'features': {
-                'tower': 'buildings/arcane_tower.png',
+                'tower': 'terrain/Isometric/woodenCrates_N.png',
               },
               'terrains': {
-                'grass': 'terrain/Isometric/dirtTiles_E.png',
-                'ground': 'terrain/Isometric/dirt_E.png',
-                'path': 'terrain/Isometric/planks_E.png',
-                'stone': 'terrain/Isometric/stone_E.png',
-                'wall': 'terrain/Isometric/stoneWall_E.png',
+                'grass': 'terrain/Isometric/dirtTiles_N.png',
+                'ground': 'terrain/Isometric/dirtTiles_N.png',
+                'path': 'terrain/Isometric/dirtTiles_N.png',
+                'stone': 'terrain/Isometric/stoneTile_N.png',
+                'wall': 'terrain/Isometric/dirtTiles_N.png',
               },
               'units': {
-                'creep': 'sprite-sheets/scrapper-sprite-sheet-se.png',
-                'hero': 'sprite-sheets/amir-sprite-sheet-se.png',
+                'creep': 'sprite-sheets/forger-sprite-sheet-se.png',
+                'hero': 'sprite-sheets/shadow-legion-sprite-sheet-sw.png',
               },
             },
             'description': 'Base-url + terrain/unit/structure sprite maps; towers render as the structure asset.',
