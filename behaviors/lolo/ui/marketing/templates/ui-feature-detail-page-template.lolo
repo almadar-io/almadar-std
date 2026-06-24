@@ -1,6 +1,7 @@
 app ui-feature-detail-page-template "1.0.0"
 "FeatureDetailPageTemplate — UI factory (1:1 with the @almadar/ui feature-detail-page-template pattern)."
 orbital FeatureDetailPageTemplateOrbital {
+    type FeatureDetailPageTemplateLoaded = Event { data : [FeatureDetailPageTemplateItem] } "FeatureDetailPageTemplate rows finished loading; payload.data holds the collection"
   type FeatureDetailPageTemplateHero = {
     id : string
     tag : string
@@ -48,12 +49,25 @@ orbital FeatureDetailPageTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch FeatureDetailPageTemplateItem {})
+        (fetch FeatureDetailPageTemplateItem { emit: { success: FeatureDetailPageTemplateLoaded } })
         (render-ui main {
           entity: @entity
           className: @config.className
           type: feature-detail-page-template
         })
+      FeatureDetailPageTemplateLoaded -> idle
+        (render-ui main {
+          entity: @payload.data
+          className: @config.className
+          type: feature-detail-page-template
+        })
+    }
+
+    emits {
+      FeatureDetailPageTemplateLoaded
+        @description "FeatureDetailPageTemplate rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

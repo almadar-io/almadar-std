@@ -30,7 +30,7 @@ const ALIAS = 'UiDataList';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDataListEventKey = 'INIT' | 'ITEM_CLICK' | 'LOAD_MORE' | 'LONG_PRESS' | 'REORDER' | 'SWIPE_LEFT' | 'SWIPE_RIGHT' | 'VIEW';
+export type StdUiDataListEventKey = 'DataListLoaded' | 'INIT' | 'ITEM_CLICK' | 'LOAD_MORE' | 'LONG_PRESS' | 'REORDER' | 'SWIPE_LEFT' | 'SWIPE_RIGHT' | 'VIEW';
 
 /**
  * Payload shape for the `REORDER` event.
@@ -79,6 +79,13 @@ export interface StdUiDataListLoadMorePayload {
  */
 export interface StdUiDataListViewPayload {
   id?: string;
+}
+
+/**
+ * Payload shape for the `DataListLoaded` event.
+ */
+export interface StdUiDataListDataListLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**

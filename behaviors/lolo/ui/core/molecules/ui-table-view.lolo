@@ -1,6 +1,7 @@
 app ui-table-view "1.0.0"
 "TableView — UI factory (1:1 with the @almadar/ui table-view pattern)."
 orbital TableViewOrbital {
+    type TableViewLoaded = Event { data : [TableViewItem] } "TableView rows finished loading; payload.data holds the collection"
   type TableViewColumnsItem = {
     key : string!
     field : string
@@ -49,7 +50,7 @@ orbital TableViewOrbital {
 
     state idle {
       INIT -> idle
-        (fetch TableViewItem {})
+        (fetch TableViewItem { emit: { success: TableViewLoaded } })
         (render-ui main {
           dragGroup: @config.dragGroup
           accepts: @config.accepts
@@ -60,6 +61,36 @@ orbital TableViewOrbital {
           dndItemIdField: @config.dndItemIdField
           dndRoot: @config.dndRoot
           entity: @entity
+          columns: @config.columns
+          fields: @config.fields
+          maxInlineActions: @config.maxInlineActions
+          selectable: @config.selectable
+          selectEvent: SELECT
+          selectedIds: @config.selectedIds
+          sortEvent: SORT
+          sortColumn: @config.sortColumn
+          sortDirection: @config.sortDirection
+          className: @config.className
+          emptyMessage: @config.emptyMessage
+          isLoading: @config.isLoading
+          error: @config.error
+          groupBy: @config.groupBy
+          pageSize: @config.pageSize
+          look: @config.look
+          itemActions: [{ label: "View", event: VIEW }]
+          type: table-view
+        })
+      TableViewLoaded -> idle
+        (render-ui main {
+          dragGroup: @config.dragGroup
+          accepts: @config.accepts
+          sortable: @config.sortable
+          dropEvent: @config.dropEvent
+          reorderEvent: @config.reorderEvent
+          positionEvent: @config.positionEvent
+          dndItemIdField: @config.dndItemIdField
+          dndRoot: @config.dndRoot
+          entity: @payload.data
           columns: @config.columns
           fields: @config.fields
           maxInlineActions: @config.maxInlineActions
@@ -98,6 +129,10 @@ orbital TableViewOrbital {
         id : string
       }
         @description "User opened a record from the list."
+        @tier "essential"
+      TableViewLoaded
+        @description "TableView rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

@@ -450,6 +450,21 @@
               ]
             }
           },
+          "emits": [
+            {
+              "description": "LandingPageTemplate rows finished loading; payload.data holds the collection.",
+              "event": "LandingPageTemplateLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[LandingPageTemplateItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -463,6 +478,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "LandingPageTemplate rows finished loading; payload.data holds the collection.",
+                "key": "LandingPageTemplateLoaded",
+                "name": "Landing page template loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[LandingPageTemplateItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -477,7 +505,11 @@
                   [
                     "fetch",
                     "LandingPageTemplateItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "LandingPageTemplateLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -492,6 +524,24 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "entity": "@payload.data",
+                      "featureColumns": "@config.featureColumns",
+                      "type": "landing-page-template",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "LandingPageTemplateLoaded",
                 "from": "idle",
                 "to": "idle"
               }

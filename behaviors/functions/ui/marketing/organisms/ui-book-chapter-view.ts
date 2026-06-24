@@ -30,7 +30,14 @@ const ALIAS = 'UiBookChapterView';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiBookChapterViewEventKey = 'INIT';
+export type StdUiBookChapterViewEventKey = 'BookChapterViewLoaded' | 'INIT';
+
+/**
+ * Payload shape for the `BookChapterViewLoaded` event.
+ */
+export interface StdUiBookChapterViewBookChapterViewLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -136,6 +143,21 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
             ],
           },
         },
+        'emits': [
+          {
+            'description': 'BookChapterView rows finished loading; payload.data holds the collection.',
+            'event': 'BookChapterViewLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[BookChapterViewItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],
@@ -150,6 +172,19 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'description': 'BookChapterView rows finished loading; payload.data holds the collection.',
+              'key': 'BookChapterViewLoaded',
+              'name': 'Book chapter view loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BookChapterViewItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -163,7 +198,11 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                 [
                   'fetch',
                   'BookChapterViewItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'BookChapterViewLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -177,6 +216,23 @@ export function stdUiBookChapterViewBookChapterViewOrbital(params: StdUiBookChap
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'chapter': '@payload.data',
+                    'className': '@config.className',
+                    'direction': '@config.direction',
+                    'type': 'book-chapter-view',
+                  },
+                ],
+              ],
+              'event': 'BookChapterViewLoaded',
               'from': 'idle',
               'to': 'idle',
             },

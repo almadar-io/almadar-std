@@ -1,6 +1,7 @@
 app ui-timeline "1.0.0"
 "Timeline — UI factory (1:1 with the @almadar/ui timeline pattern)."
 orbital TimelineOrbital {
+    type TimelineLoaded = Event { data : [TimelineItem] } "Timeline rows finished loading; payload.data holds the collection"
   type TimelineError = {
     message : string!
     name : string
@@ -32,12 +33,25 @@ orbital TimelineOrbital {
 
     state idle {
       INIT -> idle
-        (fetch TimelineItem {})
+        (fetch TimelineItem { emit: { success: TimelineLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
           error: @config.error
           entity: @entity
+          title: @config.title
+          items: @config.items
+          fields: @config.fields
+          look: @config.look
+          itemActions: [{ label: "View", event: VIEW }]
+          type: timeline
+        })
+      TimelineLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          entity: @payload.data
           title: @config.title
           items: @config.items
           fields: @config.fields
@@ -54,6 +68,10 @@ orbital TimelineOrbital {
         id : string
       }
         @description "User opened a record from the list."
+        @tier "essential"
+      TimelineLoaded
+        @description "Timeline rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

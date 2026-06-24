@@ -504,6 +504,19 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "TableView rows finished loading; payload.data holds the collection.",
+              "event": "TableViewLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[TableViewItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -519,6 +532,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "TableView rows finished loading; payload.data holds the collection.",
+                "key": "TableViewLoaded",
+                "name": "Table view loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[TableViewItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               },
               {
                 "description": "User opened a record from the list.",
@@ -569,7 +595,11 @@
                   [
                     "fetch",
                     "TableViewItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "TableViewLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -611,6 +641,51 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "accepts": "@config.accepts",
+                      "className": "@config.className",
+                      "columns": "@config.columns",
+                      "dndItemIdField": "@config.dndItemIdField",
+                      "dndRoot": "@config.dndRoot",
+                      "dragGroup": "@config.dragGroup",
+                      "dropEvent": "@config.dropEvent",
+                      "emptyMessage": "@config.emptyMessage",
+                      "entity": "@payload.data",
+                      "error": "@config.error",
+                      "fields": "@config.fields",
+                      "groupBy": "@config.groupBy",
+                      "isLoading": "@config.isLoading",
+                      "itemActions": [
+                        {
+                          "event": "VIEW",
+                          "label": "View"
+                        }
+                      ],
+                      "look": "@config.look",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "pageSize": "@config.pageSize",
+                      "positionEvent": "@config.positionEvent",
+                      "reorderEvent": "@config.reorderEvent",
+                      "selectEvent": "SELECT",
+                      "selectable": "@config.selectable",
+                      "selectedIds": "@config.selectedIds",
+                      "sortColumn": "@config.sortColumn",
+                      "sortDirection": "@config.sortDirection",
+                      "sortEvent": "SORT",
+                      "sortable": "@config.sortable",
+                      "type": "table-view"
+                    }
+                  ]
+                ],
+                "event": "TableViewLoaded",
                 "from": "idle",
                 "to": "idle"
               },

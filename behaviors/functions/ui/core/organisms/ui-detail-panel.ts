@@ -30,7 +30,14 @@ const ALIAS = 'UiDetailPanel';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiDetailPanelEventKey = 'INIT';
+export type StdUiDetailPanelEventKey = 'DetailPanelLoaded' | 'INIT';
+
+/**
+ * Payload shape for the `DetailPanelLoaded` event.
+ */
+export interface StdUiDetailPanelDetailPanelLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -570,6 +577,21 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'type': 'string',
           },
         },
+        'emits': [
+          {
+            'description': 'DetailPanel rows finished loading; payload.data holds the collection.',
+            'event': 'DetailPanelLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[DetailPanelItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],
@@ -584,6 +606,19 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'description': 'DetailPanel rows finished loading; payload.data holds the collection.',
+              'key': 'DetailPanelLoaded',
+              'name': 'Detail panel loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[DetailPanelItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -597,7 +632,11 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 [
                   'fetch',
                   'DetailPanelItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'DetailPanelLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -636,6 +675,48 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'actions': '@config.actions',
+                    'activeFilters': '@config.activeFilters',
+                    'avatar': '@config.avatar',
+                    'className': '@config.className',
+                    'displayFields': '@config.displayFields',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'fieldNames': '@config.fieldNames',
+                    'fields': '@config.fields',
+                    'footer': '@config.footer',
+                    'initialData': '@config.initialData',
+                    'isLoading': '@config.isLoading',
+                    'mode': '@config.mode',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'position': '@config.position',
+                    'searchValue': '@config.searchValue',
+                    'sections': '@config.sections',
+                    'selectedIds': '@config.selectedIds',
+                    'showActions': '@config.showActions',
+                    'slideOver': '@config.slideOver',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'status': '@config.status',
+                    'subtitle': '@config.subtitle',
+                    'title': '@config.title',
+                    'totalCount': '@config.totalCount',
+                    'type': 'detail-panel',
+                    'width': '@config.width',
+                  },
+                ],
+              ],
+              'event': 'DetailPanelLoaded',
               'from': 'idle',
               'to': 'idle',
             },

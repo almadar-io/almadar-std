@@ -30,7 +30,7 @@ const ALIAS = 'UiCalendarGrid';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCalendarGridEventKey = 'DAY_CLICK' | 'EVENT_CLICK' | 'INIT' | 'LONG_PRESS' | 'SLOT_CLICK' | 'SWIPE_LEFT' | 'SWIPE_RIGHT';
+export type StdUiCalendarGridEventKey = 'CalendarGridLoaded' | 'DAY_CLICK' | 'EVENT_CLICK' | 'INIT' | 'LONG_PRESS' | 'SLOT_CLICK' | 'SWIPE_LEFT' | 'SWIPE_RIGHT';
 
 /**
  * Payload shape for the `SLOT_CLICK` event.
@@ -74,6 +74,13 @@ export interface StdUiCalendarGridSwipeLeftPayload {
  */
 export interface StdUiCalendarGridSwipeRightPayload {
   id?: string;
+}
+
+/**
+ * Payload shape for the `CalendarGridLoaded` event.
+ */
+export interface StdUiCalendarGridCalendarGridLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**

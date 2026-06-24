@@ -1,6 +1,7 @@
 app ui-game-template "1.0.0"
 "GameTemplate — UI factory (1:1 with the @almadar/ui game-template pattern)."
 orbital GameTemplateOrbital {
+    type GameTemplateLoaded = Event { data : [GameTemplateItem] } "GameTemplate rows finished loading; payload.data holds the collection"
   type GameTemplateControls = {
     isPlaying : boolean
   }
@@ -14,7 +15,7 @@ orbital GameTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch GameTemplateItem {})
+        (fetch GameTemplateItem { emit: { success: GameTemplateLoaded } })
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -26,6 +27,25 @@ orbital GameTemplateOrbital {
           controls: @config.controls
           type: game-template
         })
+      GameTemplateLoaded -> idle
+        (render-ui main {
+          entity: @payload.data
+          className: @config.className
+          title: @config.title
+          children: [{ type: game-canvas-2d }]
+          hud: [{ content: "Hud", type: typography }]
+          debugPanel: @config.debugPanel
+          showDebugPanel: @config.showDebugPanel
+          controls: @config.controls
+          type: game-template
+        })
+    }
+
+    emits {
+      GameTemplateLoaded
+        @description "GameTemplate rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

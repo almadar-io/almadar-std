@@ -103,7 +103,7 @@ export interface StdUiPlatformerBoardConfig {
   platforms?: EntityRow[];
   /** Default: `"https://almadar-kflow-assets.web.app/shared/platformer/characters/platformChar_idle.png"` */
   playerSprite?: unknown;
-  /** Default: `{"goal":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile007.png","ground":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile001.png","hazard":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile017.png","platform":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile004.png"}` */
+  /** Default: `{"goal":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile058.png","ground":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile029.png","hazard":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile063.png","platform":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile046.png"}` */
   tileSprites?: unknown;
   /** Default: `400` */
   worldHeight?: number;
@@ -430,10 +430,10 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
           },
           'tileSprites': {
             'default': {
-              'goal': 'https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile007.png',
-              'ground': 'https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile001.png',
-              'hazard': 'https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile017.png',
-              'platform': 'https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile004.png',
+              'goal': 'https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile058.png',
+              'ground': 'https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile029.png',
+              'hazard': 'https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile063.png',
+              'platform': 'https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile046.png',
             },
             'description': 'Map of platform type to tile sprite URL',
             'items': {

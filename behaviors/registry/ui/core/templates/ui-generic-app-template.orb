@@ -64,6 +64,21 @@
               "type": "string"
             }
           },
+          "emits": [
+            {
+              "description": "GenericAppTemplate rows finished loading; payload.data holds the collection.",
+              "event": "GenericAppTemplateLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[GenericAppTemplateItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -77,6 +92,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "GenericAppTemplate rows finished loading; payload.data holds the collection.",
+                "key": "GenericAppTemplateLoaded",
+                "name": "Generic app template loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[GenericAppTemplateItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -91,7 +119,11 @@
                   [
                     "fetch",
                     "GenericAppTemplateItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "GenericAppTemplateLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -114,6 +146,32 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "entity": "@payload.data",
+                      "footer": "@config.footer",
+                      "headerActions": "@config.headerActions",
+                      "subtitle": "@config.subtitle",
+                      "title": "@config.title",
+                      "type": "generic-app-template"
+                    }
+                  ]
+                ],
+                "event": "GenericAppTemplateLoaded",
                 "from": "idle",
                 "to": "idle"
               }

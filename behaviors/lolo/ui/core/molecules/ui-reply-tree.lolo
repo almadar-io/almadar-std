@@ -1,6 +1,8 @@
 app ui-reply-tree "1.0.0"
 "ReplyTree — UI factory (1:1 with the @almadar/ui reply-tree pattern)."
 orbital ReplyTreeOrbital {
+    type ReplyTreeLoaded = Event { data : [ReplyTreeItem] } "ReplyTree rows finished loading; payload.data holds the collection"
+
   entity ReplyTreeItem [runtime] {
     id : string!
     authorName : string = "Author Name"
@@ -18,9 +20,25 @@ orbital ReplyTreeOrbital {
 
     state idle {
       INIT -> idle
-        (fetch ReplyTreeItem {})
+        (fetch ReplyTreeItem { emit: { success: ReplyTreeLoaded } })
         (render-ui main {
           nodes: @entity
+          maxDepth: @config.maxDepth
+          onVote: VOTE
+          onReply: REPLY
+          onFlag: FLAG
+          onContinueThread: CONTINUE_THREAD
+          voteEvent: VOTE
+          replyEvent: REPLY
+          flagEvent: FLAG
+          continueThreadEvent: CONTINUE_THREAD
+          showActions: @config.showActions
+          className: @config.className
+          type: reply-tree
+        })
+      ReplyTreeLoaded -> idle
+        (render-ui main {
+          nodes: @payload.data
           maxDepth: @config.maxDepth
           onVote: VOTE
           onReply: REPLY
@@ -58,6 +76,10 @@ orbital ReplyTreeOrbital {
         nodeId : string
       }
         @description "onContinueThread prop"
+        @tier "essential"
+      ReplyTreeLoaded
+        @description "ReplyTree rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

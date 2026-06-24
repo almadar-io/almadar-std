@@ -1,6 +1,7 @@
 app ui-step-flow-organism "1.0.0"
 "StepFlowOrganism — UI factory (1:1 with the @almadar/ui step-flow-organism pattern)."
 orbital StepFlowOrganismOrbital {
+    type StepFlowOrganismLoaded = Event { data : [StepFlowOrganismItem] } "StepFlowOrganism rows finished loading; payload.data holds the collection"
   type StepFlowOrganismError = {
     message : string!
     name : string
@@ -21,7 +22,7 @@ orbital StepFlowOrganismOrbital {
 
     state idle {
       INIT -> idle
-        (fetch StepFlowOrganismItem {})
+        (fetch StepFlowOrganismItem { emit: { success: StepFlowOrganismLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -41,6 +42,33 @@ orbital StepFlowOrganismOrbital {
           subtitle: @config.subtitle
           type: step-flow-organism
         })
+      StepFlowOrganismLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          orientation: @config.orientation
+          showConnectors: @config.showConnectors
+          heading: @config.heading
+          subtitle: @config.subtitle
+          type: step-flow-organism
+        })
+    }
+
+    emits {
+      StepFlowOrganismLoaded
+        @description "StepFlowOrganism rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

@@ -1,6 +1,8 @@
 app ui-calendar-grid "1.0.0"
 "CalendarGrid — UI factory (1:1 with the @almadar/ui calendar-grid pattern)."
 orbital CalendarGridOrbital {
+    type CalendarGridLoaded = Event { data : [CalendarGridItem] } "CalendarGrid rows finished loading; payload.data holds the collection"
+
   entity CalendarGridItem [runtime] {
     id : string!
     title : string = "Title"
@@ -14,11 +16,27 @@ orbital CalendarGridOrbital {
 
     state idle {
       INIT -> idle
-        (fetch CalendarGridItem {})
+        (fetch CalendarGridItem { emit: { success: CalendarGridLoaded } })
         (render-ui main {
           weekStart: @config.weekStart
           timeSlots: @config.timeSlots
           events: @entity
+          onSlotClick: SLOT_CLICK
+          onDayClick: DAY_CLICK
+          onEventClick: EVENT_CLICK
+          className: @config.className
+          longPressEvent: LONG_PRESS
+          longPressPayload: @config.longPressPayload
+          swipeLeftEvent: SWIPE_LEFT
+          swipeRightEvent: SWIPE_RIGHT
+          dayWindow: @config.dayWindow
+          type: calendar-grid
+        })
+      CalendarGridLoaded -> idle
+        (render-ui main {
+          weekStart: @config.weekStart
+          timeSlots: @config.timeSlots
+          events: @payload.data
           onSlotClick: SLOT_CLICK
           onDayClick: DAY_CLICK
           onEventClick: EVENT_CLICK
@@ -64,6 +82,10 @@ orbital CalendarGridOrbital {
         id : string
       }
         @description "Event emitted on swipe right (prev week): UI:{swipeRightEvent}"
+        @tier "essential"
+      CalendarGridLoaded
+        @description "CalendarGrid rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

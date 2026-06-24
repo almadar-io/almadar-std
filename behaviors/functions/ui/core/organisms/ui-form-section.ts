@@ -30,7 +30,7 @@ const ALIAS = 'UiFormSection';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiFormSectionEventKey = 'CANCEL' | 'FIELD_CHANGE' | 'INIT' | 'SUBMIT';
+export type StdUiFormSectionEventKey = 'CANCEL' | 'FIELD_CHANGE' | 'FormSectionLoaded' | 'INIT' | 'SUBMIT';
 
 /**
  * Payload shape for the `SUBMIT` event.
@@ -51,6 +51,13 @@ export interface StdUiFormSectionCancelPayload {
  */
 export interface StdUiFormSectionFieldChangePayload {
   change?: EntityRow;
+}
+
+/**
+ * Payload shape for the `FormSectionLoaded` event.
+ */
+export interface StdUiFormSectionFormSectionLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**
@@ -1065,6 +1072,19 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'scope': 'external',
             'tier': 'essential',
           },
+          {
+            'description': 'FormSection rows finished loading; payload.data holds the collection.',
+            'event': 'FormSectionLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[FormSectionItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
         ],
         'entityContract': {
           'provides': [],
@@ -1079,6 +1099,19 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             {
               'key': 'INIT',
               'name': 'Initialize',
+            },
+            {
+              'description': 'FormSection rows finished loading; payload.data holds the collection.',
+              'key': 'FormSectionLoaded',
+              'name': 'Form section loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[FormSectionItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
             },
             {
               'description': 'Event dispatch props (for trait state machine integration)',
@@ -1146,7 +1179,11 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 [
                   'fetch',
                   'FormSectionItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'FormSectionLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -1191,6 +1228,54 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'cancelEvent': 'CANCEL',
+                    'cancelLabel': '@config.cancelLabel',
+                    'children': [
+                      {
+                        'content': 'Sample content',
+                        'type': 'typography',
+                      },
+                    ],
+                    'className': '@config.className',
+                    'conditionalFields': '@config.conditionalFields',
+                    'configPath': '@config.configPath',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'evaluationContext': '@config.evaluationContext',
+                    'fields': '@config.fields',
+                    'gap': '@config.gap',
+                    'hiddenCalculations': '@config.hiddenCalculations',
+                    'initialData': '@config.initialData',
+                    'isLoading': '@config.isLoading',
+                    'layout': '@config.layout',
+                    'mode': '@config.mode',
+                    'onCancel': '@config.onCancel',
+                    'onFieldChange': 'FIELD_CHANGE',
+                    'onSubmit': '@config.onSubmit',
+                    'relationsData': '@config.relationsData',
+                    'relationsLoading': '@config.relationsLoading',
+                    'repeatable': '@config.repeatable',
+                    'sections': '@config.sections',
+                    'showCancel': '@config.showCancel',
+                    'showSubmit': '@config.showSubmit',
+                    'submitEvent': 'SUBMIT',
+                    'submitLabel': '@config.submitLabel',
+                    'title': '@config.title',
+                    'type': 'form-section',
+                    'violationTriggers': '@config.violationTriggers',
+                  },
+                ],
+              ],
+              'event': 'FormSectionLoaded',
               'from': 'idle',
               'to': 'idle',
             },

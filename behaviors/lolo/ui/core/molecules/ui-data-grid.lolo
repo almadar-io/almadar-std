@@ -1,6 +1,7 @@
 app ui-data-grid "1.0.0"
 "DataGrid — UI factory (1:1 with the @almadar/ui data-grid pattern)."
 orbital DataGridOrbital {
+    type DataGridLoaded = Event { data : [DataGridItem] } "DataGrid rows finished loading; payload.data holds the collection"
   type DataGridFieldsItem = {
     name : string!
     label : string
@@ -39,7 +40,7 @@ orbital DataGridOrbital {
 
     state idle {
       INIT -> idle
-        (fetch DataGridItem {})
+        (fetch DataGridItem { emit: { success: DataGridLoaded } })
         (render-ui main {
           dragGroup: @config.dragGroup
           accepts: @config.accepts
@@ -50,6 +51,38 @@ orbital DataGridOrbital {
           dndItemIdField: @config.dndItemIdField
           dndRoot: @config.dndRoot
           entity: @entity
+          fields: @config.fields
+          columns: @config.columns
+          maxInlineActions: @config.maxInlineActions
+          scrollX: @config.scrollX
+          cols: @config.cols
+          gap: @config.gap
+          minCardWidth: @config.minCardWidth
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          imageField: @config.imageField
+          selectable: @config.selectable
+          selectionEvent: SELECTION
+          infiniteScroll: @config.infiniteScroll
+          loadMoreEvent: LOAD_MORE
+          hasMore: @config.hasMore
+          pageSize: @config.pageSize
+          look: @config.look
+          itemActions: [{ label: "View", event: VIEW }]
+          type: data-grid
+        })
+      DataGridLoaded -> idle
+        (render-ui main {
+          dragGroup: @config.dragGroup
+          accepts: @config.accepts
+          sortable: @config.sortable
+          dropEvent: @config.dropEvent
+          reorderEvent: @config.reorderEvent
+          positionEvent: @config.positionEvent
+          dndItemIdField: @config.dndItemIdField
+          dndRoot: @config.dndRoot
+          entity: @payload.data
           fields: @config.fields
           columns: @config.columns
           maxInlineActions: @config.maxInlineActions
@@ -90,6 +123,10 @@ orbital DataGridOrbital {
         id : string
       }
         @description "User opened a record from the list."
+        @tier "essential"
+      DataGridLoaded
+        @description "DataGrid rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

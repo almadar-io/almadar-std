@@ -169,6 +169,19 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "CalendarGrid rows finished loading; payload.data holds the collection.",
+              "event": "CalendarGridLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[CalendarGridItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -184,6 +197,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "CalendarGrid rows finished loading; payload.data holds the collection.",
+                "key": "CalendarGridLoaded",
+                "name": "Calendar grid loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[CalendarGridItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               },
               {
                 "description": "Called when a time slot is clicked",
@@ -279,7 +305,11 @@
                   [
                     "fetch",
                     "CalendarGridItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "CalendarGridLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -302,6 +332,32 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "dayWindow": "@config.dayWindow",
+                      "events": "@payload.data",
+                      "longPressEvent": "LONG_PRESS",
+                      "longPressPayload": "@config.longPressPayload",
+                      "onDayClick": "DAY_CLICK",
+                      "onEventClick": "EVENT_CLICK",
+                      "onSlotClick": "SLOT_CLICK",
+                      "swipeLeftEvent": "SWIPE_LEFT",
+                      "swipeRightEvent": "SWIPE_RIGHT",
+                      "timeSlots": "@config.timeSlots",
+                      "type": "calendar-grid",
+                      "weekStart": "@config.weekStart"
+                    }
+                  ]
+                ],
+                "event": "CalendarGridLoaded",
                 "from": "idle",
                 "to": "idle"
               }

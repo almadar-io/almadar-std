@@ -30,7 +30,14 @@ const ALIAS = 'UiBookViewer';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiBookViewerEventKey = 'INIT';
+export type StdUiBookViewerEventKey = 'BookViewerLoaded' | 'INIT';
+
+/**
+ * Payload shape for the `BookViewerLoaded` event.
+ */
+export interface StdUiBookViewerBookViewerLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -334,6 +341,21 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
             'type': 'number',
           },
         },
+        'emits': [
+          {
+            'description': 'BookViewer rows finished loading; payload.data holds the collection.',
+            'event': 'BookViewerLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[BookViewerItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],
@@ -348,6 +370,19 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'description': 'BookViewer rows finished loading; payload.data holds the collection.',
+              'key': 'BookViewerLoaded',
+              'name': 'Book viewer loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BookViewerItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -361,7 +396,11 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
                 [
                   'fetch',
                   'BookViewerItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'BookViewerLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -386,6 +425,34 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'className': '@config.className',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'fieldMap': '@config.fieldMap',
+                    'initialPage': '@config.initialPage',
+                    'isLoading': '@config.isLoading',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'book-viewer',
+                  },
+                ],
+              ],
+              'event': 'BookViewerLoaded',
               'from': 'idle',
               'to': 'idle',
             },

@@ -1,6 +1,7 @@
 app ui-pricing-organism "1.0.0"
 "PricingOrganism — UI factory (1:1 with the @almadar/ui pricing-organism pattern)."
 orbital PricingOrganismOrbital {
+    type PricingOrganismLoaded = Event { data : [PricingOrganismItem] } "PricingOrganism rows finished loading; payload.data holds the collection"
   type PricingOrganismError = {
     message : string!
     name : string
@@ -25,7 +26,7 @@ orbital PricingOrganismOrbital {
 
     state idle {
       INIT -> idle
-        (fetch PricingOrganismItem {})
+        (fetch PricingOrganismItem { emit: { success: PricingOrganismLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -43,6 +44,31 @@ orbital PricingOrganismOrbital {
           subtitle: @config.subtitle
           type: pricing-organism
         })
+      PricingOrganismLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          heading: @config.heading
+          subtitle: @config.subtitle
+          type: pricing-organism
+        })
+    }
+
+    emits {
+      PricingOrganismLoaded
+        @description "PricingOrganism rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

@@ -235,6 +235,21 @@
               "type": "string"
             }
           },
+          "emits": [
+            {
+              "description": "FeatureDetailPageTemplate rows finished loading; payload.data holds the collection.",
+              "event": "FeatureDetailPageTemplateLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[FeatureDetailPageTemplateItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -248,6 +263,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "FeatureDetailPageTemplate rows finished loading; payload.data holds the collection.",
+                "key": "FeatureDetailPageTemplateLoaded",
+                "name": "Feature detail page template loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[FeatureDetailPageTemplateItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -262,7 +290,11 @@
                   [
                     "fetch",
                     "FeatureDetailPageTemplateItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "FeatureDetailPageTemplateLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -275,6 +307,22 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "entity": "@payload.data",
+                      "type": "feature-detail-page-template"
+                    }
+                  ]
+                ],
+                "event": "FeatureDetailPageTemplateLoaded",
                 "from": "idle",
                 "to": "idle"
               }

@@ -446,6 +446,19 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "DataGrid rows finished loading; payload.data holds the collection.",
+              "event": "DataGridLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[DataGridItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -461,6 +474,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "DataGrid rows finished loading; payload.data holds the collection.",
+                "key": "DataGridLoaded",
+                "name": "Data grid loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[DataGridItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               },
               {
                 "description": "User opened a record from the list.",
@@ -511,7 +537,11 @@
                   [
                     "fetch",
                     "DataGridItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "DataGridLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -555,6 +585,53 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "accepts": "@config.accepts",
+                      "className": "@config.className",
+                      "cols": "@config.cols",
+                      "columns": "@config.columns",
+                      "dndItemIdField": "@config.dndItemIdField",
+                      "dndRoot": "@config.dndRoot",
+                      "dragGroup": "@config.dragGroup",
+                      "dropEvent": "@config.dropEvent",
+                      "entity": "@payload.data",
+                      "error": "@config.error",
+                      "fields": "@config.fields",
+                      "gap": "@config.gap",
+                      "hasMore": "@config.hasMore",
+                      "imageField": "@config.imageField",
+                      "infiniteScroll": "@config.infiniteScroll",
+                      "isLoading": "@config.isLoading",
+                      "itemActions": [
+                        {
+                          "event": "VIEW",
+                          "label": "View"
+                        }
+                      ],
+                      "loadMoreEvent": "LOAD_MORE",
+                      "look": "@config.look",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "minCardWidth": "@config.minCardWidth",
+                      "pageSize": "@config.pageSize",
+                      "positionEvent": "@config.positionEvent",
+                      "reorderEvent": "@config.reorderEvent",
+                      "scrollX": "@config.scrollX",
+                      "selectable": "@config.selectable",
+                      "selectionEvent": "SELECTION",
+                      "sortable": "@config.sortable",
+                      "type": "data-grid"
+                    }
+                  ]
+                ],
+                "event": "DataGridLoaded",
                 "from": "idle",
                 "to": "idle"
               },

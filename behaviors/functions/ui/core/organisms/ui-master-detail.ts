@@ -30,7 +30,14 @@ const ALIAS = 'UiMasterDetail';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiMasterDetailEventKey = 'INIT';
+export type StdUiMasterDetailEventKey = 'INIT' | 'MasterDetailLoaded';
+
+/**
+ * Payload shape for the `MasterDetailLoaded` event.
+ */
+export interface StdUiMasterDetailMasterDetailLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -277,6 +284,21 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
             'type': 'number',
           },
         },
+        'emits': [
+          {
+            'description': 'MasterDetail rows finished loading; payload.data holds the collection.',
+            'event': 'MasterDetailLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[MasterDetailItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],
@@ -291,6 +313,19 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'description': 'MasterDetail rows finished loading; payload.data holds the collection.',
+              'key': 'MasterDetailLoaded',
+              'name': 'Master detail loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[MasterDetailItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -304,7 +339,11 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
                 [
                   'fetch',
                   'MasterDetailItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'MasterDetailLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -330,6 +369,35 @@ export function stdUiMasterDetailMasterDetailOrbital(params: StdUiMasterDetailMa
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'className': '@config.className',
+                    'detailFields': '@config.detailFields',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'loading': '@config.loading',
+                    'masterFields': '@config.masterFields',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'master-detail',
+                  },
+                ],
+              ],
+              'event': 'MasterDetailLoaded',
               'from': 'idle',
               'to': 'idle',
             },

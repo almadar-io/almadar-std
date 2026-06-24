@@ -1,6 +1,7 @@
 app ui-about-page-template "1.0.0"
 "AboutPageTemplate — UI factory (1:1 with the @almadar/ui about-page-template pattern)."
 orbital AboutPageTemplateOrbital {
+    type AboutPageTemplateLoaded = Event { data : [AboutPageTemplateItem] } "AboutPageTemplate rows finished loading; payload.data holds the collection"
   type AboutPageTemplateHero = {
     id : string
     tag : string
@@ -60,12 +61,25 @@ orbital AboutPageTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch AboutPageTemplateItem {})
+        (fetch AboutPageTemplateItem { emit: { success: AboutPageTemplateLoaded } })
         (render-ui main {
           entity: @entity
           className: @config.className
           type: about-page-template
         })
+      AboutPageTemplateLoaded -> idle
+        (render-ui main {
+          entity: @payload.data
+          className: @config.className
+          type: about-page-template
+        })
+    }
+
+    emits {
+      AboutPageTemplateLoaded
+        @description "AboutPageTemplate rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

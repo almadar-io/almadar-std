@@ -1,6 +1,7 @@
 app ui-detail-panel "1.0.0"
 "DetailPanel — UI factory (1:1 with the @almadar/ui detail-panel pattern)."
 orbital DetailPanelOrbital {
+    type DetailPanelLoaded = Event { data : [DetailPanelItem] } "DetailPanel rows finished loading; payload.data holds the collection"
   type DetailPanelError = {
     message : string!
     name : string
@@ -44,7 +45,7 @@ orbital DetailPanelOrbital {
 
     state idle {
       INIT -> idle
-        (fetch DetailPanelItem {})
+        (fetch DetailPanelItem { emit: { success: DetailPanelLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -76,6 +77,45 @@ orbital DetailPanelOrbital {
           showActions: @config.showActions
           type: detail-panel
         })
+      DetailPanelLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          title: @config.title
+          subtitle: @config.subtitle
+          status: @config.status
+          avatar: @config.avatar
+          sections: @config.sections
+          actions: @config.actions
+          footer: @config.footer
+          slideOver: @config.slideOver
+          fields: @config.fields
+          fieldNames: @config.fieldNames
+          initialData: @config.initialData
+          mode: @config.mode
+          position: @config.position
+          width: @config.width
+          displayFields: @config.displayFields
+          showActions: @config.showActions
+          type: detail-panel
+        })
+    }
+
+    emits {
+      DetailPanelLoaded
+        @description "DetailPanel rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

@@ -1,6 +1,7 @@
 app ui-entity-list "1.0.0"
 "EntityList — UI factory (1:1 with the @almadar/ui entity-list pattern)."
 orbital EntityListOrbital {
+    type EntityListLoaded = Event { data : [EntityListItem] } "EntityList rows finished loading; payload.data holds the collection"
   type EntityListError = {
     message : string!
     name : string
@@ -23,7 +24,7 @@ orbital EntityListOrbital {
 
     state idle {
       INIT -> idle
-        (fetch EntityListItem {})
+        (fetch EntityListItem { emit: { success: EntityListLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -37,6 +38,31 @@ orbital EntityListOrbital {
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
           entity: @entity
+          entityType: @config.entityType
+          selectable: @config.selectable
+          showDividers: @config.showDividers
+          variant: @config.variant
+          emptyMessage: @config.emptyMessage
+          children: [{ content: "Sample content", type: typography }]
+          fields: @config.fields
+          fieldNames: @config.fieldNames
+          itemActions: [{ label: "View", event: VIEW }]
+          type: entity-list
+        })
+      EntityListLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
           entityType: @config.entityType
           selectable: @config.selectable
           showDividers: @config.showDividers
@@ -62,6 +88,10 @@ orbital EntityListOrbital {
         id : string
       }
         @description "User opened a record from the list."
+        @tier "essential"
+      EntityListLoaded
+        @description "EntityList rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

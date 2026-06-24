@@ -1,6 +1,8 @@
 app ui-book-table-of-contents "1.0.0"
 "BookTableOfContents — UI factory (1:1 with the @almadar/ui book-table-of-contents pattern)."
 orbital BookTableOfContentsOrbital {
+    type BookTableOfContentsLoaded = Event { data : [BookTableOfContentsItem] } "BookTableOfContents rows finished loading; payload.data holds the collection"
+
   entity BookTableOfContentsItem [runtime] {
     id : string!
   }
@@ -10,7 +12,7 @@ orbital BookTableOfContentsOrbital {
 
     state idle {
       INIT -> idle
-        (fetch BookTableOfContentsItem {})
+        (fetch BookTableOfContentsItem { emit: { success: BookTableOfContentsLoaded } })
         (render-ui main {
           className: @config.className
           parts: @entity
@@ -18,6 +20,21 @@ orbital BookTableOfContentsOrbital {
           direction: @config.direction
           type: book-table-of-contents
         })
+      BookTableOfContentsLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          parts: @payload.data
+          currentChapterId: @config.currentChapterId
+          direction: @config.direction
+          type: book-table-of-contents
+        })
+    }
+
+    emits {
+      BookTableOfContentsLoaded
+        @description "BookTableOfContents rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

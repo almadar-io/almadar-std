@@ -1,6 +1,8 @@
 app ui-sortable-list "1.0.0"
 "SortableList — UI factory (1:1 with the @almadar/ui sortable-list pattern)."
 orbital SortableListOrbital {
+    type SortableListLoaded = Event { data : [SortableListItem] } "SortableList rows finished loading; payload.data holds the collection"
+
   entity SortableListItem [runtime] {
     id : string!
   }
@@ -10,9 +12,19 @@ orbital SortableListOrbital {
 
     state idle {
       INIT -> idle
-        (fetch SortableListItem {})
+        (fetch SortableListItem { emit: { success: SortableListLoaded } })
         (render-ui main {
           items: @entity
+          renderItem: (fn item { content: @item.id, type: typography })
+          reorderEvent: REORDER
+          reorderPayload: @config.reorderPayload
+          dragHandlePosition: @config.dragHandlePosition
+          className: @config.className
+          type: sortable-list
+        })
+      SortableListLoaded -> idle
+        (render-ui main {
+          items: @payload.data
           renderItem: (fn item { content: @item.id, type: typography })
           reorderEvent: REORDER
           reorderPayload: @config.reorderPayload
@@ -27,6 +39,10 @@ orbital SortableListOrbital {
         id : string
       }
         @description "reorderEvent prop"
+        @tier "essential"
+      SortableListLoaded
+        @description "SortableList rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

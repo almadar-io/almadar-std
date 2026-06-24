@@ -30,7 +30,14 @@ const ALIAS = 'UiLandingPageTemplate';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiLandingPageTemplateEventKey = 'INIT';
+export type StdUiLandingPageTemplateEventKey = 'INIT' | 'LandingPageTemplateLoaded';
+
+/**
+ * Payload shape for the `LandingPageTemplateLoaded` event.
+ */
+export interface StdUiLandingPageTemplateLandingPageTemplateLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every

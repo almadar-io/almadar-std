@@ -30,13 +30,20 @@ const ALIAS = 'UiMediaGallery';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiMediaGalleryEventKey = 'INIT' | 'SELECTION';
+export type StdUiMediaGalleryEventKey = 'INIT' | 'MediaGalleryLoaded' | 'SELECTION';
 
 /**
  * Payload shape for the `SELECTION` event.
  */
 export interface StdUiMediaGallerySelectionPayload {
   selection: EntityRow[];
+}
+
+/**
+ * Payload shape for the `MediaGalleryLoaded` event.
+ */
+export interface StdUiMediaGalleryMediaGalleryLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**
@@ -446,6 +453,19 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             'scope': 'external',
             'tier': 'essential',
           },
+          {
+            'description': 'MediaGallery rows finished loading; payload.data holds the collection.',
+            'event': 'MediaGalleryLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[MediaGalleryItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
         ],
         'entityContract': {
           'provides': [],
@@ -460,6 +480,19 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
             {
               'key': 'INIT',
               'name': 'Initialize',
+            },
+            {
+              'description': 'MediaGallery rows finished loading; payload.data holds the collection.',
+              'key': 'MediaGalleryLoaded',
+              'name': 'Media gallery loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[MediaGalleryItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
             },
             {
               'description': 'Event name emitted when selection changes (emitted as UI:{selectionEvent})',
@@ -487,7 +520,11 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                 [
                   'fetch',
                   'MediaGalleryItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'MediaGalleryLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -519,6 +556,41 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'actions': '@config.actions',
+                    'activeFilters': '@config.activeFilters',
+                    'aspectRatio': '@config.aspectRatio',
+                    'className': '@config.className',
+                    'columns': '@config.columns',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'items': '@config.items',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectable': '@config.selectable',
+                    'selectedIds': '@config.selectedIds',
+                    'selectedItems': '@config.selectedItems',
+                    'selectionEvent': 'SELECTION',
+                    'showUpload': '@config.showUpload',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'title': '@config.title',
+                    'totalCount': '@config.totalCount',
+                    'type': 'media-gallery',
+                  },
+                ],
+              ],
+              'event': 'MediaGalleryLoaded',
               'from': 'idle',
               'to': 'idle',
             },

@@ -1,6 +1,8 @@
 app ui-book-chapter-view "1.0.0"
 "BookChapterView — UI factory (1:1 with the @almadar/ui book-chapter-view pattern)."
 orbital BookChapterViewOrbital {
+    type BookChapterViewLoaded = Event { data : [BookChapterViewItem] } "BookChapterView rows finished loading; payload.data holds the collection"
+
   entity BookChapterViewItem [runtime] {
     id : string!
   }
@@ -10,13 +12,27 @@ orbital BookChapterViewOrbital {
 
     state idle {
       INIT -> idle
-        (fetch BookChapterViewItem {})
+        (fetch BookChapterViewItem { emit: { success: BookChapterViewLoaded } })
         (render-ui main {
           className: @config.className
           chapter: @entity
           direction: @config.direction
           type: book-chapter-view
         })
+      BookChapterViewLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          chapter: @payload.data
+          direction: @config.direction
+          type: book-chapter-view
+        })
+    }
+
+    emits {
+      BookChapterViewLoaded
+        @description "BookChapterView rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

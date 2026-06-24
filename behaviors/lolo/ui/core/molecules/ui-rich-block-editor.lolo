@@ -1,6 +1,8 @@
 app ui-rich-block-editor "1.0.0"
 "RichBlockEditor — UI factory (1:1 with the @almadar/ui rich-block-editor pattern)."
 orbital RichBlockEditorOrbital {
+    type RichBlockEditorLoaded = Event { data : [RichBlockEditorItem] } "RichBlockEditor rows finished loading; payload.data holds the collection"
+
   entity RichBlockEditorItem [runtime] {
     id : string!
   }
@@ -10,9 +12,21 @@ orbital RichBlockEditorOrbital {
 
     state idle {
       INIT -> idle
-        (fetch RichBlockEditorItem {})
+        (fetch RichBlockEditorItem { emit: { success: RichBlockEditorLoaded } })
         (render-ui main {
           initialBlocks: @entity
+          onChange: CHANGE
+          changeEvent: CHANGE
+          readOnly: @config.readOnly
+          placeholder: @config.placeholder
+          enableBlocks: @config.enableBlocks
+          showToolbar: @config.showToolbar
+          className: @config.className
+          type: rich-block-editor
+        })
+      RichBlockEditorLoaded -> idle
+        (render-ui main {
+          initialBlocks: @payload.data
           onChange: CHANGE
           changeEvent: CHANGE
           readOnly: @config.readOnly
@@ -29,6 +43,10 @@ orbital RichBlockEditorOrbital {
         blocks : [object]
       }
         @description "onChange prop"
+        @tier "essential"
+      RichBlockEditorLoaded
+        @description "RichBlockEditor rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

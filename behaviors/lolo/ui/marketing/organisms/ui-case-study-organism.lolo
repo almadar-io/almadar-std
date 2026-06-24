@@ -1,6 +1,7 @@
 app ui-case-study-organism "1.0.0"
 "CaseStudyOrganism — UI factory (1:1 with the @almadar/ui case-study-organism pattern)."
 orbital CaseStudyOrganismOrbital {
+    type CaseStudyOrganismLoaded = Event { data : [CaseStudyOrganismItem] } "CaseStudyOrganism rows finished loading; payload.data holds the collection"
   type CaseStudyOrganismError = {
     message : string!
     name : string
@@ -23,7 +24,7 @@ orbital CaseStudyOrganismOrbital {
 
     state idle {
       INIT -> idle
-        (fetch CaseStudyOrganismItem {})
+        (fetch CaseStudyOrganismItem { emit: { success: CaseStudyOrganismLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -41,6 +42,31 @@ orbital CaseStudyOrganismOrbital {
           subtitle: @config.subtitle
           type: case-study-organism
         })
+      CaseStudyOrganismLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          heading: @config.heading
+          subtitle: @config.subtitle
+          type: case-study-organism
+        })
+    }
+
+    emits {
+      CaseStudyOrganismLoaded
+        @description "CaseStudyOrganism rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

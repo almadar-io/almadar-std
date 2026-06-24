@@ -497,6 +497,21 @@
               "type": "number"
             }
           },
+          "emits": [
+            {
+              "description": "GameCanvas3dBattleTemplate rows finished loading; payload.data holds the collection.",
+              "event": "GameCanvas3dBattleTemplateLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[GameCanvas3dBattleTemplateItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -510,6 +525,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "GameCanvas3dBattleTemplate rows finished loading; payload.data holds the collection.",
+                "key": "GameCanvas3dBattleTemplateLoaded",
+                "name": "Game canvas3d battle template loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[GameCanvas3dBattleTemplateItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -524,7 +552,11 @@
                   [
                     "fetch",
                     "GameCanvas3dBattleTemplateItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "GameCanvas3dBattleTemplateLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -555,6 +587,40 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "assetManifest": "@config.assetManifest",
+                      "attackEvent": "@config.attackEvent",
+                      "backgroundColor": "@config.backgroundColor",
+                      "cameraMode": "@config.cameraMode",
+                      "cancelEvent": "@config.cancelEvent",
+                      "className": "@config.className",
+                      "endTurnEvent": "@config.endTurnEvent",
+                      "entity": "@payload.data",
+                      "exitEvent": "@config.exitEvent",
+                      "features": "@config.features",
+                      "gameEndEvent": "@config.gameEndEvent",
+                      "playAgainEvent": "@config.playAgainEvent",
+                      "scale": "@config.scale",
+                      "shadows": "@config.shadows",
+                      "showGrid": "@config.showGrid",
+                      "showTurnIndicator": "@config.showTurnIndicator",
+                      "tileClickEvent": "@config.tileClickEvent",
+                      "tiles": "@config.tiles",
+                      "type": "game-canvas-3d-battle-template",
+                      "unitClickEvent": "@config.unitClickEvent",
+                      "unitScale": "@config.unitScale"
+                    }
+                  ]
+                ],
+                "event": "GameCanvas3dBattleTemplateLoaded",
                 "from": "idle",
                 "to": "idle"
               }
