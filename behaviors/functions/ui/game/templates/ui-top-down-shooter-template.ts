@@ -39,7 +39,7 @@ export type StdUiTopDownShooterTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTopDownShooterTemplateConfig {
-  /** Default: `{"background":"scenes/world/streets.png","baseUrl":"https://almadar-kflow-assets.web.app/shared/","features":{"pickup":"platformer/items/platformPack_item001.png","projectile":"platformer/items/platformPack_item012.png"},"units":{"enemy":"platformer/characters/platformChar_jump.png","player":"platformer/characters/platformChar_idle.png"}}` */
+  /** Default: `{"background":"scenes/world/streets.png","baseUrl":"https://almadar-kflow-assets.web.app/shared/","features":{"pickup":"platformer/items/platformPack_item001.png","projectile":"platformer/items/platformPack_item001.png"},"units":{"enemy":"platformer/characters/platformChar_jump.png","player":"platformer/characters/platformChar_idle.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;

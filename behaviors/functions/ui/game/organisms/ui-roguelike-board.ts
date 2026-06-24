@@ -61,7 +61,7 @@ export interface StdUiRoguelikeBoardGameEndPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiRoguelikeBoardConfig {
-  /** Default: `{"baseUrl":"https://almadar-kflow-assets.web.app/shared","features":{"health_potion":"isometric-dungeon/Isometric/chestClosed_E.png","shield":"isometric-dungeon/Isometric/barrel_E.png","sword":"isometric-dungeon/Isometric/barrel_E.png"},"terrains":{"floor":"isometric-dungeon/Isometric/dirt_E.png","planks":"isometric-dungeon/Isometric/planks_E.png","stairs":"isometric-dungeon/Isometric/stairs_E.png","wall":"isometric-dungeon/Isometric/stoneInset_E.png"},"units":{"enemy":"sprite-sheets/shadow-legion-sprite-sheet-sw.png","player":"isometric-dungeon/Characters/Male/Male_0_Idle0.png"}}` */
+  /** Default: `{"baseUrl":"https://almadar-kflow-assets.web.app/shared","features":{"health_potion":"terrain/Isometric/woodenCrates_N.png","shield":"terrain/Isometric/woodenCrates_S.png","sword":"terrain/Isometric/woodenCrates_N.png"},"terrains":{"floor":"terrain/Isometric/dirtTiles_N.png","planks":"terrain/Isometric/planks_N.png","stairs":"terrain/Isometric/stairs_N.png","wall":"terrain/Isometric/dirtTiles_N.png"},"units":{"enemy":"sprite-sheets/destroyer-sprite-sheet-sw.png","player":"sprite-sheets/forger-sprite-sheet-sw.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
@@ -353,19 +353,19 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
             'default': {
               'baseUrl': 'https://almadar-kflow-assets.web.app/shared',
               'features': {
-                'health_potion': 'isometric-dungeon/Isometric/chestClosed_E.png',
-                'shield': 'isometric-dungeon/Isometric/barrel_E.png',
-                'sword': 'isometric-dungeon/Isometric/barrel_E.png',
+                'health_potion': 'terrain/Isometric/woodenCrates_N.png',
+                'shield': 'terrain/Isometric/woodenCrates_S.png',
+                'sword': 'terrain/Isometric/woodenCrates_N.png',
               },
               'terrains': {
-                'floor': 'isometric-dungeon/Isometric/dirt_E.png',
-                'planks': 'isometric-dungeon/Isometric/planks_E.png',
-                'stairs': 'isometric-dungeon/Isometric/stairs_E.png',
-                'wall': 'isometric-dungeon/Isometric/stoneInset_E.png',
+                'floor': 'terrain/Isometric/dirtTiles_N.png',
+                'planks': 'terrain/Isometric/planks_N.png',
+                'stairs': 'terrain/Isometric/stairs_N.png',
+                'wall': 'terrain/Isometric/dirtTiles_N.png',
               },
               'units': {
-                'enemy': 'sprite-sheets/shadow-legion-sprite-sheet-sw.png',
-                'player': 'isometric-dungeon/Characters/Male/Male_0_Idle0.png',
+                'enemy': 'sprite-sheets/destroyer-sprite-sheet-sw.png',
+                'player': 'sprite-sheets/forger-sprite-sheet-sw.png',
               },
             },
             'description': 'CDN sprite paths for terrain, player, enemies, and items.',

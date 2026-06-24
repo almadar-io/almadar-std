@@ -395,6 +395,7 @@ export * from './ui/game/organisms/ui-game-audio-provider.js';
 export * from './ui/game/organisms/ui-game-audio-toggle.js';
 export * from './ui/game/organisms/ui-game-board-3d.js';
 export * from './ui/marketing/organisms/ui-hero-organism.js';
+export * from './ui/game/organisms/ui-hex-strategy-board.js';
 export * from './ui/core/organisms/ui-master-detail.js';
 export * from './ui/core/organisms/ui-master-detail-layout.js';
 export * from './ui/core/organisms/ui-media-gallery.js';
