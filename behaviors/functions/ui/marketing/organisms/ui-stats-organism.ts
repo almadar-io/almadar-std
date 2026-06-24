@@ -124,16 +124,6 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
             'required': true,
             'type': 'string',
           },
-          {
-            'default': '',
-            'name': 'value',
-            'type': 'string',
-          },
-          {
-            'default': '',
-            'name': 'label',
-            'type': 'string',
-          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;

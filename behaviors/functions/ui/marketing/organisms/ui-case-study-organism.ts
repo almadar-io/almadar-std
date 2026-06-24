@@ -126,11 +126,6 @@ export function stdUiCaseStudyOrganismCaseStudyOrganismOrbital(params: StdUiCase
             'required': true,
             'type': 'string',
           },
-          {
-            'default': '',
-            'name': 'title',
-            'type': 'string',
-          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
