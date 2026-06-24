@@ -73,6 +73,10 @@ export interface StdUiGraphCanvasConfig {
   layout?: 'force' | 'circular' | 'grid';
   /** Default: `100` */
   linkDistance?: number;
+  /** Default: `0.18` */
+  linkOpacity?: number;
+  /** Default: `28` */
+  nodeSpacing?: number;
   /** Default: `[{"color":"Color","group":"Group","id":"Id","label":"Label","size":1,"x":1,"y":1}]` */
   nodes?: EntityRow[];
   /** Default: `800` */
