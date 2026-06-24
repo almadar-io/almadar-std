@@ -43,7 +43,7 @@ export interface StdUiQuestTrackerConfig {
   activeQuestId?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"active":false,"completed":false,"id":"Id","maxProgress":1,"progress":1,"title":"Title"}]` */
+  /** Default: `[{"active":false,"completed":false,"id":"Id","maxProgress":1,"progress":1,"title":"Title"},{"active":true,"completed":true,"id":"Id 2","maxProgress":2,"progress":2,"title":"Title 2"}]` */
   quests?: EntityRow[];
 }
 

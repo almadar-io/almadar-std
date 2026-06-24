@@ -72,7 +72,7 @@ export interface StdUiRepeatableFormSectionConfig {
   currentState?: string;
   /** Default: `"Empty Message"` */
   emptyMessage?: string;
-  /** Default: `[{"addedAt":"Added At","addedInState":"Added In State","id":"Id"}]` */
+  /** Default: `[{"addedAt":"Added At","addedInState":"Added In State","id":"Id"},{"addedAt":"Added At 2","addedInState":"Added In State 2","id":"Id 2"}]` */
   items?: EntityRow[];
   /** Default: `0` */
   maxItems?: number;

@@ -48,11 +48,11 @@ export interface StdUiBranchingLogicBuilderRulesChangePayload {
 export interface StdUiBranchingLogicBuilderConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"id":"Id","label":"Label","optionValues":["Item"]}]` */
+  /** Default: `[{"id":"Id","label":"Label","optionValues":["Item","Item 2"]},{"id":"Id 2","label":"Label 2","optionValues":["Item","Item 2"]}]` */
   questions?: EntityRow[];
   /** Default: `false` */
   readOnly?: boolean;
-  /** Default: `[{"id":"Id","operator":"equals","sourceQuestionId":"Source Question Id","targetQuestionId":"Target Question Id","value":["Item"]}]` */
+  /** Default: `[{"id":"Id","operator":"equals","sourceQuestionId":"Source Question Id","targetQuestionId":"Target Question Id","value":["Item","Item 2"]},{"id":"Id 2","operator":"not-equals","sourceQuestionId":"Source Question Id 2","targetQuestionId":"Target Question Id 2","value":["Item","Item 2"]}]` */
   rules?: EntityRow[];
 }
 

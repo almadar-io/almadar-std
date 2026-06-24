@@ -43,7 +43,7 @@ export interface StdUiLineChartConfig {
   areaColor?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"color":"Color","label":"Label","value":1}]` */
+  /** Default: `[{"color":"Color","label":"Label","value":1},{"color":"Color 2","label":"Label 2","value":2}]` */
   data?: EntityRow[];
   /** Default: `200` */
   height?: number;

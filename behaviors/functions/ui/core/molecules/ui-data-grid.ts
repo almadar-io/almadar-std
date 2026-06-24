@@ -66,7 +66,7 @@ export interface StdUiDataGridConfig {
   className?: string;
   /** Default: `1` */
   cols?: number;
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"}]` */
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
   columns?: EntityRow[];
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
@@ -77,7 +77,7 @@ export interface StdUiDataGridConfig {
   /** Default: `"Drop Event"` */
   dropEvent?: string;
   error?: EntityRow;
-  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"}]` */
+  /** Default: `[{"format":"date","icon":"circle","label":"Label","name":"Name","variant":"h3"},{"format":"currency","icon":"circle","label":"Label 2","name":"Name 2","variant":"h4"}]` */
   fields?: EntityRow[];
   /** Default: `"md"` */
   gap?: 'none' | 'sm' | 'md' | 'lg' | 'xl';

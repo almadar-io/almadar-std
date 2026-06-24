@@ -89,6 +89,8 @@ export interface StdUiBoxConfig {
   rounded?: 'none' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   /** Default: `"none"` */
   shadow?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  /** Default: `true` */
+  tapReveal?: boolean;
 }
 
 /**

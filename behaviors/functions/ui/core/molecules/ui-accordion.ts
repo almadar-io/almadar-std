@@ -61,7 +61,7 @@ export interface StdUiAccordionConfig {
   defaultOpen?: number[];
   /** Default: `[]` */
   defaultOpenItems?: string[];
-  /** Default: `[{"content":"Content","defaultOpen":false,"disabled":false,"header":"Header","id":"Id","title":"Title"}]` */
+  /** Default: `[{"content":"Content","defaultOpen":false,"disabled":false,"header":"Header","id":"Id","title":"Title"},{"content":"Content 2","defaultOpen":true,"disabled":true,"header":"Header 2","id":"Id 2","title":"Title 2"}]` */
   items?: EntityRow[];
   /** Default: `false` */
   multiple?: boolean;

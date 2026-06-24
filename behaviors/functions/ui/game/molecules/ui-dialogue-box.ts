@@ -64,7 +64,7 @@ export interface StdUiDialogueBoxConfig {
   backgroundImage?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `{"autoAdvance":1,"choices":[{"action":"Action","disabled":false,"next":"Next","text":"Text"}],"id":"Id","portrait":"Portrait","speaker":"Speaker","text":"Text"}` */
+  /** Default: `{"autoAdvance":1,"choices":[{"action":"Action","disabled":false,"next":"Next","text":"Text"},{"action":"Action 2","disabled":true,"next":"Next 2","text":"Text 2"}],"id":"Id","portrait":"Portrait","speaker":"Speaker","text":"Text"}` */
   dialogue?: EntityRow;
   /** Default: `1` */
   portraitScale?: number;

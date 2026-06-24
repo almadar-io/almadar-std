@@ -39,7 +39,7 @@ export type StdUiDocumentViewerEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDocumentViewerConfig {
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
   actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
@@ -49,7 +49,7 @@ export interface StdUiDocumentViewerConfig {
   currentPage?: number;
   /** Default: `"pdf"` */
   documentType?: 'pdf' | 'text' | 'html' | 'markdown';
-  /** Default: `[{"content":"Content","documentType":"pdf","label":"Label","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}]` */
+  /** Default: `[{"content":"Content","documentType":"pdf","label":"Label","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},{"content":"Content 2","documentType":"text","label":"Label 2","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}]` */
   documents?: EntityRow[];
   error?: EntityRow;
   /** Default: `"Height"` */

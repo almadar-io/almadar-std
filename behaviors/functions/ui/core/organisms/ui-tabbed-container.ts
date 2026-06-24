@@ -54,7 +54,7 @@ export interface StdUiTabbedContainerConfig {
   defaultTab?: string;
   /** Default: `"top"` */
   position?: 'top' | 'left';
-  /** Default: `[{"badge":"Badge","content":"Content","disabled":false,"id":"Id","label":"Label","sectionId":"Section Id"}]` */
+  /** Default: `[{"badge":"Badge","content":"Content","disabled":false,"id":"Id","label":"Label","sectionId":"Section Id"},{"badge":"Badge 2","content":"Content 2","disabled":true,"id":"Id 2","label":"Label 2","sectionId":"Section Id 2"}]` */
   tabs?: EntityRow[];
 }
 
@@ -171,6 +171,14 @@ export function stdUiTabbedContainerTabbedContainerOrbital(params: StdUiTabbedCo
                 'id': 'Id',
                 'label': 'Label',
                 'sectionId': 'Section Id',
+              },
+              {
+                'badge': 'Badge 2',
+                'content': 'Content 2',
+                'disabled': true,
+                'id': 'Id 2',
+                'label': 'Label 2',
+                'sectionId': 'Section Id 2',
               },
             ],
             'description': 'Tab definitions',

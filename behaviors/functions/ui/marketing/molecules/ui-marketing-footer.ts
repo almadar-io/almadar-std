@@ -41,7 +41,7 @@ export type StdUiMarketingFooterEventKey = 'INIT';
 export interface StdUiMarketingFooterConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"items":[{"href":"Href","label":"Label"}],"title":"Title"}]` */
+  /** Default: `[{"items":[{"href":"Href","label":"Label"},{"href":"Href 2","label":"Label 2"}],"title":"Title"},{"items":[{"href":"Href","label":"Label"},{"href":"Href 2","label":"Label 2"}],"title":"Title 2"}]` */
   columns?: EntityRow[];
   /** Default: `"Copyright"` */
   copyright?: string;

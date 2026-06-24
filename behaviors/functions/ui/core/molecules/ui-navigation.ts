@@ -44,7 +44,7 @@ export interface StdUiNavigationConfig {
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"badge":"Badge","disabled":false,"href":"Href","icon":"circle","id":"Id","isActive":false,"label":"Label","subMenu":[]}]` */
+  /** Default: `[{"badge":"Badge","disabled":false,"href":"Href","icon":"circle","id":"Id","isActive":false,"label":"Label","subMenu":[]},{"badge":"Badge 2","disabled":true,"href":"Href 2","icon":"circle","id":"Id 2","isActive":true,"label":"Label 2","subMenu":[]}]` */
   items?: EntityRow[];
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';

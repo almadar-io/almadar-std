@@ -46,12 +46,13 @@ export interface StdUiEntityTableViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiEntityTableConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `[]` */
   bulkActions?: EntityRow[];
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name","sortable":false,"width":"Width"}]` */
+  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name","sortable":false,"width":"Width"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2","sortable":true,"width":"Width 2"}]` */
   columns?: EntityRow[];
   /** Default: `{"label":"Label"}` */
   emptyAction?: EntityRow;
@@ -61,12 +62,12 @@ export interface StdUiEntityTableConfig {
   /** Default: `"Empty Title"` */
   emptyTitle?: string;
   error?: EntityRow;
-  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name","sortable":false,"width":"Width"}]` */
+  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name","sortable":false,"width":"Width"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2","sortable":true,"width":"Width 2"}]` */
   fields?: EntityRow[];
   headerActions?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"action":"Action","icon":"circle","label":"Label","navigatesTo":"Navigates To","placement":"row","variant":"default"}]` */
+  /** Default: `[{"action":"Action","icon":"circle","label":"Label","navigatesTo":"Navigates To","placement":"row","variant":"default"},{"action":"Action 2","icon":"circle","label":"Label 2","navigatesTo":"Navigates To 2","placement":"bulk","variant":"primary"}]` */
   itemActions?: EntityRow[];
   /** Default: `"dense"` */
   look?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
@@ -169,6 +170,7 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',
@@ -221,6 +223,14 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                 'name': 'Name',
                 'sortable': false,
                 'width': 'Width',
+              },
+              {
+                'header': 'Header 2',
+                'key': 'Key 2',
+                'label': 'Label 2',
+                'name': 'Name 2',
+                'sortable': true,
+                'width': 'Width 2',
               },
             ],
             'description': 'Columns can be Column objects or simple string field names',
@@ -342,6 +352,14 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                 'sortable': false,
                 'width': 'Width',
               },
+              {
+                'header': 'Header 2',
+                'key': 'Key 2',
+                'label': 'Label 2',
+                'name': 'Name 2',
+                'sortable': true,
+                'width': 'Width 2',
+              },
             ],
             'description': 'Fields to display - accepts string[] or Column[] for unified interface. Alias for columns',
             'items': {
@@ -405,6 +423,14 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                 'navigatesTo': 'Navigates To',
                 'placement': 'row',
                 'variant': 'default',
+              },
+              {
+                'action': 'Action 2',
+                'icon': 'circle',
+                'label': 'Label 2',
+                'navigatesTo': 'Navigates To 2',
+                'placement': 'bulk',
+                'variant': 'primary',
               },
             ],
             'description': 'Item actions from generated code - maps to rowActions',

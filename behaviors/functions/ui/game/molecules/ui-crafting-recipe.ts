@@ -50,7 +50,7 @@ export interface StdUiCraftingRecipeConfig {
   canCraft?: boolean;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"available":1,"icon":"circle","label":"Label","required":1}]` */
+  /** Default: `[{"available":1,"icon":"circle","label":"Label","required":1},{"available":2,"icon":"circle","label":"Label 2","required":2}]` */
   inputs?: EntityRow[];
   /** Default: `{"icon":"circle","label":"Label","rarity":"Rarity"}` */
   output?: EntityRow;

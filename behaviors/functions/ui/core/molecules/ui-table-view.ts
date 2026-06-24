@@ -64,7 +64,7 @@ export interface StdUiTableViewConfig {
   accepts?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"align":"left","className":"Class Name","field":"Field","format":"badge","header":"Header","icon":"circle","key":"Key","label":"Label","sortable":false,"weight":"normal","width":"Width"}]` */
+  /** Default: `[{"align":"left","className":"Class Name","field":"Field","format":"badge","header":"Header","icon":"circle","key":"Key","label":"Label","sortable":false,"weight":"normal","width":"Width"},{"align":"center","className":"Class Name 2","field":"Field 2","format":"date","header":"Header 2","icon":"circle","key":"Key 2","label":"Label 2","sortable":true,"weight":"medium","width":"Width 2"}]` */
   columns?: EntityRow[];
   /** Default: `"Dnd Item Id Field"` */
   dndItemIdField?: string;
@@ -77,7 +77,7 @@ export interface StdUiTableViewConfig {
   /** Default: `"Empty Message"` */
   emptyMessage?: string;
   error?: EntityRow;
-  /** Default: `[{"align":"left","className":"Class Name","field":"Field","format":"badge","header":"Header","icon":"circle","key":"Key","label":"Label","sortable":false,"weight":"normal","width":"Width"}]` */
+  /** Default: `[{"align":"left","className":"Class Name","field":"Field","format":"badge","header":"Header","icon":"circle","key":"Key","label":"Label","sortable":false,"weight":"normal","width":"Width"},{"align":"center","className":"Class Name 2","field":"Field 2","format":"date","header":"Header 2","icon":"circle","key":"Key 2","label":"Label 2","sortable":true,"weight":"medium","width":"Width 2"}]` */
   fields?: EntityRow[];
   /** Default: `"Group By"` */
   groupBy?: string;

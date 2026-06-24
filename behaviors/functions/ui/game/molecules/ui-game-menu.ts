@@ -52,9 +52,9 @@ export interface StdUiGameMenuConfig {
   className?: string;
   /** Default: `"Logo"` */
   logo?: string;
-  /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"}]` */
+  /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"},{"action":"Action 2","disabled":true,"id":"Id 2","label":"Label 2","navigatesTo":"Navigates To 2","subLabel":"Sub Label 2","variant":"secondary"}]` */
   menuItems?: EntityRow[];
-  /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"}]` */
+  /** Default: `[{"action":"Action","disabled":false,"id":"Id","label":"Label","navigatesTo":"Navigates To","subLabel":"Sub Label","variant":"primary"},{"action":"Action 2","disabled":true,"id":"Id 2","label":"Label 2","navigatesTo":"Navigates To 2","subLabel":"Sub Label 2","variant":"secondary"}]` */
   options?: EntityRow[];
   /** Default: `"Subtitle"` */
   subtitle?: string;

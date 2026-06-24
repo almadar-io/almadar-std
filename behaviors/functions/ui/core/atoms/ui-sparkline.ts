@@ -43,7 +43,7 @@ export interface StdUiSparklineConfig {
   className?: string;
   /** Default: `"auto"` */
   color?: 'auto' | 'primary' | 'success' | 'warning' | 'error' | 'info' | 'muted';
-  /** Default: `[1]` */
+  /** Default: `[1,2]` */
   data?: number[];
   /** Default: `false` */
   fill?: boolean;

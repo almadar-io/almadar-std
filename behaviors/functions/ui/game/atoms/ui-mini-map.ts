@@ -47,9 +47,9 @@ export interface StdUiMiniMapConfig {
   mapHeight?: number;
   /** Default: `100` */
   mapWidth?: number;
-  /** Default: `[{"color":"Color","x":1,"y":1}]` */
+  /** Default: `[{"color":"Color","x":1,"y":1},{"color":"Color 2","x":2,"y":2}]` */
   tiles?: EntityRow[];
-  /** Default: `[{"color":"Color","isPlayer":false,"x":1,"y":1}]` */
+  /** Default: `[{"color":"Color","isPlayer":false,"x":1,"y":1},{"color":"Color 2","isPlayer":true,"x":2,"y":2}]` */
   units?: EntityRow[];
   /** Default: `{"h":1,"w":1,"x":1,"y":1}` */
   viewportRect?: EntityRow;

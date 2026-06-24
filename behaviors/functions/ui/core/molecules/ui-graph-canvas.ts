@@ -54,13 +54,13 @@ export interface StdUiGraphCanvasNodeDoubleClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGraphCanvasConfig {
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
   actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
   /** Default: `true` */
   draggable?: boolean;
-  /** Default: `[{"color":"Color","label":"Label","source":"Source","target":"Target","weight":1}]` */
+  /** Default: `[{"color":"Color","label":"Label","source":"Source","target":"Target","weight":1},{"color":"Color 2","label":"Label 2","source":"Source 2","target":"Target 2","weight":2}]` */
   edges?: EntityRow[];
   error?: EntityRow;
   /** Default: `400` */
@@ -77,7 +77,7 @@ export interface StdUiGraphCanvasConfig {
   linkOpacity?: number;
   /** Default: `28` */
   nodeSpacing?: number;
-  /** Default: `[{"color":"Color","group":"Group","id":"Id","label":"Label","size":1,"x":1,"y":1}]` */
+  /** Default: `[{"color":"Color","group":"Group","id":"Id","label":"Label","size":1,"x":1,"y":1},{"color":"Color 2","group":"Group 2","id":"Id 2","label":"Label 2","size":2,"x":2,"y":2}]` */
   nodes?: EntityRow[];
   /** Default: `800` */
   repulsion?: number;

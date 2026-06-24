@@ -39,13 +39,13 @@ export type StdUiChartEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiChartConfig {
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
   actions?: EntityRow[];
   /** Default: `"bar"` */
   chartType?: 'bar' | 'line' | 'pie' | 'area' | 'donut' | 'scatter' | 'histogram';
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"color":"Color","label":"Label","value":1}]` */
+  /** Default: `[{"color":"Color","label":"Label","value":1},{"color":"Color 2","label":"Label 2","value":2}]` */
   data?: EntityRow[];
   /** Default: `"Drill Event"` */
   drillEvent?: string;
@@ -56,9 +56,9 @@ export interface StdUiChartConfig {
   isLoading?: boolean;
   /** Default: `"bar-vertical"` */
   look?: 'bar-vertical' | 'bar-horizontal' | 'line' | 'area' | 'pie' | 'donut' | 'scatter' | 'histogram';
-  /** Default: `[{"color":"Color","label":"Label","size":1,"x":1,"y":1}]` */
+  /** Default: `[{"color":"Color","label":"Label","size":1,"x":1,"y":1},{"color":"Color 2","label":"Label 2","size":2,"x":2,"y":2}]` */
   scatterData?: EntityRow[];
-  /** Default: `[{"color":"Color","dashed":false,"data":[{"color":"Color","label":"Label","value":1}],"name":"Name"}]` */
+  /** Default: `[{"color":"Color","dashed":false,"data":[{"color":"Color","label":"Label","value":1},{"color":"Color 2","label":"Label 2","value":2}],"name":"Name"},{"color":"Color 2","dashed":true,"data":[{"color":"Color","label":"Label","value":1},{"color":"Color 2","label":"Label 2","value":2}],"name":"Name 2"}]` */
   series?: EntityRow[];
   /** Default: `true` */
   showLegend?: boolean;

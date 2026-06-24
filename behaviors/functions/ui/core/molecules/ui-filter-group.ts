@@ -56,7 +56,7 @@ export interface StdUiFilterGroupClearAllPayload {
 export interface StdUiFilterGroupConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"field":"Field","label":"Label","options":["Item"],"type":"checkbox"}]` */
+  /** Default: `[{"field":"Field","label":"Label","options":["Item","Item 2"],"type":"checkbox"},{"field":"Field 2","label":"Label 2","options":["Item","Item 2"],"type":"select"}]` */
   filters?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;

@@ -43,7 +43,7 @@ export interface StdUiEnemyPlateConfig {
   assetUrl?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"icon":"circle","label":"Label","variant":"buff"}]` */
+  /** Default: `[{"icon":"circle","label":"Label","variant":"buff"},{"icon":"circle","label":"Label 2","variant":"debuff"}]` */
   effects?: EntityRow[];
   /** Default: `80` */
   health?: number;

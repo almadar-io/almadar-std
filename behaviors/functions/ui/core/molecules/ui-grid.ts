@@ -56,6 +56,7 @@ export interface StdUiGridConfig {
   rowGap?: 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   /** Default: `0` */
   rows?: number;
+  /** Default: `{}` */
   style?: unknown;
 }
 

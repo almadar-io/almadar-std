@@ -73,7 +73,7 @@ export interface StdUiIsometricCanvasConfig {
   assetBaseUrl?: unknown;
   /** Default: `{"effects":{},"features":{"castle":"castle/resonator_citadel.png","gold_mine":"world-map/gold_mine.png","portal":"world-map/portal_open.png"},"terrains":{"castle":"isometric-dungeon/Isometric/stoneTile_E.png","dirt":"isometric-dungeon/Isometric/dirtTiles_E.png","forest":"isometric-dungeon/Isometric/planks_E.png","grass":"isometric-dungeon/Isometric/dirt_E.png","stone":"isometric-dungeon/Isometric/stoneInset_E.png"},"units":{"guardian":"units/guardian.png","mender":"units/mender.png","scrapper":"units/scrapper.png","worker":"units/worker.png"}}` */
   assetManifest?: EntityRow;
-  /** Default: `[{"x":1,"y":1}]` */
+  /** Default: `[{"x":1,"y":1},{"x":2,"y":2}]` */
   attackTargets?: EntityRow[];
   /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
   backgroundImage?: unknown;
@@ -116,7 +116,7 @@ export interface StdUiIsometricCanvasConfig {
   unitScale?: number;
   /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","name":"Worker","position":{"x":1,"y":1},"team":"player","unitType":"worker"},{"health":8,"id":"u2","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Guardian","position":{"x":3,"y":3},"team":"enemy","unitType":"guardian"}]` */
   units?: EntityRow[];
-  /** Default: `[{"x":1,"y":1}]` */
+  /** Default: `[{"x":1,"y":1},{"x":2,"y":2}]` */
   validMoves?: EntityRow[];
 }
 

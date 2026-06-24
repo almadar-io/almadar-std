@@ -47,7 +47,7 @@ export interface StdUiActionButtonsActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiActionButtonsConfig {
-  /** Default: `[{"icon":"circle","id":"Id","label":"Label","variant":"primary"}]` */
+  /** Default: `[{"icon":"circle","id":"Id","label":"Label","variant":"primary"},{"icon":"circle","id":"Id 2","label":"Label 2","variant":"secondary"}]` */
   buttons?: EntityRow[];
   /** Default: `""` */
   className?: string;

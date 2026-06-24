@@ -39,6 +39,7 @@ export type StdUiTeamOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTeamOrganismConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
@@ -126,6 +127,31 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
             'required': true,
             'type': 'string',
           },
+          {
+            'default': 'Name',
+            'name': 'name',
+            'type': 'string',
+          },
+          {
+            'default': 'Name Ar',
+            'name': 'nameAr',
+            'type': 'string',
+          },
+          {
+            'default': 'Role',
+            'name': 'role',
+            'type': 'string',
+          },
+          {
+            'default': 'Bio',
+            'name': 'bio',
+            'type': 'string',
+          },
+          {
+            'default': 'Avatar',
+            'name': 'avatar',
+            'type': 'string',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -138,6 +164,7 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',

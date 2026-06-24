@@ -43,7 +43,7 @@ export interface StdUiMenuConfig {
   className?: string;
   footer?: unknown;
   header?: unknown;
-  /** Default: `[{"badge":"Badge","disabled":false,"icon":"circle","id":"Id","label":"Label","subMenu":[],"variant":"default"}]` */
+  /** Default: `[{"badge":"Badge","disabled":false,"icon":"circle","id":"Id","label":"Label","subMenu":[],"variant":"default"},{"badge":"Badge 2","disabled":true,"icon":"circle","id":"Id 2","label":"Label 2","subMenu":[],"variant":"danger"}]` */
   items?: EntityRow[];
   /** Default: `"bottom-left"` */
   position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';

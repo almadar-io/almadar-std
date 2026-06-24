@@ -39,6 +39,7 @@ export type StdUiStatsOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatsOrganismConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
@@ -124,6 +125,16 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
             'required': true,
             'type': 'string',
           },
+          {
+            'default': 'Value',
+            'name': 'value',
+            'type': 'string',
+          },
+          {
+            'default': 'Label',
+            'name': 'label',
+            'type': 'string',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -136,6 +147,7 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',

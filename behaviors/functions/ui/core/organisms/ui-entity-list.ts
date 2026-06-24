@@ -53,6 +53,7 @@ export interface StdUiEntityListViewPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiEntityListConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
@@ -63,7 +64,7 @@ export interface StdUiEntityListConfig {
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"}]` */
+  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2"}]` */
   fields?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
@@ -162,6 +163,7 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',
@@ -233,6 +235,12 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                 'key': 'Key',
                 'label': 'Label',
                 'name': 'Name',
+              },
+              {
+                'header': 'Header 2',
+                'key': 'Key 2',
+                'label': 'Label 2',
+                'name': 'Name 2',
               },
             ],
             'description': 'Fields to display - accepts string[] or {key, header}[] for unified interface',

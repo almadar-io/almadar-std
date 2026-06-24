@@ -39,6 +39,7 @@ export type StdUiShowcaseOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiShowcaseOrganismConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
@@ -128,6 +129,51 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
             'required': true,
             'type': 'string',
           },
+          {
+            'default': 'Title',
+            'name': 'title',
+            'type': 'string',
+          },
+          {
+            'default': 'Description',
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'default': {
+              'alt': 'Alt',
+              'src': 'Src',
+            },
+            'name': 'image',
+            'properties': {
+              'alt': {
+                'name': 'alt',
+                'required': false,
+                'type': 'string',
+              },
+              'src': {
+                'name': 'src',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'type': 'object',
+          },
+          {
+            'default': 'Href',
+            'name': 'href',
+            'type': 'string',
+          },
+          {
+            'default': 'Badge',
+            'name': 'badge',
+            'type': 'string',
+          },
+          {
+            'default': 'Accent Color',
+            'name': 'accentColor',
+            'type': 'string',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -140,6 +186,7 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',

@@ -41,7 +41,7 @@ export type StdUiResourceBarEventKey = 'INIT';
 export interface StdUiResourceBarConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"icon":"circle","label":"Label","max":1,"value":1}]` */
+  /** Default: `[{"icon":"circle","label":"Label","max":1,"value":1},{"icon":"circle","label":"Label 2","max":2,"value":2}]` */
   resources?: EntityRow[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';

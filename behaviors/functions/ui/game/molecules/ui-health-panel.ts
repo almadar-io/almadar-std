@@ -43,7 +43,7 @@ export interface StdUiHealthPanelConfig {
   className?: string;
   /** Default: `75` */
   current?: number;
-  /** Default: `[{"icon":"circle","label":"Label","variant":"buff"}]` */
+  /** Default: `[{"icon":"circle","label":"Label","variant":"buff"},{"icon":"circle","label":"Label 2","variant":"debuff"}]` */
   effects?: EntityRow[];
   /** Default: `"Player HP"` */
   label?: string;

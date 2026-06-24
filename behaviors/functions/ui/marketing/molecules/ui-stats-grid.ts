@@ -43,7 +43,7 @@ export interface StdUiStatsGridConfig {
   className?: string;
   /** Default: `3` */
   columns?: number;
-  /** Default: `[{"label":"Label","value":"Value"}]` */
+  /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
   stats?: EntityRow[];
 }
 

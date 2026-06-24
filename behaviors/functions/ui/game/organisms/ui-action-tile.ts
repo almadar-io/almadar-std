@@ -41,6 +41,7 @@ export type StdUiActionTileEventKey = 'INIT';
 export interface StdUiActionTileConfig {
   /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name"}` */
   action?: EntityRow;
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `{}` */
   categoryColors?: unknown;
@@ -192,6 +193,7 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
             'type': 'ActionTileAction',
           },
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',

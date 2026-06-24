@@ -39,8 +39,9 @@ export type StdUiDetailPanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDetailPanelConfig {
-  /** Default: `[{"icon":"circle","label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  /** Default: `[{"icon":"circle","label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"icon":"circle","label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
   actions?: EntityRow[];
+  /** Default: `{}` */
   activeFilters?: unknown;
   avatar?: unknown;
   /** Default: `""` */
@@ -50,9 +51,10 @@ export interface StdUiDetailPanelConfig {
   error?: EntityRow;
   /** Default: `[]` */
   fieldNames?: string[];
-  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"}]` */
+  /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2"}]` */
   fields?: EntityRow[];
   footer?: unknown;
+  /** Default: `{}` */
   initialData?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
@@ -66,7 +68,7 @@ export interface StdUiDetailPanelConfig {
   position?: 'left' | 'right';
   /** Default: `"Search Value"` */
   searchValue?: string;
-  /** Default: `[{"fields":[{"copyable":false,"icon":"circle","label":"Label","value":"Value"}],"title":"Title"}]` */
+  /** Default: `[{"fields":[{"copyable":false,"icon":"circle","label":"Label","value":"Value"},{"copyable":true,"icon":"circle","label":"Label 2","value":"Value 2"}],"title":"Title"},{"fields":[{"copyable":false,"icon":"circle","label":"Label","value":"Value"},{"copyable":true,"icon":"circle","label":"Label 2","value":"Value 2"}],"title":"Title 2"}]` */
   sections?: EntityRow[];
   /** Default: `[]` */
   selectedIds?: string[];
@@ -169,6 +171,12 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 'navigatesTo': 'Navigates To',
                 'variant': 'primary',
               },
+              {
+                'icon': 'circle',
+                'label': 'Label 2',
+                'navigatesTo': 'Navigates To 2',
+                'variant': 'secondary',
+              },
             ],
             'description': 'Unified actions array - first action with variant=\'primary\' is the main action',
             'items': {
@@ -212,6 +220,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'type': '[DetailPanelActionsItem]',
           },
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',
@@ -286,6 +295,12 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                 'label': 'Label',
                 'name': 'Name',
               },
+              {
+                'header': 'Header 2',
+                'key': 'Key 2',
+                'label': 'Label 2',
+                'name': 'Name 2',
+              },
             ],
             'description': 'Fields to display - accepts string[], {key, header}[], or DetailField[]',
             'items': {
@@ -324,6 +339,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'type': 'node',
           },
           'initialData': {
+            'default': {},
             'description': 'Initial data for edit mode (passed by compiler)',
             'label': 'Initial Data',
             'tier': 'presentation',
@@ -386,8 +402,31 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'label': 'Label',
                     'value': 'Value',
                   },
+                  {
+                    'copyable': true,
+                    'icon': 'circle',
+                    'label': 'Label 2',
+                    'value': 'Value 2',
+                  },
                 ],
                 'title': 'Title',
+              },
+              {
+                'fields': [
+                  {
+                    'copyable': false,
+                    'icon': 'circle',
+                    'label': 'Label',
+                    'value': 'Value',
+                  },
+                  {
+                    'copyable': true,
+                    'icon': 'circle',
+                    'label': 'Label 2',
+                    'value': 'Value 2',
+                  },
+                ],
+                'title': 'Title 2',
               },
             ],
             'description': 'sections prop',

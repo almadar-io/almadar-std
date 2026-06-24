@@ -47,7 +47,7 @@ export interface StdUiPricingCardConfig {
   className?: string;
   /** Default: `"Description"` */
   description?: string;
-  /** Default: `["Item"]` */
+  /** Default: `["Item","Item 2"]` */
   features?: string[];
   /** Default: `false` */
   highlighted?: boolean;

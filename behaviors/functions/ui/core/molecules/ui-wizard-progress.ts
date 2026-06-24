@@ -54,7 +54,7 @@ export interface StdUiWizardProgressConfig {
   compact?: boolean;
   /** Default: `0` */
   currentStep?: number;
-  /** Default: `[{"description":"Description","id":"Id","title":"Title"}]` */
+  /** Default: `[{"description":"Description","id":"Id","title":"Title"},{"description":"Description 2","id":"Id 2","title":"Title 2"}]` */
   steps?: EntityRow[];
 }
 

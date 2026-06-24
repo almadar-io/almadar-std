@@ -39,6 +39,7 @@ export type StdUiFeatureGridOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFeatureGridOrganismConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
@@ -128,6 +129,31 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
             'required': true,
             'type': 'string',
           },
+          {
+            'default': 'Title',
+            'name': 'title',
+            'type': 'string',
+          },
+          {
+            'default': 'Icon',
+            'name': 'icon',
+            'type': 'string',
+          },
+          {
+            'default': 'Description',
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'default': 'Href',
+            'name': 'href',
+            'type': 'string',
+          },
+          {
+            'default': 'Link Label',
+            'name': 'linkLabel',
+            'type': 'string',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -140,6 +166,7 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',

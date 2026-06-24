@@ -49,6 +49,7 @@ export interface StdUiRuntimeDebuggerConfig {
   mode?: 'floating' | 'inline' | 'verify';
   /** Default: `"bottom-right"` */
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  /** Default: `{}` */
   schema?: unknown;
 }
 
@@ -171,6 +172,7 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
             ],
           },
           'schema': {
+            'default': {},
             'description': 'Raw schema for EventDispatcherTab payload extraction',
             'label': 'Schema',
             'tier': 'presentation',

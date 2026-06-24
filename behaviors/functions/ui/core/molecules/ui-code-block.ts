@@ -46,18 +46,18 @@ export interface StdUiCodeBlockChangePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCodeBlockConfig {
-  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"}]` */
+  /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
   actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
   /** Default: `"Code"` */
   code?: string;
-  /** Default: `[{"afterLineNumber":1,"beforeLineNumber":1,"content":"Content","type":"added"}]` */
+  /** Default: `[{"afterLineNumber":1,"beforeLineNumber":1,"content":"Content","type":"added"},{"afterLineNumber":2,"beforeLineNumber":2,"content":"Content 2","type":"removed"}]` */
   diff?: EntityRow[];
   /** Default: `false` */
   editable?: boolean;
   error?: EntityRow;
-  /** Default: `[{"code":"Code","label":"Label","language":"text"}]` */
+  /** Default: `[{"code":"Code","label":"Label","language":"text"},{"code":"Code 2","label":"Label 2","language":"json"}]` */
   files?: EntityRow[];
   /** Default: `false` */
   foldable?: boolean;

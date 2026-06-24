@@ -1,8 +1,42 @@
 app ui-pricing-page-template "1.0.0"
 "PricingPageTemplate — UI factory (1:1 with the @almadar/ui pricing-page-template pattern)."
 orbital PricingPageTemplateOrbital {
+  type PricingPageTemplateHero = {
+    id : string
+    tag : string
+    title : string!
+    titleAccent : string
+    subtitle : string!
+    background : "dark" | "gradient" | "subtle"
+  }
+  type PricingPageTemplatePlansItem = {
+    id : string
+    name : string!
+    price : string!
+    description : string
+    features : [string]!
+    actionLabel : string!
+    actionHref : string!
+    highlighted : boolean
+    badge : string
+  }
+  type PricingPageTemplateFaqItem = {
+    question : string!
+    answer : string!
+  }
+  type PricingPageTemplateCtaAction = {
+    label : string!
+    href : string!
+  }
+
   entity PricingPageTemplateItem [runtime] {
     id : string!
+    hero : PricingPageTemplateHero = { id: "Id", tag: "Tag", title: "Title", titleAccent: "Title Accent", subtitle: "Subtitle", background: dark }
+    plans : [PricingPageTemplatePlansItem] = [{ id: "Id", name: "Name", price: "Price", description: "Description", features: ["Item", "Item 2"], actionLabel: "Action Label", actionHref: "Action Href", highlighted: false, badge: "Badge" }, { id: "Id 2", name: "Name 2", price: "Price 2", description: "Description 2", features: ["Item", "Item 2"], actionLabel: "Action Label 2", actionHref: "Action Href 2", highlighted: true, badge: "Badge 2" }]
+    faq : [PricingPageTemplateFaqItem] = [{ question: "Question", answer: "Answer" }, { question: "Question 2", answer: "Answer 2" }]
+    ctaTitle : string = "Cta Title"
+    ctaSubtitle : string = "Cta Subtitle"
+    ctaAction : PricingPageTemplateCtaAction = { label: "Label", href: "Href" }
   }
 
   trait PricingPageTemplateRender -> @rebindable PricingPageTemplateItem [interaction, instance] {

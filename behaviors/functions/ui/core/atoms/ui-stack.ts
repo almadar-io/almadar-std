@@ -66,6 +66,7 @@ export interface StdUiStackConfig {
   reverse?: boolean;
   /** Default: `"Role"` */
   role?: string;
+  /** Default: `{}` */
   style?: unknown;
   /** Default: `0` */
   tabIndex?: number;

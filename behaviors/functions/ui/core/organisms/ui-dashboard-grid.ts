@@ -39,8 +39,9 @@ export type StdUiDashboardGridEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiDashboardGridConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
-  /** Default: `[{"colSpan":1,"content":"Content","id":"Id","rowSpan":1}]` */
+  /** Default: `[{"colSpan":1,"content":"Content","id":"Id","rowSpan":1},{"colSpan":2,"content":"Content 2","id":"Id 2","rowSpan":2}]` */
   cells?: EntityRow[];
   /** Default: `""` */
   className?: string;
@@ -140,6 +141,7 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',
@@ -152,6 +154,12 @@ export function stdUiDashboardGridDashboardGridOrbital(params: StdUiDashboardGri
                 'content': 'Content',
                 'id': 'Id',
                 'rowSpan': 1,
+              },
+              {
+                'colSpan': 2,
+                'content': 'Content 2',
+                'id': 'Id 2',
+                'rowSpan': 2,
               },
             ],
             'description': 'Cell definitions',

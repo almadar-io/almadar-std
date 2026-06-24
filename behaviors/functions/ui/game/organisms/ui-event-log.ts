@@ -41,7 +41,7 @@ export type StdUiEventLogEventKey = 'INIT';
 export interface StdUiEventLogConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"icon":"circle","id":"Id","message":"Message","status":"pending","timestamp":1}]` */
+  /** Default: `[{"icon":"circle","id":"Id","message":"Message","status":"pending","timestamp":1},{"icon":"circle","id":"Id 2","message":"Message 2","status":"active","timestamp":2}]` */
   entries?: EntityRow[];
   /** Default: `"Label"` */
   label?: string;
@@ -136,6 +136,13 @@ export function stdUiEventLogEventLogOrbital(params: StdUiEventLogEventLogOrbita
                 'message': 'Message',
                 'status': 'pending',
                 'timestamp': 1,
+              },
+              {
+                'icon': 'circle',
+                'id': 'Id 2',
+                'message': 'Message 2',
+                'status': 'active',
+                'timestamp': 2,
               },
             ],
             'description': 'Log entries',

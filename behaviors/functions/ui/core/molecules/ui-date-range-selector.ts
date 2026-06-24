@@ -48,7 +48,7 @@ export interface StdUiDateRangeSelectorSelectPayload {
 export interface StdUiDateRangeSelectorConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"label":"Label","value":"Value"}]` */
+  /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
   options?: EntityRow[];
   /** Default: `"month"` */
   selected?: string;

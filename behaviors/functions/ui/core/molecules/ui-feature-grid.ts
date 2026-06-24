@@ -45,7 +45,7 @@ export interface StdUiFeatureGridConfig {
   columns?: number;
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
-  /** Default: `[{"className":"Class Name","description":"Description","href":"Href","icon":"circle","linkLabel":"Link Label","size":"sm","title":"Title","variant":"default"}]` */
+  /** Default: `[{"className":"Class Name","description":"Description","href":"Href","icon":"circle","linkLabel":"Link Label","size":"sm","title":"Title","variant":"default"},{"className":"Class Name 2","description":"Description 2","href":"Href 2","icon":"circle","linkLabel":"Link Label 2","size":"md","title":"Title 2","variant":"bordered"}]` */
   items?: EntityRow[];
 }
 

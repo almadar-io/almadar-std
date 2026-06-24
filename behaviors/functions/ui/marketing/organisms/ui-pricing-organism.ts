@@ -39,6 +39,7 @@ export type StdUiPricingOrganismEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiPricingOrganismConfig {
+  /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `""` */
   className?: string;
@@ -126,6 +127,52 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
             'required': true,
             'type': 'string',
           },
+          {
+            'default': 'Name',
+            'name': 'name',
+            'type': 'string',
+          },
+          {
+            'default': 'Price',
+            'name': 'price',
+            'type': 'string',
+          },
+          {
+            'default': 'Description',
+            'name': 'description',
+            'type': 'string',
+          },
+          {
+            'default': [
+              'Item',
+              'Item 2',
+            ],
+            'items': {
+              'type': 'string',
+            },
+            'name': 'features',
+            'type': 'array',
+          },
+          {
+            'default': 'Action Label',
+            'name': 'actionLabel',
+            'type': 'string',
+          },
+          {
+            'default': 'Action Href',
+            'name': 'actionHref',
+            'type': 'string',
+          },
+          {
+            'default': false,
+            'name': 'highlighted',
+            'type': 'boolean',
+          },
+          {
+            'default': 'Badge',
+            'name': 'badge',
+            'type': 'string',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -138,6 +185,7 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
         'category': 'interaction',
         'config': {
           'activeFilters': {
+            'default': {},
             'description': 'Active filters',
             'label': 'Active Filters',
             'tier': 'presentation',

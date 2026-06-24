@@ -7,9 +7,31 @@ orbital HeroOrganismOrbital {
     code : string
     stack : string
   }
+  type HeroOrganismPrimaryAction = {
+    label : string
+    href : string
+  }
+  type HeroOrganismSecondaryAction = {
+    label : string
+    href : string
+  }
+  type HeroOrganismImage = {
+    src : string
+    alt : string
+  }
 
   entity HeroOrganismItem [runtime] {
     id : string!
+    title : string = "Title"
+    tag : string = "Tag"
+    titleAccent : string = "Title Accent"
+    subtitle : string = "Subtitle"
+    primaryAction : HeroOrganismPrimaryAction = { label: "Label", href: "Href" }
+    secondaryAction : HeroOrganismSecondaryAction = { label: "Label", href: "Href" }
+    installCommand : string = "Install Command"
+    image : HeroOrganismImage = { src: "Src", alt: "Alt" }
+    imagePosition : "below" | "right" | "background" = below
+    background : "dark" | "gradient" | "subtle" = dark
   }
 
   trait HeroOrganismRender -> @rebindable HeroOrganismItem [interaction, instance] {
@@ -74,7 +96,7 @@ orbital HeroOrganismOrbital {
         @label "Total Count"
         @description "Total number of items"
         @tier "presentation"
-      activeFilters : json
+      activeFilters : json = {}
         @label "Active Filters"
         @description "Active filters"
         @tier "presentation"

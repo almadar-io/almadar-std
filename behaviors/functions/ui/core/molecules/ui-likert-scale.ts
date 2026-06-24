@@ -50,7 +50,7 @@ export interface StdUiLikertScaleConfig {
   className?: string;
   /** Default: `false` */
   disabled?: boolean;
-  /** Default: `[{"label":"Label","value":"Value"}]` */
+  /** Default: `[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}]` */
   options?: EntityRow[];
   /** Default: `"Question"` */
   question?: string;

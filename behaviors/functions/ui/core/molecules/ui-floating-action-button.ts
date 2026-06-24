@@ -55,7 +55,7 @@ export interface StdUiFloatingActionButtonClickPayload {
 export interface StdUiFloatingActionButtonConfig {
   /** Default: `{}` */
   actionPayload?: unknown;
-  /** Default: `[{"icon":"circle","id":"Id","label":"Label","variant":"primary"}]` */
+  /** Default: `[{"icon":"circle","id":"Id","label":"Label","variant":"primary"},{"icon":"circle","id":"Id 2","label":"Label 2","variant":"secondary"}]` */
   actions?: EntityRow[];
   /** Default: `""` */
   className?: string;
