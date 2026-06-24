@@ -137,7 +137,7 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'type': 'string',
           },
           {
-            'default': 0,
+            'default': 1,
             'name': 'number',
             'type': 'number',
           },
@@ -147,7 +147,7 @@ export function stdUiStepFlowOrganismStepFlowOrganismOrbital(params: StdUiStepFl
             'type': 'string',
           },
           {
-            'default': 'Icon',
+            'default': 'circle',
             'name': 'icon',
             'type': 'string',
           },

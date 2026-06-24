@@ -148,7 +148,7 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
             'type': 'string',
           },
           {
-            'default': 'Avatar',
+            'default': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
             'name': 'avatar',
             'type': 'string',
           },
