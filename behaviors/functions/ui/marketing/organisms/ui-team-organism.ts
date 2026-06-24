@@ -126,11 +126,6 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
             'required': true,
             'type': 'string',
           },
-          {
-            'default': '',
-            'name': 'name',
-            'type': 'string',
-          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;

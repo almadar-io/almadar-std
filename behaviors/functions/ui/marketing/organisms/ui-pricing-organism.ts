@@ -126,16 +126,6 @@ export function stdUiPricingOrganismPricingOrganismOrbital(params: StdUiPricingO
             'required': true,
             'type': 'string',
           },
-          {
-            'default': '',
-            'name': 'name',
-            'type': 'string',
-          },
-          {
-            'default': '',
-            'name': 'price',
-            'type': 'string',
-          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;

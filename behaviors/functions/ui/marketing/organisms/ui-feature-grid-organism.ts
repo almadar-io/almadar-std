@@ -128,11 +128,6 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
             'required': true,
             'type': 'string',
           },
-          {
-            'default': '',
-            'name': 'title',
-            'type': 'string',
-          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
