@@ -135,7 +135,7 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
             'type': 'string',
           },
           {
-            'default': 'Icon',
+            'default': 'circle',
             'name': 'icon',
             'type': 'string',
           },

@@ -142,7 +142,7 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
           {
             'default': {
               'alt': 'Alt',
-              'src': 'Src',
+              'src': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
             },
             'name': 'image',
             'properties': {
