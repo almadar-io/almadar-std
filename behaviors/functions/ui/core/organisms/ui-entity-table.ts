@@ -30,13 +30,20 @@ const ALIAS = 'UiEntityTable';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiEntityTableEventKey = 'INIT' | 'VIEW';
+export type StdUiEntityTableEventKey = 'EntityTableLoaded' | 'INIT' | 'VIEW';
 
 /**
  * Payload shape for the `VIEW` event.
  */
 export interface StdUiEntityTableViewPayload {
   id?: string;
+}
+
+/**
+ * Payload shape for the `EntityTableLoaded` event.
+ */
+export interface StdUiEntityTableEntityTableLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**
@@ -638,6 +645,19 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             'scope': 'external',
             'tier': 'essential',
           },
+          {
+            'description': 'EntityTable rows finished loading; payload.data holds the collection.',
+            'event': 'EntityTableLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[EntityTableItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
         ],
         'entityContract': {
           'provides': [],
@@ -652,6 +672,19 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
             {
               'key': 'INIT',
               'name': 'Initialize',
+            },
+            {
+              'description': 'EntityTable rows finished loading; payload.data holds the collection.',
+              'key': 'EntityTableLoaded',
+              'name': 'Entity table loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[EntityTableItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
             },
             {
               'description': 'User opened a record from the list.',
@@ -678,7 +711,11 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                 [
                   'fetch',
                   'EntityTableItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'EntityTableLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -721,6 +758,52 @@ export function stdUiEntityTableEntityTableOrbital(params: StdUiEntityTableEntit
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'bulkActions': '@config.bulkActions',
+                    'className': '@config.className',
+                    'columns': '@config.columns',
+                    'emptyAction': '@config.emptyAction',
+                    'emptyDescription': '@config.emptyDescription',
+                    'emptyIcon': '@config.emptyIcon',
+                    'emptyTitle': '@config.emptyTitle',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'fields': '@config.fields',
+                    'headerActions': '@config.headerActions',
+                    'isLoading': '@config.isLoading',
+                    'itemActions': [
+                      {
+                        'event': 'VIEW',
+                        'label': 'View',
+                      },
+                    ],
+                    'look': '@config.look',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'rowActions': '@config.rowActions',
+                    'searchPlaceholder': '@config.searchPlaceholder',
+                    'searchValue': '@config.searchValue',
+                    'searchable': '@config.searchable',
+                    'selectable': '@config.selectable',
+                    'selectedIds': '@config.selectedIds',
+                    'showTotal': '@config.showTotal',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'entity-table',
+                  },
+                ],
+              ],
+              'event': 'EntityTableLoaded',
               'from': 'idle',
               'to': 'idle',
             },

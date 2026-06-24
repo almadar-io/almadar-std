@@ -1,6 +1,7 @@
 app ui-feature-grid-organism "1.0.0"
 "FeatureGridOrganism — UI factory (1:1 with the @almadar/ui feature-grid-organism pattern)."
 orbital FeatureGridOrganismOrbital {
+    type FeatureGridOrganismLoaded = Event { data : [FeatureGridOrganismItem] } "FeatureGridOrganism rows finished loading; payload.data holds the collection"
   type FeatureGridOrganismError = {
     message : string!
     name : string
@@ -22,7 +23,7 @@ orbital FeatureGridOrganismOrbital {
 
     state idle {
       INIT -> idle
-        (fetch FeatureGridOrganismItem {})
+        (fetch FeatureGridOrganismItem { emit: { success: FeatureGridOrganismLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -41,6 +42,32 @@ orbital FeatureGridOrganismOrbital {
           subtitle: @config.subtitle
           type: feature-grid-organism
         })
+      FeatureGridOrganismLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          columns: @config.columns
+          heading: @config.heading
+          subtitle: @config.subtitle
+          type: feature-grid-organism
+        })
+    }
+
+    emits {
+      FeatureGridOrganismLoaded
+        @description "FeatureGridOrganism rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

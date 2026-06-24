@@ -511,6 +511,21 @@
               "type": "number"
             }
           },
+          "emits": [
+            {
+              "description": "GameCanvas3dCastleTemplate rows finished loading; payload.data holds the collection.",
+              "event": "GameCanvas3dCastleTemplateLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[GameCanvas3dCastleTemplateItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -524,6 +539,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "GameCanvas3dCastleTemplate rows finished loading; payload.data holds the collection.",
+                "key": "GameCanvas3dCastleTemplateLoaded",
+                "name": "Game canvas3d castle template loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[GameCanvas3dCastleTemplateItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -538,7 +566,11 @@
                   [
                     "fetch",
                     "GameCanvas3dCastleTemplateItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "GameCanvas3dCastleTemplateLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -571,6 +603,42 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "assetManifest": "@config.assetManifest",
+                      "attackEvent": "@config.attackEvent",
+                      "backgroundColor": "@config.backgroundColor",
+                      "buildEvent": "@config.buildEvent",
+                      "buildingClickEvent": "@config.buildingClickEvent",
+                      "cameraMode": "@config.cameraMode",
+                      "cancelEvent": "@config.cancelEvent",
+                      "className": "@config.className",
+                      "endTurnEvent": "@config.endTurnEvent",
+                      "entity": "@payload.data",
+                      "exitEvent": "@config.exitEvent",
+                      "features": "@config.features",
+                      "gameEndEvent": "@config.gameEndEvent",
+                      "playAgainEvent": "@config.playAgainEvent",
+                      "recruitEvent": "@config.recruitEvent",
+                      "scale": "@config.scale",
+                      "shadows": "@config.shadows",
+                      "showGrid": "@config.showGrid",
+                      "showHeader": "@config.showHeader",
+                      "tiles": "@config.tiles",
+                      "type": "game-canvas-3d-castle-template",
+                      "unitClickEvent": "@config.unitClickEvent",
+                      "unitScale": "@config.unitScale"
+                    }
+                  ]
+                ],
+                "event": "GameCanvas3dCastleTemplateLoaded",
                 "from": "idle",
                 "to": "idle"
               }

@@ -1,6 +1,7 @@
 app ui-game-canvas-3d-castle-template "1.0.0"
 "GameCanvas3dCastleTemplate — UI factory (1:1 with the @almadar/ui game-canvas-3d-castle-template pattern)."
 orbital GameCanvas3dCastleTemplateOrbital {
+    type GameCanvas3dCastleTemplateLoaded = Event { data : [GameCanvas3dCastleTemplateItem] } "GameCanvas3dCastleTemplate rows finished loading; payload.data holds the collection"
   type GameCanvas3dCastleTemplateTilesItem = {
     id : string
     x : number!
@@ -41,7 +42,7 @@ orbital GameCanvas3dCastleTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch GameCanvas3dCastleTemplateItem {})
+        (fetch GameCanvas3dCastleTemplateItem { emit: { success: GameCanvas3dCastleTemplateLoaded } })
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -67,6 +68,39 @@ orbital GameCanvas3dCastleTemplateOrbital {
           scale: @config.scale
           type: game-canvas-3d-castle-template
         })
+      GameCanvas3dCastleTemplateLoaded -> idle
+        (render-ui main {
+          entity: @payload.data
+          className: @config.className
+          tiles: @config.tiles
+          features: @config.features
+          assetManifest: @config.assetManifest
+          cameraMode: @config.cameraMode
+          showGrid: @config.showGrid
+          shadows: @config.shadows
+          backgroundColor: @config.backgroundColor
+          buildingClickEvent: @config.buildingClickEvent
+          unitClickEvent: @config.unitClickEvent
+          endTurnEvent: @config.endTurnEvent
+          cancelEvent: @config.cancelEvent
+          attackEvent: @config.attackEvent
+          playAgainEvent: @config.playAgainEvent
+          gameEndEvent: @config.gameEndEvent
+          buildEvent: @config.buildEvent
+          recruitEvent: @config.recruitEvent
+          exitEvent: @config.exitEvent
+          showHeader: @config.showHeader
+          unitScale: @config.unitScale
+          scale: @config.scale
+          type: game-canvas-3d-castle-template
+        })
+    }
+
+    emits {
+      GameCanvas3dCastleTemplateLoaded
+        @description "GameCanvas3dCastleTemplate rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

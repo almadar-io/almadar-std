@@ -1,6 +1,7 @@
 app ui-entity-table "1.0.0"
 "EntityTable — UI factory (1:1 with the @almadar/ui entity-table pattern)."
 orbital EntityTableOrbital {
+    type EntityTableLoaded = Event { data : [EntityTableItem] } "EntityTable rows finished loading; payload.data holds the collection"
   type EntityTableError = {
     message : string!
     name : string
@@ -57,7 +58,7 @@ orbital EntityTableOrbital {
 
     state idle {
       INIT -> idle
-        (fetch EntityTableItem {})
+        (fetch EntityTableItem { emit: { success: EntityTableLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -88,6 +89,37 @@ orbital EntityTableOrbital {
           itemActions: [{ label: "View", event: VIEW }]
           type: entity-table
         })
+      EntityTableLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          fields: @config.fields
+          columns: @config.columns
+          emptyIcon: @config.emptyIcon
+          emptyTitle: @config.emptyTitle
+          emptyDescription: @config.emptyDescription
+          emptyAction: @config.emptyAction
+          selectable: @config.selectable
+          searchable: @config.searchable
+          searchPlaceholder: @config.searchPlaceholder
+          rowActions: @config.rowActions
+          bulkActions: @config.bulkActions
+          headerActions: @config.headerActions
+          showTotal: @config.showTotal
+          look: @config.look
+          itemActions: [{ label: "View", event: VIEW }]
+          type: entity-table
+        })
       VIEW -> idle
         (emit VIEW {})
     }
@@ -97,6 +129,10 @@ orbital EntityTableOrbital {
         id : string
       }
         @description "User opened a record from the list."
+        @tier "essential"
+      EntityTableLoaded
+        @description "EntityTable rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

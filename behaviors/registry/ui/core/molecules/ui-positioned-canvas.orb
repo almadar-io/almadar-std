@@ -150,6 +150,19 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "PositionedCanvas rows finished loading; payload.data holds the collection.",
+              "event": "PositionedCanvasLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[PositionedCanvasItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -165,6 +178,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "PositionedCanvas rows finished loading; payload.data holds the collection.",
+                "key": "PositionedCanvasLoaded",
+                "name": "Positioned canvas loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[PositionedCanvasItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               },
               {
                 "description": "onSelect prop",
@@ -211,7 +237,11 @@
                   [
                     "fetch",
                     "PositionedCanvasItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "PositionedCanvasLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -232,6 +262,30 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "editable": "@config.editable",
+                      "height": "@config.height",
+                      "items": "@payload.data",
+                      "moveEvent": "MOVE",
+                      "onMove": "MOVE",
+                      "onSelect": "SELECT",
+                      "selectEvent": "SELECT",
+                      "selectedId": "@config.selectedId",
+                      "type": "positioned-canvas",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "PositionedCanvasLoaded",
                 "from": "idle",
                 "to": "idle"
               }

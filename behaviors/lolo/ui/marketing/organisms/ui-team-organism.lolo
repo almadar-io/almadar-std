@@ -1,6 +1,7 @@
 app ui-team-organism "1.0.0"
 "TeamOrganism — UI factory (1:1 with the @almadar/ui team-organism pattern)."
 orbital TeamOrganismOrbital {
+    type TeamOrganismLoaded = Event { data : [TeamOrganismItem] } "TeamOrganism rows finished loading; payload.data holds the collection"
   type TeamOrganismError = {
     message : string!
     name : string
@@ -22,7 +23,7 @@ orbital TeamOrganismOrbital {
 
     state idle {
       INIT -> idle
-        (fetch TeamOrganismItem {})
+        (fetch TeamOrganismItem { emit: { success: TeamOrganismLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -40,6 +41,31 @@ orbital TeamOrganismOrbital {
           subtitle: @config.subtitle
           type: team-organism
         })
+      TeamOrganismLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          heading: @config.heading
+          subtitle: @config.subtitle
+          type: team-organism
+        })
+    }
+
+    emits {
+      TeamOrganismLoaded
+        @description "TeamOrganism rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

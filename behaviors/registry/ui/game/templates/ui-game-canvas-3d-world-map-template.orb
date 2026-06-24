@@ -532,6 +532,21 @@
               "type": "number"
             }
           },
+          "emits": [
+            {
+              "description": "GameCanvas3dWorldMapTemplate rows finished loading; payload.data holds the collection.",
+              "event": "GameCanvas3dWorldMapTemplateLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[GameCanvas3dWorldMapTemplateItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -545,6 +560,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "GameCanvas3dWorldMapTemplate rows finished loading; payload.data holds the collection.",
+                "key": "GameCanvas3dWorldMapTemplateLoaded",
+                "name": "Game canvas3d world map template loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[GameCanvas3dWorldMapTemplateItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -559,7 +587,11 @@
                   [
                     "fetch",
                     "GameCanvas3dWorldMapTemplateItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "GameCanvas3dWorldMapTemplateLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -595,6 +627,45 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "assetManifest": "@config.assetManifest",
+                      "attackEvent": "@config.attackEvent",
+                      "backgroundColor": "@config.backgroundColor",
+                      "cameraChangeEvent": "@config.cameraChangeEvent",
+                      "cameraMode": "@config.cameraMode",
+                      "cancelEvent": "@config.cancelEvent",
+                      "className": "@config.className",
+                      "endTurnEvent": "@config.endTurnEvent",
+                      "entity": "@payload.data",
+                      "exitEvent": "@config.exitEvent",
+                      "featureClickEvent": "@config.featureClickEvent",
+                      "features": "@config.features",
+                      "gameEndEvent": "@config.gameEndEvent",
+                      "playAgainEvent": "@config.playAgainEvent",
+                      "scale": "@config.scale",
+                      "shadows": "@config.shadows",
+                      "showCoordinates": "@config.showCoordinates",
+                      "showGrid": "@config.showGrid",
+                      "showTileInfo": "@config.showTileInfo",
+                      "tileClickEvent": "@config.tileClickEvent",
+                      "tileHoverEvent": "@config.tileHoverEvent",
+                      "tileLeaveEvent": "@config.tileLeaveEvent",
+                      "tiles": "@config.tiles",
+                      "type": "game-canvas-3d-world-map-template",
+                      "unitClickEvent": "@config.unitClickEvent",
+                      "unitScale": "@config.unitScale"
+                    }
+                  ]
+                ],
+                "event": "GameCanvas3dWorldMapTemplateLoaded",
                 "from": "idle",
                 "to": "idle"
               }

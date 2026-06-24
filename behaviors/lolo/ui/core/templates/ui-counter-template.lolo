@@ -1,6 +1,8 @@
 app ui-counter-template "1.0.0"
 "CounterTemplate — UI factory (1:1 with the @almadar/ui counter-template pattern)."
 orbital CounterTemplateOrbital {
+    type CounterTemplateLoaded = Event { data : [CounterTemplateItem] } "CounterTemplate rows finished loading; payload.data holds the collection"
+
   entity CounterTemplateItem [runtime] {
     id : string!
     count : number = 1
@@ -16,9 +18,22 @@ orbital CounterTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch CounterTemplateItem {})
+        (fetch CounterTemplateItem { emit: { success: CounterTemplateLoaded } })
         (render-ui main {
           entity: @entity
+          className: @config.className
+          onIncrement: INCREMENT
+          onDecrement: DECREMENT
+          onReset: RESET
+          title: @config.title
+          showReset: @config.showReset
+          size: @config.size
+          variant: @config.variant
+          type: counter-template
+        })
+      CounterTemplateLoaded -> idle
+        (render-ui main {
+          entity: @payload.data
           className: @config.className
           onIncrement: INCREMENT
           onDecrement: DECREMENT
@@ -46,6 +61,10 @@ orbital CounterTemplateOrbital {
         id : string
       }
         @description "Called when reset is clicked"
+        @tier "essential"
+      CounterTemplateLoaded
+        @description "CounterTemplate rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

@@ -78,6 +78,19 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "RichBlockEditor rows finished loading; payload.data holds the collection.",
+              "event": "RichBlockEditorLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[RichBlockEditorItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -93,6 +106,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "RichBlockEditor rows finished loading; payload.data holds the collection.",
+                "key": "RichBlockEditorLoaded",
+                "name": "Rich block editor loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[RichBlockEditorItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               },
               {
                 "description": "onChange prop",
@@ -119,7 +145,11 @@
                   [
                     "fetch",
                     "RichBlockEditorItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "RichBlockEditorLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -138,6 +168,28 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "changeEvent": "CHANGE",
+                      "className": "@config.className",
+                      "enableBlocks": "@config.enableBlocks",
+                      "initialBlocks": "@payload.data",
+                      "onChange": "CHANGE",
+                      "placeholder": "@config.placeholder",
+                      "readOnly": "@config.readOnly",
+                      "showToolbar": "@config.showToolbar",
+                      "type": "rich-block-editor"
+                    }
+                  ]
+                ],
+                "event": "RichBlockEditorLoaded",
                 "from": "idle",
                 "to": "idle"
               }

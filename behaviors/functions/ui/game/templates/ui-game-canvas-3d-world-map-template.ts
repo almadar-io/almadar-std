@@ -30,7 +30,14 @@ const ALIAS = 'UiGameCanvas3dWorldMapTemplate';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiGameCanvas3dWorldMapTemplateEventKey = 'INIT';
+export type StdUiGameCanvas3dWorldMapTemplateEventKey = 'GameCanvas3dWorldMapTemplateLoaded' | 'INIT';
+
+/**
+ * Payload shape for the `GameCanvas3dWorldMapTemplateLoaded` event.
+ */
+export interface StdUiGameCanvas3dWorldMapTemplateGameCanvas3dWorldMapTemplateLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every

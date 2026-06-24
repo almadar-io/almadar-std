@@ -30,13 +30,20 @@ const ALIAS = 'UiRichBlockEditor';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiRichBlockEditorEventKey = 'CHANGE' | 'INIT';
+export type StdUiRichBlockEditorEventKey = 'CHANGE' | 'INIT' | 'RichBlockEditorLoaded';
 
 /**
  * Payload shape for the `CHANGE` event.
  */
 export interface StdUiRichBlockEditorChangePayload {
   blocks?: EntityRow[];
+}
+
+/**
+ * Payload shape for the `RichBlockEditorLoaded` event.
+ */
+export interface StdUiRichBlockEditorRichBlockEditorLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**

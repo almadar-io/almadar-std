@@ -1,6 +1,7 @@
 app ui-game-canvas-3d-battle-template "1.0.0"
 "GameCanvas3dBattleTemplate — UI factory (1:1 with the @almadar/ui game-canvas-3d-battle-template pattern)."
 orbital GameCanvas3dBattleTemplateOrbital {
+    type GameCanvas3dBattleTemplateLoaded = Event { data : [GameCanvas3dBattleTemplateItem] } "GameCanvas3dBattleTemplate rows finished loading; payload.data holds the collection"
   type GameCanvas3dBattleTemplateTilesItem = {
     id : string
     x : number!
@@ -41,7 +42,7 @@ orbital GameCanvas3dBattleTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch GameCanvas3dBattleTemplateItem {})
+        (fetch GameCanvas3dBattleTemplateItem { emit: { success: GameCanvas3dBattleTemplateLoaded } })
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -65,6 +66,37 @@ orbital GameCanvas3dBattleTemplateOrbital {
           scale: @config.scale
           type: game-canvas-3d-battle-template
         })
+      GameCanvas3dBattleTemplateLoaded -> idle
+        (render-ui main {
+          entity: @payload.data
+          className: @config.className
+          tiles: @config.tiles
+          features: @config.features
+          assetManifest: @config.assetManifest
+          cameraMode: @config.cameraMode
+          showGrid: @config.showGrid
+          shadows: @config.shadows
+          backgroundColor: @config.backgroundColor
+          tileClickEvent: @config.tileClickEvent
+          unitClickEvent: @config.unitClickEvent
+          endTurnEvent: @config.endTurnEvent
+          cancelEvent: @config.cancelEvent
+          attackEvent: @config.attackEvent
+          playAgainEvent: @config.playAgainEvent
+          gameEndEvent: @config.gameEndEvent
+          exitEvent: @config.exitEvent
+          showTurnIndicator: @config.showTurnIndicator
+          unitScale: @config.unitScale
+          scale: @config.scale
+          type: game-canvas-3d-battle-template
+        })
+    }
+
+    emits {
+      GameCanvas3dBattleTemplateLoaded
+        @description "GameCanvas3dBattleTemplate rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

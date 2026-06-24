@@ -30,7 +30,7 @@ const ALIAS = 'UiCounterTemplate';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiCounterTemplateEventKey = 'DECREMENT' | 'INCREMENT' | 'INIT' | 'RESET';
+export type StdUiCounterTemplateEventKey = 'CounterTemplateLoaded' | 'DECREMENT' | 'INCREMENT' | 'INIT' | 'RESET';
 
 /**
  * Payload shape for the `INCREMENT` event.
@@ -51,6 +51,13 @@ export interface StdUiCounterTemplateDecrementPayload {
  */
 export interface StdUiCounterTemplateResetPayload {
   id?: string;
+}
+
+/**
+ * Payload shape for the `CounterTemplateLoaded` event.
+ */
+export interface StdUiCounterTemplateCounterTemplateLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**

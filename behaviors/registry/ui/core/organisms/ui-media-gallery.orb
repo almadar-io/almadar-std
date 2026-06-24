@@ -318,6 +318,19 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "MediaGallery rows finished loading; payload.data holds the collection.",
+              "event": "MediaGalleryLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[MediaGalleryItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -333,6 +346,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "MediaGallery rows finished loading; payload.data holds the collection.",
+                "key": "MediaGalleryLoaded",
+                "name": "Media gallery loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[MediaGalleryItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               },
               {
                 "description": "Event name emitted when selection changes (emitted as UI:{selectionEvent})",
@@ -360,7 +386,11 @@
                   [
                     "fetch",
                     "MediaGalleryItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "MediaGalleryLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -392,6 +422,41 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "actions": "@config.actions",
+                      "activeFilters": "@config.activeFilters",
+                      "aspectRatio": "@config.aspectRatio",
+                      "className": "@config.className",
+                      "columns": "@config.columns",
+                      "entity": "@payload.data",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "items": "@config.items",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "searchValue": "@config.searchValue",
+                      "selectable": "@config.selectable",
+                      "selectedIds": "@config.selectedIds",
+                      "selectedItems": "@config.selectedItems",
+                      "selectionEvent": "SELECTION",
+                      "showUpload": "@config.showUpload",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "title": "@config.title",
+                      "totalCount": "@config.totalCount",
+                      "type": "media-gallery"
+                    }
+                  ]
+                ],
+                "event": "MediaGalleryLoaded",
                 "from": "idle",
                 "to": "idle"
               }

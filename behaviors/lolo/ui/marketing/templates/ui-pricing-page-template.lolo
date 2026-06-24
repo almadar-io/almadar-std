@@ -1,6 +1,7 @@
 app ui-pricing-page-template "1.0.0"
 "PricingPageTemplate — UI factory (1:1 with the @almadar/ui pricing-page-template pattern)."
 orbital PricingPageTemplateOrbital {
+    type PricingPageTemplateLoaded = Event { data : [PricingPageTemplateItem] } "PricingPageTemplate rows finished loading; payload.data holds the collection"
   type PricingPageTemplateHero = {
     id : string
     tag : string
@@ -44,12 +45,25 @@ orbital PricingPageTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch PricingPageTemplateItem {})
+        (fetch PricingPageTemplateItem { emit: { success: PricingPageTemplateLoaded } })
         (render-ui main {
           entity: @entity
           className: @config.className
           type: pricing-page-template
         })
+      PricingPageTemplateLoaded -> idle
+        (render-ui main {
+          entity: @payload.data
+          className: @config.className
+          type: pricing-page-template
+        })
+    }
+
+    emits {
+      PricingPageTemplateLoaded
+        @description "PricingPageTemplate rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

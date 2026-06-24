@@ -30,7 +30,14 @@ const ALIAS = 'UiBookTableOfContents';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiBookTableOfContentsEventKey = 'INIT';
+export type StdUiBookTableOfContentsEventKey = 'BookTableOfContentsLoaded' | 'INIT';
+
+/**
+ * Payload shape for the `BookTableOfContentsLoaded` event.
+ */
+export interface StdUiBookTableOfContentsBookTableOfContentsLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -145,6 +152,21 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
             ],
           },
         },
+        'emits': [
+          {
+            'description': 'BookTableOfContents rows finished loading; payload.data holds the collection.',
+            'event': 'BookTableOfContentsLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[BookTableOfContentsItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],
@@ -159,6 +181,19 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'description': 'BookTableOfContents rows finished loading; payload.data holds the collection.',
+              'key': 'BookTableOfContentsLoaded',
+              'name': 'Book table of contents loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[BookTableOfContentsItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -172,7 +207,11 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                 [
                   'fetch',
                   'BookTableOfContentsItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'BookTableOfContentsLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -187,6 +226,24 @@ export function stdUiBookTableOfContentsBookTableOfContentsOrbital(params: StdUi
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': '@config.className',
+                    'currentChapterId': '@config.currentChapterId',
+                    'direction': '@config.direction',
+                    'parts': '@payload.data',
+                    'type': 'book-table-of-contents',
+                  },
+                ],
+              ],
+              'event': 'BookTableOfContentsLoaded',
               'from': 'idle',
               'to': 'idle',
             },

@@ -30,7 +30,14 @@ const ALIAS = 'UiPricingPageTemplate';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiPricingPageTemplateEventKey = 'INIT';
+export type StdUiPricingPageTemplateEventKey = 'INIT' | 'PricingPageTemplateLoaded';
+
+/**
+ * Payload shape for the `PricingPageTemplateLoaded` event.
+ */
+export interface StdUiPricingPageTemplatePricingPageTemplateLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every

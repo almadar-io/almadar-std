@@ -1,6 +1,7 @@
 app ui-hero-organism "1.0.0"
 "HeroOrganism — UI factory (1:1 with the @almadar/ui hero-organism pattern)."
 orbital HeroOrganismOrbital {
+    type HeroOrganismLoaded = Event { data : [HeroOrganismItem] } "HeroOrganism rows finished loading; payload.data holds the collection"
   type HeroOrganismError = {
     message : string!
     name : string
@@ -39,7 +40,7 @@ orbital HeroOrganismOrbital {
 
     state idle {
       INIT -> idle
-        (fetch HeroOrganismItem {})
+        (fetch HeroOrganismItem { emit: { success: HeroOrganismLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -56,6 +57,30 @@ orbital HeroOrganismOrbital {
           children: [{ content: "Sample content", type: typography }]
           type: hero-organism
         })
+      HeroOrganismLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          children: [{ content: "Sample content", type: typography }]
+          type: hero-organism
+        })
+    }
+
+    emits {
+      HeroOrganismLoaded
+        @description "HeroOrganism rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

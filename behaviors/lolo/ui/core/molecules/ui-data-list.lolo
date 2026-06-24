@@ -1,6 +1,7 @@
 app ui-data-list "1.0.0"
 "DataList — UI factory (1:1 with the @almadar/ui data-list pattern)."
 orbital DataListOrbital {
+    type DataListLoaded = Event { data : [DataListItem] } "DataList rows finished loading; payload.data holds the collection"
   type DataListFieldsItem = {
     name : string!
     label : string
@@ -47,7 +48,7 @@ orbital DataListOrbital {
 
     state idle {
       INIT -> idle
-        (fetch DataListItem {})
+        (fetch DataListItem { emit: { success: DataListLoaded } })
         (render-ui main {
           dragGroup: @config.dragGroup
           accepts: @config.accepts
@@ -58,6 +59,43 @@ orbital DataListOrbital {
           dndItemIdField: @config.dndItemIdField
           dndRoot: @config.dndRoot
           entity: @entity
+          fields: @config.fields
+          columns: @config.columns
+          maxInlineActions: @config.maxInlineActions
+          itemClickEvent: ITEM_CLICK
+          gap: @config.gap
+          variant: @config.variant
+          groupBy: @config.groupBy
+          senderField: @config.senderField
+          currentUser: @config.currentUser
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          reorderable: @config.reorderable
+          swipeLeftEvent: SWIPE_LEFT
+          swipeLeftActions: @config.swipeLeftActions
+          swipeRightEvent: SWIPE_RIGHT
+          swipeRightActions: @config.swipeRightActions
+          longPressEvent: LONG_PRESS
+          infiniteScroll: @config.infiniteScroll
+          loadMoreEvent: LOAD_MORE
+          hasMore: @config.hasMore
+          pageSize: @config.pageSize
+          look: @config.look
+          itemActions: [{ label: "View", event: VIEW }]
+          type: data-list
+        })
+      DataListLoaded -> idle
+        (render-ui main {
+          dragGroup: @config.dragGroup
+          accepts: @config.accepts
+          sortable: @config.sortable
+          dropEvent: @config.dropEvent
+          reorderEvent: REORDER
+          positionEvent: @config.positionEvent
+          dndItemIdField: @config.dndItemIdField
+          dndRoot: @config.dndRoot
+          entity: @payload.data
           fields: @config.fields
           columns: @config.columns
           maxInlineActions: @config.maxInlineActions
@@ -123,6 +161,10 @@ orbital DataListOrbital {
         id : string
       }
         @description "User opened a record from the list."
+        @tier "essential"
+      DataListLoaded
+        @description "DataList rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

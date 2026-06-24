@@ -30,7 +30,14 @@ const ALIAS = 'UiFeatureDetailPageTemplate';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiFeatureDetailPageTemplateEventKey = 'INIT';
+export type StdUiFeatureDetailPageTemplateEventKey = 'FeatureDetailPageTemplateLoaded' | 'INIT';
+
+/**
+ * Payload shape for the `FeatureDetailPageTemplateLoaded` event.
+ */
+export interface StdUiFeatureDetailPageTemplateFeatureDetailPageTemplateLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every

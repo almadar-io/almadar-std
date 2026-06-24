@@ -1,6 +1,7 @@
 app ui-stats-organism "1.0.0"
 "StatsOrganism — UI factory (1:1 with the @almadar/ui stats-organism pattern)."
 orbital StatsOrganismOrbital {
+    type StatsOrganismLoaded = Event { data : [StatsOrganismItem] } "StatsOrganism rows finished loading; payload.data holds the collection"
   type StatsOrganismError = {
     message : string!
     name : string
@@ -19,7 +20,7 @@ orbital StatsOrganismOrbital {
 
     state idle {
       INIT -> idle
-        (fetch StatsOrganismItem {})
+        (fetch StatsOrganismItem { emit: { success: StatsOrganismLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -36,6 +37,30 @@ orbital StatsOrganismOrbital {
           columns: @config.columns
           type: stats-organism
         })
+      StatsOrganismLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          columns: @config.columns
+          type: stats-organism
+        })
+    }
+
+    emits {
+      StatsOrganismLoaded
+        @description "StatsOrganism rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

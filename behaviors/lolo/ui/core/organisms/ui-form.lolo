@@ -1,6 +1,7 @@
 app ui-form "1.0.0"
 "Form — UI factory (1:1 with the @almadar/ui form pattern)."
 orbital FormOrbital {
+    type FormLoaded = Event { data : [FormItem] } "Form rows finished loading; payload.data holds the collection"
   type FormFieldsItem = {
     name : string
     field : string
@@ -113,7 +114,7 @@ orbital FormOrbital {
 
     state idle {
       INIT -> idle
-        (fetch FormItem {})
+        (fetch FormItem { emit: { success: FormLoaded } })
         (render-ui main {
           children: [{ content: "Sample content", type: typography }]
           onSubmit: @config.onSubmit
@@ -122,6 +123,39 @@ orbital FormOrbital {
           gap: @config.gap
           className: @config.className
           entity: @entity
+          mode: @config.mode
+          fields: @config.fields
+          initialData: @config.initialData
+          isLoading: @config.isLoading
+          error: @config.error
+          submitLabel: @config.submitLabel
+          cancelLabel: @config.cancelLabel
+          showCancel: @config.showCancel
+          showSubmit: @config.showSubmit
+          title: @config.title
+          submitEvent: SUBMIT
+          cancelEvent: CANCEL
+          relationsData: @config.relationsData
+          relationsLoading: @config.relationsLoading
+          conditionalFields: @config.conditionalFields
+          hiddenCalculations: @config.hiddenCalculations
+          violationTriggers: @config.violationTriggers
+          evaluationContext: @config.evaluationContext
+          sections: @config.sections
+          onFieldChange: FIELD_CHANGE
+          configPath: @config.configPath
+          repeatable: @config.repeatable
+          type: form
+        })
+      FormLoaded -> idle
+        (render-ui main {
+          children: [{ content: "Sample content", type: typography }]
+          onSubmit: @config.onSubmit
+          onCancel: @config.onCancel
+          layout: @config.layout
+          gap: @config.gap
+          className: @config.className
+          entity: @payload.data
           mode: @config.mode
           fields: @config.fields
           initialData: @config.initialData
@@ -163,6 +197,10 @@ orbital FormOrbital {
         change : FormFIELDCHANGEChange
       }
         @description "Callback when any field value changes"
+        @tier "essential"
+      FormLoaded
+        @description "Form rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

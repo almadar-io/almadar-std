@@ -30,7 +30,7 @@ const ALIAS = 'UiReplyTree';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiReplyTreeEventKey = 'CONTINUE_THREAD' | 'FLAG' | 'INIT' | 'REPLY' | 'VOTE';
+export type StdUiReplyTreeEventKey = 'CONTINUE_THREAD' | 'FLAG' | 'INIT' | 'REPLY' | 'ReplyTreeLoaded' | 'VOTE';
 
 /**
  * Payload shape for the `VOTE` event.
@@ -60,6 +60,13 @@ export interface StdUiReplyTreeFlagPayload {
  */
 export interface StdUiReplyTreeContinueThreadPayload {
   nodeId?: string;
+}
+
+/**
+ * Payload shape for the `ReplyTreeLoaded` event.
+ */
+export interface StdUiReplyTreeReplyTreeLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**

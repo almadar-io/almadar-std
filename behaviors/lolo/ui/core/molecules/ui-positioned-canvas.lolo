@@ -1,6 +1,8 @@
 app ui-positioned-canvas "1.0.0"
 "PositionedCanvas — UI factory (1:1 with the @almadar/ui positioned-canvas pattern)."
 orbital PositionedCanvasOrbital {
+    type PositionedCanvasLoaded = Event { data : [PositionedCanvasItem] } "PositionedCanvas rows finished loading; payload.data holds the collection"
+
   entity PositionedCanvasItem [runtime] {
     id : string!
     label : string = "Label"
@@ -18,9 +20,23 @@ orbital PositionedCanvasOrbital {
 
     state idle {
       INIT -> idle
-        (fetch PositionedCanvasItem {})
+        (fetch PositionedCanvasItem { emit: { success: PositionedCanvasLoaded } })
         (render-ui main {
           items: @entity
+          width: @config.width
+          height: @config.height
+          selectedId: @config.selectedId
+          editable: @config.editable
+          onSelect: SELECT
+          onMove: MOVE
+          selectEvent: SELECT
+          moveEvent: MOVE
+          className: @config.className
+          type: positioned-canvas
+        })
+      PositionedCanvasLoaded -> idle
+        (render-ui main {
+          items: @payload.data
           width: @config.width
           height: @config.height
           selectedId: @config.selectedId
@@ -46,6 +62,10 @@ orbital PositionedCanvasOrbital {
         y : number
       }
         @description "onMove prop"
+        @tier "essential"
+      PositionedCanvasLoaded
+        @description "PositionedCanvas rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

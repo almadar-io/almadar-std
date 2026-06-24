@@ -1,6 +1,7 @@
 app ui-master-detail "1.0.0"
 "MasterDetail — UI factory (1:1 with the @almadar/ui master-detail pattern)."
 orbital MasterDetailOrbital {
+    type MasterDetailLoaded = Event { data : [MasterDetailItem] } "MasterDetail rows finished loading; payload.data holds the collection"
   type MasterDetailError = {
     message : string!
     name : string
@@ -17,7 +18,7 @@ orbital MasterDetailOrbital {
 
     state idle {
       INIT -> idle
-        (fetch MasterDetailItem {})
+        (fetch MasterDetailItem { emit: { success: MasterDetailLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -36,6 +37,32 @@ orbital MasterDetailOrbital {
           loading: @config.loading
           type: master-detail
         })
+      MasterDetailLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          masterFields: @config.masterFields
+          detailFields: @config.detailFields
+          loading: @config.loading
+          type: master-detail
+        })
+    }
+
+    emits {
+      MasterDetailLoaded
+        @description "MasterDetail rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

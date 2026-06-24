@@ -69,7 +69,7 @@ export interface StdUiPlatformerCanvasStopPayload {
 export interface StdUiPlatformerCanvasConfig {
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
   assetBaseUrl?: unknown;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/scenes/world/streets.png"` */
   backgroundImage?: unknown;
   /** Default: `"#5c94fc"` */
   bgColor?: string;
@@ -95,7 +95,7 @@ export interface StdUiPlatformerCanvasConfig {
   player?: EntityRow;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/platformer/characters/platformChar_idle.png"` */
   playerSprite?: unknown;
-  /** Default: `{}` */
+  /** Default: `{"goal":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile058.png","ground":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile029.png","hazard":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile063.png","platform":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile046.png"}` */
   tileSprites?: unknown;
   /** Default: `400` */
   worldHeight?: number;

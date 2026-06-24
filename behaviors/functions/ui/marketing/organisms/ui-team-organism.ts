@@ -30,7 +30,14 @@ const ALIAS = 'UiTeamOrganism';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTeamOrganismEventKey = 'INIT';
+export type StdUiTeamOrganismEventKey = 'INIT' | 'TeamOrganismLoaded';
+
+/**
+ * Payload shape for the `TeamOrganismLoaded` event.
+ */
+export interface StdUiTeamOrganismTeamOrganismLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -284,6 +291,21 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
             'type': 'number',
           },
         },
+        'emits': [
+          {
+            'description': 'TeamOrganism rows finished loading; payload.data holds the collection.',
+            'event': 'TeamOrganismLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[TeamOrganismItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],
@@ -298,6 +320,19 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'description': 'TeamOrganism rows finished loading; payload.data holds the collection.',
+              'key': 'TeamOrganismLoaded',
+              'name': 'Team organism loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[TeamOrganismItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -311,7 +346,11 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
                 [
                   'fetch',
                   'TeamOrganismItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'TeamOrganismLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -336,6 +375,34 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'className': '@config.className',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'heading': '@config.heading',
+                    'isLoading': '@config.isLoading',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'subtitle': '@config.subtitle',
+                    'totalCount': '@config.totalCount',
+                    'type': 'team-organism',
+                  },
+                ],
+              ],
+              'event': 'TeamOrganismLoaded',
               'from': 'idle',
               'to': 'idle',
             },

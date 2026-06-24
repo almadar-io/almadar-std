@@ -68,6 +68,19 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "SortableList rows finished loading; payload.data holds the collection.",
+              "event": "SortableListLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[SortableListItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -83,6 +96,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "SortableList rows finished loading; payload.data holds the collection.",
+                "key": "SortableListLoaded",
+                "name": "Sortable list loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[SortableListItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               },
               {
                 "description": "reorderEvent prop",
@@ -109,7 +135,11 @@
                   [
                     "fetch",
                     "SortableListItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "SortableListLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -133,6 +163,33 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "dragHandlePosition": "@config.dragHandlePosition",
+                      "items": "@payload.data",
+                      "renderItem": [
+                        "fn",
+                        "item",
+                        {
+                          "content": "@item.id",
+                          "type": "typography"
+                        }
+                      ],
+                      "reorderEvent": "REORDER",
+                      "reorderPayload": "@config.reorderPayload",
+                      "type": "sortable-list"
+                    }
+                  ]
+                ],
+                "event": "SortableListLoaded",
                 "from": "idle",
                 "to": "idle"
               }

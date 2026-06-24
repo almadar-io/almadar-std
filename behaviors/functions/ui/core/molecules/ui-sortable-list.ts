@@ -30,13 +30,20 @@ const ALIAS = 'UiSortableList';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiSortableListEventKey = 'INIT' | 'REORDER';
+export type StdUiSortableListEventKey = 'INIT' | 'REORDER' | 'SortableListLoaded';
 
 /**
  * Payload shape for the `REORDER` event.
  */
 export interface StdUiSortableListReorderPayload {
   id?: string;
+}
+
+/**
+ * Payload shape for the `SortableListLoaded` event.
+ */
+export interface StdUiSortableListSortableListLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**

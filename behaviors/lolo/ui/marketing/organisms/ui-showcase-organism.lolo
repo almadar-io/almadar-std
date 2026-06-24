@@ -1,6 +1,7 @@
 app ui-showcase-organism "1.0.0"
 "ShowcaseOrganism — UI factory (1:1 with the @almadar/ui showcase-organism pattern)."
 orbital ShowcaseOrganismOrbital {
+    type ShowcaseOrganismLoaded = Event { data : [ShowcaseOrganismItem] } "ShowcaseOrganism rows finished loading; payload.data holds the collection"
   type ShowcaseOrganismError = {
     message : string!
     name : string
@@ -27,7 +28,7 @@ orbital ShowcaseOrganismOrbital {
 
     state idle {
       INIT -> idle
-        (fetch ShowcaseOrganismItem {})
+        (fetch ShowcaseOrganismItem { emit: { success: ShowcaseOrganismLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -46,6 +47,32 @@ orbital ShowcaseOrganismOrbital {
           subtitle: @config.subtitle
           type: showcase-organism
         })
+      ShowcaseOrganismLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          columns: @config.columns
+          heading: @config.heading
+          subtitle: @config.subtitle
+          type: showcase-organism
+        })
+    }
+
+    emits {
+      ShowcaseOrganismLoaded
+        @description "ShowcaseOrganism rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

@@ -74,6 +74,21 @@
               "type": "string"
             }
           },
+          "emits": [
+            {
+              "description": "GameTemplate rows finished loading; payload.data holds the collection.",
+              "event": "GameTemplateLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[GameTemplateItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -87,6 +102,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "GameTemplate rows finished loading; payload.data holds the collection.",
+                "key": "GameTemplateLoaded",
+                "name": "Game template loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[GameTemplateItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -101,7 +129,11 @@
                   [
                     "fetch",
                     "GameTemplateItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "GameTemplateLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -129,6 +161,37 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "type": "game-canvas-2d"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "controls": "@config.controls",
+                      "debugPanel": "@config.debugPanel",
+                      "entity": "@payload.data",
+                      "hud": [
+                        {
+                          "content": "Hud",
+                          "type": "typography"
+                        }
+                      ],
+                      "showDebugPanel": "@config.showDebugPanel",
+                      "title": "@config.title",
+                      "type": "game-template"
+                    }
+                  ]
+                ],
+                "event": "GameTemplateLoaded",
                 "from": "idle",
                 "to": "idle"
               }

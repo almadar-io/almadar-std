@@ -116,7 +116,7 @@ export interface StdUiGameBoard3dConfig {
   tiles?: EntityRow[];
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","name":"Worker","position":{"x":1,"y":1},"team":"player","unitType":"worker"},{"health":10,"id":"u2","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","name":"Warrior","position":{"x":1,"y":3},"team":"player","unitType":"warrior"},{"health":8,"id":"e1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Guardian","position":{"x":3,"y":3},"team":"enemy","unitType":"guardian"},{"health":6,"id":"e2","maxHealth":8,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Scout","position":{"x":3,"y":1},"team":"enemy","unitType":"scout"}]` */
+  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","name":"Worker","position":{"x":1,"y":1},"team":"player","unitType":"worker"},{"health":10,"id":"u2","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/valence.glb","name":"Warrior","position":{"x":1,"y":3},"team":"player","unitType":"warrior"},{"health":8,"id":"e1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Guardian","position":{"x":3,"y":3},"team":"enemy","unitType":"guardian"},{"health":6,"id":"e2","maxHealth":8,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/tunnel_creeper.glb","name":"Scout","position":{"x":3,"y":1},"team":"enemy","unitType":"scout"}]` */
   units?: EntityRow[];
 }
 
@@ -939,7 +939,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 'health': 10,
                 'id': 'u2',
                 'maxHealth': 10,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/valence.glb',
                 'name': 'Warrior',
                 'position': {
                   'x': 1,
@@ -965,7 +965,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 'health': 6,
                 'id': 'e2',
                 'maxHealth': 8,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/tunnel_creeper.glb',
                 'name': 'Scout',
                 'position': {
                   'x': 3,

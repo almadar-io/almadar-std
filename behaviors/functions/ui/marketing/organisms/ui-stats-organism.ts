@@ -30,7 +30,14 @@ const ALIAS = 'UiStatsOrganism';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiStatsOrganismEventKey = 'INIT';
+export type StdUiStatsOrganismEventKey = 'INIT' | 'StatsOrganismLoaded';
+
+/**
+ * Payload shape for the `StatsOrganismLoaded` event.
+ */
+export interface StdUiStatsOrganismStatsOrganismLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -260,6 +267,21 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
             'type': 'number',
           },
         },
+        'emits': [
+          {
+            'description': 'StatsOrganism rows finished loading; payload.data holds the collection.',
+            'event': 'StatsOrganismLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[StatsOrganismItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],
@@ -274,6 +296,19 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'description': 'StatsOrganism rows finished loading; payload.data holds the collection.',
+              'key': 'StatsOrganismLoaded',
+              'name': 'Stats organism loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[StatsOrganismItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -287,7 +322,11 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
                 [
                   'fetch',
                   'StatsOrganismItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'StatsOrganismLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -311,6 +350,33 @@ export function stdUiStatsOrganismStatsOrganismOrbital(params: StdUiStatsOrganis
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'className': '@config.className',
+                    'columns': '@config.columns',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'stats-organism',
+                  },
+                ],
+              ],
+              'event': 'StatsOrganismLoaded',
               'from': 'idle',
               'to': 'idle',
             },

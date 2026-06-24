@@ -242,6 +242,21 @@
               "type": "number"
             }
           },
+          "emits": [
+            {
+              "description": "HeroOrganism rows finished loading; payload.data holds the collection.",
+              "event": "HeroOrganismLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[HeroOrganismItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -255,6 +270,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "HeroOrganism rows finished loading; payload.data holds the collection.",
+                "key": "HeroOrganismLoaded",
+                "name": "Hero organism loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[HeroOrganismItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -269,7 +297,11 @@
                   [
                     "fetch",
                     "HeroOrganismItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "HeroOrganismLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -298,6 +330,38 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "activeFilters": "@config.activeFilters",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "entity": "@payload.data",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "searchValue": "@config.searchValue",
+                      "selectedIds": "@config.selectedIds",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "totalCount": "@config.totalCount",
+                      "type": "hero-organism"
+                    }
+                  ]
+                ],
+                "event": "HeroOrganismLoaded",
                 "from": "idle",
                 "to": "idle"
               }

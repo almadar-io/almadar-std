@@ -30,13 +30,20 @@ const ALIAS = 'UiTimeline';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiTimelineEventKey = 'INIT' | 'VIEW';
+export type StdUiTimelineEventKey = 'INIT' | 'TimelineLoaded' | 'VIEW';
 
 /**
  * Payload shape for the `VIEW` event.
  */
 export interface StdUiTimelineViewPayload {
   id?: string;
+}
+
+/**
+ * Payload shape for the `TimelineLoaded` event.
+ */
+export interface StdUiTimelineTimelineLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**
@@ -353,6 +360,19 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             'scope': 'external',
             'tier': 'essential',
           },
+          {
+            'description': 'Timeline rows finished loading; payload.data holds the collection.',
+            'event': 'TimelineLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[TimelineItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
         ],
         'entityContract': {
           'provides': [],
@@ -367,6 +387,19 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             {
               'key': 'INIT',
               'name': 'Initialize',
+            },
+            {
+              'description': 'Timeline rows finished loading; payload.data holds the collection.',
+              'key': 'TimelineLoaded',
+              'name': 'Timeline loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[TimelineItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
             },
             {
               'description': 'User opened a record from the list.',
@@ -393,7 +426,11 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                 [
                   'fetch',
                   'TimelineItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'TimelineLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -418,6 +455,34 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'className': '@config.className',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'fields': '@config.fields',
+                    'isLoading': '@config.isLoading',
+                    'itemActions': [
+                      {
+                        'event': 'VIEW',
+                        'label': 'View',
+                      },
+                    ],
+                    'items': '@config.items',
+                    'look': '@config.look',
+                    'title': '@config.title',
+                    'type': 'timeline',
+                  },
+                ],
+              ],
+              'event': 'TimelineLoaded',
               'from': 'idle',
               'to': 'idle',
             },

@@ -49,6 +49,21 @@
               ]
             }
           },
+          "emits": [
+            {
+              "description": "BookChapterView rows finished loading; payload.data holds the collection.",
+              "event": "BookChapterViewLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[BookChapterViewItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -62,6 +77,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "BookChapterView rows finished loading; payload.data holds the collection.",
+                "key": "BookChapterViewLoaded",
+                "name": "Book chapter view loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[BookChapterViewItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -76,7 +104,11 @@
                   [
                     "fetch",
                     "BookChapterViewItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "BookChapterViewLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -90,6 +122,23 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "chapter": "@payload.data",
+                      "className": "@config.className",
+                      "direction": "@config.direction",
+                      "type": "book-chapter-view"
+                    }
+                  ]
+                ],
+                "event": "BookChapterViewLoaded",
                 "from": "idle",
                 "to": "idle"
               }

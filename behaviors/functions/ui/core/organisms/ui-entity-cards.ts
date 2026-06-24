@@ -30,13 +30,20 @@ const ALIAS = 'UiEntityCards';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiEntityCardsEventKey = 'INIT' | 'VIEW';
+export type StdUiEntityCardsEventKey = 'EntityCardsLoaded' | 'INIT' | 'VIEW';
 
 /**
  * Payload shape for the `VIEW` event.
  */
 export interface StdUiEntityCardsViewPayload {
   id?: string;
+}
+
+/**
+ * Payload shape for the `EntityCardsLoaded` event.
+ */
+export interface StdUiEntityCardsEntityCardsLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**
@@ -522,6 +529,19 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             'scope': 'external',
             'tier': 'essential',
           },
+          {
+            'description': 'EntityCards rows finished loading; payload.data holds the collection.',
+            'event': 'EntityCardsLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[EntityCardsItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
         ],
         'entityContract': {
           'provides': [],
@@ -536,6 +556,19 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
             {
               'key': 'INIT',
               'name': 'Initialize',
+            },
+            {
+              'description': 'EntityCards rows finished loading; payload.data holds the collection.',
+              'key': 'EntityCardsLoaded',
+              'name': 'Entity cards loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[EntityCardsItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
             },
             {
               'description': 'User opened a record from the list.',
@@ -562,7 +595,11 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                 [
                   'fetch',
                   'EntityCardsItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'EntityCardsLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -608,6 +645,55 @@ export function stdUiEntityCardsEntityCardsOrbital(params: StdUiEntityCardsEntit
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'alignItems': '@config.alignItems',
+                    'children': [
+                      {
+                        'content': 'Sample content',
+                        'type': 'typography',
+                      },
+                    ],
+                    'className': '@config.className',
+                    'columns': '@config.columns',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'fieldNames': '@config.fieldNames',
+                    'fields': '@config.fields',
+                    'gap': '@config.gap',
+                    'imageField': '@config.imageField',
+                    'isLoading': '@config.isLoading',
+                    'itemActions': [
+                      {
+                        'event': 'VIEW',
+                        'label': 'View',
+                      },
+                    ],
+                    'maxCols': '@config.maxCols',
+                    'minCardWidth': '@config.minCardWidth',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'showAvatar': '@config.showAvatar',
+                    'showTotal': '@config.showTotal',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'entity-cards',
+                    'variant': '@config.variant',
+                  },
+                ],
+              ],
+              'event': 'EntityCardsLoaded',
               'from': 'idle',
               'to': 'idle',
             },

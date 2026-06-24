@@ -30,7 +30,7 @@ const ALIAS = 'UiPositionedCanvas';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiPositionedCanvasEventKey = 'INIT' | 'MOVE' | 'SELECT';
+export type StdUiPositionedCanvasEventKey = 'INIT' | 'MOVE' | 'PositionedCanvasLoaded' | 'SELECT';
 
 /**
  * Payload shape for the `SELECT` event.
@@ -46,6 +46,13 @@ export interface StdUiPositionedCanvasMovePayload {
   id?: string;
   x?: number;
   y?: number;
+}
+
+/**
+ * Payload shape for the `PositionedCanvasLoaded` event.
+ */
+export interface StdUiPositionedCanvasPositionedCanvasLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**

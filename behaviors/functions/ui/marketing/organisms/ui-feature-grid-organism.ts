@@ -30,7 +30,14 @@ const ALIAS = 'UiFeatureGridOrganism';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiFeatureGridOrganismEventKey = 'INIT';
+export type StdUiFeatureGridOrganismEventKey = 'FeatureGridOrganismLoaded' | 'INIT';
+
+/**
+ * Payload shape for the `FeatureGridOrganismLoaded` event.
+ */
+export interface StdUiFeatureGridOrganismFeatureGridOrganismLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -293,6 +300,21 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
             'type': 'number',
           },
         },
+        'emits': [
+          {
+            'description': 'FeatureGridOrganism rows finished loading; payload.data holds the collection.',
+            'event': 'FeatureGridOrganismLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[FeatureGridOrganismItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],
@@ -307,6 +329,19 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'description': 'FeatureGridOrganism rows finished loading; payload.data holds the collection.',
+              'key': 'FeatureGridOrganismLoaded',
+              'name': 'Feature grid organism loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[FeatureGridOrganismItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -320,7 +355,11 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
                 [
                   'fetch',
                   'FeatureGridOrganismItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'FeatureGridOrganismLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -346,6 +385,35 @@ export function stdUiFeatureGridOrganismFeatureGridOrganismOrbital(params: StdUi
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'className': '@config.className',
+                    'columns': '@config.columns',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'heading': '@config.heading',
+                    'isLoading': '@config.isLoading',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'subtitle': '@config.subtitle',
+                    'totalCount': '@config.totalCount',
+                    'type': 'feature-grid-organism',
+                  },
+                ],
+              ],
+              'event': 'FeatureGridOrganismLoaded',
               'from': 'idle',
               'to': 'idle',
             },

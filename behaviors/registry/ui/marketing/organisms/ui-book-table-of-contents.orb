@@ -56,6 +56,21 @@
               ]
             }
           },
+          "emits": [
+            {
+              "description": "BookTableOfContents rows finished loading; payload.data holds the collection.",
+              "event": "BookTableOfContentsLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[BookTableOfContentsItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -69,6 +84,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "BookTableOfContents rows finished loading; payload.data holds the collection.",
+                "key": "BookTableOfContentsLoaded",
+                "name": "Book table of contents loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[BookTableOfContentsItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -83,7 +111,11 @@
                   [
                     "fetch",
                     "BookTableOfContentsItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "BookTableOfContentsLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -98,6 +130,24 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "currentChapterId": "@config.currentChapterId",
+                      "direction": "@config.direction",
+                      "parts": "@payload.data",
+                      "type": "book-table-of-contents"
+                    }
+                  ]
+                ],
+                "event": "BookTableOfContentsLoaded",
                 "from": "idle",
                 "to": "idle"
               }

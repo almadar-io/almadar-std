@@ -1,6 +1,8 @@
 app ui-generic-app-template "1.0.0"
 "GenericAppTemplate — UI factory (1:1 with the @almadar/ui generic-app-template pattern)."
 orbital GenericAppTemplateOrbital {
+    type GenericAppTemplateLoaded = Event { data : [GenericAppTemplateItem] } "GenericAppTemplate rows finished loading; payload.data holds the collection"
+
   entity GenericAppTemplateItem [runtime] {
     id : string!
   }
@@ -10,7 +12,7 @@ orbital GenericAppTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch GenericAppTemplateItem {})
+        (fetch GenericAppTemplateItem { emit: { success: GenericAppTemplateLoaded } })
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -21,6 +23,24 @@ orbital GenericAppTemplateOrbital {
           footer: @config.footer
           type: generic-app-template
         })
+      GenericAppTemplateLoaded -> idle
+        (render-ui main {
+          entity: @payload.data
+          className: @config.className
+          title: @config.title
+          subtitle: @config.subtitle
+          children: [{ content: "Sample content", type: typography }]
+          headerActions: @config.headerActions
+          footer: @config.footer
+          type: generic-app-template
+        })
+    }
+
+    emits {
+      GenericAppTemplateLoaded
+        @description "GenericAppTemplate rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

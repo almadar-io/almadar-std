@@ -1,6 +1,7 @@
 app ui-landing-page-template "1.0.0"
 "LandingPageTemplate — UI factory (1:1 with the @almadar/ui landing-page-template pattern)."
 orbital LandingPageTemplateOrbital {
+    type LandingPageTemplateLoaded = Event { data : [LandingPageTemplateItem] } "LandingPageTemplate rows finished loading; payload.data holds the collection"
   type LandingPageTemplateHero = {
     id : string
     tag : string
@@ -85,7 +86,7 @@ orbital LandingPageTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch LandingPageTemplateItem {})
+        (fetch LandingPageTemplateItem { emit: { success: LandingPageTemplateLoaded } })
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -93,6 +94,21 @@ orbital LandingPageTemplateOrbital {
           featureColumns: @config.featureColumns
           type: landing-page-template
         })
+      LandingPageTemplateLoaded -> idle
+        (render-ui main {
+          entity: @payload.data
+          className: @config.className
+          variant: @config.variant
+          featureColumns: @config.featureColumns
+          type: landing-page-template
+        })
+    }
+
+    emits {
+      LandingPageTemplateLoaded
+        @description "LandingPageTemplate rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

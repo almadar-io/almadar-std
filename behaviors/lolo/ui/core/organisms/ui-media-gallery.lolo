@@ -1,6 +1,7 @@
 app ui-media-gallery "1.0.0"
 "MediaGallery — UI factory (1:1 with the @almadar/ui media-gallery pattern)."
 orbital MediaGalleryOrbital {
+    type MediaGalleryLoaded = Event { data : [MediaGalleryItem] } "MediaGallery rows finished loading; payload.data holds the collection"
   type MediaGalleryError = {
     message : string!
     name : string
@@ -32,7 +33,7 @@ orbital MediaGalleryOrbital {
 
     state idle {
       INIT -> idle
-        (fetch MediaGalleryItem {})
+        (fetch MediaGalleryItem { emit: { success: MediaGalleryLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -57,6 +58,31 @@ orbital MediaGalleryOrbital {
           aspectRatio: @config.aspectRatio
           type: media-gallery
         })
+      MediaGalleryLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          title: @config.title
+          items: @config.items
+          columns: @config.columns
+          selectable: @config.selectable
+          selectedItems: @config.selectedItems
+          selectionEvent: SELECTION
+          showUpload: @config.showUpload
+          actions: @config.actions
+          aspectRatio: @config.aspectRatio
+          type: media-gallery
+        })
     }
 
     emits {
@@ -64,6 +90,10 @@ orbital MediaGalleryOrbital {
         selection : [object]!
       }
         @description "Event name emitted when selection changes (emitted as UI:{selectionEvent})"
+        @tier "essential"
+      MediaGalleryLoaded
+        @description "MediaGallery rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
         @tier "essential"
     }
 

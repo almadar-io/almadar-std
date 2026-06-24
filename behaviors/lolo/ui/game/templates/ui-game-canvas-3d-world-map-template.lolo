@@ -1,6 +1,7 @@
 app ui-game-canvas-3d-world-map-template "1.0.0"
 "GameCanvas3dWorldMapTemplate — UI factory (1:1 with the @almadar/ui game-canvas-3d-world-map-template pattern)."
 orbital GameCanvas3dWorldMapTemplateOrbital {
+    type GameCanvas3dWorldMapTemplateLoaded = Event { data : [GameCanvas3dWorldMapTemplateItem] } "GameCanvas3dWorldMapTemplate rows finished loading; payload.data holds the collection"
   type GameCanvas3dWorldMapTemplateTilesItem = {
     id : string
     x : number!
@@ -41,7 +42,7 @@ orbital GameCanvas3dWorldMapTemplateOrbital {
 
     state idle {
       INIT -> idle
-        (fetch GameCanvas3dWorldMapTemplateItem {})
+        (fetch GameCanvas3dWorldMapTemplateItem { emit: { success: GameCanvas3dWorldMapTemplateLoaded } })
         (render-ui main {
           entity: @entity
           className: @config.className
@@ -70,6 +71,42 @@ orbital GameCanvas3dWorldMapTemplateOrbital {
           scale: @config.scale
           type: game-canvas-3d-world-map-template
         })
+      GameCanvas3dWorldMapTemplateLoaded -> idle
+        (render-ui main {
+          entity: @payload.data
+          className: @config.className
+          tiles: @config.tiles
+          features: @config.features
+          assetManifest: @config.assetManifest
+          cameraMode: @config.cameraMode
+          showGrid: @config.showGrid
+          showCoordinates: @config.showCoordinates
+          showTileInfo: @config.showTileInfo
+          shadows: @config.shadows
+          backgroundColor: @config.backgroundColor
+          tileClickEvent: @config.tileClickEvent
+          unitClickEvent: @config.unitClickEvent
+          endTurnEvent: @config.endTurnEvent
+          cancelEvent: @config.cancelEvent
+          attackEvent: @config.attackEvent
+          playAgainEvent: @config.playAgainEvent
+          gameEndEvent: @config.gameEndEvent
+          featureClickEvent: @config.featureClickEvent
+          tileHoverEvent: @config.tileHoverEvent
+          tileLeaveEvent: @config.tileLeaveEvent
+          cameraChangeEvent: @config.cameraChangeEvent
+          exitEvent: @config.exitEvent
+          unitScale: @config.unitScale
+          scale: @config.scale
+          type: game-canvas-3d-world-map-template
+        })
+    }
+
+    emits {
+      GameCanvas3dWorldMapTemplateLoaded
+        @description "GameCanvas3dWorldMapTemplate rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

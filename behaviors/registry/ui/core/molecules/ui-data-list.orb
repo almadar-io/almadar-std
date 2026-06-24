@@ -564,6 +564,19 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "DataList rows finished loading; payload.data holds the collection.",
+              "event": "DataListLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[DataListItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -579,6 +592,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "DataList rows finished loading; payload.data holds the collection.",
+                "key": "DataListLoaded",
+                "name": "Data list loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[DataListItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               },
               {
                 "description": "User opened a record from the list.",
@@ -677,7 +703,11 @@
                   [
                     "fetch",
                     "DataListItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "DataListLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -726,6 +756,58 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "accepts": "@config.accepts",
+                      "className": "@config.className",
+                      "columns": "@config.columns",
+                      "currentUser": "@config.currentUser",
+                      "dndItemIdField": "@config.dndItemIdField",
+                      "dndRoot": "@config.dndRoot",
+                      "dragGroup": "@config.dragGroup",
+                      "dropEvent": "@config.dropEvent",
+                      "entity": "@payload.data",
+                      "error": "@config.error",
+                      "fields": "@config.fields",
+                      "gap": "@config.gap",
+                      "groupBy": "@config.groupBy",
+                      "hasMore": "@config.hasMore",
+                      "infiniteScroll": "@config.infiniteScroll",
+                      "isLoading": "@config.isLoading",
+                      "itemActions": [
+                        {
+                          "event": "VIEW",
+                          "label": "View"
+                        }
+                      ],
+                      "itemClickEvent": "ITEM_CLICK",
+                      "loadMoreEvent": "LOAD_MORE",
+                      "longPressEvent": "LONG_PRESS",
+                      "look": "@config.look",
+                      "maxInlineActions": "@config.maxInlineActions",
+                      "pageSize": "@config.pageSize",
+                      "positionEvent": "@config.positionEvent",
+                      "reorderEvent": "REORDER",
+                      "reorderable": "@config.reorderable",
+                      "senderField": "@config.senderField",
+                      "sortable": "@config.sortable",
+                      "swipeLeftActions": "@config.swipeLeftActions",
+                      "swipeLeftEvent": "SWIPE_LEFT",
+                      "swipeRightActions": "@config.swipeRightActions",
+                      "swipeRightEvent": "SWIPE_RIGHT",
+                      "type": "data-list",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "DataListLoaded",
                 "from": "idle",
                 "to": "idle"
               },

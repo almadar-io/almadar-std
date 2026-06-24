@@ -30,7 +30,14 @@ const ALIAS = 'UiHeroOrganism';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiHeroOrganismEventKey = 'INIT';
+export type StdUiHeroOrganismEventKey = 'HeroOrganismLoaded' | 'INIT';
+
+/**
+ * Payload shape for the `HeroOrganismLoaded` event.
+ */
+export interface StdUiHeroOrganismHeroOrganismLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every
@@ -346,6 +353,21 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
             'type': 'number',
           },
         },
+        'emits': [
+          {
+            'description': 'HeroOrganism rows finished loading; payload.data holds the collection.',
+            'event': 'HeroOrganismLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[HeroOrganismItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
+        ],
         'entityContract': {
           'provides': [],
           'requires': [],
@@ -360,6 +382,19 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
               'key': 'INIT',
               'name': 'Initialize',
             },
+            {
+              'description': 'HeroOrganism rows finished loading; payload.data holds the collection.',
+              'key': 'HeroOrganismLoaded',
+              'name': 'Hero organism loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[HeroOrganismItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
+            },
           ],
           'states': [
             {
@@ -373,7 +408,11 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
                 [
                   'fetch',
                   'HeroOrganismItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'HeroOrganismLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -402,6 +441,38 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'children': [
+                      {
+                        'content': 'Sample content',
+                        'type': 'typography',
+                      },
+                    ],
+                    'className': '@config.className',
+                    'entity': '@payload.data',
+                    'error': '@config.error',
+                    'isLoading': '@config.isLoading',
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectedIds': '@config.selectedIds',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'hero-organism',
+                  },
+                ],
+              ],
+              'event': 'HeroOrganismLoaded',
               'from': 'idle',
               'to': 'idle',
             },

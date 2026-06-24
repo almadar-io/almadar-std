@@ -1,6 +1,7 @@
 app ui-book-viewer "1.0.0"
 "BookViewer — UI factory (1:1 with the @almadar/ui book-viewer pattern)."
 orbital BookViewerOrbital {
+    type BookViewerLoaded = Event { data : [BookViewerItem] } "BookViewer rows finished loading; payload.data holds the collection"
   type BookViewerError = {
     message : string!
     name : string
@@ -31,7 +32,7 @@ orbital BookViewerOrbital {
 
     state idle {
       INIT -> idle
-        (fetch BookViewerItem {})
+        (fetch BookViewerItem { emit: { success: BookViewerLoaded } })
         (render-ui main {
           className: @config.className
           isLoading: @config.isLoading
@@ -49,6 +50,31 @@ orbital BookViewerOrbital {
           fieldMap: @config.fieldMap
           type: book-viewer
         })
+      BookViewerLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          initialPage: @config.initialPage
+          fieldMap: @config.fieldMap
+          type: book-viewer
+        })
+    }
+
+    emits {
+      BookViewerLoaded
+        @description "BookViewer rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
     }
 
     config {

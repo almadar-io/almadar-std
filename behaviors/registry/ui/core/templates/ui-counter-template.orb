@@ -142,6 +142,19 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "CounterTemplate rows finished loading; payload.data holds the collection.",
+              "event": "CounterTemplateLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[CounterTemplateItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             }
           ],
           "entityContract": {
@@ -157,6 +170,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "CounterTemplate rows finished loading; payload.data holds the collection.",
+                "key": "CounterTemplateLoaded",
+                "name": "Counter template loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[CounterTemplateItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               },
               {
                 "description": "Called when increment is clicked",
@@ -207,7 +233,11 @@
                   [
                     "fetch",
                     "CounterTemplateItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "CounterTemplateLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -227,6 +257,29 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "entity": "@payload.data",
+                      "onDecrement": "DECREMENT",
+                      "onIncrement": "INCREMENT",
+                      "onReset": "RESET",
+                      "showReset": "@config.showReset",
+                      "size": "@config.size",
+                      "title": "@config.title",
+                      "type": "counter-template",
+                      "variant": "@config.variant"
+                    }
+                  ]
+                ],
+                "event": "CounterTemplateLoaded",
                 "from": "idle",
                 "to": "idle"
               }

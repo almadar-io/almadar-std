@@ -30,7 +30,7 @@ const ALIAS = 'UiEntityList';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiEntityListEventKey = 'INIT' | 'ITEM_ACTIONS' | 'VIEW';
+export type StdUiEntityListEventKey = 'EntityListLoaded' | 'INIT' | 'ITEM_ACTIONS' | 'VIEW';
 
 /**
  * Payload shape for the `ITEM_ACTIONS` event.
@@ -44,6 +44,13 @@ export interface StdUiEntityListItemActionsPayload {
  */
 export interface StdUiEntityListViewPayload {
   id?: string;
+}
+
+/**
+ * Payload shape for the `EntityListLoaded` event.
+ */
+export interface StdUiEntityListEntityListLoadedPayload {
+  data?: EntityRow[];
 }
 
 /**
@@ -388,6 +395,19 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             'scope': 'external',
             'tier': 'essential',
           },
+          {
+            'description': 'EntityList rows finished loading; payload.data holds the collection.',
+            'event': 'EntityListLoaded',
+            'payloadSchema': [
+              {
+                'name': 'data',
+                'type': '[EntityListItem]',
+              },
+            ],
+            'scope': 'internal',
+            'synonyms': 'loaded, fetched, retrieved',
+            'tier': 'essential',
+          },
         ],
         'entityContract': {
           'provides': [],
@@ -402,6 +422,19 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
             {
               'key': 'INIT',
               'name': 'Initialize',
+            },
+            {
+              'description': 'EntityList rows finished loading; payload.data holds the collection.',
+              'key': 'EntityListLoaded',
+              'name': 'Entity list loaded',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'type': '[EntityListItem]',
+                },
+              ],
+              'synonyms': 'loaded, fetched, retrieved',
+              'tier': 'essential',
             },
             {
               'description': 'User opened a record from the list.',
@@ -440,7 +473,11 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                 [
                   'fetch',
                   'EntityListItem',
-                  {},
+                  {
+                    'emit': {
+                      'success': 'EntityListLoaded',
+                    },
+                  },
                 ],
                 [
                   'render-ui',
@@ -482,6 +519,51 @@ export function stdUiEntityListEntityListOrbital(params: StdUiEntityListEntityLi
                 ],
               ],
               'event': 'INIT',
+              'from': 'idle',
+              'to': 'idle',
+            },
+            {
+              'effects': [
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'activeFilters': '@config.activeFilters',
+                    'children': [
+                      {
+                        'content': 'Sample content',
+                        'type': 'typography',
+                      },
+                    ],
+                    'className': '@config.className',
+                    'emptyMessage': '@config.emptyMessage',
+                    'entity': '@payload.data',
+                    'entityType': '@config.entityType',
+                    'error': '@config.error',
+                    'fieldNames': '@config.fieldNames',
+                    'fields': '@config.fields',
+                    'isLoading': '@config.isLoading',
+                    'itemActions': [
+                      {
+                        'event': 'VIEW',
+                        'label': 'View',
+                      },
+                    ],
+                    'page': '@config.pageProp',
+                    'pageSize': '@config.pageSize',
+                    'searchValue': '@config.searchValue',
+                    'selectable': '@config.selectable',
+                    'selectedIds': '@config.selectedIds',
+                    'showDividers': '@config.showDividers',
+                    'sortBy': '@config.sortBy',
+                    'sortDirection': '@config.sortDirection',
+                    'totalCount': '@config.totalCount',
+                    'type': 'entity-list',
+                    'variant': '@config.variant',
+                  },
+                ],
+              ],
+              'event': 'EntityListLoaded',
               'from': 'idle',
               'to': 'idle',
             },

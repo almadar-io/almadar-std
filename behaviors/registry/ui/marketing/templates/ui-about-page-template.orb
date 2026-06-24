@@ -304,6 +304,21 @@
               "type": "string"
             }
           },
+          "emits": [
+            {
+              "description": "AboutPageTemplate rows finished loading; payload.data holds the collection.",
+              "event": "AboutPageTemplateLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[AboutPageTemplateItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            }
+          ],
           "entityContract": {
             "provides": [],
             "requires": []
@@ -317,6 +332,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "AboutPageTemplate rows finished loading; payload.data holds the collection.",
+                "key": "AboutPageTemplateLoaded",
+                "name": "About page template loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[AboutPageTemplateItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               }
             ],
             "states": [
@@ -331,7 +359,11 @@
                   [
                     "fetch",
                     "AboutPageTemplateItem",
-                    {}
+                    {
+                      "emit": {
+                        "success": "AboutPageTemplateLoaded"
+                      }
+                    }
                   ],
                   [
                     "render-ui",
@@ -344,6 +376,22 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "className": "@config.className",
+                      "entity": "@payload.data",
+                      "type": "about-page-template"
+                    }
+                  ]
+                ],
+                "event": "AboutPageTemplateLoaded",
                 "from": "idle",
                 "to": "idle"
               }

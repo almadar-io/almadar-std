@@ -30,7 +30,14 @@ const ALIAS = 'UiGameTemplate';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiGameTemplateEventKey = 'INIT';
+export type StdUiGameTemplateEventKey = 'GameTemplateLoaded' | 'INIT';
+
+/**
+ * Payload shape for the `GameTemplateLoaded` event.
+ */
+export interface StdUiGameTemplateGameTemplateLoadedPayload {
+  data?: EntityRow[];
+}
 
 /**
  * Typed call-site config block for this trait — every
