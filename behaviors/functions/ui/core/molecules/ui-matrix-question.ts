@@ -60,7 +60,7 @@ export interface StdUiMatrixQuestionConfig {
   /** Default: `"Title"` */
   title?: string;
   /** Default: `{}` */
-  values?: unknown;
+  values?: Record<string, TraitConfig>;
 }
 
 /**

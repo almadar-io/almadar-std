@@ -41,7 +41,7 @@ export type StdUiStateIndicatorEventKey = 'INIT';
 export interface StdUiStateIndicatorConfig {
   /** Default: `true` */
   animated?: boolean;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/citizens/archetypes/00_base_model.png"` */
   assetUrl?: unknown;
   /** Default: `""` */
   className?: string;
@@ -52,7 +52,7 @@ export interface StdUiStateIndicatorConfig {
   /** Default: `"idle"` */
   stateProp?: string;
   /** Default: `{}` */
-  stateStyles?: unknown;
+  stateStyles?: Record<string, TraitConfig>;
 }
 
 /**

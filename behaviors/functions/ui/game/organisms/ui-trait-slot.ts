@@ -68,12 +68,12 @@ export interface StdUiTraitSlotRemovePayload {
  */
 export interface StdUiTraitSlotConfig {
   /** Default: `{}` */
-  categoryColors?: unknown;
+  categoryColors?: Record<string, TraitConfig>;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   draggable?: boolean;
-  /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","name":"Name"}` */
+  /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":"https://almadar-kflow-assets.web.app/shared/units/citizens/archetypes/00_base_model.png","id":"Id","name":"Name"}` */
   equippedItem?: EntityRow;
   error?: EntityRow;
   /** Default: `"correct"` */
@@ -92,7 +92,7 @@ export interface StdUiTraitSlotConfig {
   size?: 'sm' | 'md' | 'lg';
   /** Default: `0` */
   slotNumber?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/citizens/archetypes/00_base_model.png"` */
   tooltipFrameUrl?: unknown;
 }
 
@@ -214,7 +214,7 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
               'category': 'Category',
               'description': 'Description',
               'iconEmoji': 'Icon Emoji',
-              'iconUrl': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
+              'iconUrl': 'https://almadar-kflow-assets.web.app/shared/units/citizens/archetypes/00_base_model.png',
               'id': 'Id',
               'name': 'Name',
             },
@@ -354,7 +354,7 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
             'type': 'number',
           },
           'tooltipFrameUrl': {
-            'default': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
+            'default': 'https://almadar-kflow-assets.web.app/shared/units/citizens/archetypes/00_base_model.png',
             'description': 'Optional tooltip frame image URL',
             'label': 'Tooltip Frame Url',
             'tier': 'presentation',
