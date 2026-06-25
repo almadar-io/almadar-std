@@ -1,0 +1,135 @@
+app ui-holiday-runner-board "1.0.0"
+"HolidayRunnerBoard — UI factory (1:1 with the @almadar/ui holiday-runner-board pattern)."
+orbital HolidayRunnerBoardOrbital {
+  type HolidayRunnerBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type HolidayRunnerBoardTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    terrain : string
+    type : string
+    passable : boolean
+  }
+  type HolidayRunnerBoardUnitsItem = {
+    id : string!
+    x : number
+    y : number
+    sprite : asset
+    unitType : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+  }
+
+  entity HolidayRunnerBoardItem [runtime] {
+    id : string!
+  }
+
+  trait HolidayRunnerBoardRender -> @rebindable HolidayRunnerBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          tiles: @config.tiles
+          units: @config.units
+          assetManifest: @config.assetManifest
+          assetBaseUrl: @config.assetBaseUrl
+          scale: @config.scale
+          showMinimap: @config.showMinimap
+          enableCamera: @config.enableCamera
+          width: @config.width
+          height: @config.height
+          fps: @config.fps
+          backgroundImage: @config.backgroundImage
+          tickEvent: TICK
+          drawEvent: DRAW
+          type: holiday-runner-board
+        })
+    }
+
+    emits {
+      TICK -> external {
+        dt : number!
+        frame : number!
+      }
+        @description "Declarative event: emits UI:{tickEvent} with { dt, frame } each tick"
+        @tier "essential"
+      DRAW -> external {
+        frame : number!
+      }
+        @description "Declarative event: emits UI:{drawEvent} with { frame } each draw frame"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : HolidayRunnerBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      tiles : [HolidayRunnerBoardTilesItem] = [{ x: 0, y: 0, terrain: "ground", passable: true }, { x: 1, y: 0, terrain: "ground", passable: true }, { x: 2, y: 0, terrain: "platform", passable: true }, { x: 3, y: 0, terrain: "ground", passable: true }, { x: 4, y: 0, terrain: "ground", passable: true }]
+        @label "Tiles"
+        @description "Flat side-scroll level tiles (ground, platform, gap)"
+        @tier "presentation"
+      units : [HolidayRunnerBoardUnitsItem] = [{ id: "runner1", x: 1, y: 0, unitType: "runner", name: "Holiday Runner", team: player, health: 3, maxHealth: 3, sprite: "https://almadar-kflow-assets.web.app/shared/units/chars-roguelike/kflow/sprite-sheets/amir-sprite-sheet-se.png" }]
+        @label "Units"
+        @description "Units on the board"
+        @tier "presentation"
+      assetManifest : string = ""
+        @label "Asset Manifest"
+        @description "Asset sprite manifest"
+        @tier "presentation"
+      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
+        @label "Asset Base Url"
+        @description "Base URL prepended to manifest sprite paths"
+        @tier "presentation"
+      backgroundImage : asset = "https://almadar-kflow-assets.web.app/shared/scenes/backgrounds/kflow/winter-scene.png"
+        @label "Background Image"
+        @description "Background image URL for the runner level"
+        @tier "presentation"
+      width : number = 800
+        @label "Width"
+        @description "Canvas width in pixels"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels"
+        @tier "presentation"
+      fps : number = 60
+        @label "FPS"
+        @description "Target frames per second"
+        @tier "presentation"
+      scale : number = 1.0
+        @label "Scale"
+        @description "Render scale"
+        @tier "presentation"
+      showMinimap : boolean = false
+        @label "Show Minimap"
+        @description "Show minimap overlay"
+        @tier "presentation"
+      enableCamera : boolean = false
+        @label "Enable Camera"
+        @description "Enable camera pan/zoom controls"
+        @tier "presentation"
+    }
+  }
+
+  page "/holiday-runner-board" as HolidayRunnerBoardPage -> HolidayRunnerBoardRender
+}

@@ -1,0 +1,201 @@
+app ui-tanks-board "1.0.0"
+"TanksBoard — UI factory (1:1 with the @almadar/ui tanks-board pattern)."
+orbital TanksBoardOrbital {
+  type TanksBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type TanksBoardTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+    modelUrl : asset
+  }
+  type TanksBoardUnitsItem = {
+    id : string!
+    position : TanksBoardUnitsItemPosition
+    x : number
+    y : number
+    z : number
+    sprite : asset
+    spriteSheet : asset
+    modelUrl : asset
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [TanksBoardUnitsItemTraitsItem]
+    previousPosition : TanksBoardUnitsItemPreviousPosition
+    elevation : number
+  }
+  type TanksBoardUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type TanksBoardUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type TanksBoardUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type TanksBoardFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : asset
+    assetUrl : asset
+    color : string
+    elevation : number
+  }
+
+  entity TanksBoardItem [runtime] {
+    id : string!
+  }
+
+  trait TanksBoardRender -> @rebindable TanksBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          tiles: @config.tiles
+          units: @config.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          assetBaseUrl: @config.assetBaseUrl
+          scale: @config.scale
+          showMinimap: @config.showMinimap
+          enableCamera: @config.enableCamera
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          type: tanks-board
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external {
+        x : number!
+        y : number!
+      }
+        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @tier "essential"
+      UNIT_CLICK -> external {
+        unitId : string!
+      }
+        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : TanksBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json = {}
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      tiles : [TanksBoardTilesItem] = [{ x: 0, y: 0, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 1, y: 0, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 2, y: 0, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile230.png" }, { x: 3, y: 0, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile291.png" }, { x: 4, y: 0, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 5, y: 0, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 0, y: 1, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile291.png" }, { x: 1, y: 1, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 2, y: 1, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 3, y: 1, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile230.png" }, { x: 4, y: 1, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile291.png" }, { x: 5, y: 1, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 0, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile230.png" }, { x: 1, y: 2, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 2, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 3, y: 2, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile291.png" }, { x: 4, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 5, y: 2, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 0, y: 3, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile291.png" }, { x: 1, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile230.png" }, { x: 2, y: 3, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 3, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 4, y: 3, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile291.png" }, { x: 5, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile230.png" }, { x: 0, y: 4, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 1, y: 4, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 2, y: 4, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile230.png" }, { x: 3, y: 4, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile291.png" }, { x: 4, y: 4, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 5, y: 4, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 0, y: 5, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile291.png" }, { x: 1, y: 5, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 2, y: 5, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }, { x: 3, y: 5, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile230.png" }, { x: 4, y: 5, terrain: "sand", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile291.png" }, { x: 5, y: 5, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-tower-defense/towerDefense_tile030.png" }]
+        @label "Tiles"
+        @description "Ground/sand terrain tiles"
+        @tier "presentation"
+      units : [TanksBoardUnitsItem] = [{ id: "t1", position: { x: 1, y: 1 }, unitType: "tank", name: "Tiger", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/units/chars-roguelike/kflow/sprite-sheets/amir-sprite-sheet-se.png" }, { id: "t2", position: { x: 4, y: 4 }, unitType: "tank", name: "Panzer", team: enemy, health: 8, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/units/chars-roguelike/kflow/sprite-sheets/guardian-sprite-sheet-se.png" }]
+        @label "Units"
+        @description "Tank units on the board"
+        @tier "presentation"
+      features : [TanksBoardFeaturesItem] = [{ id: "f1", x: 2, y: 3, type: "obstacle", sprite: "https://almadar-kflow-assets.web.app/shared/terrains/tiles-iso/kflow/Stone/stone_03.png" }]
+        @label "Features"
+        @description "Features (obstacles, structures, etc.) on the board"
+        @tier "presentation"
+      assetManifest : string = ""
+        @label "Asset Manifest"
+        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
+        @tier "presentation"
+      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
+        @label "Asset Base Url"
+        @description "Base URL prepended to manifest sprite paths"
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Render scale"
+        @tier "presentation"
+      showMinimap : boolean = true
+        @label "Show Minimap"
+        @description "Show minimap overlay"
+        @tier "presentation"
+      enableCamera : boolean = true
+        @label "Enable Camera"
+        @description "Enable camera pan/zoom controls"
+        @tier "presentation"
+    }
+  }
+
+  page "/tanks-board" as TanksBoardPage -> TanksBoardRender
+}

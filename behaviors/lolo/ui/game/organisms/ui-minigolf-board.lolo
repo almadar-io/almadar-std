@@ -1,0 +1,201 @@
+app ui-minigolf-board "1.0.0"
+"MinigolfBoard — UI factory (1:1 with the @almadar/ui minigolf-board pattern)."
+orbital MinigolfBoardOrbital {
+  type MinigolfBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type MinigolfBoardTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+    modelUrl : asset
+  }
+  type MinigolfBoardUnitsItem = {
+    id : string!
+    position : MinigolfBoardUnitsItemPosition
+    x : number
+    y : number
+    z : number
+    sprite : asset
+    spriteSheet : asset
+    modelUrl : asset
+    unitType : string
+    heroId : string
+    name : string
+    team : "player" | "enemy" | "neutral"
+    faction : "player" | "enemy" | "neutral"
+    health : number
+    maxHealth : number
+    traits : [MinigolfBoardUnitsItemTraitsItem]
+    previousPosition : MinigolfBoardUnitsItemPreviousPosition
+    elevation : number
+  }
+  type MinigolfBoardUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type MinigolfBoardUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
+  }
+  type MinigolfBoardUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type MinigolfBoardFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : asset
+    assetUrl : asset
+    color : string
+    elevation : number
+  }
+
+  entity MinigolfBoardItem [runtime] {
+    id : string!
+  }
+
+  trait MinigolfBoardRender -> @rebindable MinigolfBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          tiles: @config.tiles
+          units: @config.units
+          features: @config.features
+          assetManifest: @config.assetManifest
+          assetBaseUrl: @config.assetBaseUrl
+          scale: @config.scale
+          showMinimap: @config.showMinimap
+          enableCamera: @config.enableCamera
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
+          type: minigolf-board
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external {
+        x : number!
+        y : number!
+      }
+        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @tier "essential"
+      UNIT_CLICK -> external {
+        unitId : string!
+      }
+        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : MinigolfBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json = {}
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      tiles : [MinigolfBoardTilesItem] = [{ x: 0, y: 0, terrain: "green", passable: true }, { x: 1, y: 0, terrain: "green", passable: true }, { x: 2, y: 0, terrain: "green", passable: true }, { x: 3, y: 0, terrain: "green", passable: true }, { x: 4, y: 0, terrain: "green", passable: true }, { x: 0, y: 1, terrain: "green", passable: true }, { x: 1, y: 1, terrain: "fairway", passable: true }, { x: 2, y: 1, terrain: "fairway", passable: true }, { x: 3, y: 1, terrain: "fairway", passable: true }, { x: 4, y: 1, terrain: "green", passable: true }, { x: 0, y: 2, terrain: "green", passable: true }, { x: 1, y: 2, terrain: "fairway", passable: true }, { x: 2, y: 2, terrain: "hole", passable: true }, { x: 3, y: 2, terrain: "fairway", passable: true }, { x: 4, y: 2, terrain: "green", passable: true }, { x: 0, y: 3, terrain: "green", passable: true }, { x: 1, y: 3, terrain: "fairway", passable: true }, { x: 2, y: 3, terrain: "fairway", passable: true }, { x: 3, y: 3, terrain: "fairway", passable: true }, { x: 4, y: 3, terrain: "green", passable: true }, { x: 0, y: 4, terrain: "green", passable: true }, { x: 1, y: 4, terrain: "green", passable: true }, { x: 2, y: 4, terrain: "green", passable: true }, { x: 3, y: 4, terrain: "green", passable: true }, { x: 4, y: 4, terrain: "green", passable: true }]
+        @label "Tiles"
+        @description "Isometric grid tiles"
+        @tier "presentation"
+      units : [MinigolfBoardUnitsItem] = [{ id: "ball1", position: { x: 2, y: 4 }, unitType: "ball", name: "Ball", team: player, health: 1, maxHealth: 1 }]
+        @label "Units"
+        @description "Units on the board"
+        @tier "presentation"
+      features : [MinigolfBoardFeaturesItem] = [{ id: "hole1", x: 2, y: 2, type: "hole" }, { id: "flag1", x: 2, y: 2, type: "flag" }]
+        @label "Features"
+        @description "Features (holes, obstacles, etc.) on the board"
+        @tier "presentation"
+      assetManifest : string = ""
+        @label "Asset Manifest"
+        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
+        @tier "presentation"
+      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
+        @label "Asset Base Url"
+        @description "Base URL prepended to manifest sprite paths"
+        @tier "presentation"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Render scale"
+        @tier "presentation"
+      showMinimap : boolean = true
+        @label "Show Minimap"
+        @description "Show minimap overlay"
+        @tier "presentation"
+      enableCamera : boolean = true
+        @label "Enable Camera"
+        @description "Enable camera pan/zoom controls"
+        @tier "presentation"
+    }
+  }
+
+  page "/minigolf-board" as MinigolfBoardPage -> MinigolfBoardRender
+}

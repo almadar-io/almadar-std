@@ -1,0 +1,300 @@
+{
+  "description": "RacingBoard — UI factory (1:1 with the @almadar/ui racing-board pattern).",
+  "name": "ui-racing-board",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "RacingBoardItem",
+        "persistence": "runtime"
+      },
+      "name": "RacingBoardOrbital",
+      "pages": [
+        {
+          "name": "RacingBoardPage",
+          "path": "/racing-board",
+          "traits": [
+            {
+              "ref": "RacingBoardRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "activeFilters": {
+              "default": {},
+              "description": "Active filters",
+              "label": "Active Filters",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "assetBaseUrl": {
+              "default": "https://almadar-kflow-assets.web.app/shared/",
+              "description": "Base URL prepended to asset paths",
+              "label": "Asset Base Url",
+              "tier": "presentation",
+              "type": "asset"
+            },
+            "backgroundImage": {
+              "default": "https://almadar-kflow-assets.web.app/shared/terrains/top-down/road-track.png",
+              "description": "Race track background image URL",
+              "label": "Background Image",
+              "tier": "presentation",
+              "type": "asset"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state (UiError)",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "RacingBoardError"
+            },
+            "fps": {
+              "default": 60.0,
+              "description": "Target frames per second",
+              "label": "FPS",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "height": {
+              "default": 600.0,
+              "description": "Canvas height in pixels",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "pageProp": {
+              "default": 0.0,
+              "description": "Current page number",
+              "label": "Page",
+              "synonyms": "page",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageSize": {
+              "default": 0.0,
+              "description": "Number of items per page",
+              "label": "Page Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "searchValue": {
+              "default": "Search Value",
+              "description": "Current search query value",
+              "label": "Search Value",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "selectedIds": {
+              "default": [],
+              "description": "Currently selected item IDs",
+              "items": {
+                "type": "string"
+              },
+              "label": "Selected Ids",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "sortBy": {
+              "default": "Sort By",
+              "description": "Current sort field",
+              "label": "Sort By",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "sortDirection": {
+              "default": "asc",
+              "description": "Current sort direction",
+              "label": "Sort Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "totalCount": {
+              "default": 0.0,
+              "description": "Total number of items",
+              "label": "Total Count",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "width": {
+              "default": 800.0,
+              "description": "Canvas width in pixels",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "emits": [
+            {
+              "description": "Declarative event: emits UI:{tickEvent} with { dt, frame } each tick",
+              "event": "TICK",
+              "payloadSchema": [
+                {
+                  "name": "dt",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "frame",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Declarative event: emits UI:{drawEvent} with { frame } each draw frame",
+              "event": "DRAW",
+              "payloadSchema": [
+                {
+                  "name": "frame",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "RacingBoardItem",
+          "name": "RacingBoardRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Declarative event: emits UI:{tickEvent} with { dt, frame } each tick",
+                "key": "TICK",
+                "name": "Tick",
+                "payloadSchema": [
+                  {
+                    "name": "dt",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "frame",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Declarative event: emits UI:{drawEvent} with { frame } each draw frame",
+                "key": "DRAW",
+                "name": "Draw",
+                "payloadSchema": [
+                  {
+                    "name": "frame",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "activeFilters": "@config.activeFilters",
+                      "assetBaseUrl": "@config.assetBaseUrl",
+                      "backgroundImage": "@config.backgroundImage",
+                      "className": "@config.className",
+                      "drawEvent": "DRAW",
+                      "error": "@config.error",
+                      "fps": "@config.fps",
+                      "height": "@config.height",
+                      "isLoading": "@config.isLoading",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "searchValue": "@config.searchValue",
+                      "selectedIds": "@config.selectedIds",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "tickEvent": "TICK",
+                      "totalCount": "@config.totalCount",
+                      "type": "racing-board",
+                      "width": "@config.width"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

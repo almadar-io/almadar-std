@@ -1,0 +1,241 @@
+{
+  "description": "ChatBar — UI factory (1:1 with the @almadar/ui chat-bar pattern).",
+  "name": "ui-chat-bar",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "ChatBarItem",
+        "persistence": "runtime"
+      },
+      "name": "ChatBarOrbital",
+      "pages": [
+        {
+          "name": "ChatBarPage",
+          "path": "/chat-bar",
+          "traits": [
+            {
+              "ref": "ChatBarRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "activeFilters": {
+              "default": {},
+              "description": "Active filters",
+              "label": "Active Filters",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "activeGate": {
+              "default": "Active Gate",
+              "description": "Currently active gate label, e.g. 'Gate 2: State machines'",
+              "label": "Active Gate",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "context": {
+              "default": "",
+              "description": "Agent context description",
+              "label": "Context",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "error": {
+              "description": "Error state (UiError)",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "ChatBarError"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "jepaValidity": {
+              "default": 0.0,
+              "description": "JEPA validity probability 0-1",
+              "label": "Jepa Validity",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageProp": {
+              "default": 0.0,
+              "description": "Current page number",
+              "label": "Page",
+              "synonyms": "page",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageSize": {
+              "default": 0.0,
+              "description": "Number of items per page",
+              "label": "Page Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "placeholder": {
+              "default": "Placeholder",
+              "description": "Input placeholder text",
+              "label": "Placeholder",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "searchValue": {
+              "default": "Search Value",
+              "description": "Current search query value",
+              "label": "Search Value",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "selectedIds": {
+              "default": [],
+              "description": "Currently selected item IDs",
+              "items": {
+                "type": "string"
+              },
+              "label": "Selected Ids",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "sortBy": {
+              "default": "Sort By",
+              "description": "Current sort field",
+              "label": "Sort By",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "sortDirection": {
+              "default": "asc",
+              "description": "Current sort direction",
+              "label": "Sort Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "status": {
+              "default": "idle",
+              "description": "Pipeline status",
+              "label": "Status",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "idle",
+                "running",
+                "paused",
+                "complete",
+                "error"
+              ]
+            },
+            "totalCount": {
+              "default": 0.0,
+              "description": "Total number of items",
+              "label": "Total Count",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ChatBarItem",
+          "name": "ChatBarRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "activeFilters": "@config.activeFilters",
+                      "activeGate": "@config.activeGate",
+                      "className": "@config.className",
+                      "context": "@config.context",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "jepaValidity": "@config.jepaValidity",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "placeholder": "@config.placeholder",
+                      "searchValue": "@config.searchValue",
+                      "selectedIds": "@config.selectedIds",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "status": "@config.status",
+                      "totalCount": "@config.totalCount",
+                      "type": "chat-bar"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}
