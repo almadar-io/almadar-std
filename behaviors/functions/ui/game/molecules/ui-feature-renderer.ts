@@ -56,8 +56,8 @@ export interface StdUiFeatureRendererConfig {
   /** Default: `1` */
   cellSize?: number;
   /** Default: `{}` */
-  featureColors?: unknown;
-  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":1}]` */
+  featureColors?: Record<string, TraitConfig>;
+  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/environments/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/environments/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":1}]` */
   features?: EntityRow[];
   /** Default: `0` */
   offsetX?: number;

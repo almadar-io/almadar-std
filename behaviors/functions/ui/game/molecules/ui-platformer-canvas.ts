@@ -69,7 +69,7 @@ export interface StdUiPlatformerCanvasStopPayload {
 export interface StdUiPlatformerCanvasConfig {
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
   assetBaseUrl?: unknown;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/scenes/world/streets.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/backgrounds/scenes/world/streets.png"` */
   backgroundImage?: unknown;
   /** Default: `"#5c94fc"` */
   bgColor?: string;
@@ -93,10 +93,10 @@ export interface StdUiPlatformerCanvasConfig {
   platforms?: EntityRow[];
   /** Default: `{"facingRight":true,"grounded":false,"height":48,"vx":0,"vy":0,"width":32,"x":80,"y":320}` */
   player?: EntityRow;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/platformer/characters/platformChar_idle.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/toon/platformChar_idle.png"` */
   playerSprite?: unknown;
-  /** Default: `{"goal":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile058.png","ground":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile029.png","hazard":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile063.png","platform":"https://almadar-kflow-assets.web.app/shared/platformer/tiles/platformPack_tile046.png"}` */
-  tileSprites?: unknown;
+  /** Default: `{"goal":"https://almadar-kflow-assets.web.app/shared/terrains/flat/platformer/platformPack_tile058.png","ground":"https://almadar-kflow-assets.web.app/shared/terrains/flat/platformer/platformPack_tile029.png","hazard":"https://almadar-kflow-assets.web.app/shared/terrains/flat/platformer/platformPack_tile063.png","platform":"https://almadar-kflow-assets.web.app/shared/terrains/flat/platformer/platformPack_tile046.png"}` */
+  tileSprites?: Record<string, TraitConfig>;
   /** Default: `400` */
   worldHeight?: number;
   /** Default: `800` */

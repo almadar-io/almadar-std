@@ -87,7 +87,7 @@ export interface StdUiSequencerBoardConfig {
   /** Default: `[{"category":"morning","description":"Get out of bed","iconEmoji":"🌅","id":"wake-up","name":"Wake Up"},{"category":"hygiene","description":"Clean your teeth","iconEmoji":"🪥","id":"brush-teeth","name":"Brush Teeth"},{"category":"food","description":"Have your morning meal","iconEmoji":"🍳","id":"eat-breakfast","name":"Eat Breakfast"},{"category":"morning","description":"Put on your clothes","iconEmoji":"👕","id":"get-dressed","name":"Get Dressed"}]` */
   availableActions?: EntityRow[];
   /** Default: `{}` */
-  categoryColors?: unknown;
+  categoryColors?: Record<string, TraitConfig>;
   /** Default: `"Put the steps in the right order to start the day right."` */
   description?: string;
   /** Default: `""` */

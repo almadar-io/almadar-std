@@ -44,7 +44,7 @@ export interface StdUiActionTileConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
   /** Default: `{}` */
-  categoryColors?: unknown;
+  categoryColors?: Record<string, TraitConfig>;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */

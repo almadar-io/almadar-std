@@ -55,7 +55,7 @@ export interface StdUiSequenceBarSlotRemovePayload {
  */
 export interface StdUiSequenceBarConfig {
   /** Default: `{}` */
-  categoryColors?: unknown;
+  categoryColors?: Record<string, TraitConfig>;
   /** Default: `""` */
   className?: string;
   /** Default: `-1` */

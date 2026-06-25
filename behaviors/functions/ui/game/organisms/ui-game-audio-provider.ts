@@ -49,7 +49,7 @@ export interface StdUiGameAudioProviderConfig {
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `{}` */
-  manifest?: unknown;
+  manifest?: Record<string, TraitConfig>;
 }
 
 /**
