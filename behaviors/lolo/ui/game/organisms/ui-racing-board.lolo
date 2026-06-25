@@ -1,0 +1,127 @@
+app ui-racing-board "1.0.0"
+"RacingBoard — UI factory (1:1 with the @almadar/ui racing-board pattern)."
+orbital RacingBoardOrbital {
+  type RacingBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+
+  entity RacingBoardItem [runtime] {
+    id : string!
+  }
+
+  trait RacingBoardRender -> @rebindable RacingBoardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          backgroundImage: @config.backgroundImage
+          assetBaseUrl: @config.assetBaseUrl
+          width: @config.width
+          height: @config.height
+          fps: @config.fps
+          tickEvent: TICK
+          drawEvent: DRAW
+          type: racing-board
+        })
+    }
+
+    emits {
+      TICK -> external {
+        dt : number!
+        frame : number!
+      }
+        @description "Declarative event: emits UI:{tickEvent} with { dt, frame } each tick"
+        @tier "essential"
+      DRAW -> external {
+        frame : number!
+      }
+        @description "Declarative event: emits UI:{drawEvent} with { frame } each draw frame"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : RacingBoardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json = {}
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      backgroundImage : asset = "https://almadar-kflow-assets.web.app/shared/terrains/top-down/road-track.png"
+        @label "Background Image"
+        @description "Race track background image URL"
+        @tier "presentation"
+      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
+        @label "Asset Base Url"
+        @description "Base URL prepended to asset paths"
+        @tier "presentation"
+      width : number = 800
+        @label "Width"
+        @description "Canvas width in pixels"
+        @tier "presentation"
+      height : number = 600
+        @label "Height"
+        @description "Canvas height in pixels"
+        @tier "presentation"
+      fps : number = 60
+        @label "FPS"
+        @description "Target frames per second"
+        @tier "presentation"
+    }
+  }
+
+  page "/racing-board" as RacingBoardPage -> RacingBoardRender
+}

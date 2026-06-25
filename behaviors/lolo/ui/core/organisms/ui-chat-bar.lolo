@@ -1,0 +1,111 @@
+app ui-chat-bar "1.0.0"
+"ChatBar — UI factory (1:1 with the @almadar/ui chat-bar pattern)."
+orbital ChatBarOrbital {
+  type ChatBarError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+
+  entity ChatBarItem [runtime] {
+    id : string!
+  }
+
+  trait ChatBarRender -> @rebindable ChatBarItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          status: @config.status
+          activeGate: @config.activeGate
+          jepaValidity: @config.jepaValidity
+          placeholder: @config.placeholder
+          context: @config.context
+          type: chat-bar
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : ChatBarError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json = {}
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      status : "idle" | "running" | "paused" | "complete" | "error" = idle
+        @label "Status"
+        @description "Pipeline status"
+        @tier "presentation"
+      activeGate : string = "Active Gate"
+        @label "Active Gate"
+        @description "Currently active gate label, e.g. 'Gate 2: State machines'"
+        @tier "presentation"
+      jepaValidity : number = 0
+        @label "Jepa Validity"
+        @description "JEPA validity probability 0-1"
+        @tier "presentation"
+      placeholder : string = "Placeholder"
+        @label "Placeholder"
+        @description "Input placeholder text"
+        @tier "presentation"
+      context : string = ""
+        @label "Context"
+        @description "Agent context description"
+        @tier "presentation"
+    }
+  }
+
+  page "/chat-bar" as ChatBarPage -> ChatBarRender
+}

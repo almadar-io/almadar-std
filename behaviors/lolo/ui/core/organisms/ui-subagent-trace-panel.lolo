@@ -1,0 +1,151 @@
+app ui-subagent-trace-panel "1.0.0"
+"SubagentTracePanel — UI factory (1:1 with the @almadar/ui subagent-trace-panel pattern)."
+orbital SubagentTracePanelOrbital {
+  type SubagentTracePanelError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+
+  entity SubagentTracePanelItem [runtime] {
+    id : string!
+  }
+
+  trait SubagentTracePanelRender -> @rebindable SubagentTracePanelItem [interaction, instance] {
+    initial: closed
+
+    state closed {
+      INIT -> closed
+        (render-ui main {
+          label: "Open Subagent-trace-panel"
+          action: OPEN
+          type: button
+        })
+      OPEN -> open
+        (render-ui overlay {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          subagents: @config.subagents
+          focusedOrbital: @config.focusedOrbital
+          disclosureLevel: @config.disclosureLevel
+          open: @config.open
+          onClose: CLOSE
+          coordinatorActivities: @config.coordinatorActivities
+          coordinatorMessages: @config.coordinatorMessages
+          mode: @config.mode
+          type: subagent-trace-panel
+        })
+    }
+
+    state open {
+      CLOSE -> closed
+        (render-ui overlay null)
+        (render-ui main {
+          label: "Open Subagent-trace-panel"
+          action: OPEN
+          type: button
+        })
+    }
+
+    emits {
+      CLOSE -> external {
+        id : string
+      }
+        @description "Optional dismiss handler."
+        @tier "essential"
+      OPEN -> external {
+        id : string
+      }
+        @description "Open the Subagent-trace-panel."
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : SubagentTracePanelError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json = {}
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      subagents : [json] = []
+        @label "Subagents"
+        @description "All known subagents from the runner."
+        @tier "presentation"
+      focusedOrbital : string = "Focused Orbital"
+        @label "Focused Orbital"
+        @description "Current canvas focus orbital — only used by overlay mode. Tab mode ignores this."
+        @tier "presentation"
+      disclosureLevel : number = 1
+        @label "Disclosure Level"
+        @description "Drives density: 1-2 → compact, 3-4 → full activity embed (when mode='overlay')."
+        @tier "presentation"
+      open : boolean = false
+        @label "Open"
+        @description "Whether the panel is visible. Typically auto-opens during generation in overlay mode."
+        @tier "presentation"
+      coordinatorActivities : [json] = []
+        @label "Coordinator Activities"
+        @description "Full coordinator activities (tool calls, results, messages, errors)."
+        @tier "presentation"
+      coordinatorMessages : [json] = []
+        @label "Coordinator Messages"
+        @description "Canonical Coordinator conversation — same shape live and on reload. When present, takes precedence over `coordinatorActivities` for the Coordinator section."
+        @tier "presentation"
+      mode : "overlay" | "tab" = overlay
+        @label "Mode"
+        @description "Rendering mode. - `'overlay'` (default): floating side panel positioned absolutely over the canvas. Density follows `disclosureLevel` (compact L1/L2, rich L3+). The `open` flag actually hides the panel when false. - `'tab'`: full-width content for a dedicated 'trace' supplemental tab. Always renders rich (regardless of disclosure level), always visible (the `open` flag is ignored), and includes an empty state when no subagents are present so users see the surface even before generation starts."
+        @tier "presentation"
+    }
+  }
+
+  page "/subagent-trace-panel" as SubagentTracePanelPage -> SubagentTracePanelRender
+}
