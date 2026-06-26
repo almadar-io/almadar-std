@@ -1,5 +1,5 @@
 {
-  "description": "BattleBoard — UI factory (1:1 with the @almadar/ui battle-board pattern).",
+  "description": "BattleBoard — game-shell composition with LOLO-driven sprite animation and combat effects.",
   "name": "ui-battle-board",
   "orbitals": [
     {
@@ -13,6 +13,11 @@
           {
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "elevation": {
                   "name": "elevation",
                   "required": false,
@@ -27,6 +32,11 @@
                     "enemy",
                     "neutral"
                   ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
                 },
                 "health": {
                   "name": "health",
@@ -209,6 +219,36 @@
             "default": false,
             "name": "enemyTurn",
             "type": "boolean"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "BattleBoardItem",
@@ -2490,6 +2530,11 @@
               "description": "Direct unit data — takes priority over entity-derived units.",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "elevation": {
                     "name": "elevation",
                     "required": false,
@@ -2504,6 +2549,11 @@
                       "enemy",
                       "neutral"
                     ]
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
                   },
                   "health": {
                     "name": "health",
@@ -2786,6 +2836,7 @@
           ],
           "entityContract": {
             "provides": [
+              "effects",
               "enemyTurn",
               "gridHeight",
               "gridWidth",
@@ -2996,27 +3047,42 @@
                     false
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "attackEvent": "ATTACK",
-                      "cancelEvent": "CANCEL",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "gameEndEvent": "GAME_END",
-                      "onAttack": "ATTACK",
-                      "onGameEnd": "GAME_END",
-                      "onUnitMove": "UNIT_MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "type": "battle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "icon": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png",
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3058,6 +3124,11 @@
                   ],
                   [
                     "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.gridWidth",
                     16.0
                   ],
@@ -3075,26 +3146,34 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "attackEvent": "ATTACK",
-                      "cancelEvent": "CANCEL",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "gameEndEvent": "GAME_END",
-                      "hasActiveEffects": "@config.hasActiveEffects",
-                      "onAttack": "ATTACK",
-                      "onGameEnd": "GAME_END",
-                      "onUnitMove": "UNIT_MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "type": "battle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "icon": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png",
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3113,24 +3192,34 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "attackEvent": "ATTACK",
-                      "cancelEvent": "CANCEL",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "gameEndEvent": "GAME_END",
-                      "onAttack": "ATTACK",
-                      "onGameEnd": "GAME_END",
-                      "onUnitMove": "UNIT_MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "type": "battle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "icon": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png",
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3183,24 +3272,34 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "attackEvent": "ATTACK",
-                      "cancelEvent": "CANCEL",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "gameEndEvent": "GAME_END",
-                      "onAttack": "ATTACK",
-                      "onGameEnd": "GAME_END",
-                      "onUnitMove": "UNIT_MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "type": "battle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "icon": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png",
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3276,24 +3375,34 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "attackEvent": "ATTACK",
-                      "cancelEvent": "CANCEL",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "gameEndEvent": "GAME_END",
-                      "onAttack": "ATTACK",
-                      "onGameEnd": "GAME_END",
-                      "onUnitMove": "UNIT_MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "type": "battle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "icon": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png",
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3418,6 +3527,28 @@
                             "object/merge",
                             "@u",
                             {
+                              "animation": [
+                                "if",
+                                [
+                                  "<=",
+                                  [
+                                    "math/max",
+                                    0.0,
+                                    [
+                                      "-",
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "health"
+                                      ],
+                                      "@payload.damage"
+                                    ]
+                                  ],
+                                  0.0
+                                ],
+                                "death",
+                                "hit"
+                              ],
                               "health": [
                                 "math/max",
                                 0.0,
@@ -3433,10 +3564,158 @@
                               ]
                             }
                           ],
-                          "@u"
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.attackerId"
+                            ],
+                            [
+                              "object/merge",
+                              "@u",
+                              {
+                                "animation": "attack"
+                              }
+                            ],
+                            "@u"
+                          ]
                         ]
                       ]
                     ]
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "slash",
+                        "ttl": 4.0,
+                        "x": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.targetId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.targetId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "y"
+                        ]
+                      }
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "<=",
+                      [
+                        "object/get",
+                        [
+                          "array/find",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.targetId"
+                            ]
+                          ]
+                        ],
+                        "health"
+                      ],
+                      0.0
+                    ],
+                    [
+                      "set",
+                      "@entity.effects",
+                      [
+                        "array/append",
+                        "@entity.effects",
+                        {
+                          "key": "explosion",
+                          "ttl": 5.0,
+                          "x": [
+                            "object/get",
+                            [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@payload.targetId"
+                                  ]
+                                ]
+                              ],
+                              "position"
+                            ],
+                            "x"
+                          ],
+                          "y": [
+                            "object/get",
+                            [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@payload.targetId"
+                                  ]
+                                ]
+                              ],
+                              "position"
+                            ],
+                            "y"
+                          ]
+                        }
+                      ]
+                    ],
+                    null
                   ],
                   [
                     "set",
@@ -3452,24 +3731,34 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "attackEvent": "ATTACK",
-                      "cancelEvent": "CANCEL",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "gameEndEvent": "GAME_END",
-                      "onAttack": "ATTACK",
-                      "onGameEnd": "GAME_END",
-                      "onUnitMove": "UNIT_MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "type": "battle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "icon": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png",
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3603,24 +3892,34 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "attackEvent": "ATTACK",
-                      "cancelEvent": "CANCEL",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "gameEndEvent": "GAME_END",
-                      "onAttack": "ATTACK",
-                      "onGameEnd": "GAME_END",
-                      "onUnitMove": "UNIT_MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "type": "battle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "icon": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png",
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3649,24 +3948,34 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "attackEvent": "ATTACK",
-                      "cancelEvent": "CANCEL",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "gameEndEvent": "GAME_END",
-                      "onAttack": "ATTACK",
-                      "onGameEnd": "GAME_END",
-                      "onUnitMove": "UNIT_MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "type": "battle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "icon": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png",
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3731,24 +4040,34 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "attackEvent": "ATTACK",
-                      "cancelEvent": "CANCEL",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "gameEndEvent": "GAME_END",
-                      "onAttack": "ATTACK",
-                      "onGameEnd": "GAME_END",
-                      "onUnitMove": "UNIT_MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "type": "battle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "icon": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png",
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3856,27 +4175,42 @@
                     false
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "attackEvent": "ATTACK",
-                      "cancelEvent": "CANCEL",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "gameEndEvent": "GAME_END",
-                      "onAttack": "ATTACK",
-                      "onGameEnd": "GAME_END",
-                      "onUnitMove": "UNIT_MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "type": "battle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "icon": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png",
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
