@@ -1,5 +1,5 @@
 app ui-pirate-board "1.0.0"
-"PirateBoard — UI factory (1:1 with the @almadar/ui pirate-board pattern)."
+"PirateBoard — game-shell composition with ship movement, cannon fx, and gold/turn HUD."
 orbital PirateBoardOrbital {
   type PirateBoardError = {
     message : string!
@@ -28,7 +28,6 @@ orbital PirateBoardOrbital {
     y : number
     z : number
     sprite : asset
-    spriteSheet : asset
     modelUrl : asset
     unitType : string
     heroId : string
@@ -40,6 +39,14 @@ orbital PirateBoardOrbital {
     traits : [PirateBoardUnitsItemTraitsItem]
     previousPosition : PirateBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type PirateBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type PirateBoardUnitsItemPosition = {
     x : number!
@@ -66,53 +73,241 @@ orbital PirateBoardOrbital {
     color : string
     elevation : number
   }
+  type PirateBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
+  type PirateBoardCANNONFIRETo = {
+    x : number!
+    y : number!
+  }
 
   entity PirateBoardItem [runtime] {
     id : string!
+    ships : [PirateBoardUnitsItem]
+    selectedShipId : string
+    turn : number = 0
+    gold : number = 0
+    result : "none" | "victory" | "defeat" = none
+    phase : string = "observation"
+    gridWidth : number = 8
+    gridHeight : number = 8
+    movementRange : number = 2
+    enemyTurn : boolean = false
+    effects : [PirateBoardEffectItem] = []
   }
 
   trait PirateBoardRender -> @rebindable PirateBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state menu {
+      START -> playing
+        (set @entity.ships @config.units)
+        (set @entity.selectedShipId "")
+        (set @entity.turn 0)
+        (set @entity.gold 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.enemyTurn false)
+        (set @entity.effects [])
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: pirate-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.ships @config.units)
+        (set @entity.selectedShipId "")
+        (set @entity.turn 0)
+        (set @entity.gold 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.enemyTurn false)
+        (set @entity.effects [])
+        (set @entity.gridWidth 8)
+        (set @entity.gridHeight 8)
+        (set @entity.movementRange 2)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.selectedShipId ?unitId) (== (object/get (array/find @entity.ships (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.phase "action")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.ships (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedShipId ?unitId)
+        (set @entity.phase "movement")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedShipId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.ships (fn u (== @u.id @entity.selectedShipId))) position) { x: ?x, y: ?y }) @entity.movementRange) (== (array/len (array/filter @entity.ships (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
+        (set @entity.ships (array/map @entity.ships (fn u (if (== @u.id @entity.selectedShipId) (object/merge @u { position: { x: ?x, y: ?y }, animation: "walk" }) @u))))
+        (set @entity.selectedShipId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      CANNON_FIRE -> playing when (let ((ap (object/get (array/find @entity.ships (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.ships (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 3) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 3) (!= @ap @tp))))
+        (set @entity.ships (array/map @entity.ships (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)), animation: (if (<= (math/max 0 (- (object/get @u health) ?damage)) 0) "death" "hit") }) (if (== @u.id ?attackerId) (object/merge @u { animation: "attack" }) @u)))))
+        (if (> ?damage 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.ships (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.ships (fn u (== @u.id ?targetId))) position) y), ttl: 5 })) null)
+        (set @entity.selectedShipId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      COLLECT_GOLD -> playing
+        (set @entity.gold (+ @entity.gold ?amount))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      END_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.selectedShipId "")
+        (set @entity.enemyTurn true)
+        (set @entity.phase "enemy_turn")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedShipId "")
+        (set @entity.selectedShipId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      GAME_END -> gameover when (or (== (array/len (array/filter @entity.ships (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.ships (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
+        (set @entity.result (if (== (array/len (array/filter @entity.ships (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
+        (set @entity.phase "game_over")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.ships @config.units)
+        (set @entity.selectedShipId "")
+        (set @entity.turn 0)
+        (set @entity.gold 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.enemyTurn false)
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.ships (array/map @entity.ships (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      enemyAiTick every 1s
+        when (and (== @entity.enemyTurn true) (== @entity.result "none"))
+        (set @entity.ships (array/map @entity.ships (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.ships (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (<= (grid/manhattan-distance (object/get @e position) (object/get @u position)) 3))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 2)), animation: (if (<= (math/max 0 (- @u.health 2)) 0) "death" "hit") }) @u) @u))))
+        (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/first (array/filter @entity.ships (fn u (and (== @u.team "player") (> @u.health 0))))) position) x), y: (object/get (object/get (array/first (array/filter @entity.ships (fn u (and (== @u.team "player") (> @u.health 0))))) position) y), ttl: 5 }))
+        (set @entity.ships (array/map @entity.ships (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.ships (fn p (and (and (== @p.team "player") (> @p.health 0)) (<= (grid/manhattan-distance (object/get @u position) (object/get @p position)) 3))))) 0) (let ((target (array/first (array/filter @entity.ships (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) }, animation: "walk" })) @u) @u))))
+        (set @entity.result (if (== (array/len (array/filter @entity.ships (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.ships (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
+        (set @entity.enemyTurn false)
+        (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
     emits {
+      CANNON_FIRE -> external {
+        attacker : object
+        target : object
+        damage : number
+        attackerId : string!
+        targetId : string!
+      }
+        @description "-- Callbacks --"
+        @tier "essential"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when the battle at sea ends"
+        @tier "essential"
+      UNIT_MOVE -> external {
+        unit : object
+        to : PirateBoardCANNONFIRETo
+      }
+        @description "Called after a ship moves"
+        @tier "essential"
+      COLLECT_GOLD -> external {
+        amount : number!
+      }
+        @description "Called when gold is collected"
+        @tier "essential"
       TILE_CLICK -> external {
         x : number!
         y : number!
       }
-        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @description "-- Declarative event props --"
         @tier "essential"
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Emits UI:{unitClickEvent} with { unitId } on ship click"
+        @tier "essential"
+      END_TURN -> external {
+        id : string
+      }
+        @description "Emits UI:{endTurnEvent} with {} on end turn"
+        @tier "essential"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
         @tier "essential"
     }
 
@@ -166,33 +361,25 @@ orbital PirateBoardOrbital {
         @label "Tiles"
         @description "Sea/island grid tiles"
         @tier "presentation"
-      units : [PirateBoardUnitsItem] = [{ id: "u1", position: { x: 1, y: 4 }, unitType: "ship", name: "Galleon", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/units/ship-galleon.png" }, { id: "u2", position: { x: 6, y: 2 }, unitType: "ship", name: "Corsair", team: enemy, health: 8, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/units/ship-corsair.png" }, { id: "u3", position: { x: 4, y: 0 }, unitType: "ship", name: "Scout", team: neutral, health: 6, maxHealth: 6, sprite: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/units/ship-galleon.png" }]
+      units : [PirateBoardUnitsItem] = [{ id: "u1", position: { x: 1, y: 4 }, unitType: "ship", name: "Galleon", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/units/ship-galleon.png", animation: "idle", frame: 0 }, { id: "u2", position: { x: 6, y: 2 }, unitType: "ship", name: "Corsair", team: enemy, health: 8, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/units/ship-corsair.png", animation: "idle", frame: 0 }, { id: "u3", position: { x: 4, y: 0 }, unitType: "ship", name: "Scout", team: neutral, health: 6, maxHealth: 6, sprite: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/units/ship-galleon.png", animation: "idle", frame: 0 }]
         @label "Units"
-        @description "Ship and crew units on the board"
+        @description "Ship units on the board"
         @tier "presentation"
       features : [PirateBoardFeaturesItem] = [{ id: "f1", x: 2, y: 1, type: "port", sprite: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/features/port.png" }, { id: "f2", x: 5, y: 5, type: "treasure", sprite: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/features/treasure.png" }]
         @label "Features"
-        @description "Features (ports, treasures, etc.) on the board"
+        @description "Features (ports, treasures) on the board"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : PirateBoardAssetManifest = { terrains: { sea: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/terrain/sea.png", island: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/terrain/island.png" }, units: { ship: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/units/ship-galleon.png" }, features: { port: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/features/port.png", treasure: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/features/treasure.png" }, effects: { explosion: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png" } }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
-        @tier "presentation"
-      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
-        @label "Asset Base Url"
-        @description "Base URL prepended to manifest sprite paths"
+        @description "Asset sprite manifest"
         @tier "presentation"
       scale : number = 0.45
         @label "Scale"
         @description "Render scale"
         @tier "presentation"
-      showMinimap : boolean = true
-        @label "Show Minimap"
-        @description "Show minimap overlay"
-        @tier "presentation"
-      enableCamera : boolean = true
-        @label "Enable Camera"
-        @description "Enable camera pan/zoom controls"
+      unitScale : number = 1
+        @label "Unit Scale"
+        @description "Unit draw-size multiplier"
         @tier "presentation"
     }
   }

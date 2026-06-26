@@ -1,5 +1,5 @@
 {
-  "description": "MatchPuzzleBoard — UI factory (1:1 with the @almadar/ui match-puzzle-board pattern).",
+  "description": "MatchPuzzleBoard — match-3 puzzle composed via game-shell with score/moves HUD and spark effects.",
   "name": "ui-match-puzzle-board",
   "orbitals": [
     {
@@ -9,6 +9,46 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "default": 20.0,
+            "name": "moves",
+            "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "MatchPuzzleBoardItem",
@@ -45,11 +85,64 @@
               "type": "asset"
             },
             "assetManifest": {
-              "default": "",
-              "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
+              "default": {
+                "effects": {},
+                "features": {
+                  "blocker": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/blocker.png",
+                  "powerup": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/powerup.png"
+                },
+                "terrains": {
+                  "gem_blue": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",
+                  "gem_green": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",
+                  "gem_purple": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png",
+                  "gem_red": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",
+                  "gem_yellow": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png"
+                },
+                "units": {}
+              },
+              "description": "Asset sprite manifest — terrains/units/features/effects maps",
               "label": "Asset Manifest",
+              "properties": {
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
+                },
+                "features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "terrains": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "terrains",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
               "tier": "presentation",
-              "type": "string"
+              "type": "MatchPuzzleBoardAssetManifest"
             },
             "className": {
               "default": "",
@@ -57,13 +150,6 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
-            },
-            "enableCamera": {
-              "default": false,
-              "description": "Enable camera pan/zoom controls",
-              "label": "Enable Camera",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "error": {
               "description": "Error state (UiError)",
@@ -218,13 +304,6 @@
               "tier": "presentation",
               "type": "[string]"
             },
-            "showMinimap": {
-              "default": false,
-              "description": "Show minimap overlay",
-              "label": "Show Minimap",
-              "tier": "presentation",
-              "type": "boolean"
-            },
             "sortBy": {
               "default": "Sort By",
               "description": "Current sort field",
@@ -246,6 +325,8 @@
             "tiles": {
               "default": [
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_red",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",
@@ -253,6 +334,8 @@
                   "y": 0.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_blue",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",
@@ -260,6 +343,8 @@
                   "y": 0.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_green",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",
@@ -267,6 +352,8 @@
                   "y": 0.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_yellow",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png",
@@ -274,6 +361,8 @@
                   "y": 0.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_purple",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png",
@@ -281,6 +370,8 @@
                   "y": 0.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_blue",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",
@@ -288,6 +379,8 @@
                   "y": 1.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_green",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",
@@ -295,6 +388,8 @@
                   "y": 1.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_yellow",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png",
@@ -302,6 +397,8 @@
                   "y": 1.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_purple",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png",
@@ -309,6 +406,8 @@
                   "y": 1.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_red",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",
@@ -316,6 +415,8 @@
                   "y": 1.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_green",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",
@@ -323,6 +424,8 @@
                   "y": 2.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_yellow",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png",
@@ -330,6 +433,8 @@
                   "y": 2.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_red",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",
@@ -337,6 +442,8 @@
                   "y": 2.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_blue",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",
@@ -344,6 +451,8 @@
                   "y": 2.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_green",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",
@@ -351,6 +460,8 @@
                   "y": 2.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_purple",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png",
@@ -358,6 +469,8 @@
                   "y": 3.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_red",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",
@@ -365,6 +478,8 @@
                   "y": 3.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_blue",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",
@@ -372,6 +487,8 @@
                   "y": 3.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_green",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",
@@ -379,6 +496,8 @@
                   "y": 3.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_yellow",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png",
@@ -386,6 +505,8 @@
                   "y": 3.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_purple",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png",
@@ -393,6 +514,8 @@
                   "y": 4.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_purple",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png",
@@ -400,6 +523,8 @@
                   "y": 4.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_yellow",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png",
@@ -407,6 +532,8 @@
                   "y": 4.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_red",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",
@@ -414,6 +541,8 @@
                   "y": 4.0
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "passable": true,
                   "terrain": "gem_blue",
                   "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",
@@ -424,8 +553,18 @@
               "description": "Grid tiles for the match puzzle board",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "elevation": {
                     "name": "elevation",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "frame": {
+                    "name": "frame",
                     "required": false,
                     "type": "number"
                   },
@@ -503,6 +642,11 @@
               "description": "Units on the board",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "elevation": {
                     "name": "elevation",
                     "required": false,
@@ -517,6 +661,11 @@
                       "enemy",
                       "neutral"
                     ]
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
                   },
                   "health": {
                     "name": "health",
@@ -665,7 +814,7 @@
           },
           "emits": [
             {
-              "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+              "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
               "event": "TILE_CLICK",
               "payloadSchema": [
                 {
@@ -683,7 +832,7 @@
               "tier": "essential"
             },
             {
-              "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+              "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
               "event": "UNIT_CLICK",
               "payloadSchema": [
                 {
@@ -697,7 +846,11 @@
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "effects",
+              "moves",
+              "score"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -711,7 +864,7 @@
                 "name": "Initialize"
               },
               {
-                "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+                "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
                 "key": "TILE_CLICK",
                 "name": "Tile Click",
                 "payloadSchema": [
@@ -729,7 +882,7 @@
                 "tier": "essential"
               },
               {
-                "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+                "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
                 "key": "UNIT_CLICK",
                 "name": "Unit Click",
                 "payloadSchema": [
@@ -745,47 +898,284 @@
             "states": [
               {
                 "isInitial": true,
-                "name": "idle"
+                "name": "playing"
               }
             ],
             "transitions": [
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.moves",
+                    20.0
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "activeFilters": "@config.activeFilters",
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "enableCamera": "@config.enableCamera",
-                      "error": "@config.error",
-                      "features": "@config.features",
-                      "isLoading": "@config.isLoading",
-                      "page": "@config.pageProp",
-                      "pageSize": "@config.pageSize",
-                      "scale": "@config.scale",
-                      "searchValue": "@config.searchValue",
-                      "selectedIds": "@config.selectedIds",
-                      "showMinimap": "@config.showMinimap",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "totalCount": "@config.totalCount",
-                      "type": "match-puzzle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@config.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@config.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Moves",
+                            "value": "@entity.moves"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.moves",
+                    [
+                      "-",
+                      "@entity.moves",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    [
+                      "+",
+                      "@entity.score",
+                      10.0
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        [
+                          "object/get",
+                          "@config.assetManifest",
+                          "effects"
+                        ]
+                      ],
+                      0.0
+                    ],
+                    [
+                      "set",
+                      "@entity.effects",
+                      [
+                        "array/append",
+                        "@entity.effects",
+                        {
+                          "key": "spark",
+                          "ttl": 4.0,
+                          "x": "@payload.x",
+                          "y": "@payload.y"
+                        }
+                      ]
+                    ],
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@config.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Moves",
+                            "value": "@entity.moves"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "playing",
+                "guard": [
+                  ">",
+                  "@entity.moves",
+                  0.0
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@config.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Moves",
+                            "value": "@entity.moves"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "to": "playing"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": false,
+                        "tileLayout": "flat",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@config.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Score",
+                          "value": "@entity.score"
+                        },
+                        {
+                          "label": "Moves",
+                          "value": "@entity.moves"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            }
+          ]
         }
       ]
     }

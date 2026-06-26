@@ -1,5 +1,5 @@
 app ui-tanks-board "1.0.0"
-"TanksBoard — UI factory (1:1 with the @almadar/ui tanks-board pattern)."
+"TanksBoard — game-shell composition with LOLO-driven animation and combat effects."
 orbital TanksBoardOrbital {
   type TanksBoardError = {
     message : string!
@@ -40,6 +40,14 @@ orbital TanksBoardOrbital {
     traits : [TanksBoardUnitsItemTraitsItem]
     previousPosition : TanksBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type TanksBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type TanksBoardUnitsItemPosition = {
     x : number!
@@ -66,53 +74,230 @@ orbital TanksBoardOrbital {
     color : string
     elevation : number
   }
+  type TanksBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
+  type TanksBoardFIRETo = {
+    x : number!
+    y : number!
+  }
 
   entity TanksBoardItem [runtime] {
     id : string!
+    units : [TanksBoardUnitsItem]
+    selectedUnitId : string
+    score : number = 0
+    lives : number = 3
+    turn : number = 0
+    result : "none" | "victory" | "defeat" = none
+    phase : string = "observation"
+    gridWidth : number = 8
+    gridHeight : number = 6
+    firingRange : number = 3
+    enemyTurn : boolean = false
+    effects : [TanksBoardEffectItem] = []
   }
 
   trait TanksBoardRender -> @rebindable TanksBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state menu {
+      START -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.score 0)
+        (set @entity.lives 3)
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.enemyTurn false)
+        (set @entity.effects [])
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: tanks-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.score 0)
+        (set @entity.lives 3)
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.enemyTurn false)
+        (set @entity.effects [])
+        (set @entity.gridWidth 8)
+        (set @entity.gridHeight 6)
+        (set @entity.firingRange 3)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.phase "action")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?unitId) (object/merge @u { animation: "idle" }) @u))))
+        (set @entity.phase "targeting")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) 2) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?y }, animation: "walk" }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      FIRE -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (grid/manhattan-distance @ap @tp) @entity.firingRange) (!= @ap @tp)))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)), animation: (if (<= (math/max 0 (- (object/get @u health) ?damage)) 0) "death" "hit") }) (if (== @u.id ?attackerId) (object/merge @u { animation: "attack" }) @u)))))
+        (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 4 }))
+        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 6 })) null)
+        (set @entity.score (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (+ @entity.score 100) (+ @entity.score 10)))
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      END_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.selectedUnitId "")
+        (set @entity.enemyTurn true)
+        (set @entity.phase "enemy_turn")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
+        (set @entity.lives (if (== @entity.result "defeat") (math/max 0 (- @entity.lives 1)) @entity.lives))
+        (set @entity.phase "game_over")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.score 0)
+        (set @entity.lives 3)
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.enemyTurn false)
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      enemyAiTick every 1s
+        when (and (== @entity.enemyTurn true) (== @entity.result "none"))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (<= (grid/manhattan-distance (object/get @e position) (object/get @u position)) @entity.firingRange))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)), animation: (if (<= (math/max 0 (- @u.health 1)) 0) "death" "hit") }) @u) @u))))
+        (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/first (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) position) x), y: (object/get (object/get (array/first (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) position) y), ttl: 4 }))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (<= (grid/manhattan-distance (object/get @u position) (object/get @p position)) @entity.firingRange))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) }, animation: "walk" })) (object/merge @u { animation: "attack" })) @u))))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
+        (set @entity.enemyTurn false)
+        (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
         })
     }
 
     emits {
+      FIRE -> external {
+        attacker : object
+        target : object
+        damage : number
+        attackerId : string!
+        targetId : string!
+      }
+        @description "Fired when a tank shoots at a target."
+        @tier "essential"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when the battle ends."
+        @tier "essential"
       TILE_CLICK -> external {
         x : number!
         y : number!
       }
-        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @description "Emits UI:{tileClickEvent} with { x, y } on tile click."
         @tier "essential"
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click."
+        @tier "essential"
+      END_TURN -> external {
+        id : string
+      }
+        @description "Emits UI:{endTurnEvent} with {} on end turn."
+        @tier "essential"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel."
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset."
         @tier "essential"
     }
 
@@ -154,7 +339,7 @@ orbital TanksBoardOrbital {
         @label "Total Count"
         @description "Total number of items"
         @tier "presentation"
-      activeFilters : json = {}
+      activeFilters : json
         @label "Active Filters"
         @description "Active filters"
         @tier "presentation"
@@ -166,33 +351,21 @@ orbital TanksBoardOrbital {
         @label "Tiles"
         @description "Ground/sand terrain tiles"
         @tier "presentation"
-      units : [TanksBoardUnitsItem] = [{ id: "t1", position: { x: 1, y: 1 }, unitType: "tank", name: "Alpha", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/units/tankBody_green.png" }, { id: "t2", position: { x: 6, y: 0 }, unitType: "tank", name: "Bravo", team: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/units/tankBody_dark.png" }, { id: "t3", position: { x: 6, y: 4 }, unitType: "tank", name: "Charlie", team: enemy, health: 8, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/units/tankBody_dark.png" }]
+      units : [TanksBoardUnitsItem] = [{ id: "t1", position: { x: 1, y: 1 }, unitType: "tank", name: "Alpha", team: player, health: 10, maxHealth: 10, animation: "idle", frame: 0, sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/units/tankBody_green.png" }, { id: "t2", position: { x: 6, y: 0 }, unitType: "tank", name: "Bravo", team: enemy, health: 10, maxHealth: 10, animation: "idle", frame: 0, sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/units/tankBody_dark.png" }, { id: "t3", position: { x: 6, y: 4 }, unitType: "tank", name: "Charlie", team: enemy, health: 8, maxHealth: 10, animation: "idle", frame: 0, sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/units/tankBody_dark.png" }]
         @label "Units"
         @description "Tank units on the board"
         @tier "presentation"
       features : [TanksBoardFeaturesItem] = [{ id: "f1", x: 2, y: 1, type: "obstacle", sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/features/sandbagBeige.png" }, { id: "f2", x: 3, y: 2, type: "obstacle", sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/features/sandbagBeige.png" }, { id: "f3", x: 4, y: 3, type: "obstacle", sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/features/sandbagBeige.png" }, { id: "f4", x: 5, y: 3, type: "obstacle", sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/features/sandbagBeige.png" }, { id: "f5", x: 5, y: 4, type: "obstacle", sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/features/sandbagBeige.png" }, { id: "f6", x: 2, y: 4, type: "obstacle", sprite: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/features/sandbagBeige.png" }]
         @label "Features"
-        @description "Features (obstacles, structures, etc.) on the board"
+        @description "Obstacles and structures on the board"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : TanksBoardAssetManifest = { terrains: { ground: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/terrain/tileGrass1.png", sand: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/terrain/tileSand1.png" }, units: { tank: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/units/tankBody_green.png" }, features: { obstacle: "https://almadar-kflow-assets.web.app/shared/ui-tanks-board/default/features/sandbagBeige.png" }, effects: { explosion: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png" } }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
-        @tier "presentation"
-      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
-        @label "Asset Base Url"
-        @description "Base URL prepended to manifest sprite paths"
+        @description "Asset sprite manifest"
         @tier "presentation"
       scale : number = 0.45
         @label "Scale"
         @description "Render scale"
-        @tier "presentation"
-      showMinimap : boolean = true
-        @label "Show Minimap"
-        @description "Show minimap overlay"
-        @tier "presentation"
-      enableCamera : boolean = true
-        @label "Enable Camera"
-        @description "Enable camera pan/zoom controls"
         @tier "presentation"
     }
   }

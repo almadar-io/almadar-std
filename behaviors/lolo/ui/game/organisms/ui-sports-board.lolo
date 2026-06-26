@@ -1,5 +1,5 @@
 app ui-sports-board "1.0.0"
-"SportsBoard — UI factory (1:1 with the @almadar/ui sports-board pattern)."
+"SportsBoard — game-shell composition with sprite animation and score HUD."
 orbital SportsBoardOrbital {
   type SportsBoardError = {
     message : string!
@@ -40,6 +40,14 @@ orbital SportsBoardOrbital {
     traits : [SportsBoardUnitsItemTraitsItem]
     previousPosition : SportsBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type SportsBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type SportsBoardUnitsItemPosition = {
     x : number!
@@ -66,39 +74,101 @@ orbital SportsBoardOrbital {
     color : string
     elevation : number
   }
+  type SportsBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
 
   entity SportsBoardItem [runtime] {
     id : string!
+    units : [SportsBoardUnitsItem]
+    selectedUnitId : string
+    homeScore : number = 0
+    awayScore : number = 0
+    phase : string = "kickoff"
+    effects : [SportsBoardEffectItem] = []
   }
 
   trait SportsBoardRender -> @rebindable SportsBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.homeScore 0)
+        (set @entity.awayScore 0)
+        (set @entity.phase "kickoff")
+        (set @entity.effects [])
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: sports-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Home", value: @entity.homeScore }, { label: "Away", value: @entity.awayScore } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing when (== @entity.selectedUnitId ?unitId)
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "kickoff")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Home", value: @entity.homeScore }, { label: "Away", value: @entity.awayScore } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.phase "selected")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Home", value: @entity.homeScore }, { label: "Away", value: @entity.awayScore } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?y }, animation: "walk" }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "kickoff")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Home", value: @entity.homeScore }, { label: "Away", value: @entity.awayScore } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      GOAL -> playing
+        (set @entity.homeScore (if (== ?team "player") (+ @entity.homeScore 1) @entity.homeScore))
+        (set @entity.awayScore (if (== ?team "enemy") (+ @entity.awayScore 1) @entity.awayScore))
+        (set @entity.phase "kickoff")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Home", value: @entity.homeScore }, { label: "Away", value: @entity.awayScore } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      RESET -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.homeScore 0)
+        (set @entity.awayScore 0)
+        (set @entity.phase "kickoff")
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Home", value: @entity.homeScore }, { label: "Away", value: @entity.awayScore } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Home", value: @entity.homeScore }, { label: "Away", value: @entity.awayScore } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
         })
     }
 
@@ -107,12 +177,22 @@ orbital SportsBoardOrbital {
         x : number!
         y : number!
       }
-        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @description "Emits UI:{tileClickEvent} with { x, y } on tile click"
         @tier "essential"
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+      GOAL -> external {
+        team : string!
+      }
+        @description "Fired when a goal is scored; team is 'player' or 'enemy'"
+        @tier "essential"
+      RESET -> external {
+        id : string
+      }
+        @description "Resets the match to initial state"
         @tier "essential"
     }
 
@@ -166,7 +246,7 @@ orbital SportsBoardOrbital {
         @label "Tiles"
         @description "Court/field terrain tiles"
         @tier "presentation"
-      units : [SportsBoardUnitsItem] = [{ id: "g1", position: { x: 1, y: 2 }, unitType: "player", name: "GK Green", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png" }, { id: "g2", position: { x: 2, y: 1 }, unitType: "player", name: "LW Green", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png" }, { id: "g3", position: { x: 3, y: 2 }, unitType: "player", name: "ST Green", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png" }, { id: "g4", position: { x: 2, y: 3 }, unitType: "player", name: "RW Green", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png" }, { id: "b1", position: { x: 6, y: 2 }, unitType: "player", name: "GK Blue", team: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png" }, { id: "b2", position: { x: 5, y: 1 }, unitType: "player", name: "DEF Blue", team: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png" }, { id: "b3", position: { x: 4, y: 2 }, unitType: "player", name: "MID Blue", team: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png" }, { id: "b4", position: { x: 5, y: 3 }, unitType: "player", name: "DEF Blue", team: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png" }]
+      units : [SportsBoardUnitsItem] = [{ id: "g1", position: { x: 1, y: 2 }, unitType: "player", name: "GK Green", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png", animation: "idle", frame: 0 }, { id: "g2", position: { x: 2, y: 1 }, unitType: "player", name: "LW Green", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png", animation: "idle", frame: 0 }, { id: "g3", position: { x: 3, y: 2 }, unitType: "player", name: "ST Green", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png", animation: "idle", frame: 0 }, { id: "g4", position: { x: 2, y: 3 }, unitType: "player", name: "RW Green", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png", animation: "idle", frame: 0 }, { id: "b1", position: { x: 6, y: 2 }, unitType: "player", name: "GK Blue", team: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png", animation: "idle", frame: 0 }, { id: "b2", position: { x: 5, y: 1 }, unitType: "player", name: "DEF Blue", team: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png", animation: "idle", frame: 0 }, { id: "b3", position: { x: 4, y: 2 }, unitType: "player", name: "MID Blue", team: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png", animation: "idle", frame: 0 }, { id: "b4", position: { x: 5, y: 3 }, unitType: "player", name: "DEF Blue", team: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png", animation: "idle", frame: 0 }]
         @label "Units"
         @description "Player units on the board"
         @tier "presentation"
@@ -174,9 +254,9 @@ orbital SportsBoardOrbital {
         @label "Features"
         @description "Features (goals, markers, etc.) on the board"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : SportsBoardAssetManifest = { terrains: { court: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png" }, units: { characterGreen: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png", characterBlue: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png" }, features: { goal: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png", ball: "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/ball_soccer.png" }, effects: {} }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
+        @description "Asset sprite manifest"
         @tier "presentation"
       assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
         @label "Asset Base Url"
@@ -185,14 +265,6 @@ orbital SportsBoardOrbital {
       scale : number = 0.45
         @label "Scale"
         @description "Render scale"
-        @tier "presentation"
-      showMinimap : boolean = false
-        @label "Show Minimap"
-        @description "Show minimap overlay"
-        @tier "presentation"
-      enableCamera : boolean = true
-        @label "Enable Camera"
-        @description "Enable camera pan/zoom controls"
         @tier "presentation"
     }
   }

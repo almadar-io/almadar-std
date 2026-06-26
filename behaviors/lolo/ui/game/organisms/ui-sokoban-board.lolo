@@ -1,5 +1,5 @@
 app ui-sokoban-board "1.0.0"
-"SokobanBoard — UI factory (1:1 with the @almadar/ui sokoban-board pattern)."
+"SokobanBoard — game-shell composition with HUD and LOLO-driven pusher animation."
 orbital SokobanBoardOrbital {
   type SokobanBoardError = {
     message : string!
@@ -40,6 +40,14 @@ orbital SokobanBoardOrbital {
     traits : [SokobanBoardUnitsItemTraitsItem]
     previousPosition : SokobanBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type SokobanEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type SokobanBoardUnitsItemPosition = {
     x : number!
@@ -66,39 +74,62 @@ orbital SokobanBoardOrbital {
     color : string
     elevation : number
   }
+  type SokobanBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
 
   entity SokobanBoardItem [runtime] {
     id : string!
+    units : [SokobanBoardUnitsItem]
+    moves : number = 0
+    boxesDone : number = 0
+    effects : [SokobanEffectItem] = []
   }
 
   trait SokobanBoardRender -> @rebindable SokobanBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.moves 0)
+        (set @entity.boxesDone 0)
+        (set @entity.effects [])
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: sokoban-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Moves", value: @entity.moves }, { label: "Boxes", value: @entity.boxesDone } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.unitType "pusher") (object/merge @u { position: { x: ?x, y: ?y }, animation: "walk" }) @u))))
+        (set @entity.moves (+ @entity.moves 1))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Moves", value: @entity.moves }, { label: "Boxes", value: @entity.boxesDone } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Moves", value: @entity.moves }, { label: "Boxes", value: @entity.boxesDone } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Moves", value: @entity.moves }, { label: "Boxes", value: @entity.boxesDone } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
         })
     }
 
@@ -166,7 +197,7 @@ orbital SokobanBoardOrbital {
         @label "Tiles"
         @description "Grid tiles (floor, wall, target)"
         @tier "presentation"
-      units : [SokobanBoardUnitsItem] = [{ id: "pusher", position: { x: 4, y: 2 }, unitType: "pusher", name: "Pusher", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/units/pusher.png" }]
+      units : [SokobanBoardUnitsItem] = [{ id: "pusher", position: { x: 4, y: 2 }, unitType: "pusher", name: "Pusher", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/units/pusher.png", animation: "idle", frame: 0 }]
         @label "Units"
         @description "Units on the board (the pusher character)"
         @tier "presentation"
@@ -174,9 +205,9 @@ orbital SokobanBoardOrbital {
         @label "Features"
         @description "Features (crates) on the board"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : SokobanBoardAssetManifest = { terrains: { floor: "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png", wall: "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png", target: "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png" }, units: { pusher: "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/units/pusher.png" }, features: { crate: "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png" }, effects: {} }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
+        @description "Asset sprite manifest"
         @tier "presentation"
       assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
         @label "Asset Base Url"
