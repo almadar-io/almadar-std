@@ -1,5 +1,5 @@
 {
-  "description": "CardBattlerBoard — UI factory (1:1 with the @almadar/ui card-battler-board pattern).",
+  "description": "CardBattlerBoard — game-shell composition: HUD (mana/turn/result) + battlefield board + card-hand.",
   "name": "ui-card-battler-board",
   "orbitals": [
     {
@@ -469,6 +469,10 @@
               "event": "PLAY_CARD",
               "payloadSchema": [
                 {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
                   "name": "cardId",
                   "required": true,
                   "type": "string"
@@ -542,6 +546,10 @@
                 "key": "PLAY_CARD",
                 "name": "Play Card",
                 "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
                   {
                     "name": "cardId",
                     "required": true,
@@ -639,20 +647,51 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "board": "@entity.board",
-                      "deck": "@entity.deck",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "hand": "@entity.hand",
-                      "mana": "@entity.mana",
-                      "maxMana": "@entity.maxMana",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playCardEvent": "PLAY_CARD",
-                      "result": "@entity.result",
-                      "turn": "@entity.turn",
-                      "type": "card-battler-board"
+                      "children": [
+                        {
+                          "cardClickEvent": "PLAY_CARD",
+                          "cards": [
+                            "array/map",
+                            "@entity.hand",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "object/merge",
+                                "@c",
+                                {
+                                  "disabled": false,
+                                  "iconUrl": [
+                                    "object/get",
+                                    "@config.assetManifest.cards",
+                                    "@c.iconKey"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
+                          "onCardClick": "PLAY_CARD",
+                          "type": "card-hand"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Mana",
+                            "value": "@entity.mana"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -735,20 +774,51 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "board": "@entity.board",
-                      "deck": "@entity.deck",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "hand": "@entity.hand",
-                      "mana": "@entity.mana",
-                      "maxMana": "@entity.maxMana",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playCardEvent": "PLAY_CARD",
-                      "result": "@entity.result",
-                      "turn": "@entity.turn",
-                      "type": "card-battler-board"
+                      "children": [
+                        {
+                          "cardClickEvent": "PLAY_CARD",
+                          "cards": [
+                            "array/map",
+                            "@entity.hand",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "object/merge",
+                                "@c",
+                                {
+                                  "disabled": false,
+                                  "iconUrl": [
+                                    "object/get",
+                                    "@config.assetManifest.cards",
+                                    "@c.iconKey"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
+                          "onCardClick": "PLAY_CARD",
+                          "type": "card-hand"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Mana",
+                            "value": "@entity.mana"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -870,20 +940,51 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "board": "@entity.board",
-                      "deck": "@entity.deck",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "hand": "@entity.hand",
-                      "mana": "@entity.mana",
-                      "maxMana": "@entity.maxMana",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playCardEvent": "PLAY_CARD",
-                      "result": "@entity.result",
-                      "turn": "@entity.turn",
-                      "type": "card-battler-board"
+                      "children": [
+                        {
+                          "cardClickEvent": "PLAY_CARD",
+                          "cards": [
+                            "array/map",
+                            "@entity.hand",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "object/merge",
+                                "@c",
+                                {
+                                  "disabled": false,
+                                  "iconUrl": [
+                                    "object/get",
+                                    "@config.assetManifest.cards",
+                                    "@c.iconKey"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
+                          "onCardClick": "PLAY_CARD",
+                          "type": "card-hand"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Mana",
+                            "value": "@entity.mana"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -902,20 +1003,51 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "board": "@entity.board",
-                      "deck": "@entity.deck",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "hand": "@entity.hand",
-                      "mana": "@entity.mana",
-                      "maxMana": "@entity.maxMana",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playCardEvent": "PLAY_CARD",
-                      "result": "@entity.result",
-                      "turn": "@entity.turn",
-                      "type": "card-battler-board"
+                      "children": [
+                        {
+                          "cardClickEvent": "PLAY_CARD",
+                          "cards": [
+                            "array/map",
+                            "@entity.hand",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "object/merge",
+                                "@c",
+                                {
+                                  "disabled": true,
+                                  "iconUrl": [
+                                    "object/get",
+                                    "@config.assetManifest.cards",
+                                    "@c.iconKey"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
+                          "onCardClick": "PLAY_CARD",
+                          "type": "card-hand"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Mana",
+                            "value": "@entity.mana"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -977,20 +1109,51 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "board": "@entity.board",
-                      "deck": "@entity.deck",
-                      "endTurnEvent": "END_TURN",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "hand": "@entity.hand",
-                      "mana": "@entity.mana",
-                      "maxMana": "@entity.maxMana",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "playCardEvent": "PLAY_CARD",
-                      "result": "@entity.result",
-                      "turn": "@entity.turn",
-                      "type": "card-battler-board"
+                      "children": [
+                        {
+                          "cardClickEvent": "PLAY_CARD",
+                          "cards": [
+                            "array/map",
+                            "@entity.hand",
+                            [
+                              "fn",
+                              "c",
+                              [
+                                "object/merge",
+                                "@c",
+                                {
+                                  "disabled": false,
+                                  "iconUrl": [
+                                    "object/get",
+                                    "@config.assetManifest.cards",
+                                    "@c.iconKey"
+                                  ]
+                                }
+                              ]
+                            ]
+                          ],
+                          "onCardClick": "PLAY_CARD",
+                          "type": "card-hand"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Mana",
+                            "value": "@entity.mana"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Result",
+                            "value": "@entity.result"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
