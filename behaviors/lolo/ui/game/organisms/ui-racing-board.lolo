@@ -7,6 +7,16 @@ orbital RacingBoardOrbital {
     code : string
     stack : string
   }
+  type RacingBoardUnitsItem = {
+    id : string!
+    x : number
+    y : number
+    sprite : asset
+    unitType : string
+    team : "player" | "rival" | "neutral"
+    speed : number
+    lap : number
+  }
 
   entity RacingBoardItem [runtime] {
     id : string!
@@ -30,6 +40,10 @@ orbital RacingBoardOrbital {
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
           backgroundImage: @config.backgroundImage
+          playerSprite: @config.playerSprite
+          rivalSprite: @config.rivalSprite
+          hudLightsSprite: @config.hudLightsSprite
+          units: @config.units
           assetBaseUrl: @config.assetBaseUrl
           width: @config.width
           height: @config.height
@@ -102,7 +116,23 @@ orbital RacingBoardOrbital {
         @tier "presentation"
       backgroundImage : asset = "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/backgrounds/track.png"
         @label "Background Image"
-        @description "Race track background image URL"
+        @description "Tiled asphalt road tile (Racing Pack road_asphalt01)"
+        @tier "presentation"
+      playerSprite : asset = "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png"
+        @label "Player Sprite"
+        @description "Player car sprite (Racing Pack car_red_1)"
+        @tier "presentation"
+      rivalSprite : asset = "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png"
+        @label "Rival Sprite"
+        @description "Rival car sprite (Racing Pack car_blue_1)"
+        @tier "presentation"
+      hudLightsSprite : asset = "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/lights.png"
+        @label "HUD Lights Sprite"
+        @description "Traffic lights / start signal (Racing Pack Objects/lights)"
+        @tier "presentation"
+      units : [RacingBoardUnitsItem] = [{ id: "player", x: 380, y: 480, unitType: "car", team: player, speed: 0, lap: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png" }, { id: "rival1", x: 420, y: 520, unitType: "car", team: rival, speed: 0, lap: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png" }]
+        @label "Units"
+        @description "Cars on the track (player + rivals)"
         @tier "presentation"
       assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
         @label "Asset Base Url"

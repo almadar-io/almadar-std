@@ -1,71 +1,77 @@
 {
-  "name": "std-wizard-form",
-  "version": "1.0.0",
   "description": "std-wizard-form — canonical molecule-level wizard example (3-step sign-up flow). Wizards own their state machine at molecule tier.",
+  "name": "std-wizard-form",
   "orbitals": [
     {
-      "name": "WizardFormOrbital",
       "entity": {
-        "name": "WizardFormEntry",
         "collection": "wizardformentries",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "name",
-            "type": "string",
             "description": "User-provided text identifying the entry.",
-            "synonyms": "label, title, identifier"
+            "name": "name",
+            "synonyms": "label, title, identifier",
+            "type": "string"
           },
           {
-            "name": "email",
-            "type": "string",
             "description": "User-provided email address.",
-            "synonyms": "email address, email, user email"
+            "name": "email",
+            "synonyms": "email address, email, user email",
+            "type": "string"
           },
           {
-            "name": "theme",
-            "type": "string",
             "description": "Visual style or appearance applied to the entry.",
-            "synonyms": "style, appearance, look, design"
+            "name": "theme",
+            "synonyms": "style, appearance, look, design",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "WizardFormEntry",
+        "persistence": "persistent"
       },
+      "name": "WizardFormOrbital",
+      "pages": [
+        {
+          "name": "WizardForm",
+          "path": "/wizard-form",
+          "traits": [
+            {
+              "ref": "WizardFormFlow"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "WizardFormFlow",
           "category": "interaction",
-          "linkedEntity": "WizardFormEntry",
           "emits": [
             {
-              "event": "NEXT",
               "description": "Indicates progression to the next step in a sequence.",
+              "event": "NEXT",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "object"
+                },
+                {
+                  "name": "currentStep",
+                  "type": "number"
+                },
+                {
+                  "name": "totalSteps",
+                  "type": "number"
+                }
+              ],
               "synonyms": "advance, proceed, continue",
-              "tier": "essential",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "object"
-                },
-                {
-                  "name": "currentStep",
-                  "type": "number"
-                },
-                {
-                  "name": "totalSteps",
-                  "type": "number"
-                }
-              ]
+              "tier": "essential"
             },
             {
-              "event": "PREV",
               "description": "Indicates the user navigated to the previous step.",
-              "synonyms": "back, previous, undo",
-              "tier": "essential",
+              "event": "PREV",
               "payloadSchema": [
                 {
                   "name": "currentStep",
@@ -75,13 +81,13 @@
                   "name": "totalSteps",
                   "type": "number"
                 }
-              ]
+              ],
+              "synonyms": "back, previous, undo",
+              "tier": "essential"
             },
             {
-              "event": "COMPLETE",
               "description": "Indicates the wizard form has been successfully completed.",
-              "synonyms": "finished, done, submitted",
-              "tier": "essential",
+              "event": "COMPLETE",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -95,27 +101,26 @@
                   "name": "totalSteps",
                   "type": "number"
                 }
-              ]
+              ],
+              "synonyms": "finished, done, submitted",
+              "tier": "essential"
             },
             {
-              "event": "WizardFormSaved",
               "description": "Indicates the form data has been successfully saved.",
-              "synonyms": "saved, submitted, finalized",
-              "tier": "essential",
-              "scope": "internal",
+              "event": "WizardFormSaved",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "saved, submitted, finalized",
+              "tier": "essential"
             },
             {
-              "event": "WizardFormSaveFailed",
               "description": "Indicates a failure during the save operation.",
-              "synonyms": "error, failed, problem, unsuccessful",
-              "tier": "internal",
-              "scope": "internal",
+              "event": "WizardFormSaveFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -125,27 +130,27 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "error, failed, problem, unsuccessful",
+              "tier": "internal"
             },
             {
-              "event": "WizardFormEntryLoaded",
               "description": "Signals that a form entry has been successfully loaded.",
-              "synonyms": "loaded, initialized, ready",
-              "tier": "internal",
-              "scope": "internal",
+              "event": "WizardFormEntryLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[WizardFormEntry]"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, initialized, ready",
+              "tier": "internal"
             },
             {
-              "event": "WizardFormEntryLoadFailed",
               "description": "Indicates failure to load a form entry.",
-              "synonyms": "error, failure, problem, load error",
-              "tier": "internal",
-              "scope": "internal",
+              "event": "WizardFormEntryLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -155,14 +160,152 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "error, failure, problem, load error",
+              "tier": "internal"
             }
           ],
+          "linkedEntity": "WizardFormEntry",
+          "name": "WizardFormFlow",
+          "scope": "instance",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Indicates progression to the next step in a sequence.",
+                "key": "NEXT",
+                "name": "Next",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object"
+                  },
+                  {
+                    "name": "currentStep",
+                    "type": "number"
+                  },
+                  {
+                    "name": "totalSteps",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "advance, proceed, continue",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates the user navigated to the previous step.",
+                "key": "PREV",
+                "name": "Prev",
+                "payloadSchema": [
+                  {
+                    "name": "currentStep",
+                    "type": "number"
+                  },
+                  {
+                    "name": "totalSteps",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "back, previous, undo",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates the wizard form has been successfully completed.",
+                "key": "COMPLETE",
+                "name": "Complete",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object"
+                  },
+                  {
+                    "name": "currentStep",
+                    "type": "number"
+                  },
+                  {
+                    "name": "totalSteps",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "finished, done, submitted",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates the form data has been successfully saved.",
+                "key": "WizardFormSaved",
+                "name": "Wizard form saved",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "saved, submitted, finalized",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a failure during the save operation.",
+                "key": "WizardFormSaveFailed",
+                "name": "Wizard form save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failed, problem, unsuccessful",
+                "tier": "internal"
+              },
+              {
+                "description": "Resets the wizard to its initial state.",
+                "key": "RESTART",
+                "name": "Restart",
+                "synonyms": "reset, clear, begin, start",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals that a form entry has been successfully loaded.",
+                "key": "WizardFormEntryLoaded",
+                "name": "WizardFormEntry loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[WizardFormEntry]"
+                  }
+                ],
+                "synonyms": "loaded, initialized, ready",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates failure to load a form entry.",
+                "key": "WizardFormEntryLoadFailed",
+                "name": "WizardFormEntry load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, load error",
+                "tier": "internal"
+              }
+            ],
             "states": [
               {
-                "name": "personal",
-                "isInitial": true
+                "isInitial": true,
+                "name": "personal"
               },
               {
                 "name": "preferences"
@@ -177,151 +320,16 @@
                 "name": "complete"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "NEXT",
-                "name": "Next",
-                "description": "Indicates progression to the next step in a sequence.",
-                "synonyms": "advance, proceed, continue",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object"
-                  },
-                  {
-                    "name": "currentStep",
-                    "type": "number"
-                  },
-                  {
-                    "name": "totalSteps",
-                    "type": "number"
-                  }
-                ]
-              },
-              {
-                "key": "PREV",
-                "name": "Prev",
-                "description": "Indicates the user navigated to the previous step.",
-                "synonyms": "back, previous, undo",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "currentStep",
-                    "type": "number"
-                  },
-                  {
-                    "name": "totalSteps",
-                    "type": "number"
-                  }
-                ]
-              },
-              {
-                "key": "COMPLETE",
-                "name": "Complete",
-                "description": "Indicates the wizard form has been successfully completed.",
-                "synonyms": "finished, done, submitted",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object"
-                  },
-                  {
-                    "name": "currentStep",
-                    "type": "number"
-                  },
-                  {
-                    "name": "totalSteps",
-                    "type": "number"
-                  }
-                ]
-              },
-              {
-                "key": "WizardFormSaved",
-                "name": "Wizard form saved",
-                "description": "Indicates the form data has been successfully saved.",
-                "synonyms": "saved, submitted, finalized",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "WizardFormSaveFailed",
-                "name": "Wizard form save failed",
-                "description": "Indicates a failure during the save operation.",
-                "synonyms": "error, failed, problem, unsuccessful",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RESTART",
-                "name": "Restart",
-                "description": "Resets the wizard to its initial state.",
-                "synonyms": "reset, clear, begin, start",
-                "tier": "customization"
-              },
-              {
-                "key": "WizardFormEntryLoaded",
-                "name": "WizardFormEntry loaded",
-                "description": "Signals that a form entry has been successfully loaded.",
-                "synonyms": "loaded, initialized, ready",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[WizardFormEntry]"
-                  }
-                ]
-              },
-              {
-                "key": "WizardFormEntryLoadFailed",
-                "name": "WizardFormEntry load failed",
-                "description": "Indicates failure to load a form entry.",
-                "synonyms": "error, failure, problem, load error",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
             "transitions": [
               {
-                "from": "personal",
-                "to": "personal",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
                     "WizardFormEntry",
                     {
                       "emit": {
-                        "success": "WizardFormEntryLoaded",
-                        "failure": "WizardFormEntryLoadFailed"
+                        "failure": "WizardFormEntryLoadFailed",
+                        "success": "WizardFormEntryLoaded"
                       }
                     }
                   ],
@@ -329,12 +337,9 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "className": "max-w-xl mx-auto w-full",
-                      "type": "stack",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
                               "name": "user-plus",
@@ -346,56 +351,59 @@
                               "variant": "h3"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center",
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
-                          "type": "wizard-progress",
+                          "currentStep": 0.0,
                           "steps": [
                             "Personal",
                             "Preferences",
                             "Review"
                           ],
-                          "currentStep": 0.0
+                          "type": "wizard-progress"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "h4",
+                          "content": "Personal Info",
                           "type": "typography",
-                          "content": "Personal Info"
+                          "variant": "h4"
                         },
                         {
+                          "cancelEvent": "INIT",
                           "fields": [
                             "name",
                             "email"
                           ],
-                          "type": "form-section",
-                          "cancelEvent": "INIT",
                           "mode": "create",
-                          "submitEvent": "NEXT"
+                          "submitEvent": "NEXT",
+                          "type": "form-section"
                         },
                         {
-                          "totalSteps": 3.0,
-                          "type": "wizard-navigation",
-                          "onNext": "NEXT",
                           "currentStep": 0.0,
+                          "onNext": "NEXT",
                           "showBack": false,
+                          "showComplete": false,
                           "showNext": true,
-                          "showComplete": false
+                          "totalSteps": 3.0,
+                          "type": "wizard-navigation"
                         }
-                      ]
+                      ],
+                      "className": "max-w-xl mx-auto w-full",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "personal",
+                "to": "personal"
               },
               {
-                "from": "personal",
-                "to": "preferences",
-                "event": "NEXT",
                 "effects": [
                   [
                     "set",
@@ -411,25 +419,23 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-xl mx-auto w-full",
-                      "gap": "lg",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "user-plus"
+                              "name": "user-plus",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h3",
+                              "content": "Sign-up",
                               "type": "typography",
-                              "content": "Sign-up"
+                              "variant": "h3"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
-                          "align": "center"
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "currentStep": 1.0,
@@ -445,40 +451,42 @@
                         },
                         {
                           "content": "Preferences",
-                          "variant": "h4",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h4"
                         },
                         {
                           "cancelEvent": "PREV",
-                          "mode": "edit",
-                          "type": "form-section",
+                          "entity": "@entity",
                           "fields": [
                             "theme"
                           ],
-                          "entity": "@entity",
-                          "submitEvent": "NEXT"
+                          "mode": "edit",
+                          "submitEvent": "NEXT",
+                          "type": "form-section"
                         },
                         {
-                          "showBack": true,
-                          "totalSteps": 3.0,
-                          "showComplete": false,
-                          "showNext": true,
                           "currentStep": 1.0,
                           "onBack": "PREV",
                           "onNext": "NEXT",
+                          "showBack": true,
+                          "showComplete": false,
+                          "showNext": true,
+                          "totalSteps": 3.0,
                           "type": "wizard-navigation"
                         }
                       ],
+                      "className": "max-w-xl mx-auto w-full",
                       "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "NEXT",
+                "from": "personal",
+                "to": "preferences"
               },
               {
-                "from": "preferences",
-                "to": "review",
-                "event": "NEXT",
                 "effects": [
                   [
                     "set",
@@ -489,139 +497,9 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "name": "user-plus",
-                              "type": "icon"
-                            },
-                            {
-                              "variant": "h3",
-                              "content": "Sign-up",
-                              "type": "typography"
-                            }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "align": "center"
-                        },
-                        {
-                          "type": "wizard-progress",
-                          "currentStep": 2.0,
-                          "steps": [
-                            "Personal",
-                            "Preferences",
-                            "Review"
-                          ]
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "content": "Review",
-                          "variant": "h4",
-                          "type": "typography"
-                        },
-                        {
-                          "direction": "vertical",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "content": "Name",
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.name"
-                                }
-                              ],
-                              "justify": "between",
-                              "type": "stack",
-                              "gap": "md",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "justify": "between",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "content": "Email",
-                                  "variant": "caption"
-                                },
-                                {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.email"
-                                }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "justify": "between",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "caption",
-                                  "content": "Theme"
-                                },
-                                {
-                                  "content": "@entity.theme",
-                                  "type": "typography",
-                                  "variant": "body"
-                                }
-                              ],
-                              "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal"
-                            }
-                          ],
-                          "gap": "sm"
-                        },
-                        {
-                          "currentStep": 2.0,
-                          "showBack": true,
-                          "showNext": false,
-                          "onBack": "PREV",
-                          "type": "wizard-navigation",
-                          "totalSteps": 3.0,
-                          "onComplete": "COMPLETE",
-                          "showComplete": true
-                        }
-                      ],
-                      "type": "stack",
-                      "className": "max-w-xl mx-auto w-full"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "preferences",
-                "to": "personal",
-                "event": "PREV",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
                           "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "user-plus",
@@ -634,16 +512,144 @@
                             }
                           ],
                           "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
                         },
                         {
-                          "currentStep": 0.0,
-                          "type": "wizard-progress",
+                          "currentStep": 2.0,
                           "steps": [
                             "Personal",
                             "Preferences",
                             "Review"
-                          ]
+                          ],
+                          "type": "wizard-progress"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "content": "Review",
+                          "type": "typography",
+                          "variant": "h4"
+                        },
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Name",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.name",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Email",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.email",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Theme",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                },
+                                {
+                                  "content": "@entity.theme",
+                                  "type": "typography",
+                                  "variant": "body"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "justify": "between",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "currentStep": 2.0,
+                          "onBack": "PREV",
+                          "onComplete": "COMPLETE",
+                          "showBack": true,
+                          "showComplete": true,
+                          "showNext": false,
+                          "totalSteps": 3.0,
+                          "type": "wizard-navigation"
+                        }
+                      ],
+                      "className": "max-w-xl mx-auto w-full",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "NEXT",
+                "from": "preferences",
+                "to": "review"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "user-plus",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "Sign-up",
+                              "type": "typography",
+                              "variant": "h3"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "currentStep": 0.0,
+                          "steps": [
+                            "Personal",
+                            "Preferences",
+                            "Review"
+                          ],
+                          "type": "wizard-progress"
                         },
                         {
                           "type": "divider"
@@ -654,36 +660,38 @@
                           "variant": "h4"
                         },
                         {
-                          "submitEvent": "NEXT",
-                          "mode": "edit",
-                          "type": "form-section",
                           "cancelEvent": "INIT",
+                          "entity": "@entity",
                           "fields": [
                             "name",
                             "email"
                           ],
-                          "entity": "@entity"
+                          "mode": "edit",
+                          "submitEvent": "NEXT",
+                          "type": "form-section"
                         },
                         {
-                          "showBack": false,
                           "currentStep": 0.0,
-                          "showNext": true,
+                          "onNext": "NEXT",
+                          "showBack": false,
                           "showComplete": false,
+                          "showNext": true,
                           "totalSteps": 3.0,
-                          "type": "wizard-navigation",
-                          "onNext": "NEXT"
+                          "type": "wizard-navigation"
                         }
                       ],
+                      "className": "max-w-xl mx-auto w-full",
                       "direction": "vertical",
-                      "className": "max-w-xl mx-auto w-full"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "PREV",
+                "from": "preferences",
+                "to": "personal"
               },
               {
-                "from": "review",
-                "to": "persisting",
-                "event": "COMPLETE",
                 "effects": [
                   [
                     "persist",
@@ -701,42 +709,38 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
                       "align": "center",
-                      "type": "stack",
-                      "className": "max-w-xl mx-auto w-full py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "variant": "caption",
-                          "content": "Completing sign-up…"
+                          "content": "Completing sign-up…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "max-w-xl mx-auto w-full py-12",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "COMPLETE",
+                "from": "review",
+                "to": "persisting"
               },
               {
-                "from": "review",
-                "to": "preferences",
-                "event": "PREV",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
                           "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
                               "name": "user-plus",
@@ -744,19 +748,22 @@
                             },
                             {
                               "content": "Sign-up",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "currentStep": 1.0,
-                          "type": "wizard-progress",
                           "steps": [
                             "Personal",
                             "Preferences",
                             "Review"
-                          ]
+                          ],
+                          "type": "wizard-progress"
                         },
                         {
                           "type": "divider"
@@ -767,205 +774,198 @@
                           "variant": "h4"
                         },
                         {
-                          "type": "form-section",
                           "cancelEvent": "PREV",
                           "entity": "@entity",
-                          "submitEvent": "NEXT",
-                          "mode": "edit",
                           "fields": [
                             "theme"
-                          ]
+                          ],
+                          "mode": "edit",
+                          "submitEvent": "NEXT",
+                          "type": "form-section"
                         },
                         {
-                          "showBack": true,
                           "currentStep": 1.0,
                           "onBack": "PREV",
-                          "type": "wizard-navigation",
                           "onNext": "NEXT",
+                          "showBack": true,
                           "showComplete": false,
                           "showNext": true,
-                          "totalSteps": 3.0
+                          "totalSteps": 3.0,
+                          "type": "wizard-navigation"
                         }
                       ],
                       "className": "max-w-xl mx-auto w-full",
+                      "direction": "vertical",
                       "gap": "lg",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "PREV",
+                "from": "review",
+                "to": "preferences"
               },
               {
-                "from": "persisting",
-                "to": "complete",
-                "event": "WizardFormSaved",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "className": "max-w-xl mx-auto w-full py-12",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg",
+                      "align": "center",
                       "children": [
                         {
                           "name": "check-circle",
                           "type": "icon"
                         },
                         {
-                          "variant": "h3",
                           "content": "Welcome!",
-                          "type": "typography"
-                        },
-                        {
-                          "variant": "body",
                           "type": "typography",
-                          "color": "muted",
-                          "content": "Your account has been created."
+                          "variant": "h3"
                         },
                         {
-                          "icon": "rotate-ccw",
-                          "type": "button",
+                          "color": "muted",
+                          "content": "Your account has been created.",
+                          "type": "typography",
+                          "variant": "body"
+                        },
+                        {
                           "action": "RESTART",
+                          "icon": "rotate-ccw",
                           "label": "Start Over",
+                          "type": "button",
                           "variant": "ghost"
                         }
                       ],
-                      "align": "center"
+                      "className": "max-w-xl mx-auto w-full py-12",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "WizardFormSaved",
+                "from": "persisting",
+                "to": "complete"
               },
               {
-                "from": "persisting",
-                "to": "review",
-                "event": "WizardFormSaveFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "lg",
-                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "color": "destructive",
-                          "name": "alert-triangle"
+                          "color": "error",
+                          "name": "alert-triangle",
+                          "type": "icon"
                         },
                         {
+                          "content": "Sign-up Failed",
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Sign-up Failed"
+                          "variant": "h3"
                         },
                         {
                           "message": "@payload.error",
-                          "variant": "error",
-                          "type": "alert"
+                          "type": "alert",
+                          "variant": "error"
                         },
                         {
-                          "variant": "primary",
-                          "type": "button",
+                          "action": "COMPLETE",
                           "icon": "refresh-cw",
                           "label": "Retry",
-                          "action": "COMPLETE"
+                          "type": "button",
+                          "variant": "primary"
                         }
                       ],
                       "className": "max-w-xl mx-auto w-full py-12",
-                      "align": "center"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "WizardFormSaveFailed",
+                "from": "persisting",
+                "to": "review"
               },
               {
-                "from": "complete",
-                "to": "personal",
-                "event": "RESTART",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
                       "children": [
                         {
                           "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "user-plus"
+                              "name": "user-plus",
+                              "type": "icon"
                             },
                             {
+                              "content": "Sign-up",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "Sign-up"
+                              "variant": "h3"
                             }
                           ],
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
                         },
                         {
                           "currentStep": 0.0,
-                          "type": "wizard-progress",
                           "steps": [
                             "Personal",
                             "Preferences",
                             "Review"
-                          ]
+                          ],
+                          "type": "wizard-progress"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "content": "Personal Info",
                           "type": "typography",
-                          "variant": "h4",
-                          "content": "Personal Info"
+                          "variant": "h4"
                         },
                         {
-                          "type": "form-section",
-                          "submitEvent": "NEXT",
+                          "cancelEvent": "INIT",
                           "fields": [
                             "name",
                             "email"
                           ],
-                          "cancelEvent": "INIT",
-                          "mode": "create"
+                          "mode": "create",
+                          "submitEvent": "NEXT",
+                          "type": "form-section"
                         },
                         {
                           "currentStep": 0.0,
-                          "totalSteps": 3.0,
-                          "type": "wizard-navigation",
-                          "showComplete": false,
                           "onNext": "NEXT",
+                          "showBack": false,
+                          "showComplete": false,
                           "showNext": true,
-                          "showBack": false
+                          "totalSteps": 3.0,
+                          "type": "wizard-navigation"
                         }
                       ],
+                      "className": "max-w-xl mx-auto w-full",
                       "direction": "vertical",
-                      "className": "max-w-xl mx-auto w-full"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "RESTART",
+                "from": "complete",
+                "to": "personal"
               }
             ]
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "WizardForm",
-          "path": "/wizard-form",
-          "traits": [
-            {
-              "ref": "WizardFormFlow"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

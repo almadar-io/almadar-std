@@ -1,58 +1,74 @@
 {
-  "name": "std-related",
-  "version": "1.0.0",
   "description": "std-related as a Function",
+  "name": "std-related",
   "orbitals": [
     {
-      "name": "RelatedItemOrbital",
       "entity": {
-        "name": "RelatedItem",
         "collection": "relateditems",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "name",
-            "type": "string",
             "description": "The identifier or designation for the related item.",
-            "synonyms": "title, label, identifier"
+            "name": "name",
+            "synonyms": "title, label, identifier",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "RelatedItem",
+        "persistence": "persistent"
       },
+      "name": "RelatedItemOrbital",
+      "pages": [
+        {
+          "name": "Related",
+          "path": "/related",
+          "traits": [
+            {
+              "ref": "RelatedItemList"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "RelatedItemList",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "RelatedItem",
+          "config": {
+            "tableLook": {
+              "default": "dense",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "label": "Table look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            }
+          },
           "emits": [
             {
-              "event": "RelatedItemLoaded",
               "description": "Signals that related items have been successfully loaded.",
-              "synonyms": "loaded, fetched, retrieved",
-              "tier": "essential",
-              "scope": "internal",
+              "event": "RelatedItemLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[RelatedItem]"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             },
             {
-              "event": "RelatedItemLoadFailed",
               "description": "Indicates failure to load related items.",
-              "synonyms": "error, failure, problem, unsuccessful",
-              "tier": "internal",
-              "scope": "internal",
+              "event": "RelatedItemLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -62,46 +78,43 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal"
             }
           ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "RelatedItem",
+          "name": "RelatedItemList",
+          "scope": "collection",
           "stateMachine": {
-            "states": [
-              {
-                "name": "loading",
-                "isInitial": true
-              },
-              {
-                "name": "loaded"
-              },
-              {
-                "name": "error"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Signals that related items have been successfully loaded.",
                 "key": "RelatedItemLoaded",
                 "name": "RelatedItem loaded",
-                "description": "Signals that related items have been successfully loaded.",
-                "synonyms": "loaded, fetched, retrieved",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[RelatedItem]"
                   }
-                ]
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
               },
               {
+                "description": "Indicates failure to load related items.",
                 "key": "RelatedItemLoadFailed",
                 "name": "RelatedItem load failed",
-                "description": "Indicates failure to load related items.",
-                "synonyms": "error, failure, problem, unsuccessful",
-                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -111,22 +124,33 @@
                     "name": "code",
                     "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "loading"
+              },
+              {
+                "name": "loaded"
+              },
+              {
+                "name": "error"
               }
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
                     "RelatedItem",
                     {
                       "emit": {
-                        "success": "RelatedItemLoaded",
-                        "failure": "RelatedItemLoadFailed"
+                        "failure": "RelatedItemLoadFailed",
+                        "success": "RelatedItemLoaded"
                       }
                     }
                   ],
@@ -134,60 +158,57 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "sm",
-                      "className": "py-8",
                       "align": "center",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
                           "content": "Loading related…",
+                          "type": "typography",
                           "variant": "caption"
                         }
                       ],
-                      "direction": "vertical"
+                      "className": "py-8",
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "loaded",
-                "event": "RelatedItemLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "link"
+                              "name": "link",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Related",
+                              "type": "typography",
                               "variant": "h3"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "data-list",
                           "entity": "@payload.data",
                           "fields": [],
                           "look": "@config.tableLook",
@@ -203,32 +224,34 @@
                                 }
                               ],
                               "direction": "vertical",
-                              "type": "stack",
-                              "gap": "xs"
+                              "gap": "xs",
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "type": "data-list"
                         }
                       ],
-                      "gap": "md"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "RelatedItemLoaded",
+                "from": "loading",
+                "to": "loaded"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "RelatedItemLoadFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
                       "align": "center",
-                      "gap": "sm",
                       "children": [
                         {
+                          "color": "error",
                           "name": "alert-triangle",
-                          "color": "destructive",
                           "type": "icon"
                         },
                         {
@@ -238,53 +261,54 @@
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
                           "content": "@payload.error",
+                          "type": "typography",
                           "variant": "caption"
                         },
                         {
-                          "type": "button",
+                          "action": "INIT",
                           "icon": "rotate-ccw",
                           "label": "Retry",
-                          "action": "INIT",
+                          "type": "button",
                           "variant": "ghost"
                         }
                       ],
                       "className": "py-8",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "sm",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "RelatedItemLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
+                "effects": [
+                  [
+                    "fetch",
+                    "RelatedItem",
+                    {
+                      "emit": {
+                        "failure": "RelatedItemLoadFailed",
+                        "success": "RelatedItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "INIT",
                 "from": "loaded",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "RelatedItem",
-                    {
-                      "emit": {
-                        "failure": "RelatedItemLoadFailed",
-                        "success": "RelatedItemLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner"
-                    }
-                  ]
-                ]
+                "to": "loading"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -303,40 +327,16 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "config": {
-            "tableLook": {
-              "type": "string",
-              "default": "dense",
-              "label": "Table look",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            }
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "Related",
-          "path": "/related",
-          "traits": [
-            {
-              "ref": "RelatedItemList"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

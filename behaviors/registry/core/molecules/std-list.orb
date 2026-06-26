@@ -1,894 +1,57 @@
 {
-  "name": "std-list",
-  "version": "1.0.0",
   "description": "std-list as a Function",
+  "name": "std-list",
   "orbitals": [
     {
-      "name": "ListItemOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-confirmation",
-          "as": "Confirmation"
-        },
-        {
-          "from": "std/behaviors/std-modal",
-          "as": "Modal"
-        }
-      ],
       "entity": {
-        "name": "ListItem",
         "collection": "listitems",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "name",
-            "type": "string",
             "required": true,
+            "type": "string"
+          },
+          {
             "description": "The text displayed for this list item.",
-            "synonyms": "label, text, display"
+            "name": "name",
+            "required": true,
+            "synonyms": "label, text, display",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A brief explanation of the list item's content.",
-            "synonyms": "text, details, notes, explanation"
+            "name": "description",
+            "synonyms": "text, details, notes, explanation",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Current operational state of the item.",
+            "name": "status",
+            "synonyms": "state, condition, flag",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Current operational state of the item.",
-            "synonyms": "state, condition, flag"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "pendingId",
-            "type": "string",
             "default": "",
             "description": "Identifier for a related, pending item.",
-            "synonyms": "reference, relatedId, linkId"
+            "name": "pendingId",
+            "synonyms": "reference, relatedId, linkId",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ListItem",
+        "persistence": "persistent"
       },
-      "traits": [
-        {
-          "name": "ListItemBrowse",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
-          "category": "interaction",
-          "linkedEntity": "ListItem",
-          "emits": [
-            {
-              "event": "CREATE",
-              "description": "Signals a new item has been successfully created.",
-              "synonyms": "added, new, added, insert",
-              "tier": "essential"
-            },
-            {
-              "event": "EDIT",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row",
-                  "type": "object",
-                  "properties": [
-                    {
-                      "name": "id",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "name",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "description",
-                      "type": "string"
-                    },
-                    {
-                      "name": "status",
-                      "type": "string"
-                    },
-                    {
-                      "name": "createdAt",
-                      "type": "string"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "event": "DELETE",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "row",
-                  "type": "object",
-                  "properties": [
-                    {
-                      "name": "id",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "name",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "description",
-                      "type": "string"
-                    },
-                    {
-                      "name": "status",
-                      "type": "string"
-                    },
-                    {
-                      "name": "createdAt",
-                      "type": "string"
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "event": "ListItemLoaded",
-              "description": "Signals a list item has been successfully loaded.",
-              "synonyms": "loaded, fetched, retrieved",
-              "tier": "essential",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[ListItem]"
-                }
-              ]
-            },
-            {
-              "event": "ListItemLoadFailed",
-              "description": "Indicates a failure to load a list item.",
-              "synonyms": "error, failure, problem, unsuccessful",
-              "tier": "internal",
-              "scope": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "ITEM_CREATED",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "ListItemPersistor"
-              }
-            },
-            {
-              "event": "ITEM_UPDATED",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "ListItemPersistor"
-              }
-            },
-            {
-              "event": "ITEM_DELETED",
-              "triggers": "INIT",
-              "source": {
-                "kind": "trait",
-                "trait": "ListItemPersistor"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "loading",
-                "isInitial": true
-              },
-              {
-                "name": "browsing"
-              },
-              {
-                "name": "error"
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "ListItemLoaded",
-                "name": "ListItem loaded",
-                "description": "Signals a list item has been successfully loaded.",
-                "synonyms": "loaded, fetched, retrieved",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[ListItem]"
-                  }
-                ]
-              },
-              {
-                "key": "ListItemLoadFailed",
-                "name": "ListItem load failed",
-                "description": "Indicates a failure to load a list item.",
-                "synonyms": "error, failure, problem, unsuccessful",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CREATE",
-                "name": "Create",
-                "description": "Signals a new item has been successfully created.",
-                "synonyms": "added, new, added, insert",
-                "tier": "essential"
-              },
-              {
-                "key": "EDIT",
-                "name": "Edit",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object",
-                    "properties": [
-                      {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "description",
-                        "type": "string"
-                      },
-                      {
-                        "name": "status",
-                        "type": "string"
-                      },
-                      {
-                        "name": "createdAt",
-                        "type": "string"
-                      }
-                    ]
-                  }
-                ]
-              },
-              {
-                "key": "DELETE",
-                "name": "Delete",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object",
-                    "properties": [
-                      {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "name",
-                        "type": "string",
-                        "required": true
-                      },
-                      {
-                        "name": "description",
-                        "type": "string"
-                      },
-                      {
-                        "name": "status",
-                        "type": "string"
-                      },
-                      {
-                        "name": "createdAt",
-                        "type": "string"
-                      }
-                    ]
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "ListItem",
-                    {
-                      "emit": {
-                        "failure": "ListItemLoadFailed",
-                        "success": "ListItemLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "content": "Loading list…",
-                          "variant": "caption",
-                          "type": "typography"
-                        }
-                      ],
-                      "className": "py-12"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "browsing",
-                "event": "ListItemLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "max-w-5xl mx-auto w-full",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "name": "list",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "ListItems",
-                                  "type": "typography",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "md"
-                            },
-                            {
-                              "variant": "primary",
-                              "label": "Create",
-                              "type": "button",
-                              "action": "CREATE",
-                              "icon": "plus"
-                            }
-                          ],
-                          "justify": "between",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-grid",
-                          "itemActions": [
-                            {
-                              "label": "Edit",
-                              "event": "EDIT",
-                              "variant": "ghost"
-                            },
-                            {
-                              "event": "DELETE",
-                              "variant": "danger",
-                              "label": "Delete"
-                            }
-                          ],
-                          "entity": "@payload.data",
-                          "fields": [
-                            {
-                              "label": "Name",
-                              "icon": "list",
-                              "variant": "h4",
-                              "name": "name"
-                            },
-                            {
-                              "label": "Description",
-                              "name": "description",
-                              "variant": "caption"
-                            },
-                            {
-                              "name": "status",
-                              "variant": "badge",
-                              "label": "Status"
-                            }
-                          ]
-                        }
-                      ],
-                      "direction": "vertical",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "error",
-                "event": "ListItemLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "gap": "md",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "color": "destructive",
-                          "name": "alert-triangle",
-                          "type": "icon"
-                        },
-                        {
-                          "variant": "h3",
-                          "content": "Failed to load list",
-                          "type": "typography"
-                        },
-                        {
-                          "content": "@payload.error",
-                          "color": "muted",
-                          "type": "typography",
-                          "variant": "body"
-                        },
-                        {
-                          "variant": "primary",
-                          "action": "INIT",
-                          "label": "Retry",
-                          "type": "button",
-                          "icon": "rotate-ccw"
-                        }
-                      ],
-                      "className": "py-12",
-                      "align": "center",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "ListItem",
-                    {
-                      "emit": {
-                        "failure": "ListItemLoadFailed",
-                        "success": "ListItemLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "ListItem",
-                    {
-                      "emit": {
-                        "failure": "ListItemLoadFailed",
-                        "success": "ListItemLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "collection"
-        },
-        {
-          "ref": "Modal.traits.ModalRecordModal",
-          "name": "ListItemCreate",
-          "linkedEntity": "ListItem",
-          "config": {
-            "title": "Create ListItem",
-            "mode": "create",
-            "fields": [
-              "name",
-              "description",
-              "status"
-            ],
-            "icon": "plus-circle"
-          },
-          "events": {
-            "OPEN": "CREATE",
-            "SAVE": "LIST_ITEM_CREATED"
-          },
-          "listens": [
-            {
-              "event": "CREATE",
-              "triggers": "CREATE",
-              "source": {
-                "kind": "trait",
-                "trait": "ListItemBrowse"
-              }
-            }
-          ]
-        },
-        {
-          "ref": "Modal.traits.ModalRecordModal",
-          "name": "ListItemEdit",
-          "linkedEntity": "ListItem",
-          "config": {
-            "fields": [
-              "name",
-              "description",
-              "status"
-            ],
-            "mode": "edit",
-            "title": "Edit ListItem",
-            "icon": "edit"
-          },
-          "events": {
-            "SAVE": "LIST_ITEM_UPDATED",
-            "OPEN": "EDIT"
-          },
-          "listens": [
-            {
-              "event": "EDIT",
-              "triggers": "EDIT",
-              "source": {
-                "kind": "trait",
-                "trait": "ListItemBrowse"
-              }
-            }
-          ]
-        },
-        {
-          "ref": "Confirmation.traits.ConfirmActionConfirmation",
-          "name": "ListItemDelete",
-          "linkedEntity": "ListItem",
-          "config": {
-            "title": "Delete ListItem",
-            "alertMessage": "This action cannot be undone.",
-            "confirmLabel": "Delete",
-            "icon": "alert-triangle"
-          },
-          "events": {
-            "CONFIRM": "CONFIRM_DELETE",
-            "REQUEST": "DELETE"
-          },
-          "listens": [
-            {
-              "event": "DELETE",
-              "triggers": "DELETE",
-              "source": {
-                "kind": "trait",
-                "trait": "ListItemBrowse"
-              }
-            }
-          ]
-        },
-        {
-          "name": "ListItemPersistor",
-          "category": "lifecycle",
-          "linkedEntity": "ListItem",
-          "emits": [
-            {
-              "event": "ITEM_CREATED",
-              "description": "Signals a new item has been added to the list.",
-              "synonyms": "added, new, appended",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "ITEM_UPDATED",
-              "description": "Signals a change in an item's data.",
-              "synonyms": "modified, changed, refreshed",
-              "tier": "customization",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "ITEM_DELETED",
-              "description": "Signals that a list item has been removed.",
-              "synonyms": "removed, discarded, purged",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                }
-              ]
-            }
-          ],
-          "listens": [
-            {
-              "event": "LIST_ITEM_CREATED",
-              "triggers": "DO_CREATE",
-              "source": {
-                "kind": "trait",
-                "trait": "ListItemCreate"
-              }
-            },
-            {
-              "event": "LIST_ITEM_UPDATED",
-              "triggers": "DO_UPDATE",
-              "source": {
-                "kind": "trait",
-                "trait": "ListItemEdit"
-              }
-            },
-            {
-              "event": "CONFIRM_DELETE",
-              "triggers": "DO_DELETE",
-              "source": {
-                "kind": "trait",
-                "trait": "ListItemDelete"
-              }
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "DO_CREATE",
-                "name": "Do Create",
-                "description": "Indicates a request to create a new item.",
-                "synonyms": "add, new, insert",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "ListItem",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "DO_UPDATE",
-                "name": "Do Update",
-                "description": "Indicates a data item has been modified.",
-                "synonyms": "modified, changed, refreshed",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "ListItem",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "DO_DELETE",
-                "name": "Do Delete",
-                "description": "Indicates a request to remove an item from the list.",
-                "synonyms": "remove, discard, erase",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "ITEM_CREATED",
-                "name": "Item Created",
-                "description": "Signals a new item has been added to the list.",
-                "synonyms": "added, new, appended",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "ITEM_UPDATED",
-                "name": "Item Updated",
-                "description": "Signals a change in an item's data.",
-                "synonyms": "modified, changed, refreshed",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "ITEM_DELETED",
-                "name": "Item Deleted",
-                "description": "Signals that a list item has been removed.",
-                "synonyms": "removed, discarded, purged",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT"
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "DO_CREATE",
-                "effects": [
-                  [
-                    "persist",
-                    "create",
-                    "ListItem",
-                    "@payload.data",
-                    {
-                      "emit": {
-                        "success": "ITEM_CREATED"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "DO_UPDATE",
-                "effects": [
-                  [
-                    "persist",
-                    "update",
-                    "ListItem",
-                    "@payload.data",
-                    {
-                      "emit": {
-                        "success": "ITEM_UPDATED"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "DO_DELETE",
-                "effects": [
-                  [
-                    "persist",
-                    "delete",
-                    "ListItem",
-                    "@payload.id",
-                    {
-                      "emit": {
-                        "success": "ITEM_DELETED"
-                      }
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "ListItemOrbital",
       "pages": [
         {
           "name": "ListItemPage",
@@ -911,7 +74,844 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "emits": [
+            {
+              "description": "Signals a new item has been successfully created.",
+              "event": "CREATE",
+              "synonyms": "added, new, added, insert",
+              "tier": "essential"
+            },
+            {
+              "event": "EDIT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "row",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "name",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "description",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "event": "DELETE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "row",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "name",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "description",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            {
+              "description": "Signals a list item has been successfully loaded.",
+              "event": "ListItemLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ListItem]"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
+            },
+            {
+              "description": "Indicates a failure to load a list item.",
+              "event": "ListItemLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "scope": "internal",
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal"
+            }
+          ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "ListItem",
+          "listens": [
+            {
+              "event": "ITEM_CREATED",
+              "source": {
+                "kind": "trait",
+                "trait": "ListItemPersistor"
+              },
+              "triggers": "INIT"
+            },
+            {
+              "event": "ITEM_UPDATED",
+              "source": {
+                "kind": "trait",
+                "trait": "ListItemPersistor"
+              },
+              "triggers": "INIT"
+            },
+            {
+              "event": "ITEM_DELETED",
+              "source": {
+                "kind": "trait",
+                "trait": "ListItemPersistor"
+              },
+              "triggers": "INIT"
+            }
+          ],
+          "name": "ListItemBrowse",
+          "scope": "collection",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals a list item has been successfully loaded.",
+                "key": "ListItemLoaded",
+                "name": "ListItem loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ListItem]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a failure to load a list item.",
+                "key": "ListItemLoadFailed",
+                "name": "ListItem load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal"
+              },
+              {
+                "description": "Signals a new item has been successfully created.",
+                "key": "CREATE",
+                "name": "Create",
+                "synonyms": "added, new, added, insert",
+                "tier": "essential"
+              },
+              {
+                "key": "EDIT",
+                "name": "Edit",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "description",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ]
+              },
+              {
+                "key": "DELETE",
+                "name": "Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "properties": [
+                      {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      {
+                        "name": "description",
+                        "type": "string"
+                      },
+                      {
+                        "name": "status",
+                        "type": "string"
+                      },
+                      {
+                        "name": "createdAt",
+                        "type": "string"
+                      }
+                    ],
+                    "type": "object"
+                  }
+                ]
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "loading"
+              },
+              {
+                "name": "browsing"
+              },
+              {
+                "name": "error"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "ListItem",
+                    {
+                      "emit": {
+                        "failure": "ListItemLoadFailed",
+                        "success": "ListItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading list…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "children": [
+                                {
+                                  "name": "list",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "ListItems",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "action": "CREATE",
+                              "icon": "plus",
+                              "label": "Create",
+                              "type": "button",
+                              "variant": "primary"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "entity": "@payload.data",
+                          "fields": [
+                            {
+                              "icon": "list",
+                              "label": "Name",
+                              "name": "name",
+                              "variant": "h4"
+                            },
+                            {
+                              "label": "Description",
+                              "name": "description",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "Status",
+                              "name": "status",
+                              "variant": "badge"
+                            }
+                          ],
+                          "itemActions": [
+                            {
+                              "event": "EDIT",
+                              "label": "Edit",
+                              "variant": "ghost"
+                            },
+                            {
+                              "event": "DELETE",
+                              "label": "Delete",
+                              "variant": "danger"
+                            }
+                          ],
+                          "type": "data-grid"
+                        }
+                      ],
+                      "className": "max-w-5xl mx-auto w-full",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "ListItemLoaded",
+                "from": "loading",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "color": "error",
+                          "name": "alert-triangle",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "Failed to load list",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "@payload.error",
+                          "type": "typography",
+                          "variant": "body"
+                        },
+                        {
+                          "action": "INIT",
+                          "icon": "rotate-ccw",
+                          "label": "Retry",
+                          "type": "button",
+                          "variant": "primary"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "ListItemLoadFailed",
+                "from": "loading",
+                "to": "error"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "ListItem",
+                    {
+                      "emit": {
+                        "failure": "ListItemLoadFailed",
+                        "success": "ListItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "browsing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "ListItem",
+                    {
+                      "emit": {
+                        "failure": "ListItemLoadFailed",
+                        "success": "ListItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
+              }
+            ]
+          }
+        },
+        {
+          "config": {
+            "fields": [
+              "name",
+              "description",
+              "status"
+            ],
+            "icon": "plus-circle",
+            "mode": "create",
+            "title": "Create ListItem"
+          },
+          "events": {
+            "OPEN": "CREATE",
+            "SAVE": "LIST_ITEM_CREATED"
+          },
+          "linkedEntity": "ListItem",
+          "listens": [
+            {
+              "event": "CREATE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListItemBrowse"
+              },
+              "triggers": "CREATE"
+            }
+          ],
+          "name": "ListItemCreate",
+          "ref": "Modal.traits.ModalRecordModal"
+        },
+        {
+          "config": {
+            "fields": [
+              "name",
+              "description",
+              "status"
+            ],
+            "icon": "edit",
+            "mode": "edit",
+            "title": "Edit ListItem"
+          },
+          "events": {
+            "OPEN": "EDIT",
+            "SAVE": "LIST_ITEM_UPDATED"
+          },
+          "linkedEntity": "ListItem",
+          "listens": [
+            {
+              "event": "EDIT",
+              "source": {
+                "kind": "trait",
+                "trait": "ListItemBrowse"
+              },
+              "triggers": "EDIT"
+            }
+          ],
+          "name": "ListItemEdit",
+          "ref": "Modal.traits.ModalRecordModal"
+        },
+        {
+          "config": {
+            "alertMessage": "This action cannot be undone.",
+            "confirmLabel": "Delete",
+            "icon": "alert-triangle",
+            "title": "Delete ListItem"
+          },
+          "events": {
+            "CONFIRM": "CONFIRM_DELETE",
+            "REQUEST": "DELETE"
+          },
+          "linkedEntity": "ListItem",
+          "listens": [
+            {
+              "event": "DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListItemBrowse"
+              },
+              "triggers": "DELETE"
+            }
+          ],
+          "name": "ListItemDelete",
+          "ref": "Confirmation.traits.ConfirmActionConfirmation"
+        },
+        {
+          "category": "lifecycle",
+          "emits": [
+            {
+              "description": "Signals a new item has been added to the list.",
+              "event": "ITEM_CREATED",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "added, new, appended",
+              "tier": "essential"
+            },
+            {
+              "description": "Signals a change in an item's data.",
+              "event": "ITEM_UPDATED",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "modified, changed, refreshed",
+              "tier": "customization"
+            },
+            {
+              "description": "Signals that a list item has been removed.",
+              "event": "ITEM_DELETED",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "removed, discarded, purged",
+              "tier": "essential"
+            }
+          ],
+          "linkedEntity": "ListItem",
+          "listens": [
+            {
+              "event": "LIST_ITEM_CREATED",
+              "source": {
+                "kind": "trait",
+                "trait": "ListItemCreate"
+              },
+              "triggers": "DO_CREATE"
+            },
+            {
+              "event": "LIST_ITEM_UPDATED",
+              "source": {
+                "kind": "trait",
+                "trait": "ListItemEdit"
+              },
+              "triggers": "DO_UPDATE"
+            },
+            {
+              "event": "CONFIRM_DELETE",
+              "source": {
+                "kind": "trait",
+                "trait": "ListItemDelete"
+              },
+              "triggers": "DO_DELETE"
+            }
+          ],
+          "name": "ListItemPersistor",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Indicates a request to create a new item.",
+                "key": "DO_CREATE",
+                "name": "Do Create",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "required": true,
+                    "type": "ListItem"
+                  }
+                ],
+                "synonyms": "add, new, insert",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a data item has been modified.",
+                "key": "DO_UPDATE",
+                "name": "Do Update",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "required": true,
+                    "type": "ListItem"
+                  }
+                ],
+                "synonyms": "modified, changed, refreshed",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a request to remove an item from the list.",
+                "key": "DO_DELETE",
+                "name": "Do Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "remove, discard, erase",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals a new item has been added to the list.",
+                "key": "ITEM_CREATED",
+                "name": "Item Created",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "added, new, appended",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals a change in an item's data.",
+                "key": "ITEM_UPDATED",
+                "name": "Item Updated",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "modified, changed, refreshed",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals that a list item has been removed.",
+                "key": "ITEM_DELETED",
+                "name": "Item Deleted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "removed, discarded, purged",
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "create",
+                    "ListItem",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "ITEM_CREATED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "DO_CREATE",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "ListItem",
+                    "@payload.data",
+                    {
+                      "emit": {
+                        "success": "ITEM_UPDATED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "DO_UPDATE",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "delete",
+                    "ListItem",
+                    "@payload.id",
+                    {
+                      "emit": {
+                        "success": "ITEM_DELETED"
+                      }
+                    }
+                  ]
+                ],
+                "event": "DO_DELETE",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ],
+      "uses": [
+        {
+          "as": "Confirmation",
+          "from": "std/behaviors/std-confirmation"
+        },
+        {
+          "as": "Modal",
+          "from": "std/behaviors/std-modal"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

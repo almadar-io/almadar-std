@@ -1,89 +1,161 @@
 {
-  "name": "std-cache-aside",
-  "version": "1.0.0",
   "description": "std-cache-aside as a Function",
+  "name": "std-cache-aside",
   "orbitals": [
     {
-      "name": "CacheEntryOrbital",
       "entity": {
-        "name": "CacheEntry",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "name",
-            "type": "string",
             "required": true,
+            "type": "string"
+          },
+          {
             "description": "A user-defined identifier for the cache entry.",
-            "synonyms": "key, identifier, alias"
+            "name": "name",
+            "required": true,
+            "synonyms": "key, identifier, alias",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A human-readable explanation of the entry's content.",
-            "synonyms": "explanation, details, notes, summary"
+            "name": "description",
+            "synonyms": "explanation, details, notes, summary",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Current operational state of the entry.",
+            "name": "status",
+            "synonyms": "state, condition, operationalStatus",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Current operational state of the entry.",
-            "synonyms": "state, condition, operationalStatus"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "hitCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of times this entry has been retrieved.",
-            "synonyms": "count, occurrences, retrievals"
+            "name": "hitCount",
+            "synonyms": "count, occurrences, retrievals",
+            "type": "number"
           },
           {
-            "name": "cacheAge",
-            "type": "number",
             "default": 0.0,
             "description": "Duration since the cache entry was last updated.",
-            "synonyms": "age, duration, expiry"
+            "name": "cacheAge",
+            "synonyms": "age, duration, expiry",
+            "type": "number"
           }
-        ]
+        ],
+        "name": "CacheEntry",
+        "persistence": "runtime"
       },
+      "name": "CacheEntryOrbital",
+      "pages": [
+        {
+          "name": "CacheEntryPage",
+          "path": "/cacheentrys",
+          "traits": [
+            {
+              "ref": "CacheEntryCacheManager"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "CacheEntryCacheManager",
           "category": "interaction",
-          "linkedEntity": "CacheEntry",
+          "config": {
+            "emptyLook": {
+              "default": "icon-only",
+              "description": "Layer 2 visual treatment for the empty-state placeholder.",
+              "label": "Empty-state look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "illustrated",
+                "icon-only",
+                "text-only",
+                "mascot"
+              ]
+            },
+            "evictionPolicy": {
+              "default": "lru",
+              "description": "How entries are evicted when the cache fills: least-recently-used, least-frequently-used, first-in-first-out, or TTL-only (never evict early).",
+              "label": "Eviction policy",
+              "synonyms": "cache replacement, eviction strategy",
+              "tier": "domain",
+              "type": "string",
+              "values": [
+                "lru",
+                "lfu",
+                "fifo",
+                "ttl-only"
+              ]
+            },
+            "maxCacheSize": {
+              "default": 1000.0,
+              "description": "Hard cap on cached entries before eviction. 0 = unlimited.",
+              "label": "Max cache entries",
+              "synonyms": "cache capacity, max entries",
+              "tier": "domain",
+              "type": "number"
+            },
+            "staleWhileRevalidate": {
+              "default": true,
+              "description": "When true, serve stale entries to consumers while a background refresh fetches fresh data. Reduces latency at the cost of brief staleness.",
+              "label": "Serve stale while revalidating",
+              "synonyms": "SWR, stale serving",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "tableLook": {
+              "default": "dense",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "label": "Table look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "ttlSeconds": {
+              "default": 300.0,
+              "description": "Cache entry time-to-live before it goes stale. Default 5 minutes. Shorter = fresher/real-time data; longer = stable/long-lived caching.",
+              "label": "TTL (seconds)",
+              "synonyms": "expiration, time to live, cache duration, freshness, real-time (short) vs long-lived (long)",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
           "emits": [
             {
-              "event": "CacheEntryLoaded",
               "description": "Indicates a cache entry has been successfully retrieved.",
-              "synonyms": "loaded, retrieved, fetched",
-              "tier": "essential",
-              "scope": "internal",
+              "event": "CacheEntryLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[CacheEntry]"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, retrieved, fetched",
+              "tier": "essential"
             },
             {
-              "event": "CacheEntryLoadFailed",
               "description": "Indicates a failure to load a cache entry.",
-              "synonyms": "error, failure, miss, not found",
-              "tier": "internal",
-              "scope": "internal",
+              "event": "CacheEntryLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -93,27 +165,27 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "error, failure, miss, not found",
+              "tier": "internal"
             },
             {
-              "event": "CacheEntryUpdated",
               "description": "Signals that a cached entry's data has been modified.",
-              "synonyms": "modified, refreshed, changed, updated",
-              "tier": "customization",
-              "scope": "internal",
+              "event": "CacheEntryUpdated",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "modified, refreshed, changed, updated",
+              "tier": "customization"
             },
             {
-              "event": "CacheEntryUpdateFailed",
               "description": "Indicates a failure to update a cached entry.",
-              "synonyms": "error, failure, problem, unsuccessful",
-              "tier": "internal",
-              "scope": "internal",
+              "event": "CacheEntryUpdateFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -123,14 +195,111 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal"
             }
           ],
+          "linkedEntity": "CacheEntry",
+          "name": "CacheEntryCacheManager",
+          "scope": "collection",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "FETCH",
+                "name": "Fetch"
+              },
+              {
+                "description": "Indicates a cache entry has been successfully retrieved.",
+                "key": "CacheEntryLoaded",
+                "name": "CacheEntry loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[CacheEntry]"
+                  }
+                ],
+                "synonyms": "loaded, retrieved, fetched",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a failure to load a cache entry.",
+                "key": "CacheEntryLoadFailed",
+                "name": "CacheEntry load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, miss, not found",
+                "tier": "internal"
+              },
+              {
+                "key": "INVALIDATE",
+                "name": "Invalidate"
+              },
+              {
+                "description": "Data retrieved successfully from the cache.",
+                "key": "CACHED",
+                "name": "Cached",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "CacheEntry"
+                  }
+                ],
+                "synonyms": "hit, found, retrieved",
+                "tier": "essential"
+              },
+              {
+                "key": "REFRESH",
+                "name": "Refresh"
+              },
+              {
+                "description": "Signals that a cached entry's data has been modified.",
+                "key": "CacheEntryUpdated",
+                "name": "CacheEntry updated",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "modified, refreshed, changed, updated",
+                "tier": "customization"
+              },
+              {
+                "description": "Indicates a failure to update a cached entry.",
+                "key": "CacheEntryUpdateFailed",
+                "name": "CacheEntry update failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal"
+              }
+            ],
             "states": [
               {
-                "name": "empty",
-                "isInitial": true
+                "isInitial": true,
+                "name": "empty"
               },
               {
                 "name": "loading"
@@ -145,161 +314,67 @@
                 "name": "error"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "FETCH",
-                "name": "Fetch"
-              },
-              {
-                "key": "CacheEntryLoaded",
-                "name": "CacheEntry loaded",
-                "description": "Indicates a cache entry has been successfully retrieved.",
-                "synonyms": "loaded, retrieved, fetched",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[CacheEntry]"
-                  }
-                ]
-              },
-              {
-                "key": "CacheEntryLoadFailed",
-                "name": "CacheEntry load failed",
-                "description": "Indicates a failure to load a cache entry.",
-                "synonyms": "error, failure, miss, not found",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "INVALIDATE",
-                "name": "Invalidate"
-              },
-              {
-                "key": "CACHED",
-                "name": "Cached",
-                "description": "Data retrieved successfully from the cache.",
-                "synonyms": "hit, found, retrieved",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "CacheEntry"
-                  }
-                ]
-              },
-              {
-                "key": "REFRESH",
-                "name": "Refresh"
-              },
-              {
-                "key": "CacheEntryUpdated",
-                "name": "CacheEntry updated",
-                "description": "Signals that a cached entry's data has been modified.",
-                "synonyms": "modified, refreshed, changed, updated",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CacheEntryUpdateFailed",
-                "name": "CacheEntry update failed",
-                "description": "Indicates a failure to update a cached entry.",
-                "synonyms": "error, failure, problem, unsuccessful",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
             "transitions": [
               {
-                "from": "empty",
-                "to": "empty",
-                "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
                           "children": [
                             {
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "database"
+                                  "name": "database",
+                                  "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "Cache (empty)",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
                               "direction": "horizontal",
-                              "type": "stack",
-                              "gap": "md"
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
-                              "icon": "download",
-                              "type": "button",
-                              "variant": "primary",
                               "action": "FETCH",
-                              "label": "Fetch"
+                              "icon": "download",
+                              "label": "Fetch",
+                              "type": "button",
+                              "variant": "primary"
                             }
                           ],
-                          "type": "stack",
                           "direction": "horizontal",
+                          "gap": "md",
                           "justify": "between",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "empty-state",
-                          "icon": "inbox",
                           "description": "Fetch data to populate the cache.",
+                          "icon": "inbox",
                           "look": "@config.emptyLook",
-                          "title": "Cache is empty"
+                          "title": "Cache is empty",
+                          "type": "empty-state"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "empty",
+                "to": "empty"
               },
               {
-                "from": "empty",
-                "to": "loading",
-                "event": "FETCH",
                 "effects": [
                   [
                     "fetch",
@@ -315,46 +390,43 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
                           "content": "Fetching cache…",
+                          "type": "typography",
                           "variant": "caption"
                         }
                       ],
-                      "align": "center",
                       "className": "py-12",
                       "direction": "vertical",
                       "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "FETCH",
+                "from": "empty",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "cached",
-                "event": "CacheEntryLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
                           "children": [
                             {
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "database"
+                                  "name": "database",
+                                  "type": "icon"
                                 },
                                 {
                                   "content": "Cache (hot)",
@@ -362,14 +434,12 @@
                                   "variant": "h2"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "md",
-                              "direction": "horizontal"
+                              "type": "stack"
                             },
                             {
-                              "gap": "sm",
-                              "type": "stack",
                               "align": "center",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "label": "Cached",
@@ -378,48 +448,54 @@
                                   "type": "status-dot"
                                 },
                                 {
-                                  "type": "button",
                                   "action": "INVALIDATE",
                                   "icon": "trash",
                                   "label": "Invalidate",
+                                  "type": "button",
                                   "variant": "ghost"
                                 }
-                              ]
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
                             }
                           ],
                           "direction": "horizontal",
+                          "gap": "md",
                           "justify": "between",
-                          "type": "stack",
-                          "gap": "md"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "entity": "@payload.data",
+                          "fields": [],
+                          "look": "@config.tableLook",
                           "renderItem": [
                             "fn",
                             "item",
                             {
                               "children": [
                                 {
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "direction": "horizontal",
-                                      "gap": "sm",
                                       "align": "center",
-                                      "type": "stack",
                                       "children": [
                                         {
-                                          "type": "icon",
-                                          "name": "database"
+                                          "name": "database",
+                                          "type": "icon"
                                         },
                                         {
                                           "content": "@item.name",
                                           "type": "typography",
                                           "variant": "h4"
                                         }
-                                      ]
+                                      ],
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "type": "stack"
                                     },
                                     {
                                       "label": "@item.description",
@@ -427,7 +503,6 @@
                                     }
                                   ],
                                   "direction": "horizontal",
-                                  "align": "center",
                                   "justify": "between",
                                   "type": "stack"
                                 },
@@ -438,37 +513,35 @@
                                 }
                               ],
                               "direction": "vertical",
-                              "type": "stack",
-                              "gap": "sm"
+                              "gap": "sm",
+                              "type": "stack"
                             }
                           ],
-                          "fields": [],
-                          "type": "data-grid",
-                          "look": "@config.tableLook"
+                          "type": "data-grid"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "CacheEntryLoaded",
+                "from": "loading",
+                "to": "cached"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "CacheEntryLoadFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
-                      "gap": "md",
                       "children": [
                         {
-                          "color": "destructive",
-                          "type": "icon",
-                          "name": "alert-triangle"
+                          "color": "error",
+                          "name": "alert-triangle",
+                          "type": "icon"
                         },
                         {
                           "content": "Failed to load",
@@ -476,29 +549,31 @@
                           "variant": "h3"
                         },
                         {
+                          "color": "muted",
                           "content": "@payload.error",
                           "type": "typography",
-                          "variant": "body",
-                          "color": "muted"
+                          "variant": "body"
                         },
                         {
-                          "variant": "primary",
                           "action": "FETCH",
+                          "icon": "rotate-ccw",
                           "label": "Retry",
                           "type": "button",
-                          "icon": "rotate-ccw"
+                          "variant": "primary"
                         }
                       ],
+                      "className": "py-12",
                       "direction": "vertical",
-                      "className": "py-12"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "CacheEntryLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "cached",
-                "to": "stale",
-                "event": "INVALIDATE",
                 "effects": [
                   [
                     "render-ui",
@@ -508,68 +583,68 @@
                         {
                           "children": [
                             {
-                              "type": "stack",
                               "children": [
                                 {
                                   "name": "database",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "Cache (stale)",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
                               "direction": "horizontal",
-                              "gap": "md"
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
                               "align": "center",
-                              "direction": "horizontal",
                               "children": [
                                 {
                                   "label": "Stale",
-                                  "type": "status-dot",
                                   "pulse": true,
-                                  "status": "warning"
+                                  "status": "warning",
+                                  "type": "status-dot"
                                 },
                                 {
-                                  "type": "button",
                                   "action": "REFRESH",
-                                  "variant": "primary",
                                   "icon": "refresh-cw",
-                                  "label": "Refresh"
+                                  "label": "Refresh",
+                                  "type": "button",
+                                  "variant": "primary"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "sm",
                               "type": "stack"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "md",
                           "justify": "between",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "warning",
                           "message": "Cache data is stale. Refresh to get the latest data.",
-                          "type": "alert"
+                          "type": "alert",
+                          "variant": "warning"
                         }
                       ],
-                      "gap": "lg",
                       "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INVALIDATE",
+                "from": "cached",
+                "to": "stale"
               },
               {
-                "from": "cached",
-                "to": "loading",
-                "event": "CACHED",
                 "effects": [
                   [
                     "persist",
@@ -600,36 +675,12 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "CACHED",
+                "from": "cached",
+                "to": "loading"
               },
               {
-                "from": "stale",
-                "to": "loading",
-                "event": "REFRESH",
-                "effects": [
-                  [
-                    "fetch",
-                    "CacheEntry",
-                    {
-                      "emit": {
-                        "success": "CacheEntryLoaded",
-                        "failure": "CacheEntryLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "stale",
-                "to": "loading",
-                "event": "FETCH",
                 "effects": [
                   [
                     "fetch",
@@ -648,30 +699,54 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "REFRESH",
+                "from": "stale",
+                "to": "loading"
               },
               {
-                "from": "error",
-                "to": "empty",
-                "event": "INIT",
+                "effects": [
+                  [
+                    "fetch",
+                    "CacheEntry",
+                    {
+                      "emit": {
+                        "failure": "CacheEntryLoadFailed",
+                        "success": "CacheEntryLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "FETCH",
+                "from": "stale",
+                "to": "loading"
+              },
+              {
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
                       "description": "Fetch data to populate the cache.",
-                      "title": "Cache is empty",
-                      "look": "@config.emptyLook",
                       "icon": "inbox",
+                      "look": "@config.emptyLook",
+                      "title": "Cache is empty",
                       "type": "empty-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "empty"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "FETCH",
                 "effects": [
                   [
                     "fetch",
@@ -690,91 +765,16 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "FETCH",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "config": {
-            "ttlSeconds": {
-              "type": "number",
-              "default": 300.0,
-              "label": "TTL (seconds)",
-              "description": "Cache entry time-to-live before it goes stale. Default 5 minutes. Shorter = fresher/real-time data; longer = stable/long-lived caching.",
-              "synonyms": "expiration, time to live, cache duration, freshness, real-time (short) vs long-lived (long)",
-              "tier": "domain"
-            },
-            "evictionPolicy": {
-              "type": "string",
-              "default": "lru",
-              "label": "Eviction policy",
-              "description": "How entries are evicted when the cache fills: least-recently-used, least-frequently-used, first-in-first-out, or TTL-only (never evict early).",
-              "synonyms": "cache replacement, eviction strategy",
-              "tier": "domain",
-              "values": [
-                "lru",
-                "lfu",
-                "fifo",
-                "ttl-only"
-              ]
-            },
-            "staleWhileRevalidate": {
-              "type": "boolean",
-              "default": true,
-              "label": "Serve stale while revalidating",
-              "description": "When true, serve stale entries to consumers while a background refresh fetches fresh data. Reduces latency at the cost of brief staleness.",
-              "synonyms": "SWR, stale serving",
-              "tier": "domain"
-            },
-            "maxCacheSize": {
-              "type": "number",
-              "default": 1000.0,
-              "label": "Max cache entries",
-              "description": "Hard cap on cached entries before eviction. 0 = unlimited.",
-              "synonyms": "cache capacity, max entries",
-              "tier": "domain"
-            },
-            "emptyLook": {
-              "type": "string",
-              "default": "icon-only",
-              "label": "Empty-state look",
-              "description": "Layer 2 visual treatment for the empty-state placeholder.",
-              "tier": "presentation",
-              "values": [
-                "illustrated",
-                "icon-only",
-                "text-only",
-                "mascot"
-              ]
-            },
-            "tableLook": {
-              "type": "string",
-              "default": "dense",
-              "label": "Table look",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            }
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "CacheEntryPage",
-          "path": "/cacheentrys",
-          "traits": [
-            {
-              "ref": "CacheEntryCacheManager"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }
