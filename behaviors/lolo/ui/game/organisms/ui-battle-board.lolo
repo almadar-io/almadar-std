@@ -1,5 +1,5 @@
 app ui-battle-board "1.0.0"
-"BattleBoard — UI factory (1:1 with the @almadar/ui battle-board pattern)."
+"BattleBoard — game-shell composition with LOLO-driven sprite animation and combat effects."
 orbital BattleBoardOrbital {
   type BattleBoardError = {
     message : string!
@@ -39,6 +39,14 @@ orbital BattleBoardOrbital {
     traits : [BattleBoardUnitsItemTraitsItem]
     previousPosition : BattleBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type BattleBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type BattleBoardUnitsItemPosition = {
     x : number!
@@ -88,6 +96,7 @@ orbital BattleBoardOrbital {
     gridHeight : number = 16
     movementRange : number = 2
     enemyTurn : boolean = false
+    effects : [BattleBoardEffectItem] = []
   }
 
   trait BattleBoardRender -> @rebindable BattleBoardItem [interaction, instance] {
@@ -101,25 +110,11 @@ orbital BattleBoardOrbital {
         (set @entity.result "none")
         (set @entity.phase "observation")
         (set @entity.enemyTurn false)
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -131,76 +126,30 @@ orbital BattleBoardOrbital {
         (set @entity.result "none")
         (set @entity.phase "observation")
         (set @entity.enemyTurn false)
+        (set @entity.effects [])
         (set @entity.gridWidth 16)
         (set @entity.gridHeight 16)
         (set @entity.movementRange 2)
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          hasActiveEffects: @config.hasActiveEffects
-          effectSpriteUrls: @config.effectSpriteUrls
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
       UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
         (set @entity.phase "action")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
         (set @entity.selectedUnitId ?unitId)
         (set @entity.phase "movement")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
@@ -208,49 +157,21 @@ orbital BattleBoardOrbital {
         (set @entity.selectedUnitId "")
         (set @entity.phase "observation")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)) }) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)), animation: (if (<= (math/max 0 (- (object/get @u health) ?damage)) 0) "death" "hit") }) (if (== @u.id ?attackerId) (object/merge @u { animation: "attack" }) @u)))))
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 4 }))
+        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 5 })) null)
         (set @entity.selectedUnitId "")
         (set @entity.phase "observation")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       END_TURN -> playing when (== @entity.result "none")
@@ -259,72 +180,27 @@ orbital BattleBoardOrbital {
         (set @entity.enemyTurn true)
         (set @entity.phase "enemy_turn")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedUnitId "")
         (set @entity.selectedUnitId "")
         (set @entity.phase "observation")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
         (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
         (set @entity.phase "game_over")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -336,57 +212,36 @@ orbital BattleBoardOrbital {
         (set @entity.result "none")
         (set @entity.phase "observation")
         (set @entity.enemyTurn false)
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
     ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
       enemyAiTick every 1s
         when (and (== @entity.enemyTurn true) (== @entity.result "none"))
-        # attack pass: each player unit takes 1 damage if any live enemy is adjacent
-        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)) }) @u) @u))))
-        # move pass: each live enemy without an adjacent player steps one cell toward the first live player
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)), animation: (if (<= (math/max 0 (- @u.health 1)) 0) "death" "hit") }) @u) @u))))
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/first (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) position) x), y: (object/get (object/get (array/first (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) position) y), ttl: 4 }))
         (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) } })) @u) @u))))
         (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
         (set @entity.enemyTurn false)
         (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          onAttack: ATTACK
-          onGameEnd: GAME_END
-          onUnitMove: UNIT_MOVE
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn, icon: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png" }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -489,7 +344,7 @@ orbital BattleBoardOrbital {
         @label "Tiles"
         @description "Direct tile data — takes priority over entity-derived tiles."
         @tier "presentation"
-      units : [BattleBoardUnitsItem] = [{ id: "p1", position: { x: 3, y: 12 }, unitType: "guardian", name: "Guardian", team: player, faction: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png" }, { id: "p2", position: { x: 2, y: 11 }, unitType: "scrapper", name: "Scrapper", team: player, faction: player, health: 8, maxHealth: 8, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/scrapper.png" }, { id: "p3", position: { x: 4, y: 13 }, unitType: "worker", name: "Worker", team: player, faction: player, health: 6, maxHealth: 6, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/worker.png" }, { id: "p4", position: { x: 2, y: 13 }, unitType: "mender", name: "Mender", team: player, faction: player, health: 7, maxHealth: 7, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/mender.png" }, { id: "e1", position: { x: 12, y: 3 }, unitType: "guardian", name: "Foe", team: enemy, faction: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png" }, { id: "e2", position: { x: 13, y: 4 }, unitType: "guardian", name: "Foe", team: enemy, faction: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png" }, { id: "e3", position: { x: 11, y: 2 }, unitType: "scrapper", name: "Foe", team: enemy, faction: enemy, health: 8, maxHealth: 8, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/scrapper.png" }, { id: "e4", position: { x: 13, y: 2 }, unitType: "scrapper", name: "Foe", team: enemy, faction: enemy, health: 8, maxHealth: 8, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/scrapper.png" }]
+      units : [BattleBoardUnitsItem] = [{ id: "p1", position: { x: 3, y: 12 }, unitType: "guardian", name: "Guardian", team: player, faction: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png", animation: "idle", frame: 0 }, { id: "p2", position: { x: 2, y: 11 }, unitType: "scrapper", name: "Scrapper", team: player, faction: player, health: 8, maxHealth: 8, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/scrapper.png", animation: "idle", frame: 0 }, { id: "p3", position: { x: 4, y: 13 }, unitType: "worker", name: "Worker", team: player, faction: player, health: 6, maxHealth: 6, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/worker.png", animation: "idle", frame: 0 }, { id: "p4", position: { x: 2, y: 13 }, unitType: "mender", name: "Mender", team: player, faction: player, health: 7, maxHealth: 7, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/mender.png", animation: "idle", frame: 0 }, { id: "e1", position: { x: 12, y: 3 }, unitType: "guardian", name: "Foe", team: enemy, faction: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png", animation: "idle", frame: 0 }, { id: "e2", position: { x: 13, y: 4 }, unitType: "guardian", name: "Foe", team: enemy, faction: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png", animation: "idle", frame: 0 }, { id: "e3", position: { x: 11, y: 2 }, unitType: "scrapper", name: "Foe", team: enemy, faction: enemy, health: 8, maxHealth: 8, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/scrapper.png", animation: "idle", frame: 0 }, { id: "e4", position: { x: 13, y: 2 }, unitType: "scrapper", name: "Foe", team: enemy, faction: enemy, health: 8, maxHealth: 8, sprite: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/scrapper.png", animation: "idle", frame: 0 }]
         @label "Units"
         @description "Direct unit data — takes priority over entity-derived units."
         @tier "presentation"
@@ -497,7 +352,7 @@ orbital BattleBoardOrbital {
         @label "Features"
         @description "Direct feature data — takes priority over entity-derived features."
         @tier "presentation"
-      assetManifest : BattleBoardAssetManifest = { terrains: { grass: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/terrain/grass.png", stone: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/terrain/stone.png", dirt: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/terrain/dirt.png", planks: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/terrain/planks.png" }, units: { worker: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/worker.png", mender: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/mender.png", guardian: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png", scrapper: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/scrapper.png" }, features: { gold_mine: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png", portal: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/portal.png" }, effects: {} }
+      assetManifest : BattleBoardAssetManifest = { terrains: { grass: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/terrain/grass.png", stone: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/terrain/stone.png", dirt: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/terrain/dirt.png", planks: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/terrain/planks.png" }, units: { worker: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/worker.png", mender: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/mender.png", guardian: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png", scrapper: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/scrapper.png" }, features: { gold_mine: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/gold_mine.png", portal: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/features/portal.png" }, effects: { slash: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/slash_03.png", explosion: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png" } }
         @label "Asset Manifest"
         @description "Direct asset manifest — takes priority over entity-derived manifest."
         @tier "presentation"
