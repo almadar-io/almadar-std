@@ -2256,7 +2256,7 @@
                               "u",
                               "team"
                             ],
-                            "enemy"
+                            "player"
                           ],
                           [
                             ">",
@@ -2269,190 +2269,103 @@
                           ]
                         ],
                         [
-                          "let",
+                          "if",
                           [
+                            ">",
                             [
-                              "target",
+                              "array/len",
                               [
-                                "array/first",
+                                "array/filter",
+                                "@entity.units",
                                 [
-                                  "array/filter",
-                                  "@entity.units",
+                                  "fn",
+                                  "e",
                                   [
-                                    "fn",
-                                    "p",
+                                    "and",
                                     [
                                       "and",
                                       [
                                         "==",
                                         [
                                           "object/get",
-                                          "p",
+                                          "e",
                                           "team"
                                         ],
-                                        "player"
+                                        "enemy"
                                       ],
                                       [
                                         ">",
                                         [
                                           "object/get",
-                                          "p",
+                                          "e",
                                           "hp"
                                         ],
                                         0.0
                                       ]
-                                    ]
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ],
-                          [
-                            "if",
-                            [
-                              "and",
-                              [
-                                "!=",
-                                "@target",
-                                null
-                              ],
-                              [
-                                "==",
-                                [
-                                  "grid/manhattan-distance",
-                                  [
-                                    "object/get",
-                                    "u",
-                                    "position"
-                                  ],
-                                  [
-                                    "object/get",
-                                    "@target",
-                                    "position"
-                                  ]
-                                ],
-                                1.0
-                              ]
-                            ],
-                            [
-                              "object/merge",
-                              [
-                                "array/first",
-                                [
-                                  "array/filter",
-                                  "@entity.units",
-                                  [
-                                    "fn",
-                                    "p",
+                                    ],
                                     [
                                       "==",
                                       [
-                                        "object/get",
-                                        "p",
-                                        "id"
-                                      ],
-                                      [
-                                        "object/get",
-                                        "@target",
-                                        "id"
-                                      ]
-                                    ]
-                                  ]
-                                ]
-                              ],
-                              {
-                                "animation": [
-                                  "if",
-                                  [
-                                    "<=",
-                                    [
-                                      "math/max",
-                                      0.0,
-                                      [
-                                        "-",
+                                        "grid/manhattan-distance",
                                         [
                                           "object/get",
-                                          [
-                                            "array/first",
-                                            [
-                                              "array/filter",
-                                              "@entity.units",
-                                              [
-                                                "fn",
-                                                "p",
-                                                [
-                                                  "==",
-                                                  [
-                                                    "object/get",
-                                                    "p",
-                                                    "id"
-                                                  ],
-                                                  [
-                                                    "object/get",
-                                                    "@target",
-                                                    "id"
-                                                  ]
-                                                ]
-                                              ]
-                                            ]
-                                          ],
-                                          "hp"
+                                          "e",
+                                          "position"
                                         ],
                                         [
                                           "object/get",
                                           "u",
-                                          "atk"
-                                        ]
-                                      ]
-                                    ],
-                                    0.0
-                                  ],
-                                  "death",
-                                  "hit"
-                                ],
-                                "hp": [
-                                  "math/max",
-                                  0.0,
-                                  [
-                                    "-",
-                                    [
-                                      "object/get",
-                                      [
-                                        "array/first",
-                                        [
-                                          "array/filter",
-                                          "@entity.units",
-                                          [
-                                            "fn",
-                                            "p",
-                                            [
-                                              "==",
-                                              [
-                                                "object/get",
-                                                "p",
-                                                "id"
-                                              ],
-                                              [
-                                                "object/get",
-                                                "@target",
-                                                "id"
-                                              ]
-                                            ]
-                                          ]
+                                          "position"
                                         ]
                                       ],
-                                      "hp"
-                                    ],
-                                    [
-                                      "object/get",
-                                      "u",
-                                      "atk"
+                                      1.0
                                     ]
                                   ]
                                 ]
-                              }
+                              ]
                             ],
-                            "u"
+                            0.0
+                          ],
+                          [
+                            "object/merge",
+                            "u",
+                            {
+                              "animation": [
+                                "if",
+                                [
+                                  "<=",
+                                  [
+                                    "math/max",
+                                    0.0,
+                                    [
+                                      "-",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      1.0
+                                    ]
+                                  ],
+                                  0.0
+                                ],
+                                "death",
+                                "hit"
+                              ],
+                              "hp": [
+                                "math/max",
+                                0.0,
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "u",
+                                    "hp"
+                                  ],
+                                  1.0
+                                ]
+                              ]
+                            }
                           ],
                           "u"
                         ],
