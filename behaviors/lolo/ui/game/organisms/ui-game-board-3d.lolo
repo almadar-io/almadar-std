@@ -1,5 +1,5 @@
 app ui-game-board-3d "1.0.0"
-"GameBoard3D — 3D tactics board organism; owns full gameplay state (phase/selection/validMoves/attackTargets/result)."
+"GameBoard3D — 3D tactics board organism composing game-shell + game-canvas-3d; owns full gameplay state (phase/selection/validMoves/attackTargets/result)."
 orbital GameBoard3DOrbital {
   type GameBoard3DError = {
     message : string!
@@ -112,21 +112,9 @@ orbital GameBoard3DOrbital {
         (set @entity.currentTeam "player")
         (set @entity.enemyTurn false)
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: game-board-3d
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
     }
 
@@ -145,42 +133,18 @@ orbital GameBoard3DOrbital {
         (set @entity.gridHeight 5)
         (set @entity.movementRange 2)
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: game-board-3d
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
         (set @entity.phase "action")
         (set @entity.attackTargets (array/map (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn s (== @s.id @entity.selectedUnitId))) position) (object/get @u position)) 1)))) (fn u { x: (object/get (object/get @u position) x), z: (object/get (object/get @u position) y) })))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: game-board-3d
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
@@ -189,21 +153,9 @@ orbital GameBoard3DOrbital {
         (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (== (object/get @t passable) true) (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0)))) (fn t { x: (object/get @t x), z: (object/get @t y) })))
         (set @entity.attackTargets [])
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: game-board-3d
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?z } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?z }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?z))))) 0))))
@@ -213,21 +165,9 @@ orbital GameBoard3DOrbital {
         (set @entity.attackTargets [])
         (set @entity.phase "observation")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: game-board-3d
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
@@ -237,21 +177,9 @@ orbital GameBoard3DOrbital {
         (set @entity.attackTargets [])
         (set @entity.phase "observation")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: game-board-3d
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       END_TURN -> playing when (== @entity.result "none")
@@ -263,21 +191,9 @@ orbital GameBoard3DOrbital {
         (set @entity.currentTeam "enemy")
         (set @entity.phase "enemy_turn")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: game-board-3d
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedUnitId "")
@@ -286,21 +202,9 @@ orbital GameBoard3DOrbital {
         (set @entity.attackTargets [])
         (set @entity.phase "observation")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: game-board-3d
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
 
       GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
@@ -310,21 +214,9 @@ orbital GameBoard3DOrbital {
         (set @entity.validMoves [])
         (set @entity.attackTargets [])
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: game-board-3d
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
     }
 
@@ -340,21 +232,9 @@ orbital GameBoard3DOrbital {
         (set @entity.currentTeam "player")
         (set @entity.enemyTurn false)
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: game-board-3d
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
     }
 
@@ -370,21 +250,9 @@ orbital GameBoard3DOrbital {
         (set @entity.currentTeam "player")
         (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          units: @entity.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          endTurnEvent: END_TURN
-          cancelEvent: CANCEL
-          gameEndEvent: GAME_END
-          playAgainEvent: PLAY_AGAIN
-          attackEvent: ATTACK
-          type: game-board-3d
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Phase", value: @entity.phase }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: game-canvas-3d, tiles: @config.tiles, units: @entity.units, features: @config.features, validMoves: @entity.validMoves, attackTargets: @entity.attackTargets, selectedUnitId: @entity.selectedUnitId, scale: @config.scale, unitScale: @config.unitScale } ]
         })
     }
 
