@@ -51,7 +51,7 @@ export interface StdUiPlatformerTemplateConfig {
   goalX?: number;
   /** Default: `[{"height":32,"type":"ground","width":800,"x":0,"y":368},{"height":16,"type":"platform","width":160,"x":150,"y":280},{"height":16,"type":"platform","width":160,"x":420,"y":220},{"height":16,"type":"hazard","width":80,"x":580,"y":300},{"height":28,"type":"goal","width":64,"x":700,"y":340}]` */
   platforms?: EntityRow[];
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/chars-toon/kenney-vendored/toon/platformChar_idle.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/units/player.png"` */
   playerSprite?: unknown;
   /** Default: `""` */
   tileSprites?: string;

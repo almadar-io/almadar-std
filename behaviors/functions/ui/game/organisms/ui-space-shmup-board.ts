@@ -58,7 +58,7 @@ export interface StdUiSpaceShmupBoardConfig {
   activeFilters?: unknown;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
   assetBaseUrl?: unknown;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/backgrounds/bg-parallax/trait-wars/scenes/court.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/backgrounds/space.png"` */
   backgroundImage?: unknown;
   /** Default: `""` */
   className?: string;
@@ -174,7 +174,7 @@ export function stdUiSpaceShmupBoardSpaceShmupBoardOrbital(params: StdUiSpaceShm
             'type': 'asset',
           },
           'backgroundImage': {
-            'default': 'https://almadar-kflow-assets.web.app/shared/backgrounds/bg-parallax/trait-wars/scenes/court.png',
+            'default': 'https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/backgrounds/space.png',
             'description': 'Background image URL (starfield / space scene)',
             'label': 'Background Image',
             'tier': 'presentation',

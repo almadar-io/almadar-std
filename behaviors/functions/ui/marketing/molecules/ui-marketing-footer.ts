@@ -45,7 +45,7 @@ export interface StdUiMarketingFooterConfig {
   columns?: EntityRow[];
   /** Default: `"Copyright"` */
   copyright?: string;
-  /** Default: `{"alt":"Alt","href":"Href","src":"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"}` */
+  /** Default: `{"alt":"Alt","href":"Href","src":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/owl.png"}` */
   logo?: EntityRow;
 }
 

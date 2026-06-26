@@ -55,7 +55,7 @@ export interface StdUiCanvasEffectConfig {
   className?: string;
   /** Default: `2000` */
   duration?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png"` */
   effectSpriteUrl?: unknown;
   error?: EntityRow;
   /** Default: `300` */
@@ -395,7 +395,7 @@ export function stdUiCanvasEffectCanvasEffectOrbital(params: StdUiCanvasEffectCa
             'type': 'number',
           },
           'effectSpriteUrl': {
-            'default': 'https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png',
+            'default': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png',
             'description': '--- Remote asset loading ---',
             'label': 'Effect Sprite Url',
             'tier': 'presentation',

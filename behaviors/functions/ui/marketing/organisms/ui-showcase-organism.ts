@@ -149,7 +149,7 @@ export function stdUiShowcaseOrganismShowcaseOrganismOrbital(params: StdUiShowca
           {
             'default': {
               'alt': 'Alt',
-              'src': 'https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png',
+              'src': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/chamber.png',
             },
             'name': 'image',
             'properties': {

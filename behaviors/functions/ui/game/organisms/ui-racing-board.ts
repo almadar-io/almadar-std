@@ -58,7 +58,7 @@ export interface StdUiRacingBoardConfig {
   activeFilters?: unknown;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
   assetBaseUrl?: unknown;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/backgrounds/bg-parallax/trait-wars/scenes/court.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/backgrounds/track.png"` */
   backgroundImage?: unknown;
   /** Default: `""` */
   className?: string;
@@ -174,7 +174,7 @@ export function stdUiRacingBoardRacingBoardOrbital(params: StdUiRacingBoardRacin
             'type': 'asset',
           },
           'backgroundImage': {
-            'default': 'https://almadar-kflow-assets.web.app/shared/backgrounds/bg-parallax/trait-wars/scenes/court.png',
+            'default': 'https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/backgrounds/track.png',
             'description': 'Race track background image URL',
             'label': 'Background Image',
             'tier': 'presentation',

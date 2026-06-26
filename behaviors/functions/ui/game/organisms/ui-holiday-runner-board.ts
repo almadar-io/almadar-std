@@ -58,7 +58,7 @@ export interface StdUiHolidayRunnerBoardConfig {
   assetBaseUrl?: unknown;
   /** Default: `""` */
   assetManifest?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/backgrounds/bg-parallax/trait-wars/scenes/court.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/backgrounds/winter.png"` */
   backgroundImage?: unknown;
   /** Default: `""` */
   className?: string;
@@ -77,7 +77,7 @@ export interface StdUiHolidayRunnerBoardConfig {
   showMinimap?: boolean;
   /** Default: `[{"passable":true,"terrain":"ground","x":0,"y":0},{"passable":true,"terrain":"ground","x":1,"y":0},{"passable":true,"terrain":"platform","x":2,"y":0},{"passable":true,"terrain":"ground","x":3,"y":0},{"passable":true,"terrain":"ground","x":4,"y":0}]` */
   tiles?: EntityRow[];
-  /** Default: `[{"health":3,"id":"runner1","maxHealth":3,"name":"Holiday Runner","sprite":"https://almadar-kflow-assets.web.app/shared/units/chars-roguelike/trait-wars/sprite-sheets/amir-sprite-sheet-se.png","team":"player","unitType":"runner","x":1,"y":0}]` */
+  /** Default: `[{"health":3,"id":"runner1","maxHealth":3,"name":"Holiday Runner","sprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/units/runner.png","team":"player","unitType":"runner","x":1,"y":0}]` */
   units?: EntityRow[];
   /** Default: `800` */
   width?: number;
@@ -170,7 +170,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
             'type': 'string',
           },
           'backgroundImage': {
-            'default': 'https://almadar-kflow-assets.web.app/shared/backgrounds/bg-parallax/trait-wars/scenes/court.png',
+            'default': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/backgrounds/winter.png',
             'description': 'Background image URL for the runner level',
             'label': 'Background Image',
             'tier': 'presentation',
@@ -333,7 +333,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                 'id': 'runner1',
                 'maxHealth': 3,
                 'name': 'Holiday Runner',
-                'sprite': 'https://almadar-kflow-assets.web.app/shared/units/chars-roguelike/trait-wars/sprite-sheets/amir-sprite-sheet-se.png',
+                'sprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/units/runner.png',
                 'team': 'player',
                 'unitType': 'runner',
                 'x': 1,

@@ -101,9 +101,9 @@ export interface StdUiPlatformerBoardConfig {
   moveSpeed?: number;
   /** Default: `[{"height":32,"type":"ground","width":800,"x":0,"y":368},{"height":16,"type":"platform","width":160,"x":150,"y":280},{"height":16,"type":"platform","width":160,"x":420,"y":220},{"height":16,"type":"hazard","width":80,"x":580,"y":300},{"height":28,"type":"goal","width":64,"x":700,"y":340}]` */
   platforms?: EntityRow[];
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/chars-toon/kenney-vendored/toon/platformChar_idle.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/units/player.png"` */
   playerSprite?: unknown;
-  /** Default: `{"goal":"https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-platformer/kenney-vendored/flat/platformer/platformPack_tile058.png","ground":"https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-platformer/kenney-vendored/flat/platformer/platformPack_tile029.png","hazard":"https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-platformer/kenney-vendored/flat/platformer/platformPack_tile063.png","platform":"https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-platformer/kenney-vendored/flat/platformer/platformPack_tile046.png"}` */
+  /** Default: `{"goal":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/goal.png","ground":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png","hazard":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/hazard.png","platform":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/platform.png"}` */
   tileSprites?: Record<string, TraitConfig>;
   /** Default: `400` */
   worldHeight?: number;
@@ -422,7 +422,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
             'type': '[PlatformerBoardPlatformsItem]',
           },
           'playerSprite': {
-            'default': 'https://almadar-kflow-assets.web.app/shared/units/chars-toon/kenney-vendored/toon/platformChar_idle.png',
+            'default': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/units/player.png',
             'description': 'Player sprite image URL',
             'label': 'Player Sprite',
             'tier': 'presentation',
@@ -430,10 +430,10 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
           },
           'tileSprites': {
             'default': {
-              'goal': 'https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-platformer/kenney-vendored/flat/platformer/platformPack_tile058.png',
-              'ground': 'https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-platformer/kenney-vendored/flat/platformer/platformPack_tile029.png',
-              'hazard': 'https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-platformer/kenney-vendored/flat/platformer/platformPack_tile063.png',
-              'platform': 'https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-platformer/kenney-vendored/flat/platformer/platformPack_tile046.png',
+              'goal': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/goal.png',
+              'ground': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png',
+              'hazard': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/hazard.png',
+              'platform': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/platform.png',
             },
             'description': 'Map of platform type to tile sprite URL',
             'items': {
