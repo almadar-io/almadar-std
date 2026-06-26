@@ -1,84 +1,105 @@
 {
-  "name": "std-stats-kpi-tiles",
-  "version": "1.2.0",
   "description": "KPI tiles — Stripe-dashboard style. 3–4 large numeric tiles arranged in a horizontal grid: huge typography number, label below, optional change indicator and sparkline hint. For trading dashboards, finance trackers, ecommerce metrics, payment volume. Same StatsItemStats trait, same aggregation pipeline, same listens as std-stats — only the bodyContent tree differs.",
+  "name": "std-stats-kpi-tiles",
   "orbitals": [
     {
-      "name": "KpiTilesStatsOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-stats",
-          "as": "Stats"
-        }
-      ],
       "entity": {
-        "name": "KpiTileStats",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "cards",
-            "type": "array",
             "default": [],
+            "description": "An array of statistical cards displayed within the tile.",
             "items": {
-              "type": "object",
               "properties": {
-                "prefix": {
-                  "name": "prefix",
-                  "type": "string",
-                  "required": false
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
-                },
-                "sparklineData": {
-                  "name": "sparklineData",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "number"
-                  }
-                },
                 "clickEvent": {
                   "name": "clickEvent",
-                  "type": "string",
-                  "required": false
-                },
-                "suffix": {
-                  "name": "suffix",
-                  "type": "string",
-                  "required": false
+                  "required": false,
+                  "type": "string"
                 },
                 "format": {
                   "name": "format",
-                  "type": "string",
                   "required": false,
+                  "type": "string",
                   "values": [
                     "number",
                     "currency",
                     "percent"
                   ]
                 },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
                 "label": {
                   "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "required": false,
+                  "type": "string"
+                },
+                "sparklineData": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "name": "sparklineData",
+                  "required": false,
+                  "type": "array"
+                },
+                "suffix": {
+                  "name": "suffix",
+                  "required": false,
+                  "type": "string"
+                },
+                "target": {
+                  "name": "target",
+                  "required": false,
+                  "type": "number"
+                },
+                "trend": {
+                  "name": "trend",
+                  "required": false,
+                  "type": "number"
+                },
+                "trendFormat": {
+                  "name": "trendFormat",
+                  "required": false,
                   "type": "string",
-                  "required": true
+                  "values": [
+                    "absolute",
+                    "percent"
+                  ]
+                },
+                "trendPolarity": {
+                  "name": "trendPolarity",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "higher-is-better",
+                    "lower-is-better"
+                  ]
                 },
                 "value": {
                   "name": "value",
-                  "type": "number",
-                  "required": false
+                  "required": false,
+                  "type": "number"
                 },
                 "variant": {
                   "name": "variant",
-                  "type": "string",
                   "required": false,
+                  "type": "string",
                   "values": [
                     "default",
                     "primary",
@@ -87,96 +108,75 @@
                     "error",
                     "info"
                   ]
-                },
-                "max": {
-                  "name": "max",
-                  "type": "number",
-                  "required": false
-                },
-                "target": {
-                  "name": "target",
-                  "type": "number",
-                  "required": false
-                },
-                "trend": {
-                  "name": "trend",
-                  "type": "number",
-                  "required": false
-                },
-                "trendPolarity": {
-                  "name": "trendPolarity",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "higher-is-better",
-                    "lower-is-better"
-                  ]
-                },
-                "trendFormat": {
-                  "name": "trendFormat",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "absolute",
-                    "percent"
-                  ]
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "An array of statistical cards displayed within the tile.",
-            "synonyms": "items, data, elements"
+            "name": "cards",
+            "synonyms": "items, data, elements",
+            "type": "array"
           }
-        ]
+        ],
+        "name": "KpiTileStats",
+        "persistence": "runtime"
       },
+      "name": "KpiTilesStatsOrbital",
+      "pages": [
+        {
+          "name": "KpiTilesStatsPage",
+          "path": "/kpi-tiles",
+          "traits": [
+            {
+              "ref": "KpiTileStatsItemStats"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "ref": "Stats.traits.StatsItemStats",
-          "name": "KpiTileStatsItemStats",
-          "linkedEntity": "KpiTileStats",
           "config": {
             "bodyContent": {
-              "gap": "lg",
-              "entity": "@entity.cards",
-              "minCardWidth": 220.0,
               "className": "w-full",
+              "entity": "@entity.cards",
               "fields": [],
+              "gap": "lg",
+              "minCardWidth": 220.0,
               "renderItem": [
                 "fn",
                 "card",
                 {
-                  "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow",
                   "children": [
                     {
+                      "align": "center",
                       "children": [
                         {
+                          "className": "uppercase tracking-wide",
                           "color": "muted",
                           "content": "@card.label",
-                          "weight": "medium",
-                          "className": "uppercase tracking-wide",
                           "type": "typography",
-                          "variant": "caption"
+                          "variant": "caption",
+                          "weight": "medium"
                         },
                         {
-                          "size": "sm",
+                          "color": "muted",
                           "name": "@card.icon",
-                          "type": "icon",
-                          "color": "muted"
+                          "size": "sm",
+                          "type": "icon"
                         }
                       ],
                       "direction": "horizontal",
-                      "align": "center",
-                      "justify": "between",
                       "gap": "xs",
+                      "justify": "between",
                       "type": "stack"
                     },
                     {
-                      "type": "stack",
+                      "align": "baseline",
                       "children": [
                         {
-                          "variant": "caption",
-                          "type": "typography",
                           "color": "muted",
-                          "content": "@card.prefix"
+                          "content": "@card.prefix",
+                          "type": "typography",
+                          "variant": "caption"
                         },
                         {
                           "className": "text-4xl font-bold tracking-tight",
@@ -184,39 +184,40 @@
                           "value": "@card.value"
                         },
                         {
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "@card.suffix",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption"
                         }
                       ],
-                      "align": "baseline",
+                      "direction": "horizontal",
                       "gap": "xs",
-                      "direction": "horizontal"
+                      "type": "stack"
                     },
                     {
+                      "align": "center",
                       "children": [
                         {
                           "showValue": true,
-                          "value": "@card.trend",
+                          "size": "sm",
                           "type": "trend-indicator",
-                          "size": "sm"
+                          "value": "@card.trend"
                         },
                         {
-                          "data": "@card.sparklineData",
                           "className": "flex-1",
+                          "color": "auto",
+                          "data": "@card.sparklineData",
                           "fill": true,
                           "height": 24.0,
-                          "type": "sparkline",
-                          "color": "auto"
+                          "type": "sparkline"
                         }
                       ],
-                      "align": "center",
+                      "direction": "horizontal",
                       "gap": "sm",
-                      "type": "stack",
-                      "direction": "horizontal"
+                      "type": "stack"
                     }
                   ],
+                  "className": "rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-card-lg shadow-elevation-sm hover:shadow-elevation-md transition-shadow",
                   "direction": "vertical",
                   "gap": "sm",
                   "type": "stack"
@@ -226,6 +227,10 @@
             },
             "metrics": [
               {
+                "format": "currency",
+                "icon": "dollar-sign",
+                "label": "Revenue",
+                "prefix": "$",
                 "sparklineData": [
                   42000.0,
                   45000.0,
@@ -240,20 +245,16 @@
                   67800.0,
                   72400.0
                 ],
-                "icon": "dollar-sign",
                 "trend": 12.4,
                 "trendFormat": "percent",
-                "value": 72400.0,
-                "prefix": "$",
-                "format": "currency",
-                "label": "Revenue",
                 "trendPolarity": "higher-is-better",
+                "value": 72400.0,
                 "variant": "success"
               },
               {
                 "format": "number",
-                "trendFormat": "percent",
-                "trendPolarity": "higher-is-better",
+                "icon": "users",
+                "label": "Active Users",
                 "sparklineData": [
                   2800.0,
                   2950.0,
@@ -265,17 +266,15 @@
                   3240.0
                 ],
                 "trend": 8.1,
-                "variant": "primary",
+                "trendFormat": "percent",
+                "trendPolarity": "higher-is-better",
                 "value": 3240.0,
-                "label": "Active Users",
-                "icon": "users"
+                "variant": "primary"
               },
               {
-                "trendPolarity": "higher-is-better",
-                "variant": "info",
-                "trend": -1.2,
-                "trendFormat": "percent",
-                "suffix": "%",
+                "format": "percent",
+                "icon": "trending-up",
+                "label": "Conversion",
                 "sparklineData": [
                   5.2,
                   5.0,
@@ -286,12 +285,17 @@
                   4.5,
                   4.7
                 ],
-                "label": "Conversion",
-                "format": "percent",
+                "suffix": "%",
+                "trend": -1.2,
+                "trendFormat": "percent",
+                "trendPolarity": "higher-is-better",
                 "value": 4.7,
-                "icon": "trending-up"
+                "variant": "info"
               },
               {
+                "format": "percent",
+                "icon": "trending-down",
+                "label": "Churn",
                 "sparklineData": [
                   2.3,
                   2.1,
@@ -302,31 +306,27 @@
                   1.8,
                   1.9
                 ],
-                "icon": "trending-down",
-                "format": "percent",
-                "label": "Churn",
-                "trendPolarity": "lower-is-better",
+                "suffix": "%",
                 "trend": -0.4,
                 "trendFormat": "percent",
+                "trendPolarity": "lower-is-better",
                 "value": 1.9,
-                "variant": "warning",
-                "suffix": "%"
+                "variant": "warning"
               }
             ]
-          }
+          },
+          "linkedEntity": "KpiTileStats",
+          "name": "KpiTileStatsItemStats",
+          "ref": "Stats.traits.StatsItemStats"
         }
       ],
-      "pages": [
+      "uses": [
         {
-          "name": "KpiTilesStatsPage",
-          "path": "/kpi-tiles",
-          "traits": [
-            {
-              "ref": "KpiTileStatsItemStats"
-            }
-          ]
+          "as": "Stats",
+          "from": "std/behaviors/std-stats"
         }
       ]
     }
-  ]
+  ],
+  "version": "1.2.0"
 }

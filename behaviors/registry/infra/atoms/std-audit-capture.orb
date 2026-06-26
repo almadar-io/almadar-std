@@ -1,97 +1,142 @@
 {
-  "name": "std-audit-capture",
-  "version": "1.2.0",
   "description": "std-audit-capture — event-interceptor audit log / audit trail. Use when a user voices that a record's changes must be tracked, logged, or auditable (audit trail, track changes, change history, who edited what, mutation log, record changes, log every edit, edit history, modification log, who did what when, accountability log). Listens for the generic `EntityMutated` sentinel (rename via traitOverrides.events to the real mutation event, e.g. ContactSaved) and persists an AuditEntry row capturing actor, action, entity type/id, before/after snapshots, and timestamp. `captureEventTypes` filters on @payload.data.kind (empty = capture all). Compose with `std-lifecycle` to apply retention. Composable via `extraTraits` to interpose audit logging behind any mutating trait.",
+  "name": "std-audit-capture",
   "orbitals": [
     {
-      "name": "AuditCaptureOrbital",
       "entity": {
-        "name": "AuditEntry",
         "collection": "audit_entries",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "actor",
-            "type": "string",
             "default": "",
             "description": "The user or system performing the action.",
-            "synonyms": "user, source, originator"
+            "name": "actor",
+            "synonyms": "user, source, originator",
+            "type": "string"
           },
           {
-            "name": "action",
-            "type": "string",
             "default": "",
             "description": "The specific operation performed on the entity.",
-            "synonyms": "operation, event, activity, change"
+            "name": "action",
+            "synonyms": "operation, event, activity, change",
+            "type": "string"
           },
           {
-            "name": "entityType",
-            "type": "string",
             "default": "",
             "description": "The type of entity that was modified.",
-            "synonyms": "type, kind, class"
+            "name": "entityType",
+            "synonyms": "type, kind, class",
+            "type": "string"
           },
           {
-            "name": "entityId",
-            "type": "string",
             "default": "",
             "description": "Unique identifier for the entity being audited.",
-            "synonyms": "entity identifier, record id, item id"
+            "name": "entityId",
+            "synonyms": "entity identifier, record id, item id",
+            "type": "string"
           },
           {
-            "name": "before",
-            "type": "object",
             "default": {},
             "description": "The state of the entity prior to the modification.",
-            "synonyms": "previous, original, old value"
+            "name": "before",
+            "synonyms": "previous, original, old value",
+            "type": "object"
           },
           {
-            "name": "after",
-            "type": "object",
             "default": {},
             "description": "The state of the entity after a modification.",
-            "synonyms": "new, updated, post, subsequent"
+            "name": "after",
+            "synonyms": "new, updated, post, subsequent",
+            "type": "object"
           },
           {
-            "name": "recordedAt",
-            "type": "number",
             "default": 0.0,
             "description": "Timestamp indicating when the audit event was recorded.",
-            "synonyms": "timestamp, date, time"
+            "name": "recordedAt",
+            "synonyms": "timestamp, date, time",
+            "type": "number"
           }
-        ]
+        ],
+        "name": "AuditEntry",
+        "persistence": "persistent"
       },
+      "name": "AuditCaptureOrbital",
+      "pages": [
+        {
+          "name": "AuditCapturePage",
+          "path": "/audit-capture",
+          "traits": [
+            {
+              "ref": "AuditCaptureListener"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "AuditCaptureListener",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "action",
-              "actor",
-              "after",
-              "before",
-              "entityId",
-              "entityType",
-              "recordedAt"
-            ]
-          },
-          "category": "lifecycle",
           "capabilities": [
             "audit",
             "compliance"
           ],
-          "linkedEntity": "AuditEntry",
+          "category": "lifecycle",
+          "config": {
+            "captureBeforeAfter": {
+              "default": false,
+              "description": "Store a full before-and-after snapshot of each change. More detail, but a larger audit log.",
+              "label": "Keep before/after snapshots",
+              "tier": "policy",
+              "type": "boolean"
+            },
+            "captureEntity": {
+              "default": "",
+              "description": "Type name of the entity whose mutations get logged",
+              "label": "Entity to audit",
+              "tier": "internal",
+              "type": "string"
+            },
+            "captureEventTypes": {
+              "default": [],
+              "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Event-kind filter",
+              "tier": "internal",
+              "type": "[string]"
+            },
+            "enabled": {
+              "default": false,
+              "description": "Keep an audit trail of every change to records — who changed what, and when. Off by default.",
+              "label": "Track every change",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log",
+              "tier": "policy",
+              "type": "boolean"
+            },
+            "excludeFields": {
+              "default": [],
+              "description": "Entity fields to omit from the before/after snapshots — e.g. passwords or other sensitive fields you do not want copied into the audit trail.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Skip fields",
+              "tier": "internal",
+              "type": "[string]"
+            },
+            "retentionDays": {
+              "default": 2555.0,
+              "description": "Number of days to retain audit entries. Default is about 7 years, typical for compliance.",
+              "label": "How long to keep the audit log",
+              "tier": "policy",
+              "type": "number"
+            }
+          },
           "emits": [
             {
               "event": "AuditRecorded",
-              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "actor",
@@ -113,16 +158,27 @@
                   "name": "recordedAt",
                   "type": "number"
                 }
-              ]
+              ],
+              "scope": "external"
             }
           ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
+          "entityContract": {
+            "provides": [
+              "action",
+              "actor",
+              "after",
+              "before",
+              "entityId",
+              "entityType",
+              "recordedAt"
             ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AuditEntry",
+          "name": "AuditCaptureListener",
+          "scope": "instance",
+          "stateMachine": {
             "events": [
               {
                 "key": "EntityMutated",
@@ -161,12 +217,14 @@
                 ]
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "EntityMutated",
-                "guard": "@config.enabled",
                 "effects": [
                   [
                     "when",
@@ -272,96 +330,38 @@
                         "AuditEntry",
                         {
                           "action": "@entity.action",
-                          "before": "@entity.before",
                           "actor": "@user.id",
+                          "after": "@entity.after",
+                          "before": "@entity.before",
                           "entityId": "@entity.entityId",
                           "entityType": "@config.captureEntity",
-                          "recordedAt": 0.0,
-                          "after": "@entity.after"
+                          "recordedAt": 0.0
                         }
                       ],
                       [
                         "emit",
                         "AuditRecorded",
                         {
-                          "recordedAt": 0.0,
                           "action": "@entity.action",
                           "actor": "@user.id",
                           "entityId": "@entity.entityId",
-                          "entityType": "@config.captureEntity"
+                          "entityType": "@config.captureEntity",
+                          "recordedAt": 0.0
                         }
                       ]
                     ]
                   ]
-                ]
+                ],
+                "event": "EntityMutated",
+                "from": "idle",
+                "guard": "@config.enabled",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "retentionDays": {
-              "type": "number",
-              "default": 2555.0,
-              "label": "How long to keep the audit log",
-              "description": "Number of days to retain audit entries. Default is about 7 years, typical for compliance.",
-              "tier": "policy"
-            },
-            "captureEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Entity to audit",
-              "description": "Type name of the entity whose mutations get logged",
-              "tier": "internal"
-            },
-            "captureEventTypes": {
-              "type": "[string]",
-              "default": [],
-              "label": "Event-kind filter",
-              "description": "When set, only @payload.data.kind values in this list are audited. Empty list = capture every event. Requires the upstream event to include a `kind` field on its payload.",
-              "tier": "internal",
-              "items": {
-                "type": "string"
-              }
-            },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Track every change",
-              "description": "Keep an audit trail of every change to records — who changed what, and when. Off by default.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, audit, audit trail, log changes, track changes, who edited what, mutation log, change history, edit history, modification log, accountability log, record changes, log every edit, compliance log",
-              "tier": "policy"
-            },
-            "excludeFields": {
-              "type": "[string]",
-              "default": [],
-              "label": "Skip fields",
-              "description": "Entity fields to omit from the before/after snapshots — e.g. passwords or other sensitive fields you do not want copied into the audit trail.",
-              "tier": "internal",
-              "items": {
-                "type": "string"
-              }
-            },
-            "captureBeforeAfter": {
-              "type": "boolean",
-              "default": false,
-              "label": "Keep before/after snapshots",
-              "description": "Store a full before-and-after snapshot of each change. More detail, but a larger audit log.",
-              "tier": "policy"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "AuditCapturePage",
-          "path": "/audit-capture",
-          "traits": [
-            {
-              "ref": "AuditCaptureListener"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.2.0"
 }

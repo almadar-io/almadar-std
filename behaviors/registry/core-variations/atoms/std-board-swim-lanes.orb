@@ -1,288 +1,113 @@
 {
-  "name": "std-board-swim-lanes",
-  "version": "1.0.2",
   "description": "Swim-lane board — full-width horizontal lanes per status, cards flow left-to-right within each lane. Lane header on top with icon + label + count; cards render in the lane body. Useful for HR-portal recruiting stages and project-manager team boards. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs.",
+  "name": "std-board-swim-lanes",
   "orbitals": [
     {
-      "name": "SwimLanesBoardOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-board",
-          "as": "Board"
-        }
-      ],
       "entity": {
-        "name": "SwimLaneItem",
         "collection": "swim_lane_items",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "title",
-            "type": "string",
             "required": true,
-            "description": "The text displayed as the lane's header.",
-            "synonyms": "label, heading, name"
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
+            "description": "The text displayed as the lane's header.",
+            "name": "title",
+            "required": true,
+            "synonyms": "label, heading, name",
+            "type": "string"
+          },
+          {
             "default": "",
             "description": "A brief explanation or summary of the item.",
-            "synonyms": "summary, details, explanation, notes"
+            "name": "description",
+            "synonyms": "summary, details, explanation, notes",
+            "type": "string"
           },
           {
-            "name": "stage",
-            "type": "string",
             "default": "todo",
+            "description": "The current status or phase of the item.",
+            "name": "stage",
+            "synonyms": "status, phase, state, step",
+            "type": "string",
             "values": [
               "todo",
               "doing",
               "done"
-            ],
-            "description": "The current status or phase of the item.",
-            "synonyms": "status, phase, state, step"
+            ]
           },
           {
-            "name": "notes",
-            "type": "string",
             "default": "",
             "description": "Free-form text providing additional information or context.",
-            "synonyms": "comments, remarks, details, information"
+            "name": "notes",
+            "synonyms": "comments, remarks, details, information",
+            "type": "string"
           },
           {
-            "name": "position",
-            "type": "number",
             "default": 0.0,
             "description": "The sequential order of this item within its parent.",
-            "synonyms": "order, sequence, index, rank"
+            "name": "position",
+            "synonyms": "order, sequence, index, rank",
+            "type": "number"
           },
           {
-            "name": "boards",
-            "type": "array",
             "default": [],
+            "description": "A collection of related board items.",
             "items": {
               "type": "object"
             },
-            "description": "A collection of related board items.",
-            "synonyms": "items, records, entries"
+            "name": "boards",
+            "synonyms": "items, records, entries",
+            "type": "array"
           },
           {
-            "name": "currentId",
-            "type": "string",
             "default": "",
             "description": "The unique identifier for this item.",
-            "synonyms": "identifier, key, ref"
+            "name": "currentId",
+            "synonyms": "identifier, key, ref",
+            "type": "string"
           },
           {
-            "name": "currentTitle",
-            "type": "string",
             "default": "",
             "description": "The displayed title for the current item.",
-            "synonyms": "label, heading, name"
+            "name": "currentTitle",
+            "synonyms": "label, heading, name",
+            "type": "string"
           },
           {
-            "name": "currentDescription",
-            "type": "string",
             "default": "",
             "description": "The current textual description associated with the item.",
-            "synonyms": "text, details, content, notes"
+            "name": "currentDescription",
+            "synonyms": "text, details, content, notes",
+            "type": "string"
           },
           {
-            "name": "currentStage",
-            "type": "string",
             "default": "",
             "description": "The current status or phase of an item.",
-            "synonyms": "status, phase, step, stage"
+            "name": "currentStage",
+            "synonyms": "status, phase, step, stage",
+            "type": "string"
           },
           {
-            "name": "currentNotes",
-            "type": "string",
             "default": "",
             "description": "The textual notes associated with the current item.",
-            "synonyms": "comments, remarks, annotations, details"
+            "name": "currentNotes",
+            "synonyms": "comments, remarks, annotations, details",
+            "type": "string"
           },
           {
-            "name": "errorMessage",
-            "type": "string",
             "default": "",
             "description": "Error message associated with the item.",
-            "synonyms": "error, alert, message"
+            "name": "errorMessage",
+            "synonyms": "error, alert, message",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "SwimLaneItem",
+        "persistence": "persistent"
       },
-      "traits": [
-        {
-          "ref": "Board.traits.BoardItemBoard",
-          "name": "SwimLanesBoard",
-          "linkedEntity": "SwimLaneItem",
-          "config": {
-            "bodyContent": {
-              "gap": "md",
-              "type": "stack",
-              "direction": "vertical",
-              "children": [
-                {
-                  "direction": "horizontal",
-                  "align": "center",
-                  "type": "stack",
-                  "gap": "sm",
-                  "children": [
-                    {
-                      "name": "layout-rows",
-                      "type": "icon"
-                    },
-                    {
-                      "variant": "h2",
-                      "content": "@config.title",
-                      "type": "typography"
-                    }
-                  ],
-                  "className": "px-card-md"
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "data-list",
-                  "entity": "@entity.boards",
-                  "fields": [],
-                  "dndRoot": true,
-                  "gap": "md",
-                  "renderItem": [
-                    "fn",
-                    "col",
-                    {
-                      "type": "card",
-                      "look": "flat-bordered",
-                      "className": "overflow-hidden rounded-lg",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "@col.icon"
-                                },
-                                {
-                                  "className": "flex-1",
-                                  "variant": "h4",
-                                  "content": "@col.label",
-                                  "type": "typography"
-                                },
-                                {
-                                  "variant": "primary",
-                                  "type": "badge",
-                                  "size": "sm",
-                                  "label": "@col.count"
-                                }
-                              ],
-                              "align": "center",
-                              "className": "p-card-md border-b border-[var(--color-border)] bg-[var(--color-surface-subtle)]",
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "entity": "@col.items",
-                              "reorderEvent": "REORDER_CARD",
-                              "renderItem": [
-                                "fn",
-                                "item",
-                                {
-                                  "className": "min-w-[220px] max-w-[260px] rounded-md cursor-grab shadow-sm hover:shadow-md transition-shadow",
-                                  "type": "card",
-                                  "look": "elevated",
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "variant": "body",
-                                          "content": "@config.cardTitleBinding",
-                                          "weight": "medium"
-                                        },
-                                        {
-                                          "color": "muted",
-                                          "variant": "caption",
-                                          "content": "@config.cardDescriptionBinding",
-                                          "className": "line-clamp-2",
-                                          "type": "typography"
-                                        },
-                                        {
-                                          "gap": "xs",
-                                          "align": "center",
-                                          "children": [
-                                            {
-                                              "variant": "primary",
-                                              "type": "badge",
-                                              "size": "sm",
-                                              "label": "@config.cardStageBinding"
-                                            },
-                                            {
-                                              "type": "button",
-                                              "action": "OPEN_CARD",
-                                              "size": "sm",
-                                              "className": "ml-auto",
-                                              "icon": "arrow-right",
-                                              "variant": "ghost",
-                                              "actionPayload": {
-                                                "id": "@config.cardIdBinding",
-                                                "row": "@item"
-                                              },
-                                              "label": "Open"
-                                            }
-                                          ],
-                                          "type": "stack",
-                                          "direction": "horizontal",
-                                          "className": "pt-1"
-                                        }
-                                      ],
-                                      "direction": "vertical",
-                                      "gap": "xs",
-                                      "type": "stack"
-                                    }
-                                  ],
-                                  "padding": "sm"
-                                }
-                              ],
-                              "gap": "sm",
-                              "dropEvent": "MOVE_CARD",
-                              "accepts": "*",
-                              "positionEvent": "REORDER_POSITION",
-                              "className": "p-card-md min-h-[140px] flex flex-row flex-nowrap gap-3 overflow-x-auto",
-                              "sortable": true,
-                              "type": "data-list",
-                              "dragGroup": "@col.key",
-                              "fields": []
-                            }
-                          ],
-                          "type": "stack",
-                          "gap": "none",
-                          "direction": "vertical"
-                        }
-                      ],
-                      "padding": "none"
-                    }
-                  ]
-                },
-                {
-                  "action": "ADD_CARD",
-                  "type": "floating-action-button",
-                  "icon": "plus",
-                  "variant": "primary",
-                  "label": "Add card"
-                }
-              ]
-            }
-          }
-        }
-      ],
+      "name": "SwimLanesBoardOrbital",
       "pages": [
         {
           "name": "SwimLanesPage",
@@ -293,7 +118,182 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "name": "layout-rows",
+                      "type": "icon"
+                    },
+                    {
+                      "content": "@config.title",
+                      "type": "typography",
+                      "variant": "h2"
+                    }
+                  ],
+                  "className": "px-card-md",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "dndRoot": true,
+                  "entity": "@entity.boards",
+                  "fields": [],
+                  "gap": "md",
+                  "renderItem": [
+                    "fn",
+                    "col",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "@col.icon",
+                                  "type": "icon"
+                                },
+                                {
+                                  "className": "flex-1",
+                                  "content": "@col.label",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "label": "@col.count",
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "primary"
+                                }
+                              ],
+                              "className": "p-card-md border-b border-[var(--color-border)] bg-[var(--color-surface-subtle)]",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "accepts": "*",
+                              "className": "p-card-md min-h-[140px] flex flex-row flex-nowrap gap-3 overflow-x-auto",
+                              "dragGroup": "@col.key",
+                              "dropEvent": "MOVE_CARD",
+                              "entity": "@col.items",
+                              "fields": [],
+                              "gap": "sm",
+                              "positionEvent": "REORDER_POSITION",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "content": "@config.cardTitleBinding",
+                                          "type": "typography",
+                                          "variant": "body",
+                                          "weight": "medium"
+                                        },
+                                        {
+                                          "className": "line-clamp-2",
+                                          "color": "muted",
+                                          "content": "@config.cardDescriptionBinding",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        },
+                                        {
+                                          "align": "center",
+                                          "children": [
+                                            {
+                                              "label": "@config.cardStageBinding",
+                                              "size": "sm",
+                                              "type": "badge",
+                                              "variant": "primary"
+                                            },
+                                            {
+                                              "action": "OPEN_CARD",
+                                              "actionPayload": {
+                                                "id": "@config.cardIdBinding",
+                                                "row": "@item"
+                                              },
+                                              "className": "ml-auto",
+                                              "icon": "arrow-right",
+                                              "label": "Open",
+                                              "size": "sm",
+                                              "type": "button",
+                                              "variant": "ghost"
+                                            }
+                                          ],
+                                          "className": "pt-1",
+                                          "direction": "horizontal",
+                                          "gap": "xs",
+                                          "type": "stack"
+                                        }
+                                      ],
+                                      "direction": "vertical",
+                                      "gap": "xs",
+                                      "type": "stack"
+                                    }
+                                  ],
+                                  "className": "min-w-[220px] max-w-[260px] rounded-md cursor-grab shadow-sm hover:shadow-md transition-shadow",
+                                  "look": "elevated",
+                                  "padding": "sm",
+                                  "type": "card"
+                                }
+                              ],
+                              "reorderEvent": "REORDER_CARD",
+                              "sortable": true,
+                              "type": "data-list"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "none",
+                          "type": "stack"
+                        }
+                      ],
+                      "className": "overflow-hidden rounded-lg",
+                      "look": "flat-bordered",
+                      "padding": "none",
+                      "type": "card"
+                    }
+                  ],
+                  "type": "data-list"
+                },
+                {
+                  "action": "ADD_CARD",
+                  "icon": "plus",
+                  "label": "Add card",
+                  "type": "floating-action-button",
+                  "variant": "primary"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "md",
+              "type": "stack"
+            }
+          },
+          "linkedEntity": "SwimLaneItem",
+          "name": "SwimLanesBoard",
+          "ref": "Board.traits.BoardItemBoard"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Board",
+          "from": "std/behaviors/std-board"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.2"
 }

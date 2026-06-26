@@ -1,90 +1,94 @@
 {
-  "name": "std-dashboard",
-  "version": "1.0.0",
   "description": "std-dashboard — molecule composing std-stats + std-graphs + std-browse (stat cards top, charts middle, data list bottom). Browse is the data hub; Stats and Graphs listen for `BrowseItemLoaded -> ITEMS_LOADED`.",
+  "name": "std-dashboard",
   "orbitals": [
     {
-      "name": "DashboardItemOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-stats",
-          "as": "Stats"
-        },
-        {
-          "from": "std/behaviors/std-graphs",
-          "as": "Graphs"
-        },
-        {
-          "from": "std/behaviors/std-browse",
-          "as": "Browse"
-        }
-      ],
       "entity": {
-        "name": "DashboardItem",
         "collection": "dashboarditems",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "name",
-            "type": "string",
             "description": "A human-readable identifier for the item.",
-            "synonyms": "title, label, identifier"
+            "name": "name",
+            "synonyms": "title, label, identifier",
+            "type": "string"
           },
           {
-            "name": "category",
-            "type": "string",
             "description": "The type or classification of the dashboard item.",
-            "synonyms": "type, kind, group"
+            "name": "category",
+            "synonyms": "type, kind, group",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Indicates the current operational state of the item.",
+            "name": "status",
+            "synonyms": "state, condition, enabled, disabled",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Indicates the current operational state of the item.",
-            "synonyms": "state, condition, enabled, disabled"
+            ]
           },
           {
-            "name": "amount",
-            "type": "number",
             "default": 0.0,
             "description": "The numerical value being represented.",
-            "synonyms": "value, quantity, count, total"
+            "name": "amount",
+            "synonyms": "value, quantity, count, total",
+            "type": "number"
           },
           {
-            "name": "units",
-            "type": "number",
             "default": 0.0,
             "description": "Represents a numerical measurement or quantity.",
-            "synonyms": "value, count, measure"
+            "name": "units",
+            "synonyms": "value, count, measure",
+            "type": "number"
           }
-        ]
+        ],
+        "name": "DashboardItem",
+        "persistence": "persistent"
       },
+      "name": "DashboardItemOrbital",
+      "pages": [
+        {
+          "name": "Dashboard",
+          "path": "/dashboard",
+          "traits": [
+            {
+              "ref": "DashboardLayout"
+            },
+            {
+              "ref": "DashboardSummary"
+            },
+            {
+              "ref": "DashboardCategoryChart"
+            },
+            {
+              "ref": "DashboardStatusChart"
+            },
+            {
+              "ref": "DashboardItemBrowse"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "ref": "Stats.traits.StatsItemStats",
-          "name": "DashboardSummary",
           "config": {
-            "title": "Summary",
             "metrics": [
               {
+                "aggregation": "count",
                 "format": "number",
-                "label": "Total Items",
-                "variant": "primary",
                 "icon": "list",
-                "aggregation": "count"
+                "label": "Total Items",
+                "variant": "primary"
               },
               {
-                "format": "number",
                 "aggregation": "count",
                 "filter": [
                   "fn",
@@ -95,102 +99,103 @@
                     "active"
                   ]
                 ],
-                "label": "Active",
+                "format": "number",
                 "icon": "check-circle",
+                "label": "Active",
                 "variant": "success"
               },
               {
-                "icon": "dollar-sign",
+                "aggregation": "sum",
                 "field": "amount",
+                "format": "currency",
+                "icon": "dollar-sign",
                 "label": "Total Revenue",
                 "target": 10000.0,
-                "aggregation": "sum",
-                "variant": "info",
-                "format": "currency"
+                "variant": "info"
               },
               {
-                "field": "units",
                 "aggregation": "avg",
+                "field": "units",
+                "format": "number",
                 "icon": "trending-up",
                 "label": "Avg Units",
                 "suffix": " units",
-                "format": "number",
                 "variant": "default"
               }
-            ]
+            ],
+            "title": "Summary"
           },
           "listens": [
             {
               "event": "BrowseItemLoaded",
-              "triggers": "ITEMS_LOADED",
               "source": {
                 "kind": "trait",
                 "trait": "DashboardItemBrowse"
-              }
+              },
+              "triggers": "ITEMS_LOADED"
             }
-          ]
+          ],
+          "name": "DashboardSummary",
+          "ref": "Stats.traits.StatsItemStats"
         },
         {
-          "ref": "Graphs.traits.GraphItemGraph",
-          "name": "DashboardCategoryChart",
           "config": {
-            "subtitle": "Count across categories",
-            "categoryField": "category",
-            "height": 280.0,
-            "chartType": "bar",
             "aggregation": "count",
+            "categoryField": "category",
+            "chartType": "bar",
+            "height": 280.0,
             "showLegend": false,
+            "subtitle": "Count across categories",
             "title": "Items by Category"
           },
           "listens": [
             {
               "event": "BrowseItemLoaded",
-              "triggers": "ITEMS_LOADED",
               "source": {
                 "kind": "trait",
                 "trait": "DashboardItemBrowse"
-              }
+              },
+              "triggers": "ITEMS_LOADED"
             }
-          ]
+          ],
+          "name": "DashboardCategoryChart",
+          "ref": "Graphs.traits.GraphItemGraph"
         },
         {
-          "ref": "Graphs.traits.GraphItemGraph",
-          "name": "DashboardStatusChart",
           "config": {
-            "showLegend": true,
             "aggregation": "count",
-            "height": 280.0,
+            "categoryField": "status",
             "chartType": "donut",
-            "title": "Status Mix",
-            "categoryField": "status"
+            "height": 280.0,
+            "showLegend": true,
+            "title": "Status Mix"
           },
           "listens": [
             {
               "event": "BrowseItemLoaded",
-              "triggers": "ITEMS_LOADED",
               "source": {
                 "kind": "trait",
                 "trait": "DashboardItemBrowse"
-              }
+              },
+              "triggers": "ITEMS_LOADED"
             }
-          ]
+          ],
+          "name": "DashboardStatusChart",
+          "ref": "Graphs.traits.GraphItemGraph"
         },
         {
-          "ref": "Browse.traits.BrowseItemBrowse",
-          "name": "DashboardItemBrowse",
-          "linkedEntity": "DashboardItem",
           "config": {
             "displayPageSize": 5.0,
             "fields": [
               {
-                "variant": "h4",
+                "label": "Name",
                 "name": "name",
-                "label": "Name"
+                "variant": "h4"
               },
               {
+                "label": "Category",
                 "name": "category",
-                "variant": "caption",
-                "label": "Category"
+                "variant": "caption"
               },
               {
                 "label": "Status",
@@ -199,37 +204,35 @@
               },
               {
                 "label": "Amount",
-                "variant": "caption",
-                "name": "amount"
+                "name": "amount",
+                "variant": "caption"
               }
             ],
             "pageSize": 100.0
-          }
+          },
+          "linkedEntity": "DashboardItem",
+          "name": "DashboardItemBrowse",
+          "ref": "Browse.traits.BrowseItemBrowse"
         },
         {
-          "name": "DashboardLayout",
           "category": "interaction",
-          "linkedEntity": "DashboardItem",
           "emits": [
             {
-              "event": "DashboardItemLoaded",
               "description": "Signals a data item has been successfully loaded.",
-              "synonyms": "loaded, received, fetched",
-              "tier": "essential",
-              "scope": "internal",
+              "event": "DashboardItemLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[DashboardItem]"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, received, fetched",
+              "tier": "essential"
             },
             {
-              "event": "DashboardItemLoadFailed",
               "description": "Indicates a failure to load a dashboard item.",
-              "synonyms": "error, failure, problem, load failed",
-              "tier": "internal",
-              "scope": "internal",
+              "event": "DashboardItemLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -239,40 +242,38 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "error, failure, problem, load failed",
+              "tier": "internal"
             }
           ],
+          "linkedEntity": "DashboardItem",
+          "name": "DashboardLayout",
+          "scope": "collection",
           "stateMachine": {
-            "states": [
-              {
-                "name": "composing",
-                "isInitial": true
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Signals a data item has been successfully loaded.",
                 "key": "DashboardItemLoaded",
                 "name": "DashboardItem loaded",
-                "description": "Signals a data item has been successfully loaded.",
-                "synonyms": "loaded, received, fetched",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[DashboardItem]"
                   }
-                ]
+                ],
+                "synonyms": "loaded, received, fetched",
+                "tier": "essential"
               },
               {
+                "description": "Indicates a failure to load a dashboard item.",
                 "key": "DashboardItemLoadFailed",
                 "name": "DashboardItem load failed",
-                "description": "Indicates a failure to load a dashboard item.",
-                "synonyms": "error, failure, problem, load failed",
-                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -282,22 +283,27 @@
                     "name": "code",
                     "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "error, failure, problem, load failed",
+                "tier": "internal"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "composing"
               }
             ],
             "transitions": [
               {
-                "from": "composing",
-                "to": "composing",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
                     "DashboardItem",
                     {
                       "emit": {
-                        "success": "DashboardItemLoaded",
-                        "failure": "DashboardItemLoadFailed"
+                        "failure": "DashboardItemLoadFailed",
+                        "success": "DashboardItemLoaded"
                       }
                     }
                   ],
@@ -308,19 +314,19 @@
                       "children": [
                         {
                           "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "bar-chart-2",
                               "type": "icon"
                             },
                             {
+                              "content": "Dashboard",
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "Dashboard"
+                              "variant": "h2"
                             }
                           ],
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
                         },
                         {
@@ -348,40 +354,34 @@
                       ],
                       "className": "max-w-6xl mx-auto w-full p-4",
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "composing",
+                "to": "composing"
               }
             ]
-          },
-          "scope": "collection"
+          }
         }
       ],
-      "pages": [
+      "uses": [
         {
-          "name": "Dashboard",
-          "path": "/dashboard",
-          "traits": [
-            {
-              "ref": "DashboardLayout"
-            },
-            {
-              "ref": "DashboardSummary"
-            },
-            {
-              "ref": "DashboardCategoryChart"
-            },
-            {
-              "ref": "DashboardStatusChart"
-            },
-            {
-              "ref": "DashboardItemBrowse"
-            }
-          ]
+          "as": "Stats",
+          "from": "std/behaviors/std-stats"
+        },
+        {
+          "as": "Graphs",
+          "from": "std/behaviors/std-graphs"
+        },
+        {
+          "as": "Browse",
+          "from": "std/behaviors/std-browse"
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

@@ -1,124 +1,404 @@
 {
-  "name": "std-file-store",
-  "version": "2.0.0",
   "description": "std-file-store — the generic file/page tree primitive. A file-tree + config-driven data table over a hierarchical collection; opens a row in `viewing_single` with config-driven detail actions. Rebindable: pass `fields`/`itemActions`/`detailActions`/`tree` to retarget it at any hierarchical entity (files, wiki pages, note trees). Folds in the former std-page-tree via `reorderable` + a page field/action set.",
+  "name": "std-file-store",
   "orbitals": [
     {
-      "name": "StoredFileOrbital",
       "entity": {
-        "name": "StoredFile",
         "collection": "storedfiles",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "name",
-            "type": "string",
             "required": true,
-            "description": "The file's display name or title.",
-            "synonyms": "title, label, filename"
+            "type": "string"
           },
           {
-            "name": "path",
-            "type": "string",
+            "description": "The file's display name or title.",
+            "name": "name",
+            "required": true,
+            "synonyms": "title, label, filename",
+            "type": "string"
+          },
+          {
             "default": "",
             "description": "The location of the file within the storage system.",
-            "synonyms": "location, filepath, address"
+            "name": "path",
+            "synonyms": "location, filepath, address",
+            "type": "string"
           },
           {
-            "name": "mimeType",
-            "type": "string",
             "default": "",
             "description": "The file's content type, indicating its format.",
-            "synonyms": "type, format, media type"
+            "name": "mimeType",
+            "synonyms": "type, format, media type",
+            "type": "string"
           },
           {
-            "name": "sizeBytes",
-            "type": "number",
             "default": 0.0,
             "description": "The file's size in bytes.",
-            "synonyms": "length, filesize, byteCount"
+            "name": "sizeBytes",
+            "synonyms": "length, filesize, byteCount",
+            "type": "number"
           },
           {
-            "name": "uploaderId",
-            "type": "string",
             "default": "",
             "description": "Identifier of the user who uploaded the file.",
-            "synonyms": "user, owner, creator"
+            "name": "uploaderId",
+            "synonyms": "user, owner, creator",
+            "type": "string"
           },
           {
-            "name": "uploaderName",
-            "type": "string",
             "default": "",
             "description": "The name of the user who uploaded the file.",
-            "synonyms": "owner, user, author"
+            "name": "uploaderName",
+            "synonyms": "owner, user, author",
+            "type": "string"
           },
           {
-            "name": "folder",
-            "type": "string",
             "default": "",
             "description": "The path to the containing directory.",
-            "synonyms": "parent, directory, location"
+            "name": "folder",
+            "synonyms": "parent, directory, location",
+            "type": "string"
           },
           {
-            "name": "uploadedAt",
-            "type": "string",
             "default": "",
             "description": "Timestamp indicating when the file was uploaded.",
-            "synonyms": "upload date, date uploaded, upload time"
+            "name": "uploadedAt",
+            "synonyms": "upload date, date uploaded, upload time",
+            "type": "string"
           },
           {
-            "name": "isArchived",
-            "type": "boolean",
             "default": false,
             "description": "Indicates whether the file is archived.",
-            "synonyms": "archived, status, state"
+            "name": "isArchived",
+            "synonyms": "archived, status, state",
+            "type": "boolean"
           }
-        ]
+        ],
+        "name": "StoredFile",
+        "persistence": "persistent"
       },
+      "name": "StoredFileOrbital",
+      "pages": [
+        {
+          "name": "StoredFilePage",
+          "path": "/files",
+          "traits": [
+            {
+              "ref": "StoredFileStore"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "StoredFileStore",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "folder",
-              "name",
-              "path"
-            ]
-          },
           "category": "interaction",
-          "linkedEntity": "StoredFile",
+          "config": {
+            "detailActions": {
+              "default": [
+                {
+                  "event": "DOWNLOAD_FILE",
+                  "label": "Download",
+                  "variant": "primary"
+                },
+                {
+                  "event": "ARCHIVE_FILE",
+                  "label": "Archive",
+                  "variant": "danger"
+                }
+              ],
+              "description": "Buttons shown on the opened row's detail",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Detail actions",
+              "tier": "presentation",
+              "type": "[ItemAction]"
+            },
+            "fields": {
+              "default": [
+                {
+                  "label": "Name",
+                  "name": "name",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Folder",
+                  "name": "folder",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Type",
+                  "name": "mimeType",
+                  "variant": "badge"
+                },
+                {
+                  "label": "Size",
+                  "name": "sizeBytes",
+                  "variant": "caption"
+                },
+                {
+                  "label": "Uploaded",
+                  "name": "uploadedAt",
+                  "variant": "caption"
+                }
+              ],
+              "description": "Each column maps to one field on the linked entity",
+              "items": {
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Columns to show",
+              "tier": "presentation",
+              "type": "[FieldSpec]"
+            },
+            "headerIcon": {
+              "default": "folder",
+              "description": "Icon shown beside the section title and in the detail header",
+              "label": "Header icon",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "itemActions": {
+              "default": [
+                {
+                  "event": "OPEN_FILE",
+                  "icon": "arrow-right",
+                  "label": "Open",
+                  "variant": "primary"
+                },
+                {
+                  "event": "ARCHIVE_FILE",
+                  "label": "Archive",
+                  "variant": "danger"
+                }
+              ],
+              "description": "Buttons on each row",
+              "items": {
+                "properties": {
+                  "event": {
+                    "name": "event",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Row actions",
+              "tier": "presentation",
+              "type": "[ItemAction]"
+            },
+            "reorderable": {
+              "default": false,
+              "description": "Allow drag-reordering of rows (emits REORDER). On for ordered trees (e.g. wiki page nav).",
+              "label": "Reorderable rows",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "tableLook": {
+              "default": "dense",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "label": "Table look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "title": {
+              "default": "Files",
+              "description": "Heading shown above the browser",
+              "label": "Section title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "tree": {
+              "default": [
+                {
+                  "children": [
+                    {
+                      "name": "Active.pdf",
+                      "path": "Active.pdf",
+                      "type": "file"
+                    },
+                    {
+                      "name": "Archived.pdf",
+                      "path": "Archived.pdf",
+                      "type": "file"
+                    }
+                  ],
+                  "name": "Contracts",
+                  "path": "Contracts",
+                  "type": "dir"
+                },
+                {
+                  "children": [
+                    {
+                      "name": "HR.docx",
+                      "path": "Policies/HR.docx",
+                      "type": "file"
+                    },
+                    {
+                      "name": "Security.md",
+                      "path": "Policies/Security.md",
+                      "type": "file"
+                    }
+                  ],
+                  "name": "Policies",
+                  "path": "Policies",
+                  "type": "dir"
+                },
+                {
+                  "children": [
+                    {
+                      "name": "Invoice.docx",
+                      "path": "Templates/Invoice.docx",
+                      "type": "file"
+                    },
+                    {
+                      "name": "NDA.pdf",
+                      "path": "Templates/NDA.pdf",
+                      "type": "file"
+                    }
+                  ],
+                  "name": "Templates",
+                  "path": "Templates",
+                  "type": "dir"
+                }
+              ],
+              "description": "Hierarchical nav tree shown above the table",
+              "items": {
+                "properties": {
+                  "children": {
+                    "items": {
+                      "type": "object"
+                    },
+                    "name": "children",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "path": {
+                    "name": "path",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Folder tree",
+              "tier": "presentation",
+              "type": "[TreeNode]"
+            }
+          },
           "emits": [
             {
-              "event": "OPEN_FILE",
               "description": "Indicates a file has been selected for viewing.",
-              "synonyms": "select, choose, activate",
-              "tier": "essential",
+              "event": "OPEN_FILE",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "row",
-                  "type": "object",
                   "properties": [
                     {
                       "name": "id",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "name",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "path",
@@ -152,66 +432,66 @@
                       "name": "isArchived",
                       "type": "boolean"
                     }
-                  ]
+                  ],
+                  "type": "object"
                 }
-              ]
+              ],
+              "synonyms": "select, choose, activate",
+              "tier": "essential"
             },
             {
-              "event": "CLOSE_VIEW",
               "description": "Signals the view has been closed or dismissed.",
+              "event": "CLOSE_VIEW",
               "synonyms": "dismiss, hide, close",
               "tier": "essential"
             },
             {
-              "event": "DOWNLOAD_FILE",
               "description": "Initiates a file download process.",
+              "event": "DOWNLOAD_FILE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
               "synonyms": "export, save, retrieve",
-              "tier": "essential",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                }
-              ]
+              "tier": "essential"
             },
             {
-              "event": "ARCHIVE_FILE",
               "description": "Signals a file is being moved to archive storage.",
-              "synonyms": "archive, move to archive, delete permanently",
-              "tier": "customization",
+              "event": "ARCHIVE_FILE",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "archive, move to archive, delete permanently",
+              "tier": "customization"
             },
             {
-              "event": "REORDER",
               "description": "Indicates the order of items in the tree has changed.",
-              "synonyms": "sort, rearrange, move, change order",
-              "tier": "customization",
+              "event": "REORDER",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "row",
-                  "type": "object",
                   "properties": [
                     {
                       "name": "id",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "name",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "path",
@@ -245,27 +525,28 @@
                       "name": "isArchived",
                       "type": "boolean"
                     }
-                  ]
+                  ],
+                  "type": "object"
                 }
-              ]
+              ],
+              "synonyms": "sort, rearrange, move, change order",
+              "tier": "customization"
             },
             {
-              "event": "StoredFileLoaded",
               "description": "Indicates a file has been successfully retrieved and is ready.",
-              "synonyms": "loaded, fetched, retrieved, ready",
-              "tier": "essential",
+              "event": "StoredFileLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[StoredFile]"
                 }
-              ]
+              ],
+              "synonyms": "loaded, fetched, retrieved, ready",
+              "tier": "essential"
             },
             {
-              "event": "StoredFileLoadFailed",
               "description": "Indicates a failure to load a stored file.",
-              "synonyms": "error, failed, problem, unsuccessful",
-              "tier": "internal",
+              "event": "StoredFileLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -275,14 +556,135 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failed, problem, unsuccessful",
+              "tier": "internal"
             }
           ],
+          "entityContract": {
+            "provides": [
+              "folder",
+              "name",
+              "path"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "StoredFile",
+          "name": "StoredFileStore",
+          "scope": "collection",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Indicates a file has been successfully retrieved and is ready.",
+                "key": "StoredFileLoaded",
+                "name": "StoredFile loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[StoredFile]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved, ready",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a failure to load a stored file.",
+                "key": "StoredFileLoadFailed",
+                "name": "StoredFile load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failed, problem, unsuccessful",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates a file has been selected for viewing.",
+                "key": "OPEN_FILE",
+                "name": "Open File",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "type": "StoredFile"
+                  }
+                ],
+                "synonyms": "select, choose, activate",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates the order of items in the tree has changed.",
+                "key": "REORDER",
+                "name": "Reorder",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "type": "StoredFile"
+                  }
+                ],
+                "synonyms": "sort, rearrange, move, change order",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals a file is being moved to archive storage.",
+                "key": "ARCHIVE_FILE",
+                "name": "Archive File",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "archive, move to archive, delete permanently",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals the view has been closed or dismissed.",
+                "key": "CLOSE_VIEW",
+                "name": "Close View",
+                "synonyms": "dismiss, hide, close",
+                "tier": "essential"
+              },
+              {
+                "description": "Initiates a file download process.",
+                "key": "DOWNLOAD_FILE",
+                "name": "Download File",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "export, save, retrieve",
+                "tier": "essential"
+              }
+            ],
             "states": [
               {
-                "name": "loading",
-                "isInitial": true
+                "isInitial": true,
+                "name": "loading"
               },
               {
                 "name": "browsing"
@@ -294,118 +696,8 @@
                 "name": "error"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "StoredFileLoaded",
-                "name": "StoredFile loaded",
-                "description": "Indicates a file has been successfully retrieved and is ready.",
-                "synonyms": "loaded, fetched, retrieved, ready",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[StoredFile]"
-                  }
-                ]
-              },
-              {
-                "key": "StoredFileLoadFailed",
-                "name": "StoredFile load failed",
-                "description": "Indicates a failure to load a stored file.",
-                "synonyms": "error, failed, problem, unsuccessful",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "OPEN_FILE",
-                "name": "Open File",
-                "description": "Indicates a file has been selected for viewing.",
-                "synonyms": "select, choose, activate",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "StoredFile"
-                  }
-                ]
-              },
-              {
-                "key": "REORDER",
-                "name": "Reorder",
-                "description": "Indicates the order of items in the tree has changed.",
-                "synonyms": "sort, rearrange, move, change order",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "StoredFile"
-                  }
-                ]
-              },
-              {
-                "key": "ARCHIVE_FILE",
-                "name": "Archive File",
-                "description": "Signals a file is being moved to archive storage.",
-                "synonyms": "archive, move to archive, delete permanently",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE_VIEW",
-                "name": "Close View",
-                "description": "Signals the view has been closed or dismissed.",
-                "synonyms": "dismiss, hide, close",
-                "tier": "essential"
-              },
-              {
-                "key": "DOWNLOAD_FILE",
-                "name": "Download File",
-                "description": "Initiates a file download process.",
-                "synonyms": "export, save, retrieve",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              }
-            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -433,18 +725,18 @@
                           "variant": "caption"
                         }
                       ],
-                      "direction": "vertical",
                       "className": "py-12",
+                      "direction": "vertical",
                       "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "browsing",
-                "event": "StoredFileLoaded",
                 "effects": [
                   [
                     "render-ui",
@@ -455,18 +747,18 @@
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "@config.headerIcon"
+                              "name": "@config.headerIcon",
+                              "type": "icon"
                             },
                             {
                               "content": "@config.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             },
                             {
-                              "type": "badge",
                               "label": "@payload.data.length",
                               "size": "sm",
+                              "type": "badge",
                               "variant": "neutral"
                             }
                           ],
@@ -478,50 +770,50 @@
                           "type": "divider"
                         },
                         {
-                          "type": "file-tree",
-                          "tree": "@config.tree"
+                          "tree": "@config.tree",
+                          "type": "file-tree"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "look": "@config.tableLook",
+                          "entity": "@payload.data",
                           "fields": "@config.fields",
-                          "type": "data-list",
-                          "reorderable": "@config.reorderable",
                           "gap": "sm",
                           "itemActions": "@config.itemActions",
-                          "entity": "@payload.data",
-                          "reorderEvent": "REORDER"
+                          "look": "@config.tableLook",
+                          "reorderEvent": "REORDER",
+                          "reorderable": "@config.reorderable",
+                          "type": "data-list"
                         }
                       ],
-                      "type": "stack",
+                      "direction": "vertical",
                       "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "StoredFileLoaded",
+                "from": "loading",
+                "to": "browsing"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "StoredFileLoadFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
+                      "message": "@payload.error",
                       "type": "alert",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
-                ]
+                ],
+                "event": "StoredFileLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "browsing",
-                "to": "viewing_single",
-                "event": "OPEN_FILE",
                 "effects": [
                   [
                     "set",
@@ -547,21 +839,19 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
+                              "action": "CLOSE_VIEW",
                               "label": "Back",
                               "type": "button",
-                              "variant": "ghost",
-                              "action": "CLOSE_VIEW"
+                              "variant": "ghost"
                             },
                             {
-                              "type": "icon",
-                              "name": "@config.headerIcon"
+                              "name": "@config.headerIcon",
+                              "type": "icon"
                             },
                             {
                               "content": "@entity.name",
@@ -569,25 +859,22 @@
                               "variant": "h3"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm",
                           "direction": "horizontal",
-                          "align": "center"
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "variant": "caption",
+                                  "color": "muted",
                                   "content": "Folder",
-                                  "color": "muted"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
                                   "content": "@entity.folder",
@@ -595,30 +882,32 @@
                                   "variant": "body"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "md",
                               "type": "stack"
                             },
                             {
-                              "gap": "md",
                               "children": [
                                 {
-                                  "variant": "caption",
-                                  "type": "typography",
                                   "color": "muted",
-                                  "content": "Path"
+                                  "content": "Path",
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
+                                  "content": "@entity.path",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.path"
+                                  "variant": "body"
                                 }
                               ],
                               "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack"
                             }
                           ],
+                          "direction": "vertical",
                           "gap": "sm",
-                          "direction": "vertical"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -626,32 +915,35 @@
                         {
                           "entity": "@config.detailActions",
                           "fields": [],
-                          "type": "data-list",
                           "gap": "sm",
-                          "variant": "default",
                           "renderItem": [
                             "fn",
                             "a",
                             {
-                              "type": "button",
-                              "variant": "@a.variant",
+                              "action": "@a.event",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "label": "@a.label",
-                              "action": "@a.event"
+                              "type": "button",
+                              "variant": "@a.variant"
                             }
-                          ]
+                          ],
+                          "type": "data-list",
+                          "variant": "default"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "OPEN_FILE",
+                "from": "browsing",
+                "to": "viewing_single"
               },
               {
-                "from": "browsing",
-                "to": "loading",
-                "event": "REORDER",
                 "effects": [
                   [
                     "set",
@@ -663,8 +955,8 @@
                     "StoredFile",
                     {
                       "emit": {
-                        "success": "StoredFileLoaded",
-                        "failure": "StoredFileLoadFailed"
+                        "failure": "StoredFileLoadFailed",
+                        "success": "StoredFileLoaded"
                       }
                     }
                   ],
@@ -673,29 +965,29 @@
                     "main",
                     {
                       "align": "center",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Reordering…"
+                          "content": "Reordering…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "type": "stack",
+                      "className": "py-12",
                       "direction": "vertical",
-                      "className": "py-12"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
-              },
-              {
+                ],
+                "event": "REORDER",
                 "from": "browsing",
-                "to": "loading",
-                "event": "ARCHIVE_FILE",
+                "to": "loading"
+              },
+              {
                 "effects": [
                   [
                     "set",
@@ -707,8 +999,8 @@
                     "StoredFile",
                     {
                       "emit": {
-                        "success": "StoredFileLoaded",
-                        "failure": "StoredFileLoadFailed"
+                        "failure": "StoredFileLoadFailed",
+                        "success": "StoredFileLoaded"
                       }
                     }
                   ],
@@ -716,113 +1008,69 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Archiving…",
-                          "color": "muted"
-                        }
-                      ],
-                      "className": "py-12",
-                      "align": "center",
-                      "direction": "vertical",
-                      "type": "stack"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
-                "event": "CLOSE_VIEW",
-                "effects": [
-                  [
-                    "fetch",
-                    "StoredFile",
-                    {
-                      "emit": {
-                        "failure": "StoredFileLoadFailed",
-                        "success": "StoredFileLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "py-12",
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
                           "type": "typography",
-                          "content": "Loading…",
-                          "variant": "caption",
-                          "color": "muted"
-                        }
-                      ],
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
-                "event": "DOWNLOAD_FILE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "StoredFile",
-                    {
-                      "emit": {
-                        "failure": "StoredFileLoadFailed",
-                        "success": "StoredFileLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "variant": "caption",
-                          "content": "Preparing…",
-                          "color": "muted",
-                          "type": "typography"
+                          "variant": "caption"
                         }
                       ],
                       "className": "py-12",
                       "direction": "vertical",
-                      "align": "center",
                       "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
+                ],
                 "event": "ARCHIVE_FILE",
+                "from": "browsing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "StoredFile",
+                    {
+                      "emit": {
+                        "failure": "StoredFileLoadFailed",
+                        "success": "StoredFileLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "CLOSE_VIEW",
+                "from": "viewing_single",
+                "to": "loading"
+              },
+              {
                 "effects": [
                   [
                     "set",
@@ -843,38 +1091,82 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
+                          "content": "Preparing…",
                           "type": "typography",
-                          "content": "Archiving…"
+                          "variant": "caption"
                         }
                       ],
-                      "align": "center",
                       "className": "py-12",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "DOWNLOAD_FILE",
+                "from": "viewing_single",
+                "to": "loading"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
+                  [
+                    "fetch",
+                    "StoredFile",
+                    {
+                      "emit": {
+                        "failure": "StoredFileLoadFailed",
+                        "success": "StoredFileLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Archiving…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "ARCHIVE_FILE",
+                "from": "viewing_single",
+                "to": "loading"
+              },
+              {
                 "effects": [
                   [
                     "fetch",
                     "StoredFile",
                     {
                       "emit": {
-                        "success": "StoredFileLoaded",
-                        "failure": "StoredFileLoadFailed"
+                        "failure": "StoredFileLoadFailed",
+                        "success": "StoredFileLoaded"
                       }
                     }
                   ],
@@ -886,308 +1178,16 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "config": {
-            "tree": {
-              "type": "[TreeNode]",
-              "default": [
-                {
-                  "path": "Contracts",
-                  "name": "Contracts",
-                  "type": "dir",
-                  "children": [
-                    {
-                      "path": "Active.pdf",
-                      "type": "file",
-                      "name": "Active.pdf"
-                    },
-                    {
-                      "type": "file",
-                      "name": "Archived.pdf",
-                      "path": "Archived.pdf"
-                    }
-                  ]
-                },
-                {
-                  "children": [
-                    {
-                      "type": "file",
-                      "name": "HR.docx",
-                      "path": "Policies/HR.docx"
-                    },
-                    {
-                      "path": "Policies/Security.md",
-                      "type": "file",
-                      "name": "Security.md"
-                    }
-                  ],
-                  "type": "dir",
-                  "path": "Policies",
-                  "name": "Policies"
-                },
-                {
-                  "name": "Templates",
-                  "children": [
-                    {
-                      "type": "file",
-                      "name": "Invoice.docx",
-                      "path": "Templates/Invoice.docx"
-                    },
-                    {
-                      "name": "NDA.pdf",
-                      "type": "file",
-                      "path": "Templates/NDA.pdf"
-                    }
-                  ],
-                  "path": "Templates",
-                  "type": "dir"
-                }
-              ],
-              "label": "Folder tree",
-              "description": "Hierarchical nav tree shown above the table",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "path": {
-                    "name": "path",
-                    "type": "string",
-                    "required": true
-                  },
-                  "type": {
-                    "name": "type",
-                    "type": "string",
-                    "required": true
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "children": {
-                    "name": "children",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "object"
-                    }
-                  }
-                }
-              }
-            },
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "variant": "caption",
-                  "label": "Name",
-                  "name": "name"
-                },
-                {
-                  "label": "Folder",
-                  "variant": "caption",
-                  "name": "folder"
-                },
-                {
-                  "name": "mimeType",
-                  "label": "Type",
-                  "variant": "badge"
-                },
-                {
-                  "label": "Size",
-                  "name": "sizeBytes",
-                  "variant": "caption"
-                },
-                {
-                  "variant": "caption",
-                  "label": "Uploaded",
-                  "name": "uploadedAt"
-                }
-              ],
-              "label": "Columns to show",
-              "description": "Each column maps to one field on the linked entity",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "itemActions": {
-              "type": "[ItemAction]",
-              "default": [
-                {
-                  "variant": "primary",
-                  "event": "OPEN_FILE",
-                  "label": "Open",
-                  "icon": "arrow-right"
-                },
-                {
-                  "event": "ARCHIVE_FILE",
-                  "variant": "danger",
-                  "label": "Archive"
-                }
-              ],
-              "label": "Row actions",
-              "description": "Buttons on each row",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "reorderable": {
-              "type": "boolean",
-              "default": false,
-              "label": "Reorderable rows",
-              "description": "Allow drag-reordering of rows (emits REORDER). On for ordered trees (e.g. wiki page nav).",
-              "tier": "presentation"
-            },
-            "headerIcon": {
-              "type": "string",
-              "default": "folder",
-              "label": "Header icon",
-              "description": "Icon shown beside the section title and in the detail header",
-              "tier": "presentation"
-            },
-            "detailActions": {
-              "type": "[ItemAction]",
-              "default": [
-                {
-                  "event": "DOWNLOAD_FILE",
-                  "label": "Download",
-                  "variant": "primary"
-                },
-                {
-                  "event": "ARCHIVE_FILE",
-                  "label": "Archive",
-                  "variant": "danger"
-                }
-              ],
-              "label": "Detail actions",
-              "description": "Buttons shown on the opened row's detail",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "event": {
-                    "name": "event",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "title": {
-              "type": "string",
-              "default": "Files",
-              "label": "Section title",
-              "description": "Heading shown above the browser",
-              "tier": "presentation"
-            },
-            "tableLook": {
-              "type": "string",
-              "default": "dense",
-              "label": "Table look",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            }
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "StoredFilePage",
-          "path": "/files",
-          "traits": [
-            {
-              "ref": "StoredFileStore"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "2.0.0"
 }

@@ -1,113 +1,262 @@
 {
-  "name": "std-form-advanced",
-  "version": "1.2.0",
   "description": "std-form-advanced — full-typed form-section primitive. Hosts the `editing` state with a configurable `fields` array (each entry mirrors @almadar/ui's `form-section` field schema: `{ name, label, type?, values?, relation?, required? }`). Field-level constraints live in `config.fieldValidation` as `[{ field, format?: 'email'|'url'|'phone', regex?, minLength?, maxLength?, message? }]` — form-section surfaces inline errors when a submit violates a declared constraint. Agents drive shape by overriding `config.fields` + `config.fieldValidation` per-call-site.",
+  "name": "std-form-advanced",
   "orbitals": [
     {
-      "name": "FormEntryOrbital",
       "entity": {
-        "name": "FormEntry",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
             "type": "string"
           },
           {
-            "name": "name",
-            "type": "string",
             "description": "The identifier or title for the form entry.",
-            "synonyms": "title, label, identifier"
+            "name": "name",
+            "synonyms": "title, label, identifier",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A textual explanation or details about the entry.",
-            "synonyms": "details, explanation, notes, summary"
+            "name": "description",
+            "synonyms": "details, explanation, notes, summary",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Indicates the current operational state of the entry.",
+            "name": "status",
+            "synonyms": "state, condition, mode",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Indicates the current operational state of the entry.",
-            "synonyms": "state, condition, mode"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "notes",
-            "type": "string",
             "default": "",
             "description": "Free-text comments or additional information.",
-            "synonyms": "comment, remark, details, memo"
+            "name": "notes",
+            "synonyms": "comment, remark, details, memo",
+            "type": "string"
           },
           {
-            "name": "age",
-            "type": "number",
             "default": 0.0,
             "description": "Numerical value representing a person's age.",
-            "synonyms": "years, age, period"
+            "name": "age",
+            "synonyms": "years, age, period",
+            "type": "number"
           },
           {
-            "name": "isActive",
-            "type": "boolean",
             "default": false,
             "description": "Indicates whether the entry is currently active.",
-            "synonyms": "active, enabled, status"
+            "name": "isActive",
+            "synonyms": "active, enabled, status",
+            "type": "boolean"
           },
           {
-            "name": "birthDate",
-            "type": "datetime",
             "default": "",
             "description": "Date of birth.",
-            "synonyms": "dob, date of birth, birthday"
+            "name": "birthDate",
+            "synonyms": "dob, date of birth, birthday",
+            "type": "datetime"
           },
           {
-            "name": "priority",
-            "type": "string",
             "default": "medium",
+            "description": "Indicates the level of importance or urgency.",
+            "name": "priority",
+            "synonyms": "level, importance, urgency",
+            "type": "string",
             "values": [
               "low",
               "medium",
               "high",
               "critical"
-            ],
-            "description": "Indicates the level of importance or urgency.",
-            "synonyms": "level, importance, urgency"
+            ]
           },
           {
-            "name": "categoryId",
-            "type": "string",
             "default": "",
             "description": "Identifies the related category record.",
-            "synonyms": "category, type, group"
+            "name": "categoryId",
+            "synonyms": "category, type, group",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "FormEntry",
+        "persistence": "runtime"
       },
+      "name": "FormEntryOrbital",
+      "pages": [
+        {
+          "name": "FormEntryFormPage",
+          "path": "/formentrys/form",
+          "traits": [
+            {
+              "ref": "FormEntryFormAdvanced"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "FormEntryFormAdvanced",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "FormEntry",
+          "config": {
+            "fieldValidation": {
+              "default": [],
+              "description": "Per-field rules (format, regex, length) shown inline on submit",
+              "items": {
+                "properties": {
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "message": {
+                    "name": "message",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "rule": {
+                    "name": "rule",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Field validation",
+              "tier": "domain",
+              "type": "[ValidationSpec]"
+            },
+            "fields": {
+              "default": [
+                {
+                  "label": "Name",
+                  "name": "name"
+                },
+                {
+                  "label": "Description",
+                  "name": "description"
+                },
+                {
+                  "label": "Status",
+                  "name": "status",
+                  "type": "enum",
+                  "values": [
+                    "active",
+                    "inactive",
+                    "pending"
+                  ]
+                },
+                {
+                  "label": "Notes",
+                  "name": "notes",
+                  "type": "textarea"
+                },
+                {
+                  "label": "Age",
+                  "name": "age",
+                  "type": "number"
+                },
+                {
+                  "label": "Is Active",
+                  "name": "isActive",
+                  "type": "boolean"
+                },
+                {
+                  "label": "Birth Date",
+                  "name": "birthDate",
+                  "type": "date"
+                },
+                {
+                  "label": "Priority",
+                  "name": "priority",
+                  "type": "enum",
+                  "values": [
+                    "low",
+                    "medium",
+                    "high",
+                    "critical"
+                  ]
+                },
+                {
+                  "label": "Category ID",
+                  "name": "categoryId",
+                  "relation": {
+                    "cardinality": "one",
+                    "entity": "FormEntry"
+                  },
+                  "type": "relation"
+                }
+              ],
+              "description": "Inputs to render; each entry follows the form-section field schema",
+              "items": {
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "header": {
+                    "name": "header",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Form fields",
+              "tier": "presentation",
+              "type": "[FieldSpec]"
+            },
+            "icon": {
+              "default": "file-text",
+              "description": "Icon shown beside the form title",
+              "label": "Header icon",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Form",
+              "description": "Heading shown above the form",
+              "label": "Form title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "FormEntryLoaded",
               "description": "Signals successful loading of form entry data.",
-              "synonyms": "loaded, initialized, populated",
-              "tier": "essential",
-              "scope": "internal",
+              "event": "FormEntryLoaded",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -153,40 +302,40 @@
                   "name": "categoryId",
                   "type": "relation"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, initialized, populated",
+              "tier": "essential"
             },
             {
-              "event": "FormEntryLoadFailed",
               "description": "Indicates failure to load form entry data.",
-              "synonyms": "load error, data fetch failed, failed to retrieve",
-              "tier": "internal",
-              "scope": "internal",
+              "event": "FormEntryLoadFailed",
               "payloadSchema": [
                 {
                   "name": "message",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "load error, data fetch failed, failed to retrieve",
+              "tier": "internal"
             },
             {
-              "event": "FormEntrySaved",
               "description": "Signals successful saving of form entry data.",
-              "synonyms": "saved, persisted, submitted, confirmed",
-              "tier": "essential",
-              "scope": "internal",
+              "event": "FormEntrySaved",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "saved, persisted, submitted, confirmed",
+              "tier": "essential"
             },
             {
-              "event": "FormEntrySaveFailed",
               "description": "Indicates a failure to save form entry data.",
-              "synonyms": "error, failure, rejected, invalid",
-              "tier": "essential",
-              "scope": "internal",
+              "event": "FormEntrySaveFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -196,48 +345,48 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "error, failure, rejected, invalid",
+              "tier": "essential"
             }
           ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FormEntry",
+          "name": "FormEntryFormAdvanced",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "editing",
-                "isInitial": true
-              },
-              {
-                "name": "submitted"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Indicates the form has been submitted for processing.",
                 "key": "SUBMIT",
                 "name": "Submit",
-                "description": "Indicates the form has been submitted for processing.",
-                "synonyms": "submit, send, post",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "object",
-                    "required": true
+                    "required": true,
+                    "type": "object"
                   }
-                ]
+                ],
+                "synonyms": "submit, send, post",
+                "tier": "essential"
               },
               {
                 "key": "RESET",
                 "name": "Reset"
               },
               {
+                "description": "Signals successful loading of form entry data.",
                 "key": "FormEntryLoaded",
                 "name": "FormEntry loaded",
-                "description": "Signals successful loading of form entry data.",
-                "synonyms": "loaded, initialized, populated",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
@@ -283,40 +432,40 @@
                     "name": "categoryId",
                     "type": "relation"
                   }
-                ]
+                ],
+                "synonyms": "loaded, initialized, populated",
+                "tier": "essential"
               },
               {
+                "description": "Indicates failure to load form entry data.",
                 "key": "FormEntryLoadFailed",
                 "name": "FormEntry load failed",
-                "description": "Indicates failure to load form entry data.",
-                "synonyms": "load error, data fetch failed, failed to retrieve",
-                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "message",
                     "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "load error, data fetch failed, failed to retrieve",
+                "tier": "internal"
               },
               {
+                "description": "Signals successful saving of form entry data.",
                 "key": "FormEntrySaved",
                 "name": "FormEntry saved",
-                "description": "Signals successful saving of form entry data.",
-                "synonyms": "saved, persisted, submitted, confirmed",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
                     "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "saved, persisted, submitted, confirmed",
+                "tier": "essential"
               },
               {
+                "description": "Indicates a failure to save form entry data.",
                 "key": "FormEntrySaveFailed",
                 "name": "FormEntry save failed",
-                "description": "Indicates a failure to save form entry data.",
-                "synonyms": "error, failure, rejected, invalid",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -326,14 +475,22 @@
                     "name": "code",
                     "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "error, failure, rejected, invalid",
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "editing"
+              },
+              {
+                "name": "submitted"
               }
             ],
             "transitions": [
               {
-                "from": "editing",
-                "to": "editing",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -359,25 +516,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "@config.icon"
+                              "name": "@config.icon",
+                              "type": "icon"
                             },
                             {
                               "content": "@config.title",
-                              "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h2"
                             }
                           ],
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
                         },
                         {
@@ -385,20 +539,23 @@
                         },
                         {
                           "cancelEvent": "INIT",
-                          "submitEvent": "SUBMIT",
                           "fields": "@config.fields",
-                          "type": "form-section",
-                          "mode": "create"
+                          "mode": "create",
+                          "submitEvent": "SUBMIT",
+                          "type": "form-section"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "editing",
+                "to": "editing"
               },
               {
-                "from": "editing",
-                "to": "submitted",
-                "event": "SUBMIT",
                 "effects": [
                   [
                     "persist",
@@ -407,8 +564,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "FormEntrySaved",
-                        "failure": "FormEntrySaveFailed"
+                        "failure": "FormEntrySaveFailed",
+                        "success": "FormEntrySaved"
                       }
                     }
                   ],
@@ -416,41 +573,41 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "name": "check-circle",
                           "type": "icon"
                         },
                         {
+                          "content": "Form Submitted",
                           "type": "typography",
-                          "variant": "h2",
-                          "content": "Form Submitted"
+                          "variant": "h2"
                         },
                         {
-                          "variant": "success",
                           "message": "Your form has been submitted successfully.",
-                          "type": "alert"
+                          "type": "alert",
+                          "variant": "success"
                         },
                         {
-                          "variant": "primary",
-                          "label": "New Entry",
                           "action": "RESET",
                           "icon": "plus",
-                          "type": "button"
+                          "label": "New Entry",
+                          "type": "button",
+                          "variant": "primary"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "lg",
-                      "align": "center",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "SUBMIT",
+                "from": "editing",
+                "to": "submitted"
               },
               {
-                "from": "submitted",
-                "to": "editing",
-                "event": "RESET",
                 "effects": [
                   [
                     "fetch",
@@ -476,207 +633,50 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "lg",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
                               "name": "@config.icon",
                               "type": "icon"
                             },
                             {
+                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h2",
-                              "content": "@config.title"
+                              "variant": "h2"
                             }
                           ],
-                          "align": "center",
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "mode": "create",
                           "cancelEvent": "INIT",
-                          "submitEvent": "SUBMIT",
                           "fields": "@config.fields",
+                          "mode": "create",
+                          "submitEvent": "SUBMIT",
                           "type": "form-section"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "RESET",
+                "from": "submitted",
+                "to": "editing"
               }
             ]
-          },
-          "config": {
-            "title": {
-              "type": "string",
-              "default": "Form",
-              "label": "Form title",
-              "description": "Heading shown above the form",
-              "tier": "presentation"
-            },
-            "fieldValidation": {
-              "type": "[ValidationSpec]",
-              "default": [],
-              "label": "Field validation",
-              "description": "Per-field rules (format, regex, length) shown inline on submit",
-              "tier": "domain",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": true
-                  },
-                  "rule": {
-                    "name": "rule",
-                    "type": "string",
-                    "required": false
-                  },
-                  "message": {
-                    "name": "message",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "icon": {
-              "type": "string",
-              "default": "file-text",
-              "label": "Header icon",
-              "description": "Icon shown beside the form title",
-              "tier": "presentation"
-            },
-            "fields": {
-              "type": "[FieldSpec]",
-              "default": [
-                {
-                  "label": "Name",
-                  "name": "name"
-                },
-                {
-                  "label": "Description",
-                  "name": "description"
-                },
-                {
-                  "type": "enum",
-                  "label": "Status",
-                  "name": "status",
-                  "values": [
-                    "active",
-                    "inactive",
-                    "pending"
-                  ]
-                },
-                {
-                  "name": "notes",
-                  "type": "textarea",
-                  "label": "Notes"
-                },
-                {
-                  "label": "Age",
-                  "name": "age",
-                  "type": "number"
-                },
-                {
-                  "name": "isActive",
-                  "type": "boolean",
-                  "label": "Is Active"
-                },
-                {
-                  "name": "birthDate",
-                  "label": "Birth Date",
-                  "type": "date"
-                },
-                {
-                  "name": "priority",
-                  "type": "enum",
-                  "values": [
-                    "low",
-                    "medium",
-                    "high",
-                    "critical"
-                  ],
-                  "label": "Priority"
-                },
-                {
-                  "name": "categoryId",
-                  "label": "Category ID",
-                  "relation": {
-                    "entity": "FormEntry",
-                    "cardinality": "one"
-                  },
-                  "type": "relation"
-                }
-              ],
-              "label": "Form fields",
-              "description": "Inputs to render; each entry follows the form-section field schema",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "header": {
-                    "name": "header",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "FormEntryFormPage",
-          "path": "/formentrys/form",
-          "traits": [
-            {
-              "ref": "FormEntryFormAdvanced"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.2.0"
 }

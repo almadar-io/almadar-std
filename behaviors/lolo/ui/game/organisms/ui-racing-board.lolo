@@ -7,15 +7,55 @@ orbital RacingBoardOrbital {
     code : string
     stack : string
   }
+  type RacingBoardTilesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    terrain : string
+    type : string
+    terrainSprite : asset
+    passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
+    modelUrl : asset
+  }
   type RacingBoardUnitsItem = {
     id : string!
+    position : RacingBoardUnitsItemPosition
     x : number
     y : number
+    z : number
     sprite : asset
+    spriteSheet : asset
+    modelUrl : asset
     unitType : string
+    name : string
     team : "player" | "rival" | "neutral"
-    speed : number
-    lap : number
+    health : number
+    maxHealth : number
+    previousPosition : RacingBoardUnitsItemPreviousPosition
+    elevation : number
+  }
+  type RacingBoardUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type RacingBoardUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type RacingBoardFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    z : number
+    type : string!
+    sprite : asset
+    assetUrl : asset
+    color : string
+    elevation : number
   }
 
   entity RacingBoardItem [runtime] {
@@ -39,32 +79,31 @@ orbital RacingBoardOrbital {
           totalCount: @config.totalCount
           activeFilters: @config.activeFilters
           selectedIds: @config.selectedIds
-          backgroundImage: @config.backgroundImage
-          playerSprite: @config.playerSprite
-          rivalSprite: @config.rivalSprite
-          hudLightsSprite: @config.hudLightsSprite
+          tiles: @config.tiles
           units: @config.units
+          features: @config.features
+          assetManifest: @config.assetManifest
           assetBaseUrl: @config.assetBaseUrl
-          width: @config.width
-          height: @config.height
-          fps: @config.fps
-          tickEvent: TICK
-          drawEvent: DRAW
+          scale: @config.scale
+          showMinimap: @config.showMinimap
+          enableCamera: @config.enableCamera
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
           type: racing-board
         })
     }
 
     emits {
-      TICK -> external {
-        dt : number!
-        frame : number!
+      TILE_CLICK -> external {
+        x : number!
+        y : number!
       }
-        @description "Declarative event: emits UI:{tickEvent} with { dt, frame } each tick"
+        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
         @tier "essential"
-      DRAW -> external {
-        frame : number!
+      UNIT_CLICK -> external {
+        unitId : string!
       }
-        @description "Declarative event: emits UI:{drawEvent} with { frame } each draw frame"
+        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
         @tier "essential"
     }
 
@@ -114,41 +153,37 @@ orbital RacingBoardOrbital {
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
-      backgroundImage : asset = "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/backgrounds/track.png"
-        @label "Background Image"
-        @description "Tiled asphalt road tile (Racing Pack road_asphalt01)"
+      tiles : [RacingBoardTilesItem] = [{ x: 0, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 2, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 3, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 4, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 5, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 6, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 7, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 1, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 1, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 2, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 2, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 3, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 3, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 5, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 5, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 6, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 6, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 2, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 3, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 4, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 5, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 6, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 7, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }]
+        @label "Tiles"
+        @description "Road circuit + grass infield tiles (8x8 rectangular track)"
         @tier "presentation"
-      playerSprite : asset = "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png"
-        @label "Player Sprite"
-        @description "Player car sprite (Racing Pack car_red_1)"
-        @tier "presentation"
-      rivalSprite : asset = "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png"
-        @label "Rival Sprite"
-        @description "Rival car sprite (Racing Pack car_blue_1)"
-        @tier "presentation"
-      hudLightsSprite : asset = "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/lights.png"
-        @label "HUD Lights Sprite"
-        @description "Traffic lights / start signal (Racing Pack Objects/lights)"
-        @tier "presentation"
-      units : [RacingBoardUnitsItem] = [{ id: "player", x: 380, y: 480, unitType: "car", team: player, speed: 0, lap: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png" }, { id: "rival1", x: 420, y: 520, unitType: "car", team: rival, speed: 0, lap: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png" }]
+      units : [RacingBoardUnitsItem] = [{ id: "player", position: { x: 3, y: 0 }, unitType: "car", name: "Player", team: player, sprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png" }, { id: "rival1", position: { x: 4, y: 0 }, unitType: "car", name: "Rival", team: rival, sprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png" }]
         @label "Units"
-        @description "Cars on the track (player + rivals)"
+        @description "Cars on the track (player + rival)"
+        @tier "presentation"
+      features : [RacingBoardFeaturesItem] = []
+        @label "Features"
+        @description "Track features (pit markers, start line, etc.)"
+        @tier "presentation"
+      assetManifest : string = ""
+        @label "Asset Manifest"
+        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
         @tier "presentation"
       assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
         @label "Asset Base Url"
-        @description "Base URL prepended to asset paths"
+        @description "Base URL prepended to manifest sprite paths"
         @tier "presentation"
-      width : number = 800
-        @label "Width"
-        @description "Canvas width in pixels"
+      scale : number = 0.45
+        @label "Scale"
+        @description "Render scale"
         @tier "presentation"
-      height : number = 600
-        @label "Height"
-        @description "Canvas height in pixels"
+      showMinimap : boolean = true
+        @label "Show Minimap"
+        @description "Show minimap overlay"
         @tier "presentation"
-      fps : number = 60
-        @label "FPS"
-        @description "Target frames per second"
+      enableCamera : boolean = true
+        @label "Enable Camera"
+        @description "Enable camera pan/zoom controls"
         @tier "presentation"
     }
   }

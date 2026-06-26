@@ -1,191 +1,20 @@
 {
-  "name": "std-step-flow-progress-vertical",
-  "version": "1.1.0",
   "description": "Header progress bar above a vertical step list — full-width progress affordance up top, every step as a row card below.",
+  "name": "std-step-flow-progress-vertical",
   "orbitals": [
     {
-      "name": "ProgressVerticalOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-step-flow",
-          "as": "StepFlow"
-        }
-      ],
       "entity": {
-        "name": "ProgressVerticalView",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ProgressVerticalView",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "ref": "StepFlow.traits.StepFlowReview",
-          "name": "ProgressVerticalReview",
-          "linkedEntity": "ProgressVerticalView",
-          "config": {
-            "bodyContent": {
-              "gap": "lg",
-              "children": [
-                {
-                  "gap": "sm",
-                  "direction": "vertical",
-                  "children": [
-                    {
-                      "type": "stack",
-                      "align": "center",
-                      "children": [
-                        {
-                          "variant": "h3",
-                          "type": "typography",
-                          "content": "@config.title"
-                        },
-                        {
-                          "color": "muted",
-                          "content": "@entity.currentStepLabel",
-                          "variant": "caption",
-                          "type": "typography"
-                        }
-                      ],
-                      "gap": "sm",
-                      "justify": "between",
-                      "direction": "horizontal"
-                    },
-                    {
-                      "steps": "@entity.wizardSteps",
-                      "allowNavigation": false,
-                      "type": "wizard-progress",
-                      "currentStep": "@entity.currentStepIndex"
-                    }
-                  ],
-                  "type": "stack"
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "gap": "md",
-                  "renderItem": [
-                    "fn",
-                    "step",
-                    {
-                      "children": [
-                        {
-                          "align": "center",
-                          "className": "p-card-md",
-                          "direction": "horizontal",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "label": "@step.indexLabel",
-                              "variant": "@step.badgeVariant",
-                              "type": "badge"
-                            },
-                            {
-                              "size": "md",
-                              "type": "icon",
-                              "name": "@step.icon"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "content": "@step.label",
-                                  "variant": "h4",
-                                  "type": "typography"
-                                },
-                                {
-                                  "variant": "caption",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "content": "@step.description"
-                                }
-                              ],
-                              "gap": "xs",
-                              "type": "stack",
-                              "direction": "vertical"
-                            }
-                          ],
-                          "gap": "md"
-                        }
-                      ],
-                      "type": "card",
-                      "look": "@config.cardLook"
-                    }
-                  ],
-                  "type": "data-list",
-                  "entity": "@entity.wizardSteps",
-                  "fields": []
-                },
-                {
-                  "className": "justify-between",
-                  "children": [
-                    {
-                      "action": "BACK",
-                      "variant": "ghost",
-                      "label": "Back",
-                      "disabled": "@entity.isFirstStep",
-                      "type": "button",
-                      "actionPayload": {
-                        "id": "@entity.id"
-                      },
-                      "icon": "chevron-left"
-                    },
-                    {
-                      "align": "center",
-                      "children": [
-                        {
-                          "type": "button",
-                          "actionPayload": {
-                            "id": "@entity.id"
-                          },
-                          "action": "REJECT",
-                          "label": "Reject",
-                          "icon": "x",
-                          "variant": "ghost"
-                        },
-                        {
-                          "variant": "ghost",
-                          "icon": "alert-triangle",
-                          "type": "button",
-                          "label": "Escalate",
-                          "action": "ESCALATE",
-                          "actionPayload": {
-                            "id": "@entity.id"
-                          }
-                        },
-                        {
-                          "type": "button",
-                          "action": "ADVANCE",
-                          "actionPayload": {
-                            "id": "@entity.id"
-                          },
-                          "icon": "@entity.primaryActionIcon",
-                          "label": "@entity.primaryActionLabel",
-                          "variant": "primary"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "type": "stack"
-                    }
-                  ],
-                  "direction": "horizontal",
-                  "align": "center",
-                  "gap": "sm",
-                  "type": "stack"
-                }
-              ],
-              "direction": "vertical",
-              "type": "stack",
-              "className": "w-full pt-section w-full"
-            }
-          }
-        }
-      ],
+      "name": "ProgressVerticalOrbital",
       "pages": [
         {
           "name": "ProgressVerticalPage",
@@ -196,7 +25,178 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "children": [
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "content": "@config.title",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "@entity.currentStepLabel",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "justify": "between",
+                      "type": "stack"
+                    },
+                    {
+                      "allowNavigation": false,
+                      "currentStep": "@entity.currentStepIndex",
+                      "steps": "@entity.wizardSteps",
+                      "type": "wizard-progress"
+                    }
+                  ],
+                  "direction": "vertical",
+                  "gap": "sm",
+                  "type": "stack"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "entity": "@entity.wizardSteps",
+                  "fields": [],
+                  "gap": "md",
+                  "renderItem": [
+                    "fn",
+                    "step",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "label": "@step.indexLabel",
+                              "type": "badge",
+                              "variant": "@step.badgeVariant"
+                            },
+                            {
+                              "name": "@step.icon",
+                              "size": "md",
+                              "type": "icon"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "content": "@step.label",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": "@step.description",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "className": "p-card-md",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "look": "@config.cardLook",
+                      "type": "card"
+                    }
+                  ],
+                  "type": "data-list"
+                },
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "action": "BACK",
+                      "actionPayload": {
+                        "id": "@entity.id"
+                      },
+                      "disabled": "@entity.isFirstStep",
+                      "icon": "chevron-left",
+                      "label": "Back",
+                      "type": "button",
+                      "variant": "ghost"
+                    },
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "action": "REJECT",
+                          "actionPayload": {
+                            "id": "@entity.id"
+                          },
+                          "icon": "x",
+                          "label": "Reject",
+                          "type": "button",
+                          "variant": "ghost"
+                        },
+                        {
+                          "action": "ESCALATE",
+                          "actionPayload": {
+                            "id": "@entity.id"
+                          },
+                          "icon": "alert-triangle",
+                          "label": "Escalate",
+                          "type": "button",
+                          "variant": "ghost"
+                        },
+                        {
+                          "action": "ADVANCE",
+                          "actionPayload": {
+                            "id": "@entity.id"
+                          },
+                          "icon": "@entity.primaryActionIcon",
+                          "label": "@entity.primaryActionLabel",
+                          "type": "button",
+                          "variant": "primary"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    }
+                  ],
+                  "className": "justify-between",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
+                }
+              ],
+              "className": "w-full pt-section w-full",
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            }
+          },
+          "linkedEntity": "ProgressVerticalView",
+          "name": "ProgressVerticalReview",
+          "ref": "StepFlow.traits.StepFlowReview"
+        }
+      ],
+      "uses": [
+        {
+          "as": "StepFlow",
+          "from": "std/behaviors/std-step-flow"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.1.0"
 }

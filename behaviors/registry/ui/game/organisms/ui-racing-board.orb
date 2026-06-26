@@ -39,17 +39,17 @@
             },
             "assetBaseUrl": {
               "default": "https://almadar-kflow-assets.web.app/shared/",
-              "description": "Base URL prepended to asset paths",
+              "description": "Base URL prepended to manifest sprite paths",
               "label": "Asset Base Url",
               "tier": "presentation",
               "type": "asset"
             },
-            "backgroundImage": {
-              "default": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/backgrounds/track.png",
-              "description": "Tiled asphalt road tile (Racing Pack road_asphalt01)",
-              "label": "Background Image",
+            "assetManifest": {
+              "default": "",
+              "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
+              "label": "Asset Manifest",
               "tier": "presentation",
-              "type": "asset"
+              "type": "string"
             },
             "className": {
               "default": "",
@@ -57,6 +57,13 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
+            },
+            "enableCamera": {
+              "default": true,
+              "description": "Enable camera pan/zoom controls",
+              "label": "Enable Camera",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "error": {
               "description": "Error state (UiError)",
@@ -86,26 +93,62 @@
               "tier": "presentation",
               "type": "RacingBoardError"
             },
-            "fps": {
-              "default": 60.0,
-              "description": "Target frames per second",
-              "label": "FPS",
+            "features": {
+              "default": [],
+              "description": "Track features (pit markers, start line, etc.)",
+              "items": {
+                "properties": {
+                  "assetUrl": {
+                    "name": "assetUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "elevation": {
+                    "name": "elevation",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "z": {
+                    "name": "z",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Features",
               "tier": "presentation",
-              "type": "number"
-            },
-            "height": {
-              "default": 600.0,
-              "description": "Canvas height in pixels",
-              "label": "Height",
-              "tier": "presentation",
-              "type": "number"
-            },
-            "hudLightsSprite": {
-              "default": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/ui/lights.png",
-              "description": "Traffic lights / start signal (Racing Pack Objects/lights)",
-              "label": "HUD Lights Sprite",
-              "tier": "presentation",
-              "type": "asset"
+              "type": "[RacingBoardFeaturesItem]"
             },
             "isLoading": {
               "default": false,
@@ -129,19 +172,12 @@
               "tier": "presentation",
               "type": "number"
             },
-            "playerSprite": {
-              "default": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png",
-              "description": "Player car sprite (Racing Pack car_red_1)",
-              "label": "Player Sprite",
+            "scale": {
+              "default": 0.45,
+              "description": "Render scale",
+              "label": "Scale",
               "tier": "presentation",
-              "type": "asset"
-            },
-            "rivalSprite": {
-              "default": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png",
-              "description": "Rival car sprite (Racing Pack car_blue_1)",
-              "label": "Rival Sprite",
-              "tier": "presentation",
-              "type": "asset"
+              "type": "number"
             },
             "searchValue": {
               "default": "Search Value",
@@ -159,6 +195,13 @@
               "label": "Selected Ids",
               "tier": "presentation",
               "type": "[string]"
+            },
+            "showMinimap": {
+              "default": true,
+              "description": "Show minimap overlay",
+              "label": "Show Minimap",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "sortBy": {
               "default": "Sort By",
@@ -178,6 +221,527 @@
                 "desc"
               ]
             },
+            "tiles": {
+              "default": [
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 2.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 3.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 4.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 6.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 7.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 1.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 2.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 3.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 4.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 5.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 6.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 7.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 0.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 1.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 3.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 4.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 5.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 6.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 7.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 0.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 1.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 5.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 6.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 7.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 0.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 1.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 2.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 3.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 5.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 6.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 7.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 0.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 1.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 3.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 4.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 5.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 6.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 7.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 0.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 1.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 2.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 3.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 4.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 5.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": false,
+                  "terrain": "grass",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "x": 6.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 7.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 0.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 1.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 2.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 3.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 4.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 5.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 6.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "road",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                  "x": 7.0,
+                  "y": 7.0
+                }
+              ],
+              "description": "Road circuit + grass infield tiles (8x8 rectangular track)",
+              "items": {
+                "properties": {
+                  "elevation": {
+                    "name": "elevation",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "modelUrl": {
+                    "name": "modelUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "movementCost": {
+                    "name": "movementCost",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "passable": {
+                    "name": "passable",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "terrain": {
+                    "name": "terrain",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "terrainSprite": {
+                    "name": "terrainSprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "tileType": {
+                    "name": "tileType",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "z": {
+                    "name": "z",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tiles",
+              "tier": "presentation",
+              "type": "[RacingBoardTilesItem]"
+            },
             "totalCount": {
               "default": 0.0,
               "description": "Total number of items",
@@ -189,45 +753,101 @@
               "default": [
                 {
                   "id": "player",
-                  "lap": 1.0,
-                  "speed": 0.0,
+                  "name": "Player",
+                  "position": {
+                    "x": 3.0,
+                    "y": 0.0
+                  },
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png",
                   "team": "player",
-                  "unitType": "car",
-                  "x": 380.0,
-                  "y": 480.0
+                  "unitType": "car"
                 },
                 {
                   "id": "rival1",
-                  "lap": 1.0,
-                  "speed": 0.0,
+                  "name": "Rival",
+                  "position": {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png",
                   "team": "rival",
-                  "unitType": "car",
-                  "x": 420.0,
-                  "y": 520.0
+                  "unitType": "car"
                 }
               ],
-              "description": "Cars on the track (player + rivals)",
+              "description": "Cars on the track (player + rival)",
               "items": {
                 "properties": {
+                  "elevation": {
+                    "name": "elevation",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "health": {
+                    "name": "health",
+                    "required": false,
+                    "type": "number"
+                  },
                   "id": {
                     "name": "id",
                     "required": true,
                     "type": "string"
                   },
-                  "lap": {
-                    "name": "lap",
+                  "maxHealth": {
+                    "name": "maxHealth",
                     "required": false,
                     "type": "number"
                   },
-                  "speed": {
-                    "name": "speed",
+                  "modelUrl": {
+                    "name": "modelUrl",
                     "required": false,
-                    "type": "number"
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "position": {
+                    "name": "position",
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "previousPosition": {
+                    "name": "previousPosition",
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
                   },
                   "sprite": {
                     "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "spriteSheet": {
+                    "name": "spriteSheet",
                     "required": false,
                     "type": "string"
                   },
@@ -255,6 +875,11 @@
                     "name": "y",
                     "required": false,
                     "type": "number"
+                  },
+                  "z": {
+                    "name": "z",
+                    "required": false,
+                    "type": "number"
                   }
                 },
                 "type": "object"
@@ -262,27 +887,20 @@
               "label": "Units",
               "tier": "presentation",
               "type": "[RacingBoardUnitsItem]"
-            },
-            "width": {
-              "default": 800.0,
-              "description": "Canvas width in pixels",
-              "label": "Width",
-              "tier": "presentation",
-              "type": "number"
             }
           },
           "emits": [
             {
-              "description": "Declarative event: emits UI:{tickEvent} with { dt, frame } each tick",
-              "event": "TICK",
+              "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+              "event": "TILE_CLICK",
               "payloadSchema": [
                 {
-                  "name": "dt",
+                  "name": "x",
                   "required": true,
                   "type": "number"
                 },
                 {
-                  "name": "frame",
+                  "name": "y",
                   "required": true,
                   "type": "number"
                 }
@@ -291,13 +909,13 @@
               "tier": "essential"
             },
             {
-              "description": "Declarative event: emits UI:{drawEvent} with { frame } each draw frame",
-              "event": "DRAW",
+              "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+              "event": "UNIT_CLICK",
               "payloadSchema": [
                 {
-                  "name": "frame",
+                  "name": "unitId",
                   "required": true,
-                  "type": "number"
+                  "type": "string"
                 }
               ],
               "scope": "external",
@@ -319,17 +937,17 @@
                 "name": "Initialize"
               },
               {
-                "description": "Declarative event: emits UI:{tickEvent} with { dt, frame } each tick",
-                "key": "TICK",
-                "name": "Tick",
+                "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
                 "payloadSchema": [
                   {
-                    "name": "dt",
+                    "name": "x",
                     "required": true,
                     "type": "number"
                   },
                   {
-                    "name": "frame",
+                    "name": "y",
                     "required": true,
                     "type": "number"
                   }
@@ -337,14 +955,14 @@
                 "tier": "essential"
               },
               {
-                "description": "Declarative event: emits UI:{drawEvent} with { frame } each draw frame",
-                "key": "DRAW",
-                "name": "Draw",
+                "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
                 "payloadSchema": [
                   {
-                    "name": "frame",
+                    "name": "unitId",
                     "required": true,
-                    "type": "number"
+                    "type": "string"
                   }
                 ],
                 "tier": "essential"
@@ -365,27 +983,26 @@
                     {
                       "activeFilters": "@config.activeFilters",
                       "assetBaseUrl": "@config.assetBaseUrl",
-                      "backgroundImage": "@config.backgroundImage",
+                      "assetManifest": "@config.assetManifest",
                       "className": "@config.className",
-                      "drawEvent": "DRAW",
+                      "enableCamera": "@config.enableCamera",
                       "error": "@config.error",
-                      "fps": "@config.fps",
-                      "height": "@config.height",
-                      "hudLightsSprite": "@config.hudLightsSprite",
+                      "features": "@config.features",
                       "isLoading": "@config.isLoading",
                       "page": "@config.pageProp",
                       "pageSize": "@config.pageSize",
-                      "playerSprite": "@config.playerSprite",
-                      "rivalSprite": "@config.rivalSprite",
+                      "scale": "@config.scale",
                       "searchValue": "@config.searchValue",
                       "selectedIds": "@config.selectedIds",
+                      "showMinimap": "@config.showMinimap",
                       "sortBy": "@config.sortBy",
                       "sortDirection": "@config.sortDirection",
-                      "tickEvent": "TICK",
+                      "tileClickEvent": "TILE_CLICK",
+                      "tiles": "@config.tiles",
                       "totalCount": "@config.totalCount",
                       "type": "racing-board",
-                      "units": "@config.units",
-                      "width": "@config.width"
+                      "unitClickEvent": "UNIT_CLICK",
+                      "units": "@config.units"
                     }
                   ]
                 ],

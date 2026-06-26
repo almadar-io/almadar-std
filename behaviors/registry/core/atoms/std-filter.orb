@@ -1,110 +1,187 @@
 {
-  "name": "std-filter",
-  "version": "1.0.0",
   "description": "std-filter — single primitive: filter-group. Owns a FilterTarget runtime entity; every FILTER transition persists field/value so cross-trait listeners can route the latest selection into data atoms.",
+  "name": "std-filter",
   "orbitals": [
     {
-      "name": "FilterTargetOrbital",
       "entity": {
-        "name": "FilterTarget",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "field",
-            "type": "string",
             "description": "The name of the data field being filtered.",
-            "synonyms": "attribute, property, key"
+            "name": "field",
+            "synonyms": "attribute, property, key",
+            "type": "string"
           },
           {
-            "name": "value",
-            "type": "string",
             "description": "The data associated with the filter criterion.",
-            "synonyms": "data, criterion, content"
+            "name": "value",
+            "synonyms": "data, criterion, content",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "FilterTarget",
+        "persistence": "runtime"
       },
+      "name": "FilterTargetOrbital",
+      "pages": [
+        {
+          "name": "FilterTargetFilterPage",
+          "path": "/filtertargets",
+          "traits": [
+            {
+              "ref": "FilterTargetFilter"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "FilterTargetFilter",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "field",
-              "value"
-            ]
-          },
           "category": "interaction",
-          "linkedEntity": "FilterTarget",
+          "config": {
+            "event": {
+              "default": "FILTER",
+              "description": "Event emitted when the user changes a filter selection",
+              "label": "Filter event",
+              "tier": "internal",
+              "type": "string"
+            },
+            "filterBarLook": {
+              "default": "toolbar",
+              "description": "Layer 2 visual treatment for the filter bar.",
+              "label": "Filter bar look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "toolbar",
+                "chips",
+                "pills",
+                "popover-trigger",
+                "inline-column-header"
+              ]
+            },
+            "filters": {
+              "default": [
+                {
+                  "field": "status",
+                  "filterType": "select",
+                  "label": "Status",
+                  "options": [
+                    "active",
+                    "inactive",
+                    "pending"
+                  ]
+                }
+              ],
+              "description": "Field, label, control type, and options for each filter input",
+              "items": {
+                "properties": {
+                  "field": {
+                    "name": "field",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "filterType": {
+                    "name": "filterType",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "options": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "name": "options",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Filter controls",
+              "tier": "presentation",
+              "type": "[FilterSpec]"
+            }
+          },
           "emits": [
             {
-              "event": "FILTER",
               "description": "Signals a filter has been applied or changed.",
-              "synonyms": "apply, update, change, refine",
-              "tier": "essential",
+              "event": "FILTER",
               "payloadSchema": [
                 {
                   "name": "field",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "value",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "apply, update, change, refine",
+              "tier": "essential"
             }
           ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
+          "entityContract": {
+            "provides": [
+              "field",
+              "value"
             ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FilterTarget",
+          "name": "FilterTargetFilter",
+          "scope": "instance",
+          "stateMachine": {
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Signals a filter has been applied or changed.",
                 "key": "FILTER",
                 "name": "Filter",
-                "description": "Signals a filter has been applied or changed.",
-                "synonyms": "apply, update, change, refine",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "field",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   },
                   {
                     "name": "value",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "apply, update, change, refine",
+                "tier": "essential"
               },
               {
+                "description": "Resets the filter selection to its initial state.",
                 "key": "CLEAR_FILTERS",
                 "name": "Clear Filters",
-                "description": "Resets the filter selection to its initial state.",
                 "synonyms": "reset, clear, remove, undo",
                 "tier": "essential"
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -121,12 +198,12 @@
                       "type": "filter-group"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "FILTER",
                 "effects": [
                   [
                     "set",
@@ -148,12 +225,12 @@
                       "type": "filter-group"
                     }
                   ]
-                ]
+                ],
+                "event": "FILTER",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "CLEAR_FILTERS",
                 "effects": [
                   [
                     "set",
@@ -177,99 +254,22 @@
                     "render-ui",
                     "main",
                     {
-                      "look": "@config.filterBarLook",
                       "entity": "FilterTarget",
                       "filters": "@config.filters",
+                      "look": "@config.filterBarLook",
                       "type": "filter-group"
                     }
                   ]
-                ]
+                ],
+                "event": "CLEAR_FILTERS",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "filters": {
-              "type": "[FilterSpec]",
-              "default": [
-                {
-                  "field": "status",
-                  "options": [
-                    "active",
-                    "inactive",
-                    "pending"
-                  ],
-                  "label": "Status",
-                  "filterType": "select"
-                }
-              ],
-              "label": "Filter controls",
-              "description": "Field, label, control type, and options for each filter input",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "options": {
-                    "name": "options",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "field": {
-                    "name": "field",
-                    "type": "string",
-                    "required": true
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "filterType": {
-                    "name": "filterType",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "filterBarLook": {
-              "type": "string",
-              "default": "toolbar",
-              "label": "Filter bar look",
-              "description": "Layer 2 visual treatment for the filter bar.",
-              "tier": "presentation",
-              "values": [
-                "toolbar",
-                "chips",
-                "pills",
-                "popover-trigger",
-                "inline-column-header"
-              ]
-            },
-            "event": {
-              "type": "string",
-              "default": "FILTER",
-              "label": "Filter event",
-              "description": "Event emitted when the user changes a filter selection",
-              "tier": "internal"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "FilterTargetFilterPage",
-          "path": "/filtertargets",
-          "traits": [
-            {
-              "ref": "FilterTargetFilter"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

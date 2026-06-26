@@ -1,185 +1,90 @@
 {
-  "name": "std-thread-comments-linear",
-  "version": "1.2.0",
   "description": "Nested threaded comments — Disqus/Hacker News style: indented reply tree, inline reply composer on every comment card, and a visible replies group per parent. For forum discussions, blog comments, document review threads, project-manager issue comments.",
+  "name": "std-thread-comments-linear",
   "orbitals": [
     {
-      "name": "CommentsLinearOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-thread",
-          "as": "Thread"
-        }
-      ],
       "entity": {
-        "name": "CommentsLinearPost",
         "collection": "commentslinearposts",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "parentId",
-            "type": "string",
             "description": "Identifier of the comment this comment replies to.",
-            "synonyms": "parent, replyTo, source"
+            "name": "parentId",
+            "synonyms": "parent, replyTo, source",
+            "type": "string"
           },
           {
-            "name": "threadRootId",
-            "type": "string",
-            "required": true,
             "description": "Identifier of the top-level comment in the thread.",
-            "synonyms": "rootId, topLevelId, originId"
+            "name": "threadRootId",
+            "required": true,
+            "synonyms": "rootId, topLevelId, originId",
+            "type": "string"
           },
           {
-            "name": "authorId",
-            "type": "string",
-            "required": true,
             "description": "Unique identifier for the comment's author.",
-            "synonyms": "user identifier, author reference, contributor ID"
+            "name": "authorId",
+            "required": true,
+            "synonyms": "user identifier, author reference, contributor ID",
+            "type": "string"
           },
           {
-            "name": "authorName",
-            "type": "string",
-            "required": true,
             "description": "The name of the comment's author.",
-            "synonyms": "author, user, contributor"
+            "name": "authorName",
+            "required": true,
+            "synonyms": "author, user, contributor",
+            "type": "string"
           },
           {
-            "name": "content",
-            "type": "string",
-            "required": true,
             "description": "The text of the comment or post.",
-            "synonyms": "text, body, message, postContent"
+            "name": "content",
+            "required": true,
+            "synonyms": "text, body, message, postContent",
+            "type": "string"
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "voteCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of votes or ratings associated with the comment.",
-            "synonyms": "rating, score, likes, upvotes"
+            "name": "voteCount",
+            "synonyms": "rating, score, likes, upvotes",
+            "type": "number"
           },
           {
-            "name": "replyCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of replies to this comment.",
-            "synonyms": "child comments, responses, sub-comments"
+            "name": "replyCount",
+            "synonyms": "child comments, responses, sub-comments",
+            "type": "number"
           },
           {
-            "name": "replies",
-            "type": "relation",
-            "relation": {
-              "entity": "CommentsLinearPost",
-              "cardinality": "many"
-            },
             "description": "A list of child comments in the thread.",
-            "synonyms": "replies, children, descendants"
+            "name": "replies",
+            "relation": {
+              "cardinality": "many",
+              "entity": "CommentsLinearPost"
+            },
+            "synonyms": "replies, children, descendants",
+            "type": "relation"
           },
           {
-            "name": "focusedRow",
-            "type": "object",
             "default": {},
             "description": "The currently selected comment within the comment thread.",
-            "synonyms": "selected, active, highlighted"
+            "name": "focusedRow",
+            "synonyms": "selected, active, highlighted",
+            "type": "object"
           }
-        ]
+        ],
+        "name": "CommentsLinearPost",
+        "persistence": "persistent"
       },
-      "traits": [
-        {
-          "ref": "Thread.traits.ThreadPostBrowse",
-          "name": "CommentsLinear",
-          "linkedEntity": "CommentsLinearPost",
-          "config": {
-            "bodyContent": {
-              "direction": "vertical",
-              "className": "w-full px-card-md py-section",
-              "gap": "lg",
-              "children": [
-                {
-                  "type": "stack",
-                  "children": [
-                    {
-                      "name": "message-square",
-                      "type": "icon",
-                      "size": "md"
-                    },
-                    {
-                      "type": "typography",
-                      "variant": "h3",
-                      "content": "@config.sectionTitle"
-                    }
-                  ],
-                  "align": "center",
-                  "direction": "horizontal",
-                  "gap": "sm"
-                },
-                {
-                  "look": "flat-bordered",
-                  "padding": "md",
-                  "children": {
-                    "type": "stack",
-                    "direction": "vertical",
-                    "gap": "sm",
-                    "children": [
-                      {
-                        "content": "Add a comment",
-                        "variant": "label",
-                        "type": "typography"
-                      },
-                      {
-                        "rows": 3.0,
-                        "placeholder": "Share your thoughts…",
-                        "action": "EDIT_REPLY",
-                        "inputType": "textarea",
-                        "type": "input"
-                      },
-                      {
-                        "type": "stack",
-                        "gap": "sm",
-                        "direction": "horizontal",
-                        "children": [
-                          {
-                            "size": "sm",
-                            "type": "button",
-                            "variant": "ghost",
-                            "label": "Cancel",
-                            "action": "CANCEL_REPLY"
-                          },
-                          {
-                            "label": "Comment",
-                            "icon": "send",
-                            "action": "SUBMIT_REPLY",
-                            "variant": "primary",
-                            "type": "button",
-                            "size": "sm"
-                          }
-                        ],
-                        "justify": "end"
-                      }
-                    ]
-                  },
-                  "type": "card"
-                },
-                {
-                  "replyEvent": "REPLY",
-                  "nodes": "@payload.data",
-                  "showActions": true,
-                  "type": "reply-tree"
-                }
-              ],
-              "type": "stack"
-            }
-          }
-        }
-      ],
+      "name": "CommentsLinearOrbital",
       "pages": [
         {
           "name": "CommentsLinearPage",
@@ -190,7 +95,102 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "name": "message-square",
+                      "size": "md",
+                      "type": "icon"
+                    },
+                    {
+                      "content": "@config.sectionTitle",
+                      "type": "typography",
+                      "variant": "h3"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
+                },
+                {
+                  "children": {
+                    "children": [
+                      {
+                        "content": "Add a comment",
+                        "type": "typography",
+                        "variant": "label"
+                      },
+                      {
+                        "action": "EDIT_REPLY",
+                        "inputType": "textarea",
+                        "placeholder": "Share your thoughts…",
+                        "rows": 3.0,
+                        "type": "input"
+                      },
+                      {
+                        "children": [
+                          {
+                            "action": "CANCEL_REPLY",
+                            "label": "Cancel",
+                            "size": "sm",
+                            "type": "button",
+                            "variant": "ghost"
+                          },
+                          {
+                            "action": "SUBMIT_REPLY",
+                            "icon": "send",
+                            "label": "Comment",
+                            "size": "sm",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "sm",
+                        "justify": "end",
+                        "type": "stack"
+                      }
+                    ],
+                    "direction": "vertical",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  "look": "flat-bordered",
+                  "padding": "md",
+                  "type": "card"
+                },
+                {
+                  "nodes": "@payload.data",
+                  "replyEvent": "REPLY",
+                  "showActions": true,
+                  "type": "reply-tree"
+                }
+              ],
+              "className": "w-full px-card-md py-section",
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            }
+          },
+          "linkedEntity": "CommentsLinearPost",
+          "name": "CommentsLinear",
+          "ref": "Thread.traits.ThreadPostBrowse"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Thread",
+          "from": "std/behaviors/std-thread"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.2.0"
 }

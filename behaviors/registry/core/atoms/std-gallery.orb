@@ -1,97 +1,101 @@
 {
-  "name": "std-gallery",
-  "version": "1.0.0",
   "description": "std-gallery — image gallery primitive. Browses GalleryItems in a media-gallery grid; opens a lightbox modal for full-size viewing.",
+  "name": "std-gallery",
   "orbitals": [
     {
-      "name": "GalleryItemOrbital",
       "entity": {
-        "name": "GalleryItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "name",
-            "type": "string",
             "required": true,
+            "type": "string"
+          },
+          {
             "description": "A user-friendly identifier for the item.",
-            "synonyms": "title, label, identifier"
+            "name": "name",
+            "required": true,
+            "synonyms": "title, label, identifier",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A brief textual summary of the item's content.",
-            "synonyms": "caption, summary, details, notes"
+            "name": "description",
+            "synonyms": "caption, summary, details, notes",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Indicates the current state of the item.",
+            "name": "status",
+            "synonyms": "state, condition, flag",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Indicates the current state of the item.",
-            "synonyms": "state, condition, flag"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "imageUrl",
-            "type": "string",
             "default": "https://picsum.photos/seed/gallery/800/600",
             "description": "The URL pointing to the image resource.",
-            "synonyms": "image, src, path"
+            "name": "imageUrl",
+            "synonyms": "image, src, path",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "GalleryItem",
+        "persistence": "runtime"
       },
+      "name": "GalleryItemOrbital",
+      "pages": [
+        {
+          "name": "GalleryItemGalleryPage",
+          "path": "/galleryitems/gallery",
+          "traits": [
+            {
+              "ref": "GalleryItemGallery"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "GalleryItemGallery",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "description",
-              "imageUrl",
-              "name"
-            ]
-          },
           "category": "interaction",
-          "linkedEntity": "GalleryItem",
+          "config": {
+            "title": {
+              "default": "Gallery",
+              "description": "Heading shown above the image gallery",
+              "label": "Section title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "VIEW",
               "description": "Signals an item has been selected for viewing.",
-              "synonyms": "select, choose, display",
-              "tier": "essential",
-              "scope": "external",
+              "event": "VIEW",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "row",
-                  "type": "object",
                   "properties": [
                     {
                       "name": "id",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "name",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "description",
@@ -109,27 +113,29 @@
                       "name": "imageUrl",
                       "type": "string"
                     }
-                  ]
+                  ],
+                  "type": "object"
                 }
-              ]
+              ],
+              "scope": "external",
+              "synonyms": "select, choose, display",
+              "tier": "essential"
             },
             {
-              "event": "GalleryItemLoaded",
               "description": "Indicates a GalleryItem has finished loading.",
-              "synonyms": "loaded, ready, available",
-              "tier": "internal",
+              "event": "GalleryItemLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[GalleryItem]"
                 }
-              ]
+              ],
+              "synonyms": "loaded, ready, available",
+              "tier": "internal"
             },
             {
-              "event": "GalleryItemLoadFailed",
               "description": "Indicates a GalleryItem failed to load.",
-              "synonyms": "error, failure, problem, load error",
-              "tier": "internal",
+              "event": "GalleryItemLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -139,14 +145,89 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failure, problem, load error",
+              "tier": "internal"
             }
           ],
+          "entityContract": {
+            "provides": [
+              "description",
+              "imageUrl",
+              "name"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "GalleryItem",
+          "name": "GalleryItemGallery",
+          "scope": "collection",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Indicates a GalleryItem has finished loading.",
+                "key": "GalleryItemLoaded",
+                "name": "GalleryItem loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[GalleryItem]"
+                  }
+                ],
+                "synonyms": "loaded, ready, available",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates a GalleryItem failed to load.",
+                "key": "GalleryItemLoadFailed",
+                "name": "GalleryItem load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, load error",
+                "tier": "internal"
+              },
+              {
+                "description": "Signals an item has been selected for viewing.",
+                "key": "VIEW",
+                "name": "View",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "type": "GalleryItem"
+                  }
+                ],
+                "synonyms": "select, choose, display",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates the gallery or lightbox has been dismissed.",
+                "key": "CLOSE",
+                "name": "Close",
+                "synonyms": "dismiss, hide, close, cancel",
+                "tier": "essential"
+              }
+            ],
             "states": [
               {
-                "name": "loading",
-                "isInitial": true
+                "isInitial": true,
+                "name": "loading"
               },
               {
                 "name": "browsing"
@@ -158,72 +239,8 @@
                 "name": "error"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "GalleryItemLoaded",
-                "name": "GalleryItem loaded",
-                "description": "Indicates a GalleryItem has finished loading.",
-                "synonyms": "loaded, ready, available",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[GalleryItem]"
-                  }
-                ]
-              },
-              {
-                "key": "GalleryItemLoadFailed",
-                "name": "GalleryItem load failed",
-                "description": "Indicates a GalleryItem failed to load.",
-                "synonyms": "error, failure, problem, load error",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "VIEW",
-                "name": "View",
-                "description": "Signals an item has been selected for viewing.",
-                "synonyms": "select, choose, display",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "GalleryItem"
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE",
-                "name": "Close",
-                "description": "Indicates the gallery or lightbox has been dismissed.",
-                "synonyms": "dismiss, hide, close, cancel",
-                "tier": "essential"
-              }
-            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -240,42 +257,37 @@
                     "main",
                     {
                       "align": "center",
-                      "gap": "md",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
+                          "content": "Loading gallery…",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "Loading gallery…"
+                          "variant": "caption"
                         }
                       ],
+                      "className": "py-12",
                       "direction": "vertical",
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "browsing",
-                "event": "GalleryItemLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "align": "center",
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "image",
@@ -286,7 +298,10 @@
                               "type": "typography",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -296,31 +311,33 @@
                           "type": "media-gallery"
                         }
                       ],
+                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "GalleryItemLoaded",
+                "from": "loading",
+                "to": "browsing"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "GalleryItemLoadFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "variant": "error",
                       "message": "@payload.error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
-                ]
+                ],
+                "event": "GalleryItemLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "browsing",
-                "to": "viewing",
-                "event": "VIEW",
                 "effects": [
                   [
                     "set",
@@ -346,26 +363,26 @@
                     "render-ui",
                     "modal",
                     {
+                      "closeAction": "CLOSE",
                       "currentIndex": 0.0,
-                      "showCounter": true,
                       "images": [
                         {
-                          "src": "@entity.imageUrl",
                           "alt": "@entity.name",
-                          "caption": "@entity.name"
+                          "caption": "@entity.name",
+                          "src": "@entity.imageUrl"
                         }
                       ],
                       "isOpen": true,
-                      "type": "lightbox",
-                      "closeAction": "CLOSE"
+                      "showCounter": true,
+                      "type": "lightbox"
                     }
                   ]
-                ]
+                ],
+                "event": "VIEW",
+                "from": "browsing",
+                "to": "viewing"
               },
               {
-                "from": "viewing",
-                "to": "loading",
-                "event": "CLOSE",
                 "effects": [
                   [
                     "render-ui",
@@ -377,8 +394,8 @@
                     "GalleryItem",
                     {
                       "emit": {
-                        "success": "GalleryItemLoaded",
-                        "failure": "GalleryItemLoadFailed"
+                        "failure": "GalleryItemLoadFailed",
+                        "success": "GalleryItemLoaded"
                       }
                     }
                   ],
@@ -386,30 +403,30 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "content": "Loading gallery…",
                           "type": "typography",
-                          "color": "muted",
                           "variant": "caption"
                         }
                       ],
+                      "className": "py-12",
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "CLOSE",
+                "from": "viewing",
+                "to": "loading"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -429,33 +446,16 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "config": {
-            "title": {
-              "type": "string",
-              "default": "Gallery",
-              "label": "Section title",
-              "description": "Heading shown above the image gallery",
-              "tier": "presentation"
-            }
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "GalleryItemGalleryPage",
-          "path": "/galleryitems/gallery",
-          "traits": [
-            {
-              "ref": "GalleryItemGallery"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

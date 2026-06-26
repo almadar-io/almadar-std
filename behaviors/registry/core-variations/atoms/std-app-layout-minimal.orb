@@ -1,100 +1,20 @@
 {
-  "name": "std-app-layout-minimal",
-  "version": "1.1.0",
   "description": "Minimal chrome. Embeds std-app-layout with minimal layout pattern + a placeholder content trait so the main slot has visible content.",
+  "name": "std-app-layout-minimal",
   "orbitals": [
     {
-      "name": "MinimalLayoutOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-app-layout",
-          "as": "AppLayout"
-        }
-      ],
       "entity": {
-        "name": "MinimalLayoutData",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "MinimalLayoutData",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "name": "MinimalContent",
-          "category": "interaction",
-          "linkedEntity": "MinimalLayoutData",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "showing",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "showing",
-                "to": "showing",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "description": "Override the contentTrait config to fill this area with your own trait.",
-                      "type": "empty-state",
-                      "icon": "layout",
-                      "title": "Minimal Layout"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "scope": "instance"
-        },
-        {
-          "ref": "AppLayout.traits.AppLayout",
-          "name": "MinimalLayout",
-          "linkedEntity": "MinimalLayoutData",
-          "config": {
-            "appName": "Minimal Demo",
-            "layoutMode": "minimal",
-            "navItems": [
-              {
-                "href": "/",
-                "icon": "home",
-                "label": "Home"
-              },
-              {
-                "icon": "users",
-                "label": "Contacts",
-                "href": "/contacts"
-              },
-              {
-                "label": "Tasks",
-                "href": "/tasks",
-                "icon": "check-square"
-              },
-              {
-                "label": "Settings",
-                "href": "/settings",
-                "icon": "settings"
-              }
-            ],
-            "contentTrait": "@trait.MinimalContent"
-          }
-        }
-      ],
+      "name": "MinimalLayoutOrbital",
       "pages": [
         {
           "name": "MinimalLayoutPage",
@@ -108,7 +28,87 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "linkedEntity": "MinimalLayoutData",
+          "name": "MinimalContent",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "showing"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "description": "Override the contentTrait config to fill this area with your own trait.",
+                      "icon": "layout",
+                      "title": "Minimal Layout",
+                      "type": "empty-state"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "showing",
+                "to": "showing"
+              }
+            ]
+          }
+        },
+        {
+          "config": {
+            "appName": "Minimal Demo",
+            "contentTrait": "@trait.MinimalContent",
+            "layoutMode": "minimal",
+            "navItems": [
+              {
+                "href": "/",
+                "icon": "home",
+                "label": "Home"
+              },
+              {
+                "href": "/contacts",
+                "icon": "users",
+                "label": "Contacts"
+              },
+              {
+                "href": "/tasks",
+                "icon": "check-square",
+                "label": "Tasks"
+              },
+              {
+                "href": "/settings",
+                "icon": "settings",
+                "label": "Settings"
+              }
+            ]
+          },
+          "linkedEntity": "MinimalLayoutData",
+          "name": "MinimalLayout",
+          "ref": "AppLayout.traits.AppLayout"
+        }
+      ],
+      "uses": [
+        {
+          "as": "AppLayout",
+          "from": "std/behaviors/std-app-layout"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.1.0"
 }

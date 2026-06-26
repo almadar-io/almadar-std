@@ -1,142 +1,65 @@
 {
-  "name": "std-browse-map",
-  "version": "1.0.0",
   "description": "Map browse — geo pin map: rows with lat/lng render as markers on a map-view, with a compact list beneath. For fleet vehicles, field technicians, store locations, delivery routes — anything with coordinates. Same BrowseItemBrowse trait + state machine as std-browse; only the bodyContent differs (a map instead of a grid).",
+  "name": "std-browse-map",
   "orbitals": [
     {
-      "name": "MapBrowseOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-browse",
-          "as": "Browse"
-        }
-      ],
       "entity": {
-        "name": "MapRow",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "name",
-            "type": "string",
             "required": true,
-            "description": "A descriptive label for the row.",
-            "synonyms": "title, label, identifier"
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
+            "description": "A descriptive label for the row.",
+            "name": "name",
+            "required": true,
+            "synonyms": "title, label, identifier",
+            "type": "string"
+          },
+          {
             "default": "active",
+            "description": "Indicates the current operational state of the row.",
+            "name": "status",
+            "synonyms": "state, condition, enabled, disabled",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Indicates the current operational state of the row.",
-            "synonyms": "state, condition, enabled, disabled"
+            ]
           },
           {
-            "name": "lat",
-            "type": "number",
             "default": 0.0,
             "description": "Represents the latitude coordinate.",
-            "synonyms": "latitude, y-coordinate, north-south position"
+            "name": "lat",
+            "synonyms": "latitude, y-coordinate, north-south position",
+            "type": "number"
           },
           {
-            "name": "lng",
-            "type": "number",
             "default": 0.0,
             "description": "The longitude coordinate of a location.",
-            "synonyms": "longitude, x, horizontal position"
+            "name": "lng",
+            "synonyms": "longitude, x, horizontal position",
+            "type": "number"
           },
           {
-            "name": "address",
-            "type": "string",
             "default": "",
             "description": "The textual location associated with the coordinate data.",
-            "synonyms": "location, place, addressString"
+            "name": "address",
+            "synonyms": "location, place, addressString",
+            "type": "string"
           },
           {
+            "default": "",
             "name": "createdAt",
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
-        ]
+        ],
+        "name": "MapRow",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "ref": "Browse.traits.BrowseItemBrowse",
-          "name": "MapBrowse",
-          "linkedEntity": "MapRow",
-          "config": {
-            "fields": [
-              {
-                "name": "name",
-                "label": "Name",
-                "variant": "h4"
-              },
-              {
-                "name": "address",
-                "variant": "caption",
-                "label": "Address"
-              },
-              {
-                "variant": "badge",
-                "label": "Status",
-                "name": "status"
-              }
-            ],
-            "tableLook": "spacious",
-            "bodyContent": {
-              "direction": "vertical",
-              "className": "p-card-md",
-              "children": [
-                {
-                  "align": "center",
-                  "type": "stack",
-                  "gap": "sm",
-                  "children": [
-                    {
-                      "className": "text-muted-foreground",
-                      "name": "search",
-                      "type": "icon"
-                    },
-                    {
-                      "type": "input",
-                      "action": "REFETCH_QUERY",
-                      "inputType": "search",
-                      "className": "flex-1",
-                      "placeholder": "@config.searchPlaceholder"
-                    }
-                  ],
-                  "className": "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm",
-                  "direction": "horizontal"
-                },
-                {
-                  "markers": "@payload.data",
-                  "height": "440px",
-                  "className": "w-full rounded-lg overflow-hidden border border-[var(--color-border)]",
-                  "type": "map-view"
-                },
-                {
-                  "type": "data-list",
-                  "entity": "@payload.data",
-                  "gap": "sm",
-                  "fields": "@config.fields",
-                  "itemActions": "@config.itemActions",
-                  "look": "@config.tableLook"
-                }
-              ],
-              "type": "stack",
-              "gap": "md"
-            }
-          }
-        }
-      ],
+      "name": "MapBrowseOrbital",
       "pages": [
         {
           "name": "MapBrowsePage",
@@ -147,7 +70,84 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "className": "text-muted-foreground",
+                      "name": "search",
+                      "type": "icon"
+                    },
+                    {
+                      "action": "REFETCH_QUERY",
+                      "className": "flex-1",
+                      "inputType": "search",
+                      "placeholder": "@config.searchPlaceholder",
+                      "type": "input"
+                    }
+                  ],
+                  "className": "w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
+                },
+                {
+                  "className": "w-full rounded-lg overflow-hidden border border-[var(--color-border)]",
+                  "height": "440px",
+                  "markers": "@payload.data",
+                  "type": "map-view"
+                },
+                {
+                  "entity": "@payload.data",
+                  "fields": "@config.fields",
+                  "gap": "sm",
+                  "itemActions": "@config.itemActions",
+                  "look": "@config.tableLook",
+                  "type": "data-list"
+                }
+              ],
+              "className": "p-card-md",
+              "direction": "vertical",
+              "gap": "md",
+              "type": "stack"
+            },
+            "fields": [
+              {
+                "label": "Name",
+                "name": "name",
+                "variant": "h4"
+              },
+              {
+                "label": "Address",
+                "name": "address",
+                "variant": "caption"
+              },
+              {
+                "label": "Status",
+                "name": "status",
+                "variant": "badge"
+              }
+            ],
+            "tableLook": "spacious"
+          },
+          "linkedEntity": "MapRow",
+          "name": "MapBrowse",
+          "ref": "Browse.traits.BrowseItemBrowse"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Browse",
+          "from": "std/behaviors/std-browse"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

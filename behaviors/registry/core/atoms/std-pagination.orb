@@ -1,112 +1,131 @@
 {
-  "name": "std-pagination",
-  "version": "1.0.0",
   "description": "std-pagination — single primitive: pagination control. PAGE accepts the Pagination component's `{page}` emit; ITEMS_LOADED accepts an upstream `{data:[ObjectSpec]}` payload and derives totalPages = ceil(len/pageSize). Molecules wire `BrowseItemLoaded -> ITEMS_LOADED` to keep it in lockstep with the data hub.",
+  "name": "std-pagination",
   "orbitals": [
     {
-      "name": "PagedItemOrbital",
       "entity": {
-        "name": "PagedItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "currentPage",
-            "type": "number",
             "default": 1.0,
             "description": "The current page number being displayed.",
-            "synonyms": "page, current, index"
+            "name": "currentPage",
+            "synonyms": "page, current, index",
+            "type": "number"
           },
           {
-            "name": "totalPages",
-            "type": "number",
             "default": 1.0,
             "description": "The total number of pages available.",
-            "synonyms": "page count, total pages, number of pages"
+            "name": "totalPages",
+            "synonyms": "page count, total pages, number of pages",
+            "type": "number"
           }
-        ]
+        ],
+        "name": "PagedItem",
+        "persistence": "runtime"
       },
+      "name": "PagedItemOrbital",
+      "pages": [
+        {
+          "name": "PagedItemPaginationPage",
+          "path": "/pageditems/paginated",
+          "traits": [
+            {
+              "ref": "PagedItemPagination"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "PagedItemPagination",
           "category": "interaction",
-          "linkedEntity": "PagedItem",
+          "config": {
+            "event": {
+              "default": "PAGE",
+              "description": "Event emitted when the user picks a new page",
+              "label": "Page-change event",
+              "tier": "internal",
+              "type": "string"
+            },
+            "pageSize": {
+              "default": 10.0,
+              "description": "Rows per page used to derive total page count",
+              "label": "Page size",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
           "emits": [
             {
-              "event": "PAGE",
               "description": "Indicates a change in the currently displayed page.",
-              "synonyms": "page-change, navigate, go-to",
-              "tier": "essential",
+              "event": "PAGE",
               "payloadSchema": [
                 {
                   "name": "page",
-                  "type": "number",
-                  "required": true
+                  "required": true,
+                  "type": "number"
                 }
-              ]
+              ],
+              "synonyms": "page-change, navigate, go-to",
+              "tier": "essential"
             },
             {
-              "event": "PagedItemLoaded",
               "description": "Indicates a single item has been loaded within a paginated view.",
-              "synonyms": "item-loaded, data-received, entry-loaded",
-              "tier": "essential",
+              "event": "PagedItemLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[PagedItem]"
                 }
-              ]
+              ],
+              "synonyms": "item-loaded, data-received, entry-loaded",
+              "tier": "essential"
             }
           ],
+          "linkedEntity": "PagedItem",
+          "name": "PagedItemPagination",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Indicates a single item has been loaded within a paginated view.",
                 "key": "PagedItemLoaded",
                 "name": "PagedItem loaded",
-                "description": "Indicates a single item has been loaded within a paginated view.",
-                "synonyms": "item-loaded, data-received, entry-loaded",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[PagedItem]"
                   }
-                ]
+                ],
+                "synonyms": "item-loaded, data-received, entry-loaded",
+                "tier": "essential"
               },
               {
+                "description": "Indicates a change in the currently displayed page.",
                 "key": "PAGE",
                 "name": "Page",
-                "description": "Indicates a change in the currently displayed page.",
-                "synonyms": "page-change, navigate, go-to",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "page",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   }
-                ]
+                ],
+                "synonyms": "page-change, navigate, go-to",
+                "tier": "essential"
               },
               {
+                "description": "Data has been loaded and pagination limits updated.",
                 "key": "ITEMS_LOADED",
                 "name": "Items Loaded",
-                "description": "Data has been loaded and pagination limits updated.",
-                "synonyms": "data-ready, content-loaded, refresh",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -116,14 +135,19 @@
                     "name": "totalCount",
                     "type": "number"
                   }
-                ]
+                ],
+                "synonyms": "data-ready, content-loaded, refresh",
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
               }
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "set",
@@ -148,37 +172,37 @@
                     "render-ui",
                     "main",
                     {
+                      "currentPage": "@entity.currentPage",
+                      "pageChangeEvent": "@config.event",
                       "showPageSize": false,
                       "totalPages": "@entity.totalPages",
-                      "pageChangeEvent": "@config.event",
-                      "currentPage": "@entity.currentPage",
                       "type": "pagination"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "PagedItemLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
+                      "currentPage": "@entity.currentPage",
                       "pageChangeEvent": "@config.event",
                       "showPageSize": false,
                       "totalPages": "@entity.totalPages",
-                      "type": "pagination",
-                      "currentPage": "@entity.currentPage"
+                      "type": "pagination"
                     }
                   ]
-                ]
+                ],
+                "event": "PagedItemLoaded",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "PAGE",
                 "effects": [
                   [
                     "set",
@@ -189,19 +213,19 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "pagination",
+                      "currentPage": "@entity.currentPage",
                       "pageChangeEvent": "@config.event",
                       "showPageSize": false,
-                      "currentPage": "@entity.currentPage",
-                      "totalPages": "@entity.totalPages"
+                      "totalPages": "@entity.totalPages",
+                      "type": "pagination"
                     }
                   ]
-                ]
+                ],
+                "event": "PAGE",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "ITEMS_LOADED",
                 "effects": [
                   [
                     "set",
@@ -219,47 +243,23 @@
                     "render-ui",
                     "main",
                     {
+                      "currentPage": "@entity.currentPage",
                       "pageChangeEvent": "@config.event",
-                      "totalPages": "@entity.totalPages",
-                      "type": "pagination",
                       "showPageSize": false,
-                      "currentPage": "@entity.currentPage"
+                      "totalPages": "@entity.totalPages",
+                      "type": "pagination"
                     }
                   ]
-                ]
+                ],
+                "event": "ITEMS_LOADED",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "pageSize": {
-              "type": "number",
-              "default": 10.0,
-              "label": "Page size",
-              "description": "Rows per page used to derive total page count",
-              "tier": "presentation"
-            },
-            "event": {
-              "type": "string",
-              "default": "PAGE",
-              "label": "Page-change event",
-              "description": "Event emitted when the user picks a new page",
-              "tier": "internal"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "PagedItemPaginationPage",
-          "path": "/pageditems/paginated",
-          "traits": [
-            {
-              "ref": "PagedItemPagination"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

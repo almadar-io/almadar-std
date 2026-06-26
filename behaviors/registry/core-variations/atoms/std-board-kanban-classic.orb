@@ -1,285 +1,106 @@
 {
-  "name": "std-board-kanban-classic",
-  "version": "1.0.1",
   "description": "Trello-style kanban — wide elevated columns side-by-side, sticky column headers with icon + label + count chip, dense cards with title, description, and a status badge. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs.",
+  "name": "std-board-kanban-classic",
   "orbitals": [
     {
-      "name": "KanbanClassicBoardOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-board",
-          "as": "Board"
-        }
-      ],
       "entity": {
-        "name": "KanbanClassicItem",
         "collection": "kanban_classic_items",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "title",
-            "type": "string",
             "required": true,
-            "description": "The item's displayed name or heading.",
-            "synonyms": "label, heading, name"
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
+            "description": "The item's displayed name or heading.",
+            "name": "title",
+            "required": true,
+            "synonyms": "label, heading, name",
+            "type": "string"
+          },
+          {
             "default": "",
             "description": "Detailed information about the item.",
-            "synonyms": "details, text, content, body"
+            "name": "description",
+            "synonyms": "details, text, content, body",
+            "type": "string"
           },
           {
-            "name": "stage",
-            "type": "string",
             "default": "todo",
+            "description": "The current status or phase of the item.",
+            "name": "stage",
+            "synonyms": "status, phase, state",
+            "type": "string",
             "values": [
               "todo",
               "doing",
               "done"
-            ],
-            "description": "The current status or phase of the item.",
-            "synonyms": "status, phase, state"
+            ]
           },
           {
-            "name": "notes",
-            "type": "string",
             "default": "",
             "description": "Free-form text providing additional details or context.",
-            "synonyms": "comments, remarks, details, annotations"
+            "name": "notes",
+            "synonyms": "comments, remarks, details, annotations",
+            "type": "string"
           },
           {
-            "name": "position",
-            "type": "number",
             "default": 0.0,
             "description": "The item's order within its parent container.",
-            "synonyms": "order, sequence, index, placement"
+            "name": "position",
+            "synonyms": "order, sequence, index, placement",
+            "type": "number"
           },
           {
-            "name": "boards",
-            "type": "array",
             "default": [],
+            "intrinsic": true,
             "items": {
               "type": "object"
             },
-            "intrinsic": true
+            "name": "boards",
+            "type": "array"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentId",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentTitle",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentDescription",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentStage",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentNotes",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
-            "name": "errorMessage",
-            "type": "string",
             "default": "",
-            "intrinsic": true
+            "intrinsic": true,
+            "name": "errorMessage",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "KanbanClassicItem",
+        "persistence": "persistent"
       },
-      "traits": [
-        {
-          "ref": "Board.traits.BoardItemBoard",
-          "name": "KanbanClassicBoard",
-          "linkedEntity": "KanbanClassicItem",
-          "config": {
-            "bodyContent": {
-              "className": "h-full",
-              "type": "stack",
-              "gap": "md",
-              "direction": "vertical",
-              "children": [
-                {
-                  "gap": "sm",
-                  "direction": "horizontal",
-                  "align": "center",
-                  "className": "px-card-md",
-                  "type": "stack",
-                  "children": [
-                    {
-                      "type": "icon",
-                      "name": "kanban-square"
-                    },
-                    {
-                      "type": "typography",
-                      "variant": "h2",
-                      "content": "@config.title"
-                    }
-                  ]
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "entity": "@entity.boards",
-                  "type": "data-grid",
-                  "className": "w-full pb-2",
-                  "gap": "lg",
-                  "fields": [],
-                  "dndRoot": true,
-                  "minCardWidth": 300.0,
-                  "renderItem": [
-                    "fn",
-                    "col",
-                    {
-                      "type": "card",
-                      "padding": "none",
-                      "className": "w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden",
-                      "look": "elevated",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "type": "icon",
-                                  "name": "@col.icon"
-                                },
-                                {
-                                  "content": "@col.label",
-                                  "type": "typography",
-                                  "variant": "h4",
-                                  "className": "flex-1"
-                                },
-                                {
-                                  "type": "badge",
-                                  "size": "sm",
-                                  "label": "@col.count",
-                                  "variant": "primary"
-                                }
-                              ],
-                              "align": "center",
-                              "className": "p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]",
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "horizontal"
-                            },
-                            {
-                              "accepts": "*",
-                              "dropEvent": "MOVE_CARD",
-                              "fields": [],
-                              "reorderEvent": "REORDER_CARD",
-                              "entity": "@col.items",
-                              "positionEvent": "REORDER_POSITION",
-                              "renderItem": [
-                                "fn",
-                                "item",
-                                {
-                                  "type": "card",
-                                  "look": "elevated",
-                                  "children": [
-                                    {
-                                      "children": [
-                                        {
-                                          "type": "typography",
-                                          "content": "@config.cardTitleBinding",
-                                          "variant": "body",
-                                          "weight": "medium"
-                                        },
-                                        {
-                                          "className": "line-clamp-2",
-                                          "type": "typography",
-                                          "content": "@config.cardDescriptionBinding",
-                                          "color": "muted",
-                                          "variant": "caption"
-                                        },
-                                        {
-                                          "gap": "xs",
-                                          "className": "pt-1",
-                                          "children": [
-                                            {
-                                              "label": "@config.cardStageBinding",
-                                              "variant": "primary",
-                                              "size": "sm",
-                                              "type": "badge"
-                                            },
-                                            {
-                                              "actionPayload": {
-                                                "row": "@item",
-                                                "id": "@config.cardIdBinding"
-                                              },
-                                              "className": "ml-auto",
-                                              "icon": "arrow-right",
-                                              "label": "Open",
-                                              "type": "button",
-                                              "size": "sm",
-                                              "action": "OPEN_CARD",
-                                              "variant": "ghost"
-                                            }
-                                          ],
-                                          "type": "stack",
-                                          "align": "center",
-                                          "direction": "horizontal"
-                                        }
-                                      ],
-                                      "type": "stack",
-                                      "direction": "vertical",
-                                      "gap": "xs"
-                                    }
-                                  ],
-                                  "padding": "sm",
-                                  "className": "cursor-grab hover:shadow-lg transition-shadow"
-                                }
-                              ],
-                              "gap": "sm",
-                              "sortable": true,
-                              "dragGroup": "@col.key",
-                              "className": "p-card-md min-h-[120px]",
-                              "type": "data-list"
-                            }
-                          ],
-                          "gap": "none",
-                          "type": "stack",
-                          "direction": "vertical"
-                        }
-                      ]
-                    }
-                  ],
-                  "scrollX": true
-                },
-                {
-                  "icon": "plus",
-                  "label": "Add card",
-                  "action": "ADD_CARD",
-                  "type": "floating-action-button",
-                  "variant": "primary"
-                }
-              ]
-            }
-          }
-        }
-      ],
+      "name": "KanbanClassicBoardOrbital",
       "pages": [
         {
           "name": "KanbanClassicPage",
@@ -290,7 +111,186 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "name": "kanban-square",
+                      "type": "icon"
+                    },
+                    {
+                      "content": "@config.title",
+                      "type": "typography",
+                      "variant": "h2"
+                    }
+                  ],
+                  "className": "px-card-md",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "className": "w-full pb-2",
+                  "dndRoot": true,
+                  "entity": "@entity.boards",
+                  "fields": [],
+                  "gap": "lg",
+                  "minCardWidth": 300.0,
+                  "renderItem": [
+                    "fn",
+                    "col",
+                    {
+                      "children": [
+                        {
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "@col.icon",
+                                  "type": "icon"
+                                },
+                                {
+                                  "className": "flex-1",
+                                  "content": "@col.label",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "label": "@col.count",
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "primary"
+                                }
+                              ],
+                              "className": "p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)]",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            },
+                            {
+                              "accepts": "*",
+                              "className": "p-card-md min-h-[120px]",
+                              "dragGroup": "@col.key",
+                              "dropEvent": "MOVE_CARD",
+                              "entity": "@col.items",
+                              "fields": [],
+                              "gap": "sm",
+                              "positionEvent": "REORDER_POSITION",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "content": "@config.cardTitleBinding",
+                                          "type": "typography",
+                                          "variant": "body",
+                                          "weight": "medium"
+                                        },
+                                        {
+                                          "className": "line-clamp-2",
+                                          "color": "muted",
+                                          "content": "@config.cardDescriptionBinding",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        },
+                                        {
+                                          "align": "center",
+                                          "children": [
+                                            {
+                                              "label": "@config.cardStageBinding",
+                                              "size": "sm",
+                                              "type": "badge",
+                                              "variant": "primary"
+                                            },
+                                            {
+                                              "action": "OPEN_CARD",
+                                              "actionPayload": {
+                                                "id": "@config.cardIdBinding",
+                                                "row": "@item"
+                                              },
+                                              "className": "ml-auto",
+                                              "icon": "arrow-right",
+                                              "label": "Open",
+                                              "size": "sm",
+                                              "type": "button",
+                                              "variant": "ghost"
+                                            }
+                                          ],
+                                          "className": "pt-1",
+                                          "direction": "horizontal",
+                                          "gap": "xs",
+                                          "type": "stack"
+                                        }
+                                      ],
+                                      "direction": "vertical",
+                                      "gap": "xs",
+                                      "type": "stack"
+                                    }
+                                  ],
+                                  "className": "cursor-grab hover:shadow-lg transition-shadow",
+                                  "look": "elevated",
+                                  "padding": "sm",
+                                  "type": "card"
+                                }
+                              ],
+                              "reorderEvent": "REORDER_CARD",
+                              "sortable": true,
+                              "type": "data-list"
+                            }
+                          ],
+                          "direction": "vertical",
+                          "gap": "none",
+                          "type": "stack"
+                        }
+                      ],
+                      "className": "w-[300px] bg-[var(--color-surface-subtle)] rounded-lg overflow-hidden",
+                      "look": "elevated",
+                      "padding": "none",
+                      "type": "card"
+                    }
+                  ],
+                  "scrollX": true,
+                  "type": "data-grid"
+                },
+                {
+                  "action": "ADD_CARD",
+                  "icon": "plus",
+                  "label": "Add card",
+                  "type": "floating-action-button",
+                  "variant": "primary"
+                }
+              ],
+              "className": "h-full",
+              "direction": "vertical",
+              "gap": "md",
+              "type": "stack"
+            }
+          },
+          "linkedEntity": "KanbanClassicItem",
+          "name": "KanbanClassicBoard",
+          "ref": "Board.traits.BoardItemBoard"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Board",
+          "from": "std/behaviors/std-board"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.1"
 }

@@ -1,125 +1,130 @@
 {
-  "name": "std-agent-provider",
-  "version": "1.0.0",
   "description": "std-agent-provider as a Function",
+  "name": "std-agent-provider",
   "orbitals": [
     {
-      "name": "AgentProviderOrbital",
       "entity": {
-        "name": "AgentProvider",
         "collection": "agentproviders",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
             "type": "string"
           },
           {
-            "name": "name",
-            "type": "string",
             "description": "A human-readable identifier for the agent provider.",
-            "synonyms": "label, identifier, designation"
+            "name": "name",
+            "synonyms": "label, identifier, designation",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A textual explanation of the agent provider's function.",
-            "synonyms": "explanation, details, notes"
+            "name": "description",
+            "synonyms": "explanation, details, notes",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Indicates the operational state of the agent provider.",
+            "name": "status",
+            "synonyms": "state, condition, operationalStatus",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Indicates the operational state of the agent provider.",
-            "synonyms": "state, condition, operationalStatus"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "currentProvider",
-            "type": "string",
             "default": "anthropic",
             "description": "The currently active provider implementation.",
-            "synonyms": "implementation, active, provider"
+            "name": "currentProvider",
+            "synonyms": "implementation, active, provider",
+            "type": "string"
           },
           {
-            "name": "currentModel",
-            "type": "string",
             "default": "claude-sonnet-4-20250514",
             "description": "The currently active model identifier.",
-            "synonyms": "model, identifier, selection"
+            "name": "currentModel",
+            "synonyms": "model, identifier, selection",
+            "type": "string"
           },
           {
-            "name": "fallbackProvider",
-            "type": "string",
             "default": "openai",
             "description": "An alternative provider to use when the primary fails.",
-            "synonyms": "alternate, backup, secondary"
+            "name": "fallbackProvider",
+            "synonyms": "alternate, backup, secondary",
+            "type": "string"
           },
           {
-            "name": "requestCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of times a request has been made.",
-            "synonyms": "count, requests, usage"
+            "name": "requestCount",
+            "synonyms": "count, requests, usage",
+            "type": "number"
           },
           {
-            "name": "message",
-            "type": "string",
             "default": "",
             "description": "A textual message associated with the agent provider.",
-            "synonyms": "text, content, details, note"
+            "name": "message",
+            "synonyms": "text, content, details, note",
+            "type": "string"
           },
           {
-            "name": "notificationType",
-            "type": "string",
             "default": "info",
+            "description": "Specifies the type of notification.",
+            "name": "notificationType",
+            "synonyms": "type, category, level",
+            "type": "string",
             "values": [
               "info",
               "success",
               "warning",
               "error"
-            ],
-            "description": "Specifies the type of notification.",
-            "synonyms": "type, category, level"
+            ]
           }
-        ]
+        ],
+        "name": "AgentProvider",
+        "persistence": "persistent"
       },
+      "name": "AgentProviderOrbital",
+      "pages": [
+        {
+          "name": "AgentProviderPage",
+          "path": "/agentproviders",
+          "traits": [
+            {
+              "ref": "AgentProviderModal"
+            },
+            {
+              "ref": "AgentProviderNotification"
+            },
+            {
+              "ref": "AgentProviderAgent"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "AgentProviderModal",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "currentModel",
-              "currentProvider"
-            ]
-          },
           "category": "interaction",
-          "linkedEntity": "AgentProvider",
           "emits": [
             {
               "event": "SWITCHED",
-              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "external"
             },
             {
-              "event": "AgentProviderLoaded",
               "description": "Fired when AgentProvider finishes loading",
-              "scope": "internal",
+              "event": "AgentProviderLoaded",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -165,43 +170,43 @@
                   "name": "notificationType",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentProviderLoadFailed",
               "description": "Fired when AgentProvider fails to load",
-              "scope": "internal",
+              "event": "AgentProviderLoadFailed",
               "payloadSchema": [
                 {
                   "name": "message",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentProviderRowLoaded",
               "description": "Fired on modal open with the pre-fill row",
-              "scope": "internal",
+              "event": "AgentProviderRowLoaded",
               "payloadSchema": [
                 {
                   "name": "row",
                   "type": "AgentProvider"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
               "event": "AgentProviderUpdated",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
               "event": "AgentProviderUpdateFailed",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -211,22 +216,22 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             }
           ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "loading"
-              },
-              {
-                "name": "open"
-              }
+          "entityContract": {
+            "provides": [
+              "currentModel",
+              "currentProvider"
             ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AgentProvider",
+          "name": "AgentProviderModal",
+          "scope": "instance",
+          "stateMachine": {
             "events": [
               {
                 "key": "INIT",
@@ -266,8 +271,8 @@
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "object",
-                    "required": true
+                    "required": true,
+                    "type": "object"
                   }
                 ]
               },
@@ -356,11 +361,20 @@
                 ]
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "closed"
+              },
+              {
+                "name": "loading"
+              },
+              {
+                "name": "open"
+              }
+            ],
             "transitions": [
               {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
                 "effects": [
                   [
                     "set",
@@ -386,59 +400,59 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "repeat"
+                                  "name": "repeat",
+                                  "type": "icon"
                                 },
                                 {
                                   "content": "Switch Provider",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
                               "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack"
                             },
                             {
-                              "icon": "repeat",
-                              "type": "button",
                               "action": "SWITCH",
+                              "icon": "repeat",
                               "label": "Open",
+                              "type": "button",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "description": "Click Open to view details in a modal overlay.",
-                          "type": "empty-state",
                           "icon": "repeat",
-                          "title": "Nothing open"
+                          "title": "Nothing open",
+                          "type": "empty-state"
                         }
                       ],
                       "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "closed",
+                "to": "closed"
               },
               {
-                "from": "closed",
-                "to": "loading",
-                "event": "SWITCH",
                 "effects": [
                   [
                     "fetch",
@@ -454,61 +468,56 @@
                     "render-ui",
                     "modal",
                     {
-                      "className": "py-12",
-                      "gap": "md",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "content": "Loading…",
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption"
                         }
                       ],
+                      "className": "py-12",
                       "direction": "vertical",
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "SWITCH",
+                "from": "closed",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "open",
-                "event": "AgentProviderRowLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "modal",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "repeat"
+                              "name": "repeat",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "Switch Provider",
+                              "type": "typography",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "md",
                           "children": [
                             {
                               "content": "Current:",
@@ -516,36 +525,41 @@
                               "variant": "caption"
                             },
                             {
-                              "type": "badge",
-                              "label": "@entity.currentProvider"
+                              "label": "@entity.currentProvider",
+                              "type": "badge"
                             },
                             {
                               "label": "@entity.currentModel",
                               "type": "badge"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
                         },
                         {
-                          "mode": "edit",
+                          "cancelEvent": "CLOSE",
+                          "entity": "@payload.row",
                           "fields": [
                             "currentProvider",
                             "currentModel"
                           ],
+                          "mode": "edit",
                           "submitEvent": "SAVE",
-                          "type": "form-section",
-                          "entity": "@payload.row",
-                          "cancelEvent": "CLOSE"
+                          "type": "form-section"
                         }
                       ],
+                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentProviderRowLoaded",
+                "from": "loading",
+                "to": "open"
               },
               {
-                "from": "loading",
-                "to": "closed",
-                "event": "AgentProviderLoadFailed",
                 "effects": [
                   [
                     "render-ui",
@@ -575,55 +589,55 @@
                         {
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "repeat"
+                                  "name": "repeat",
+                                  "type": "icon"
                                 },
                                 {
+                                  "content": "Switch Provider",
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Switch Provider"
+                                  "variant": "h2"
                                 }
                               ],
-                              "gap": "md"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
                               "action": "SWITCH",
-                              "variant": "primary",
+                              "icon": "repeat",
                               "label": "Open",
                               "type": "button",
-                              "icon": "repeat"
+                              "variant": "primary"
                             }
                           ],
-                          "justify": "between",
-                          "type": "stack",
                           "direction": "horizontal",
-                          "gap": "md"
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
                           "description": "Click Open to view details in a modal overlay.",
-                          "title": "Nothing open",
                           "icon": "repeat",
+                          "title": "Nothing open",
                           "type": "empty-state"
                         }
                       ],
-                      "gap": "lg",
                       "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentProviderLoadFailed",
+                "from": "loading",
+                "to": "closed"
               },
               {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
                 "effects": [
                   [
                     "render-ui",
@@ -640,8 +654,8 @@
                     "AgentProvider",
                     {
                       "emit": {
-                        "success": "AgentProviderLoaded",
-                        "failure": "AgentProviderLoadFailed"
+                        "failure": "AgentProviderLoadFailed",
+                        "success": "AgentProviderLoaded"
                       }
                     }
                   ],
@@ -651,57 +665,57 @@
                     {
                       "children": [
                         {
-                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "repeat"
+                                  "name": "repeat",
+                                  "type": "icon"
                                 },
                                 {
+                                  "content": "Switch Provider",
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Switch Provider"
+                                  "variant": "h2"
                                 }
                               ],
+                              "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack"
                             },
                             {
+                              "action": "SWITCH",
+                              "icon": "repeat",
                               "label": "Open",
                               "type": "button",
-                              "variant": "primary",
-                              "action": "SWITCH",
-                              "icon": "repeat"
+                              "variant": "primary"
                             }
                           ],
                           "direction": "horizontal",
                           "gap": "md",
-                          "justify": "between"
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "empty-state",
-                          "title": "Nothing open",
+                          "description": "Click Open to view details in a modal overlay.",
                           "icon": "repeat",
-                          "description": "Click Open to view details in a modal overlay."
+                          "title": "Nothing open",
+                          "type": "empty-state"
                         }
                       ],
-                      "gap": "lg",
                       "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "CLOSE",
+                "from": "open",
+                "to": "closed"
               },
               {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
                 "effects": [
                   [
                     "persist",
@@ -740,66 +754,65 @@
                     {
                       "children": [
                         {
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
                               "children": [
                                 {
                                   "name": "repeat",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "Switch Provider",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
                               "action": "SWITCH",
-                              "type": "button",
+                              "icon": "repeat",
                               "label": "Open",
-                              "variant": "primary",
-                              "icon": "repeat"
+                              "type": "button",
+                              "variant": "primary"
                             }
                           ],
-                          "justify": "between"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "title": "Nothing open",
-                          "icon": "repeat",
                           "description": "Click Open to view details in a modal overlay.",
+                          "icon": "repeat",
+                          "title": "Nothing open",
                           "type": "empty-state"
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "SAVE",
+                "from": "open",
+                "to": "closed"
               }
             ]
-          },
-          "scope": "instance"
+          }
         },
         {
-          "name": "AgentProviderNotification",
           "category": "interaction",
-          "linkedEntity": "AgentProvider",
           "emits": [
             {
-              "event": "AgentProviderLoaded",
               "description": "Fired when AgentProvider finishes loading",
-              "scope": "internal",
+              "event": "AgentProviderLoaded",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -845,30 +858,25 @@
                   "name": "notificationType",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentProviderLoadFailed",
               "description": "Fired when AgentProvider fails to load",
-              "scope": "internal",
+              "event": "AgentProviderLoadFailed",
               "payloadSchema": [
                 {
                   "name": "message",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             }
           ],
+          "linkedEntity": "AgentProvider",
+          "name": "AgentProviderNotification",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "hidden",
-                "isInitial": true
-              },
-              {
-                "name": "visible"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
@@ -880,8 +888,8 @@
                 "payloadSchema": [
                   {
                     "name": "message",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   },
                   {
                     "name": "notificationType",
@@ -954,11 +962,17 @@
                 ]
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "hidden"
+              },
+              {
+                "name": "visible"
+              }
+            ],
             "transitions": [
               {
-                "from": "hidden",
-                "to": "hidden",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -970,89 +984,12 @@
                       }
                     }
                   ]
-                ]
-              },
-              {
+                ],
+                "event": "INIT",
                 "from": "hidden",
-                "to": "visible",
-                "event": "SHOW",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.message",
-                    "@payload.message"
-                  ],
-                  [
-                    "set",
-                    "@entity.notificationType",
-                    "@payload.notificationType"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "gap": "lg",
-                      "children": [
-                        {
-                          "gap": "md",
-                          "type": "stack",
-                          "justify": "between",
-                          "children": [
-                            {
-                              "children": [
-                                {
-                                  "name": "server",
-                                  "type": "icon"
-                                },
-                                {
-                                  "content": "Provider Status",
-                                  "type": "typography",
-                                  "variant": "h2"
-                                }
-                              ],
-                              "gap": "md",
-                              "direction": "horizontal",
-                              "type": "stack",
-                              "align": "center"
-                            },
-                            {
-                              "action": "HIDE",
-                              "label": "Dismiss",
-                              "variant": "ghost",
-                              "icon": "x",
-                              "type": "button"
-                            }
-                          ],
-                          "align": "center",
-                          "direction": "horizontal"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "alert",
-                          "variant": "@entity.notificationType",
-                          "message": "@entity.message"
-                        },
-                        {
-                          "type": "toast-slot"
-                        },
-                        {
-                          "message": "@entity.message",
-                          "type": "alert",
-                          "variant": "warning"
-                        }
-                      ],
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
+                "to": "hidden"
               },
               {
-                "from": "visible",
-                "to": "visible",
-                "event": "SHOW",
                 "effects": [
                   [
                     "set",
@@ -1068,41 +1005,39 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "md",
+                          "align": "center",
                           "children": [
                             {
                               "align": "center",
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
                                   "name": "server",
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Provider Status",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
                               ],
-                              "gap": "md"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
-                              "type": "button",
-                              "label": "Dismiss",
+                              "action": "HIDE",
                               "icon": "x",
-                              "variant": "ghost",
-                              "action": "HIDE"
+                              "label": "Dismiss",
+                              "type": "button",
+                              "variant": "ghost"
                             }
                           ],
-                          "type": "stack",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "justify": "between",
-                          "align": "center",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -1116,56 +1051,134 @@
                           "type": "toast-slot"
                         },
                         {
-                          "type": "alert",
                           "message": "@entity.message",
+                          "type": "alert",
                           "variant": "warning"
                         }
                       ],
-                      "gap": "lg"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "SHOW",
+                "from": "hidden",
+                "to": "visible"
               },
               {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.message",
+                    "@payload.message"
+                  ],
+                  [
+                    "set",
+                    "@entity.notificationType",
+                    "@payload.notificationType"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "server",
+                                  "type": "icon"
+                                },
+                                {
+                                  "content": "Provider Status",
+                                  "type": "typography",
+                                  "variant": "h2"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
+                            },
+                            {
+                              "action": "HIDE",
+                              "icon": "x",
+                              "label": "Dismiss",
+                              "type": "button",
+                              "variant": "ghost"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "message": "@entity.message",
+                          "type": "alert",
+                          "variant": "@entity.notificationType"
+                        },
+                        {
+                          "type": "toast-slot"
+                        },
+                        {
+                          "message": "@entity.message",
+                          "type": "alert",
+                          "variant": "warning"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "SHOW",
                 "from": "visible",
-                "to": "hidden",
-                "event": "HIDE",
+                "to": "visible"
+              },
+              {
                 "effects": [
                   [
                     "set",
                     "@entity.message",
                     ""
                   ]
-                ]
+                ],
+                "event": "HIDE",
+                "from": "visible",
+                "to": "hidden"
               }
             ]
-          },
-          "scope": "instance"
+          }
         },
         {
-          "name": "AgentProviderAgent",
           "category": "interaction",
-          "linkedEntity": "AgentProvider",
           "emits": [
             {
               "event": "SHOW",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "message",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "notificationType",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentProviderLoaded",
               "description": "Fired when AgentProvider finishes loading",
-              "scope": "internal",
+              "event": "AgentProviderLoaded",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -1211,43 +1224,35 @@
                   "name": "notificationType",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentProviderLoadFailed",
               "description": "Fired when AgentProvider fails to load",
-              "scope": "internal",
+              "event": "AgentProviderLoadFailed",
               "payloadSchema": [
                 {
                   "name": "message",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             }
           ],
+          "linkedEntity": "AgentProvider",
           "listens": [
             {
               "event": "SWITCHED",
-              "triggers": "SWITCHED",
               "source": {
                 "kind": "trait",
                 "trait": "AgentProviderModal"
-              }
+              },
+              "triggers": "SWITCHED"
             }
           ],
+          "name": "AgentProviderAgent",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              },
-              {
-                "name": "active"
-              },
-              {
-                "name": "switching"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
@@ -1259,8 +1264,8 @@
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "object",
-                    "required": true
+                    "required": true,
+                    "type": "object"
                   }
                 ]
               },
@@ -1278,8 +1283,8 @@
                 "payloadSchema": [
                   {
                     "name": "message",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   },
                   {
                     "name": "notificationType",
@@ -1348,11 +1353,20 @@
                 ]
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "active"
+              },
+              {
+                "name": "switching"
+              }
+            ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "active",
-                "event": "INIT",
                 "effects": [
                   [
                     "set",
@@ -1364,8 +1378,8 @@
                     "AgentProvider",
                     {
                       "emit": {
-                        "success": "AgentProviderLoaded",
-                        "failure": "AgentProviderLoadFailed"
+                        "failure": "AgentProviderLoadFailed",
+                        "success": "AgentProviderLoaded"
                       }
                     }
                   ],
@@ -1380,17 +1394,17 @@
                     "main",
                     {
                       "description": "Provider is ready",
-                      "type": "empty-state",
                       "icon": "repeat",
-                      "title": "Provider"
+                      "title": "Provider",
+                      "type": "empty-state"
                     }
                   ]
-                ]
-              },
-              {
+                ],
+                "event": "INIT",
                 "from": "idle",
-                "to": "switching",
-                "event": "DO_SWITCH",
+                "to": "active"
+              },
+              {
                 "effects": [
                   [
                     "agent/switch-provider",
@@ -1407,12 +1421,12 @@
                     "@entity.currentModel",
                     "@payload.data.currentModel"
                   ]
-                ]
+                ],
+                "event": "DO_SWITCH",
+                "from": "idle",
+                "to": "switching"
               },
               {
-                "from": "active",
-                "to": "switching",
-                "event": "DO_SWITCH",
                 "effects": [
                   [
                     "agent/switch-provider",
@@ -1429,24 +1443,24 @@
                     "@entity.currentModel",
                     "@payload.data.currentModel"
                   ]
-                ]
+                ],
+                "event": "DO_SWITCH",
+                "from": "active",
+                "to": "switching"
               },
               {
-                "from": "active",
-                "to": "switching",
-                "event": "SWITCHED",
                 "effects": [
                   [
                     "agent/switch-provider",
                     "@entity.currentProvider",
                     "@entity.currentModel"
                   ]
-                ]
+                ],
+                "event": "SWITCHED",
+                "from": "active",
+                "to": "switching"
               },
               {
-                "from": "active",
-                "to": "switching",
-                "event": "SWITCH_AUTO",
                 "effects": [
                   [
                     "agent/switch-provider",
@@ -1457,12 +1471,12 @@
                     "@entity.currentProvider",
                     "@entity.fallbackProvider"
                   ]
-                ]
+                ],
+                "event": "SWITCH_AUTO",
+                "from": "active",
+                "to": "switching"
               },
               {
-                "from": "switching",
-                "to": "active",
-                "event": "INIT",
                 "effects": [
                   [
                     "agent/provider"
@@ -1487,30 +1501,16 @@
                       "notificationType": "info"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "switching",
+                "to": "active"
               }
             ]
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "AgentProviderPage",
-          "path": "/agentproviders",
-          "traits": [
-            {
-              "ref": "AgentProviderModal"
-            },
-            {
-              "ref": "AgentProviderNotification"
-            },
-            {
-              "ref": "AgentProviderAgent"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

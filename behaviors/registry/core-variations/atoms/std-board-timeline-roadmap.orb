@@ -1,333 +1,107 @@
 {
-  "name": "std-board-timeline-roadmap",
-  "version": "1.1.0",
   "description": "Timeline / roadmap board — horizontal time axis with quarters or months as columns; items render as cards inside their target column (item.stage = column.key). Mirrors the Linear / Asana / Productboard roadmap UX. Configure `columns` as ['Q1', 'Q2', 'Q3', 'Q4'] (or months) and the board lays them out left-to-right along a time axis. Same BoardItemBoard trait, same state machine, same emits/listens as std-board — only the bodyContent tree differs.",
+  "name": "std-board-timeline-roadmap",
   "orbitals": [
     {
-      "name": "TimelineRoadmapBoardOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-board",
-          "as": "Board"
-        }
-      ],
       "entity": {
-        "name": "TimelineRoadmapItem",
         "collection": "timeline_roadmap_items",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "title",
-            "type": "string",
             "required": true,
-            "description": "The item's displayed name or heading.",
-            "synonyms": "name, heading, label"
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
+            "description": "The item's displayed name or heading.",
+            "name": "title",
+            "required": true,
+            "synonyms": "name, heading, label",
+            "type": "string"
+          },
+          {
             "default": "",
             "description": "A textual explanation or summary of the item.",
-            "synonyms": "details, summary, explanation, notes"
+            "name": "description",
+            "synonyms": "details, summary, explanation, notes",
+            "type": "string"
           },
           {
-            "name": "stage",
-            "type": "string",
             "default": "Q1",
+            "description": "The item's position within the timeline's time divisions.",
+            "name": "stage",
+            "synonyms": "period, timeframe, phase, quarter, month",
+            "type": "string",
             "values": [
               "Q1",
               "Q2",
               "Q3",
               "Q4"
-            ],
-            "description": "The item's position within the timeline's time divisions.",
-            "synonyms": "period, timeframe, phase, quarter, month"
+            ]
           },
           {
-            "name": "notes",
-            "type": "string",
             "default": "",
             "description": "Free-form text providing additional information.",
-            "synonyms": "comments, remarks, details, annotations"
+            "name": "notes",
+            "synonyms": "comments, remarks, details, annotations",
+            "type": "string"
           },
           {
-            "name": "position",
-            "type": "number",
             "default": 0.0,
             "description": "Numerical order within the timeline.",
-            "synonyms": "order, sequence, index"
+            "name": "position",
+            "synonyms": "order, sequence, index",
+            "type": "number"
           },
           {
-            "name": "boards",
-            "type": "array",
             "default": [],
+            "intrinsic": true,
             "items": {
               "type": "object"
             },
-            "intrinsic": true
+            "name": "boards",
+            "type": "array"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentId",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentTitle",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentDescription",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentStage",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentNotes",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
-            "name": "errorMessage",
-            "type": "string",
             "default": "",
-            "intrinsic": true
+            "intrinsic": true,
+            "name": "errorMessage",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "TimelineRoadmapItem",
+        "persistence": "persistent"
       },
-      "traits": [
-        {
-          "ref": "Board.traits.BoardItemBoard",
-          "name": "TimelineRoadmapBoard",
-          "linkedEntity": "TimelineRoadmapItem",
-          "config": {
-            "columns": [
-              {
-                "variant": "default",
-                "label": "Q1",
-                "key": "Q1",
-                "icon": "calendar"
-              },
-              {
-                "key": "Q2",
-                "variant": "primary",
-                "icon": "calendar",
-                "label": "Q2"
-              },
-              {
-                "variant": "info",
-                "label": "Q3",
-                "icon": "calendar",
-                "key": "Q3"
-              },
-              {
-                "icon": "calendar",
-                "variant": "success",
-                "label": "Q4",
-                "key": "Q4"
-              }
-            ],
-            "bodyContent": {
-              "direction": "vertical",
-              "type": "stack",
-              "children": [
-                {
-                  "children": [
-                    {
-                      "name": "calendar-range",
-                      "type": "icon"
-                    },
-                    {
-                      "variant": "h2",
-                      "content": "@config.title",
-                      "type": "typography"
-                    },
-                    {
-                      "color": "muted",
-                      "className": "ml-2",
-                      "type": "typography",
-                      "content": "Roadmap",
-                      "variant": "caption"
-                    }
-                  ],
-                  "direction": "horizontal",
-                  "align": "center",
-                  "type": "stack",
-                  "className": "px-card-md",
-                  "gap": "sm"
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "stack",
-                  "className": "overflow-x-auto border-y border-[var(--color-border)]",
-                  "children": [
-                    {
-                      "gap": "none",
-                      "renderItem": [
-                        "fn",
-                        "col",
-                        {
-                          "children": [
-                            {
-                              "gap": "xs",
-                              "type": "stack",
-                              "align": "center",
-                              "className": "px-card-md py-2 bg-[var(--color-surface-subtle)] border-b border-[var(--color-border)] sticky top-0",
-                              "children": [
-                                {
-                                  "name": "@col.icon",
-                                  "type": "icon"
-                                },
-                                {
-                                  "variant": "h4",
-                                  "className": "flex-1",
-                                  "type": "typography",
-                                  "content": "@col.label"
-                                },
-                                {
-                                  "type": "badge",
-                                  "size": "sm",
-                                  "variant": "primary",
-                                  "label": "@col.count"
-                                }
-                              ],
-                              "direction": "horizontal"
-                            },
-                            {
-                              "dropEvent": "MOVE_CARD",
-                              "renderItem": [
-                                "fn",
-                                "item",
-                                {
-                                  "type": "card",
-                                  "look": "elevated",
-                                  "children": [
-                                    {
-                                      "direction": "vertical",
-                                      "children": [
-                                        {
-                                          "gap": "xs",
-                                          "children": [
-                                            {
-                                              "type": "icon",
-                                              "name": "flag"
-                                            },
-                                            {
-                                              "variant": "body",
-                                              "weight": "medium",
-                                              "content": "@config.cardTitleBinding",
-                                              "type": "typography",
-                                              "className": "flex-1"
-                                            }
-                                          ],
-                                          "direction": "horizontal",
-                                          "type": "stack",
-                                          "align": "center"
-                                        },
-                                        {
-                                          "content": "@config.cardDescriptionBinding",
-                                          "variant": "caption",
-                                          "className": "line-clamp-2",
-                                          "color": "muted",
-                                          "type": "typography"
-                                        },
-                                        {
-                                          "gap": "xs",
-                                          "align": "center",
-                                          "direction": "horizontal",
-                                          "type": "stack",
-                                          "children": [
-                                            {
-                                              "label": "@config.cardStageBinding",
-                                              "size": "sm",
-                                              "variant": "primary",
-                                              "type": "badge"
-                                            },
-                                            {
-                                              "label": "Details",
-                                              "size": "sm",
-                                              "action": "OPEN_CARD",
-                                              "icon": "arrow-right",
-                                              "className": "ml-auto",
-                                              "actionPayload": {
-                                                "id": "@config.cardIdBinding",
-                                                "row": "@item"
-                                              },
-                                              "type": "button",
-                                              "variant": "ghost"
-                                            }
-                                          ],
-                                          "className": "pt-1"
-                                        }
-                                      ],
-                                      "type": "stack",
-                                      "gap": "xs"
-                                    }
-                                  ],
-                                  "padding": "sm",
-                                  "className": "cursor-grab hover:shadow-md transition-shadow"
-                                }
-                              ],
-                              "reorderEvent": "REORDER_CARD",
-                              "gap": "sm",
-                              "sortable": true,
-                              "type": "data-list",
-                              "accepts": "*",
-                              "positionEvent": "REORDER_POSITION",
-                              "fields": [],
-                              "entity": "@col.items",
-                              "className": "p-card-md min-h-[160px]",
-                              "dragGroup": "@col.key"
-                            }
-                          ],
-                          "className": "min-w-[240px] border-r border-[var(--color-border)] last:border-r-0",
-                          "type": "stack",
-                          "gap": "none",
-                          "direction": "vertical"
-                        }
-                      ],
-                      "type": "data-grid",
-                      "entity": "@entity.boards",
-                      "className": "min-w-full",
-                      "cols": "@config.gridCols",
-                      "dndRoot": true,
-                      "fields": []
-                    }
-                  ],
-                  "align": "stretch",
-                  "gap": "none",
-                  "direction": "horizontal"
-                },
-                {
-                  "type": "floating-action-button",
-                  "label": "Add milestone",
-                  "icon": "plus",
-                  "action": "ADD_CARD",
-                  "variant": "primary"
-                }
-              ],
-              "gap": "md"
-            },
-            "gridCols": 4.0
-          }
-        }
-      ],
+      "name": "TimelineRoadmapBoardOrbital",
       "pages": [
         {
           "name": "TimelineRoadmapPage",
@@ -338,7 +112,233 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "name": "calendar-range",
+                      "type": "icon"
+                    },
+                    {
+                      "content": "@config.title",
+                      "type": "typography",
+                      "variant": "h2"
+                    },
+                    {
+                      "className": "ml-2",
+                      "color": "muted",
+                      "content": "Roadmap",
+                      "type": "typography",
+                      "variant": "caption"
+                    }
+                  ],
+                  "className": "px-card-md",
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "align": "stretch",
+                  "children": [
+                    {
+                      "className": "min-w-full",
+                      "cols": "@config.gridCols",
+                      "dndRoot": true,
+                      "entity": "@entity.boards",
+                      "fields": [],
+                      "gap": "none",
+                      "renderItem": [
+                        "fn",
+                        "col",
+                        {
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "@col.icon",
+                                  "type": "icon"
+                                },
+                                {
+                                  "className": "flex-1",
+                                  "content": "@col.label",
+                                  "type": "typography",
+                                  "variant": "h4"
+                                },
+                                {
+                                  "label": "@col.count",
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "primary"
+                                }
+                              ],
+                              "className": "px-card-md py-2 bg-[var(--color-surface-subtle)] border-b border-[var(--color-border)] sticky top-0",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "accepts": "*",
+                              "className": "p-card-md min-h-[160px]",
+                              "dragGroup": "@col.key",
+                              "dropEvent": "MOVE_CARD",
+                              "entity": "@col.items",
+                              "fields": [],
+                              "gap": "sm",
+                              "positionEvent": "REORDER_POSITION",
+                              "renderItem": [
+                                "fn",
+                                "item",
+                                {
+                                  "children": [
+                                    {
+                                      "children": [
+                                        {
+                                          "align": "center",
+                                          "children": [
+                                            {
+                                              "name": "flag",
+                                              "type": "icon"
+                                            },
+                                            {
+                                              "className": "flex-1",
+                                              "content": "@config.cardTitleBinding",
+                                              "type": "typography",
+                                              "variant": "body",
+                                              "weight": "medium"
+                                            }
+                                          ],
+                                          "direction": "horizontal",
+                                          "gap": "xs",
+                                          "type": "stack"
+                                        },
+                                        {
+                                          "className": "line-clamp-2",
+                                          "color": "muted",
+                                          "content": "@config.cardDescriptionBinding",
+                                          "type": "typography",
+                                          "variant": "caption"
+                                        },
+                                        {
+                                          "align": "center",
+                                          "children": [
+                                            {
+                                              "label": "@config.cardStageBinding",
+                                              "size": "sm",
+                                              "type": "badge",
+                                              "variant": "primary"
+                                            },
+                                            {
+                                              "action": "OPEN_CARD",
+                                              "actionPayload": {
+                                                "id": "@config.cardIdBinding",
+                                                "row": "@item"
+                                              },
+                                              "className": "ml-auto",
+                                              "icon": "arrow-right",
+                                              "label": "Details",
+                                              "size": "sm",
+                                              "type": "button",
+                                              "variant": "ghost"
+                                            }
+                                          ],
+                                          "className": "pt-1",
+                                          "direction": "horizontal",
+                                          "gap": "xs",
+                                          "type": "stack"
+                                        }
+                                      ],
+                                      "direction": "vertical",
+                                      "gap": "xs",
+                                      "type": "stack"
+                                    }
+                                  ],
+                                  "className": "cursor-grab hover:shadow-md transition-shadow",
+                                  "look": "elevated",
+                                  "padding": "sm",
+                                  "type": "card"
+                                }
+                              ],
+                              "reorderEvent": "REORDER_CARD",
+                              "sortable": true,
+                              "type": "data-list"
+                            }
+                          ],
+                          "className": "min-w-[240px] border-r border-[var(--color-border)] last:border-r-0",
+                          "direction": "vertical",
+                          "gap": "none",
+                          "type": "stack"
+                        }
+                      ],
+                      "type": "data-grid"
+                    }
+                  ],
+                  "className": "overflow-x-auto border-y border-[var(--color-border)]",
+                  "direction": "horizontal",
+                  "gap": "none",
+                  "type": "stack"
+                },
+                {
+                  "action": "ADD_CARD",
+                  "icon": "plus",
+                  "label": "Add milestone",
+                  "type": "floating-action-button",
+                  "variant": "primary"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "md",
+              "type": "stack"
+            },
+            "columns": [
+              {
+                "icon": "calendar",
+                "key": "Q1",
+                "label": "Q1",
+                "variant": "default"
+              },
+              {
+                "icon": "calendar",
+                "key": "Q2",
+                "label": "Q2",
+                "variant": "primary"
+              },
+              {
+                "icon": "calendar",
+                "key": "Q3",
+                "label": "Q3",
+                "variant": "info"
+              },
+              {
+                "icon": "calendar",
+                "key": "Q4",
+                "label": "Q4",
+                "variant": "success"
+              }
+            ],
+            "gridCols": 4.0
+          },
+          "linkedEntity": "TimelineRoadmapItem",
+          "name": "TimelineRoadmapBoard",
+          "ref": "Board.traits.BoardItemBoard"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Board",
+          "from": "std/behaviors/std-board"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.1.0"
 }

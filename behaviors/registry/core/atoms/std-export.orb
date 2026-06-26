@@ -1,272 +1,47 @@
 {
-  "name": "std-export",
-  "version": "3.0.0",
   "description": "std-export — a row of export-format buttons. Predefined CSV/XLSX/PDF defaults; caller can override via config.formats. Emits EXPORT_REQUESTED { format, tileId } on the bus; host or sibling orbital generates the file.",
+  "name": "std-export",
   "orbitals": [
     {
-      "name": "ExportOrbital",
       "entity": {
-        "name": "ExportPanel",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "options",
-            "type": "array",
             "default": [],
+            "description": "Configuration settings for available export formats.",
             "items": {
-              "type": "object",
               "properties": {
                 "format": {
                   "name": "format",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 "id": {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 "label": {
                   "name": "label",
-                  "type": "string",
-                  "required": true
-                }
-              }
-            },
-            "description": "Configuration settings for available export formats.",
-            "synonyms": "format, export-types, configurations"
-          }
-        ]
-      },
-      "traits": [
-        {
-          "name": "ExportMenu",
-          "category": "interaction",
-          "linkedEntity": "ExportPanel",
-          "emits": [
-            {
-              "event": "EXPORT_REQUESTED",
-              "description": "Requests export of data in a specified format.",
-              "synonyms": "export, save, download, generate",
-              "tier": "essential",
-              "scope": "external",
-              "payloadSchema": [
-                {
-                  "name": "format",
-                  "type": "string",
-                  "required": true
-                },
-                {
-                  "name": "tileId",
+                  "required": true,
                   "type": "string"
                 }
-              ]
-            }
-          ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
               },
-              {
-                "key": "OPEN_EXPORT",
-                "name": "Open Export"
-              },
-              {
-                "key": "EXPORT_REQUESTED",
-                "name": "Export Requested",
-                "description": "Requests export of data in a specified format.",
-                "synonyms": "export, save, download, generate",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "format",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "tileId",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
-            "transitions": [
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.options",
-                    "@config.formats"
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "popover",
-                      "children": {
-                        "label": "@config.buttonLabel",
-                        "icon": "download",
-                        "type": "button",
-                        "size": "sm",
-                        "variant": "ghost",
-                        "action": "OPEN_EXPORT"
-                      },
-                      "position": "bottom",
-                      "content": {
-                        "renderItem": [
-                          "fn",
-                          "fmt",
-                          {
-                            "actionPayload": {
-                              "format": "@fmt.format",
-                              "tileId": "@config.tileId"
-                            },
-                            "size": "sm",
-                            "type": "button",
-                            "variant": "ghost",
-                            "icon": "file-down",
-                            "label": "@fmt.label",
-                            "action": "@config.event"
-                          }
-                        ],
-                        "look": "@config.tableLook",
-                        "fields": [],
-                        "type": "data-list",
-                        "entity": "@entity.options"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "OPEN_EXPORT",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.options",
-                    "@entity.options"
-                  ]
-                ]
-              },
-              {
-                "from": "idle",
-                "to": "idle",
-                "event": "EXPORT_REQUESTED",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.options",
-                    "@entity.options"
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "formats": {
-              "type": "[FormatOption]",
-              "default": [
-                {
-                  "label": "CSV",
-                  "id": "csv",
-                  "format": "csv"
-                },
-                {
-                  "label": "XLSX",
-                  "format": "xlsx",
-                  "id": "xlsx"
-                },
-                {
-                  "label": "PDF",
-                  "format": "pdf",
-                  "id": "pdf"
-                }
-              ],
-              "label": "Available formats",
-              "description": "Export formats shown to the user in the popover",
-              "synonyms": "list of export format entries (csv / xlsx / pdf / png / json). user phrases: 'only CSV' -> keep only csv entry; 'add JSON' -> append json entry; 'no PNG' -> remove png; 'allow X and Y' -> set the array to those two",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": true
-                  },
-                  "id": {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
+              "type": "object"
             },
-            "event": {
-              "type": "string",
-              "default": "EXPORT_REQUESTED",
-              "label": "Export event",
-              "description": "Event emitted when the user picks a format",
-              "synonyms": "bus event name. internal wiring; users rarely target directly",
-              "tier": "internal"
-            },
-            "buttonLabel": {
-              "type": "string",
-              "default": "Export",
-              "label": "Button label",
-              "description": "Text shown on the toolbar button that opens the export popover",
-              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')",
-              "tier": "presentation"
-            },
-            "tileId": {
-              "type": "string",
-              "default": "",
-              "label": "Tile id",
-              "description": "Identifier of the dashboard tile being exported",
-              "synonyms": "internal identifier — host orbital wires this; users rarely set it directly",
-              "tier": "internal"
-            },
-            "tableLook": {
-              "type": "string",
-              "default": "dense",
-              "label": "Table look",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+            "name": "options",
+            "synonyms": "format, export-types, configurations",
+            "type": "array"
+          }
+        ],
+        "name": "ExportPanel",
+        "persistence": "runtime"
+      },
+      "name": "ExportOrbital",
       "pages": [
         {
           "name": "ExportMenuPage",
@@ -277,7 +52,232 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "buttonLabel": {
+              "default": "Export",
+              "description": "Text shown on the toolbar button that opens the export popover",
+              "label": "Button label",
+              "synonyms": "the text on the export trigger button. user phrases: 'rename export button to X' / 'set the button label to X' / 'call the button X' / 'change export button text to X' -> X (e.g. 'Download CSV', 'Download', 'Export Data')",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "event": {
+              "default": "EXPORT_REQUESTED",
+              "description": "Event emitted when the user picks a format",
+              "label": "Export event",
+              "synonyms": "bus event name. internal wiring; users rarely target directly",
+              "tier": "internal",
+              "type": "string"
+            },
+            "formats": {
+              "default": [
+                {
+                  "format": "csv",
+                  "id": "csv",
+                  "label": "CSV"
+                },
+                {
+                  "format": "xlsx",
+                  "id": "xlsx",
+                  "label": "XLSX"
+                },
+                {
+                  "format": "pdf",
+                  "id": "pdf",
+                  "label": "PDF"
+                }
+              ],
+              "description": "Export formats shown to the user in the popover",
+              "items": {
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Available formats",
+              "synonyms": "list of export format entries (csv / xlsx / pdf / png / json). user phrases: 'only CSV' -> keep only csv entry; 'add JSON' -> append json entry; 'no PNG' -> remove png; 'allow X and Y' -> set the array to those two",
+              "tier": "presentation",
+              "type": "[FormatOption]"
+            },
+            "tableLook": {
+              "default": "dense",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "label": "Table look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "tileId": {
+              "default": "",
+              "description": "Identifier of the dashboard tile being exported",
+              "label": "Tile id",
+              "synonyms": "internal identifier — host orbital wires this; users rarely set it directly",
+              "tier": "internal",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Requests export of data in a specified format.",
+              "event": "EXPORT_REQUESTED",
+              "payloadSchema": [
+                {
+                  "name": "format",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "tileId",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "synonyms": "export, save, download, generate",
+              "tier": "essential"
+            }
+          ],
+          "linkedEntity": "ExportPanel",
+          "name": "ExportMenu",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "key": "OPEN_EXPORT",
+                "name": "Open Export"
+              },
+              {
+                "description": "Requests export of data in a specified format.",
+                "key": "EXPORT_REQUESTED",
+                "name": "Export Requested",
+                "payloadSchema": [
+                  {
+                    "name": "format",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "tileId",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "export, save, download, generate",
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.options",
+                    "@config.formats"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": {
+                        "action": "OPEN_EXPORT",
+                        "icon": "download",
+                        "label": "@config.buttonLabel",
+                        "size": "sm",
+                        "type": "button",
+                        "variant": "ghost"
+                      },
+                      "content": {
+                        "entity": "@entity.options",
+                        "fields": [],
+                        "look": "@config.tableLook",
+                        "renderItem": [
+                          "fn",
+                          "fmt",
+                          {
+                            "action": "@config.event",
+                            "actionPayload": {
+                              "format": "@fmt.format",
+                              "tileId": "@config.tileId"
+                            },
+                            "icon": "file-down",
+                            "label": "@fmt.label",
+                            "size": "sm",
+                            "type": "button",
+                            "variant": "ghost"
+                          }
+                        ],
+                        "type": "data-list"
+                      },
+                      "position": "bottom",
+                      "type": "popover"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.options",
+                    "@entity.options"
+                  ]
+                ],
+                "event": "OPEN_EXPORT",
+                "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.options",
+                    "@entity.options"
+                  ]
+                ],
+                "event": "EXPORT_REQUESTED",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
       ]
     }
-  ]
+  ],
+  "version": "3.0.0"
 }

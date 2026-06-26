@@ -1,93 +1,99 @@
 {
-  "name": "std-hero-banner",
-  "version": "1.0.0",
   "description": "Hero marquee — eyebrow + headline + lead + primary CTA, centered in an elevated card. Above-the-fold landing surface. Standalone atom; fetches one HeroPromo record and renders inline.",
+  "name": "std-hero-banner",
   "orbitals": [
     {
-      "name": "HeroBannerOrbital",
       "entity": {
-        "name": "HeroPromo",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "eyebrow",
-            "type": "string",
             "default": "Announcing",
             "description": "A short introductory text or tagline.",
-            "synonyms": "subtitle, teaser, prefix"
+            "name": "eyebrow",
+            "synonyms": "subtitle, teaser, prefix",
+            "type": "string"
           },
           {
-            "name": "headline",
-            "type": "string",
-            "required": true,
             "default": "Headline",
             "description": "The main title or heading for a promotional message.",
-            "synonyms": "title, heading, main text"
+            "name": "headline",
+            "required": true,
+            "synonyms": "title, heading, main text",
+            "type": "string"
           },
           {
-            "name": "lead",
-            "type": "string",
             "default": "",
             "description": "The main descriptive text for the component.",
-            "synonyms": "body, content, text"
+            "name": "lead",
+            "synonyms": "body, content, text",
+            "type": "string"
           },
           {
-            "name": "ctaLabel",
-            "type": "string",
             "default": "Get started",
             "description": "Text for the call to action button.",
-            "synonyms": "button text, action label, call to action"
+            "name": "ctaLabel",
+            "synonyms": "button text, action label, call to action",
+            "type": "string"
           },
           {
-            "name": "ctaEvent",
-            "type": "string",
             "default": "PRIMARY_CTA",
             "description": "The event triggered when the call to action is activated.",
-            "synonyms": "event, action, trigger"
+            "name": "ctaEvent",
+            "synonyms": "event, action, trigger",
+            "type": "string"
           },
           {
-            "name": "errorMessage",
-            "type": "string",
             "default": "",
             "description": "Error message to display if data retrieval fails.",
-            "synonyms": "error, alert, message"
+            "name": "errorMessage",
+            "synonyms": "error, alert, message",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "HeroPromo",
+        "persistence": "runtime"
       },
+      "name": "HeroBannerOrbital",
+      "pages": [
+        {
+          "name": "HeroBannerPage",
+          "path": "/hero-banner",
+          "traits": [
+            {
+              "ref": "HeroBanner"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "HeroBanner",
           "category": "interaction",
-          "linkedEntity": "HeroPromo",
           "emits": [
             {
-              "event": "PRIMARY_CTA",
               "description": "Signals that the primary call to action has been triggered.",
+              "event": "PRIMARY_CTA",
               "synonyms": "click, activate, submit, trigger",
               "tier": "essential"
             },
             {
-              "event": "HeroPromoLoaded",
               "description": "Signals successful loading of the hero promotion data.",
-              "synonyms": "loaded, fetched, received, ready",
-              "tier": "essential",
+              "event": "HeroPromoLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[object]"
                 }
-              ]
+              ],
+              "synonyms": "loaded, fetched, received, ready",
+              "tier": "essential"
             },
             {
-              "event": "HeroPromoLoadFailed",
               "description": "Indicates failure to load the hero promotion data.",
-              "synonyms": "error, failed, load error",
-              "tier": "internal",
+              "event": "HeroPromoLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -97,46 +103,37 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failed, load error",
+              "tier": "internal"
             }
           ],
+          "linkedEntity": "HeroPromo",
+          "name": "HeroBanner",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "loading",
-                "isInitial": true
-              },
-              {
-                "name": "ready"
-              },
-              {
-                "name": "error"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Signals successful loading of the hero promotion data.",
                 "key": "HeroPromoLoaded",
                 "name": "HeroPromo loaded",
-                "description": "Signals successful loading of the hero promotion data.",
-                "synonyms": "loaded, fetched, received, ready",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[object]"
                   }
-                ]
+                ],
+                "synonyms": "loaded, fetched, received, ready",
+                "tier": "essential"
               },
               {
+                "description": "Indicates failure to load the hero promotion data.",
                 "key": "HeroPromoLoadFailed",
                 "name": "HeroPromo load failed",
-                "description": "Indicates failure to load the hero promotion data.",
-                "synonyms": "error, failed, load error",
-                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -146,47 +143,58 @@
                     "name": "code",
                     "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "error, failed, load error",
+                "tier": "internal"
               },
               {
+                "description": "Signals that the primary call to action has been triggered.",
                 "key": "PRIMARY_CTA",
                 "name": "Primary Cta",
-                "description": "Signals that the primary call to action has been triggered.",
                 "synonyms": "click, activate, submit, trigger",
                 "tier": "essential"
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "loading"
+              },
+              {
+                "name": "ready"
+              },
+              {
+                "name": "error"
+              }
+            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
                     "HeroPromo",
                     {
-                      "limit": 1.0,
                       "emit": {
                         "failure": "HeroPromoLoadFailed",
                         "success": "HeroPromoLoaded"
-                      }
+                      },
+                      "limit": 1.0
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Loading…"
+                      "title": "Loading…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "ready",
-                "event": "HeroPromoLoaded",
                 "effects": [
                   [
                     "set",
@@ -257,47 +265,47 @@
                           "align": "center",
                           "children": [
                             {
-                              "type": "badge",
                               "label": "@entity.eyebrow",
-                              "variant": "neutral",
-                              "size": "sm"
+                              "size": "sm",
+                              "type": "badge",
+                              "variant": "neutral"
                             },
                             {
-                              "variant": "h1",
                               "content": "@entity.headline",
                               "type": "typography",
+                              "variant": "h1",
                               "weight": "bold"
                             },
                             {
                               "color": "muted",
                               "content": "@entity.lead",
-                              "variant": "body",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "body"
                             },
                             {
-                              "variant": "primary",
+                              "action": "@entity.ctaEvent",
+                              "label": "@entity.ctaLabel",
                               "size": "lg",
                               "type": "button",
-                              "label": "@entity.ctaLabel",
-                              "action": "@entity.ctaEvent"
+                              "variant": "primary"
                             }
                           ],
-                          "gap": "lg",
                           "direction": "vertical",
+                          "gap": "lg",
                           "type": "stack"
                         }
                       ],
+                      "look": "elevated",
                       "padding": "lg",
-                      "type": "card",
-                      "look": "elevated"
+                      "type": "card"
                     }
                   ]
-                ]
+                ],
+                "event": "HeroPromoLoaded",
+                "from": "loading",
+                "to": "ready"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "HeroPromoLoadFailed",
                 "effects": [
                   [
                     "set",
@@ -313,44 +321,36 @@
                       "type": "error-state"
                     }
                   ]
-                ]
+                ],
+                "event": "HeroPromoLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
+                "event": "PRIMARY_CTA",
                 "from": "ready",
-                "to": "ready",
-                "event": "PRIMARY_CTA"
+                "to": "ready"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Retrying…"
+                      "title": "Retrying…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "HeroBannerPage",
-          "path": "/hero-banner",
-          "traits": [
-            {
-              "ref": "HeroBanner"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

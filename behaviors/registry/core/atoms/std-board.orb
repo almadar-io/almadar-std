@@ -1,76 +1,125 @@
 {
-  "name": "std-board",
-  "version": "1.1.0",
   "description": "std-board — generic N-column board primitive. `config.columns` is an array of column definitions ({ key, label, icon, variant }); the trait `array/map`s them on `BoardItemsLoaded` into `@entity.boards` where each board carries its filtered items + a count. The render is a `data-grid` over `@entity.boards` (one card per column) whose `renderItem` lambda nests a `data-list` over `@col.items` (the cards in that stage). N is config-driven — pass any number of columns; the outer `data-grid`'s `cols` is bound to `@config.gridCols` so the grid wraps if you exceed it. Topology = loading / viewing_board / viewing_card / adding / error — distinct from the cookie-cutter `loading/browsing/viewing_single/error` CRUD shape. App-level atoms (e.g. std-pipeline) compose std-board via `uses` and add a sibling persistor + extended source entity.",
+  "name": "std-board",
   "orbitals": [
     {
-      "name": "BoardOrbital",
       "entity": {
-        "name": "BoardView",
         "collection": "board_items",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "title",
-            "type": "string",
             "required": true,
-            "description": "The descriptive name of the board.",
-            "synonyms": "name, heading, label"
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
+            "description": "The descriptive name of the board.",
+            "name": "title",
+            "required": true,
+            "synonyms": "name, heading, label",
+            "type": "string"
+          },
+          {
             "default": "",
             "description": "A textual explanation or summary of the board.",
-            "synonyms": "summary, details, notes, explanation"
+            "name": "description",
+            "synonyms": "summary, details, notes, explanation",
+            "type": "string"
           },
           {
-            "name": "stage",
-            "type": "string",
             "default": "todo",
+            "description": "The current status or lifecycle phase of the board.",
+            "name": "stage",
+            "synonyms": "status, lifecycle, progress, state",
+            "type": "string",
             "values": [
               "todo",
               "doing",
               "done"
-            ],
-            "description": "The current status or lifecycle phase of the board.",
-            "synonyms": "status, lifecycle, progress, state"
+            ]
           },
           {
-            "name": "notes",
-            "type": "string",
             "default": "",
             "description": "Free-form text providing additional information.",
-            "synonyms": "comments, remarks, details, annotations"
+            "name": "notes",
+            "synonyms": "comments, remarks, details, annotations",
+            "type": "string"
           },
           {
-            "name": "position",
-            "type": "number",
             "default": 0.0,
             "description": "The sequential order of this item within a collection.",
-            "synonyms": "order, sequence, index, rank"
+            "name": "position",
+            "synonyms": "order, sequence, index, rank",
+            "type": "number"
           },
           {
-            "name": "boards",
-            "type": "array",
             "default": [],
+            "intrinsic": true,
             "items": {
-              "type": "object",
               "properties": {
                 "count": {
                   "name": "count",
-                  "type": "number",
-                  "required": false
+                  "required": false,
+                  "type": "number"
+                },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "items": {
+                  "items": {
+                    "properties": {
+                      "description": {
+                        "name": "description",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "id": {
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "notes": {
+                        "name": "notes",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "position": {
+                        "name": "position",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "stage": {
+                        "name": "stage",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "title": {
+                        "name": "title",
+                        "required": false,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "items",
+                  "required": false,
+                  "type": "array"
+                },
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 },
                 "variant": {
                   "name": "variant",
-                  "type": "string",
                   "required": false,
+                  "type": "string",
                   "values": [
                     "default",
                     "primary",
@@ -79,182 +128,405 @@
                     "error",
                     "info"
                   ]
-                },
-                "key": {
-                  "name": "key",
-                  "type": "string",
-                  "required": true
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "items": {
-                  "name": "items",
-                  "type": "array",
-                  "required": false,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "stage": {
-                        "name": "stage",
-                        "type": "string",
-                        "required": false
-                      },
-                      "notes": {
-                        "name": "notes",
-                        "type": "string",
-                        "required": false
-                      },
-                      "position": {
-                        "name": "position",
-                        "type": "number",
-                        "required": false
-                      },
-                      "id": {
-                        "name": "id",
-                        "type": "string",
-                        "required": true
-                      },
-                      "title": {
-                        "name": "title",
-                        "type": "string",
-                        "required": false
-                      },
-                      "description": {
-                        "name": "description",
-                        "type": "string",
-                        "required": false
-                      }
-                    }
-                  }
                 }
-              }
+              },
+              "type": "object"
             },
-            "intrinsic": true
+            "name": "boards",
+            "type": "array"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentId",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentTitle",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentDescription",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentStage",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
+            "default": "",
+            "intrinsic": true,
             "name": "currentNotes",
-            "type": "string",
-            "default": "",
-            "intrinsic": true
+            "type": "string"
           },
           {
-            "name": "errorMessage",
-            "type": "string",
             "default": "",
-            "intrinsic": true
+            "intrinsic": true,
+            "name": "errorMessage",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "BoardView",
+        "persistence": "persistent"
       },
+      "name": "BoardOrbital",
+      "pages": [
+        {
+          "name": "BoardPage",
+          "path": "/board",
+          "traits": [
+            {
+              "ref": "BoardItemBoard"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "BoardItemBoard",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "boards",
-              "currentDescription",
-              "currentId",
-              "currentNotes",
-              "currentStage",
-              "currentTitle",
-              "errorMessage"
-            ]
-          },
           "category": "interaction",
-          "linkedEntity": "BoardView",
+          "config": {
+            "bodyContent": {
+              "default": {
+                "children": [
+                  {
+                    "align": "center",
+                    "children": [
+                      {
+                        "name": "kanban-square",
+                        "type": "icon"
+                      },
+                      {
+                        "content": "@config.title",
+                        "type": "typography",
+                        "variant": "h3"
+                      }
+                    ],
+                    "direction": "horizontal",
+                    "gap": "sm",
+                    "type": "stack"
+                  },
+                  {
+                    "type": "divider"
+                  },
+                  {
+                    "cols": "@config.gridCols",
+                    "dndRoot": true,
+                    "entity": "@entity.boards",
+                    "fields": [],
+                    "gap": "md",
+                    "renderItem": [
+                      "fn",
+                      "col",
+                      {
+                        "children": [
+                          {
+                            "children": [
+                              {
+                                "align": "center",
+                                "children": [
+                                  {
+                                    "name": "@col.icon",
+                                    "type": "icon"
+                                  },
+                                  {
+                                    "content": "@col.label",
+                                    "type": "typography",
+                                    "variant": "h4"
+                                  },
+                                  {
+                                    "label": "@col.count",
+                                    "type": "badge",
+                                    "variant": "@col.variant"
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "xs",
+                                "type": "stack"
+                              },
+                              {
+                                "accepts": "*",
+                                "dragGroup": "@col.key",
+                                "dropEvent": "MOVE_CARD",
+                                "entity": "@col.items",
+                                "fields": [],
+                                "gap": "sm",
+                                "positionEvent": "REORDER_POSITION",
+                                "renderItem": [
+                                  "fn",
+                                  "item",
+                                  {
+                                    "children": [
+                                      {
+                                        "children": [
+                                          {
+                                            "content": "@config.cardTitleBinding",
+                                            "type": "typography",
+                                            "variant": "h4"
+                                          },
+                                          {
+                                            "color": "muted",
+                                            "content": "@config.cardDescriptionBinding",
+                                            "type": "typography",
+                                            "variant": "caption"
+                                          },
+                                          {
+                                            "align": "center",
+                                            "children": [
+                                              {
+                                                "action": "OPEN_CARD",
+                                                "actionPayload": {
+                                                  "id": "@config.cardIdBinding",
+                                                  "row": "@item"
+                                                },
+                                                "icon": "arrow-right",
+                                                "label": "Open",
+                                                "type": "button",
+                                                "variant": "ghost"
+                                              }
+                                            ],
+                                            "direction": "horizontal",
+                                            "gap": "xs",
+                                            "type": "stack"
+                                          }
+                                        ],
+                                        "direction": "vertical",
+                                        "gap": "xs",
+                                        "type": "stack"
+                                      }
+                                    ],
+                                    "look": "@config.cardLook",
+                                    "type": "card"
+                                  }
+                                ],
+                                "reorderEvent": "REORDER_CARD",
+                                "sortable": true,
+                                "type": "data-list"
+                              }
+                            ],
+                            "direction": "vertical",
+                            "gap": "sm",
+                            "type": "stack"
+                          }
+                        ],
+                        "look": "@config.cardLook",
+                        "type": "card"
+                      }
+                    ],
+                    "type": "data-grid"
+                  },
+                  {
+                    "action": "ADD_CARD",
+                    "icon": "plus",
+                    "label": "Add item",
+                    "type": "floating-action-button",
+                    "variant": "primary"
+                  }
+                ],
+                "direction": "vertical",
+                "gap": "md",
+                "type": "stack"
+              },
+              "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
+              "label": "Body content tree",
+              "tier": "internal",
+              "type": "render-ui"
+            },
+            "cardDescriptionBinding": {
+              "default": "@item.description",
+              "description": "Per-card binding for the description slot.",
+              "label": "Card description binding",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "cardIdBinding": {
+              "default": "@item.id",
+              "description": "Per-card binding for the id used in action payloads.",
+              "label": "Card id binding",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "cardLook": {
+              "default": "elevated",
+              "description": "Layer 2 visual treatment for cards rendered by this board.",
+              "label": "Card look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "elevated",
+                "flat-bordered",
+                "borderless-divider",
+                "ticket",
+                "invoice",
+                "chip",
+                "tile-image-first"
+              ]
+            },
+            "cardStageBinding": {
+              "default": "@item.stage",
+              "description": "Per-card binding for the stage/status slot.",
+              "label": "Card stage binding",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "cardTitleBinding": {
+              "default": "@item.title",
+              "description": "Per-card binding for the title slot.",
+              "label": "Card title binding",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "columns": {
+              "default": [
+                {
+                  "icon": "circle",
+                  "key": "todo",
+                  "label": "To Do",
+                  "variant": "default"
+                },
+                {
+                  "icon": "circle-dot",
+                  "key": "doing",
+                  "label": "In Progress",
+                  "variant": "primary"
+                },
+                {
+                  "icon": "check-circle",
+                  "key": "done",
+                  "label": "Done",
+                  "variant": "success"
+                }
+              ],
+              "description": "Board columns; each row's stage maps to a column key",
+              "items": {
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Columns",
+              "tier": "domain",
+              "type": "[ColumnSpec]"
+            },
+            "formFields": {
+              "default": [
+                "title",
+                "description",
+                "stage",
+                "notes"
+              ],
+              "description": "Fields shown in the add-card form",
+              "items": {
+                "type": "string"
+              },
+              "label": "New-card fields",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "gridCols": {
+              "default": 3.0,
+              "description": "Outer grid column count before the board wraps",
+              "label": "Grid columns",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "groupByField": {
+              "default": "stage",
+              "description": "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name.",
+              "label": "Group-by field",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Board",
+              "description": "Heading shown above the column board",
+              "label": "Board title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "OPEN_CARD",
               "description": "Indicates a card within the board has been selected.",
-              "synonyms": "select, choose, activate, display",
-              "tier": "essential",
+              "event": "OPEN_CARD",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "row",
-                  "type": "object",
-                  "required": true
+                  "required": true,
+                  "type": "object"
                 }
-              ]
+              ],
+              "synonyms": "select, choose, activate, display",
+              "tier": "essential"
             },
             {
-              "event": "CLOSE_CARD",
               "description": "Signals a card is being dismissed or closed.",
+              "event": "CLOSE_CARD",
               "synonyms": "dismiss, hide, close, remove",
               "tier": "essential"
             },
             {
-              "event": "ADD_CARD",
               "description": "Signals a new card is being added to the board.",
+              "event": "ADD_CARD",
               "synonyms": "create, new, append",
               "tier": "essential"
             },
             {
-              "event": "CANCEL_ADD",
               "description": "Aborts an in-progress addition operation.",
+              "event": "CANCEL_ADD",
               "synonyms": "discard, undo, reset",
               "tier": "customization"
             },
             {
-              "event": "SAVE_CARD",
               "description": "Signals that a card's data has been successfully saved.",
-              "synonyms": "persist, update, store",
-              "tier": "essential",
+              "event": "SAVE_CARD",
               "payloadSchema": [
                 {
                   "name": "data",
-                  "type": "object",
-                  "required": true
+                  "required": true,
+                  "type": "object"
                 }
-              ]
+              ],
+              "synonyms": "persist, update, store",
+              "tier": "essential"
             },
             {
-              "event": "MOVE_CARD",
               "description": "Signals a card has been repositioned within a column.",
-              "synonyms": "reorder, drag, reposition",
-              "tier": "customization",
+              "event": "MOVE_CARD",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "sourceGroup",
@@ -262,25 +534,25 @@
                 },
                 {
                   "name": "targetGroup",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "newIndex",
                   "type": "number"
                 }
-              ]
+              ],
+              "synonyms": "reorder, drag, reposition",
+              "tier": "customization"
             },
             {
-              "event": "REORDER_CARD",
               "description": "Signals a change in the order of cards within a column.",
-              "synonyms": "rearrange, sort, shuffle, reposition",
-              "tier": "customization",
+              "event": "REORDER_CARD",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "oldIndex",
@@ -290,38 +562,38 @@
                   "name": "newIndex",
                   "type": "number"
                 }
-              ]
+              ],
+              "synonyms": "rearrange, sort, shuffle, reposition",
+              "tier": "customization"
             },
             {
-              "event": "DELETE_CARD",
               "description": "Signals removal of a card from the board.",
-              "synonyms": "remove, delete, discard",
-              "tier": "customization",
+              "event": "DELETE_CARD",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "remove, delete, discard",
+              "tier": "customization"
             },
             {
-              "event": "BoardItemsLoaded",
               "description": "Signals that board items have been successfully loaded.",
-              "synonyms": "loaded, fetched, retrieved, populated",
-              "tier": "essential",
+              "event": "BoardItemsLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[ObjectSpec]"
                 }
-              ]
+              ],
+              "synonyms": "loaded, fetched, retrieved, populated",
+              "tier": "essential"
             },
             {
-              "event": "BoardItemsLoadFailed",
               "description": "Indicates a failure to load board items.",
-              "synonyms": "error, failed, problem, loading failure",
-              "tier": "internal",
+              "event": "BoardItemsLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -331,25 +603,25 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failed, problem, loading failure",
+              "tier": "internal"
             },
             {
-              "event": "BoardItemsSaved",
               "description": "Signals that board items have been successfully saved.",
-              "synonyms": "saved, persisted, updated",
-              "tier": "essential",
+              "event": "BoardItemsSaved",
               "payloadSchema": [
                 {
                   "name": "row",
                   "type": "object"
                 }
-              ]
+              ],
+              "synonyms": "saved, persisted, updated",
+              "tier": "essential"
             },
             {
-              "event": "BoardItemsSaveFailed",
               "description": "Indicates a failure to save board items.",
-              "synonyms": "error, failed, save error",
-              "tier": "internal",
+              "event": "BoardItemsSaveFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -359,14 +631,234 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failed, save error",
+              "tier": "internal"
             }
           ],
+          "entityContract": {
+            "provides": [
+              "boards",
+              "currentDescription",
+              "currentId",
+              "currentNotes",
+              "currentStage",
+              "currentTitle",
+              "errorMessage"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "BoardView",
+          "name": "BoardItemBoard",
+          "scope": "instance",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals that board items have been successfully loaded.",
+                "key": "BoardItemsLoaded",
+                "name": "Board items loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ObjectSpec]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved, populated",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a failure to load board items.",
+                "key": "BoardItemsLoadFailed",
+                "name": "Board items load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failed, problem, loading failure",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates a failure to save board items.",
+                "key": "BoardItemsSaveFailed",
+                "name": "Board items save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failed, save error",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates a card within the board has been selected.",
+                "key": "OPEN_CARD",
+                "name": "Open Card",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "required": true,
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "select, choose, activate, display",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals a new card is being added to the board.",
+                "key": "ADD_CARD",
+                "name": "Add Card",
+                "synonyms": "create, new, append",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals a card has been repositioned within a column.",
+                "key": "MOVE_CARD",
+                "name": "Move Card",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "sourceGroup",
+                    "type": "string"
+                  },
+                  {
+                    "name": "targetGroup",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "newIndex",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "reorder, drag, reposition",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals a change in the order of cards within a column.",
+                "key": "REORDER_CARD",
+                "name": "Reorder Card",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "oldIndex",
+                    "type": "number"
+                  },
+                  {
+                    "name": "newIndex",
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "rearrange, sort, shuffle, reposition",
+                "tier": "customization"
+              },
+              {
+                "description": "Indicates a change in the order of items within a column.",
+                "key": "REORDER_POSITION",
+                "name": "Reorder Position",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "position",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "synonyms": "sort, rearrange, reposition",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals that board items have been successfully saved.",
+                "key": "BoardItemsSaved",
+                "name": "Board items saved",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "saved, persisted, updated",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals a card is being dismissed or closed.",
+                "key": "CLOSE_CARD",
+                "name": "Close Card",
+                "synonyms": "dismiss, hide, close, remove",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals removal of a card from the board.",
+                "key": "DELETE_CARD",
+                "name": "Delete Card",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "remove, delete, discard",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals that a card's data has been successfully saved.",
+                "key": "SAVE_CARD",
+                "name": "Save Card",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "required": true,
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "persist, update, store",
+                "tier": "essential"
+              },
+              {
+                "description": "Aborts an in-progress addition operation.",
+                "key": "CANCEL_ADD",
+                "name": "Cancel Add",
+                "synonyms": "discard, undo, reset",
+                "tier": "customization"
+              }
+            ],
             "states": [
               {
-                "name": "loading",
-                "isInitial": true
+                "isInitial": true,
+                "name": "loading"
               },
               {
                 "name": "viewing_board"
@@ -381,213 +873,8 @@
                 "name": "error"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "BoardItemsLoaded",
-                "name": "Board items loaded",
-                "description": "Signals that board items have been successfully loaded.",
-                "synonyms": "loaded, fetched, retrieved, populated",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[ObjectSpec]"
-                  }
-                ]
-              },
-              {
-                "key": "BoardItemsLoadFailed",
-                "name": "Board items load failed",
-                "description": "Indicates a failure to load board items.",
-                "synonyms": "error, failed, problem, loading failure",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "BoardItemsSaveFailed",
-                "name": "Board items save failed",
-                "description": "Indicates a failure to save board items.",
-                "synonyms": "error, failed, save error",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "OPEN_CARD",
-                "name": "Open Card",
-                "description": "Indicates a card within the board has been selected.",
-                "synonyms": "select, choose, activate, display",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "ADD_CARD",
-                "name": "Add Card",
-                "description": "Signals a new card is being added to the board.",
-                "synonyms": "create, new, append",
-                "tier": "essential"
-              },
-              {
-                "key": "MOVE_CARD",
-                "name": "Move Card",
-                "description": "Signals a card has been repositioned within a column.",
-                "synonyms": "reorder, drag, reposition",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "sourceGroup",
-                    "type": "string"
-                  },
-                  {
-                    "name": "targetGroup",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "newIndex",
-                    "type": "number"
-                  }
-                ]
-              },
-              {
-                "key": "REORDER_CARD",
-                "name": "Reorder Card",
-                "description": "Signals a change in the order of cards within a column.",
-                "synonyms": "rearrange, sort, shuffle, reposition",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "oldIndex",
-                    "type": "number"
-                  },
-                  {
-                    "name": "newIndex",
-                    "type": "number"
-                  }
-                ]
-              },
-              {
-                "key": "REORDER_POSITION",
-                "name": "Reorder Position",
-                "description": "Indicates a change in the order of items within a column.",
-                "synonyms": "sort, rearrange, reposition",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "position",
-                    "type": "number",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "BoardItemsSaved",
-                "name": "Board items saved",
-                "description": "Signals that board items have been successfully saved.",
-                "synonyms": "saved, persisted, updated",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE_CARD",
-                "name": "Close Card",
-                "description": "Signals a card is being dismissed or closed.",
-                "synonyms": "dismiss, hide, close, remove",
-                "tier": "essential"
-              },
-              {
-                "key": "DELETE_CARD",
-                "name": "Delete Card",
-                "description": "Signals removal of a card from the board.",
-                "synonyms": "remove, delete, discard",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "SAVE_CARD",
-                "name": "Save Card",
-                "description": "Signals that a card's data has been successfully saved.",
-                "synonyms": "persist, update, store",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CANCEL_ADD",
-                "name": "Cancel Add",
-                "description": "Aborts an in-progress addition operation.",
-                "synonyms": "discard, undo, reset",
-                "tier": "customization"
-              }
-            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -603,16 +890,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Loading board…"
+                      "title": "Loading board…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "viewing_board",
-                "event": "BoardItemsLoaded",
                 "effects": [
                   [
                     "set",
@@ -624,21 +911,35 @@
                         "fn",
                         "col",
                         {
-                          "variant": [
-                            "object/get",
-                            "@col",
-                            "variant",
-                            "default"
+                          "count": [
+                            "array/len",
+                            [
+                              "array/filter",
+                              "@payload.data",
+                              [
+                                "fn",
+                                "item",
+                                [
+                                  "=",
+                                  [
+                                    "object/get",
+                                    "@item",
+                                    "@config.groupByField"
+                                  ],
+                                  [
+                                    "object/get",
+                                    "@col",
+                                    "key"
+                                  ]
+                                ]
+                              ]
+                            ]
                           ],
-                          "key": [
+                          "icon": [
                             "object/get",
                             "@col",
-                            "key"
-                          ],
-                          "label": [
-                            "object/get",
-                            "@col",
-                            "label"
+                            "icon",
+                            "circle"
                           ],
                           "items": [
                             "array/sort",
@@ -665,35 +966,21 @@
                             ],
                             "position"
                           ],
-                          "icon": [
+                          "key": [
                             "object/get",
                             "@col",
-                            "icon",
-                            "circle"
+                            "key"
                           ],
-                          "count": [
-                            "array/len",
-                            [
-                              "array/filter",
-                              "@payload.data",
-                              [
-                                "fn",
-                                "item",
-                                [
-                                  "=",
-                                  [
-                                    "object/get",
-                                    "@item",
-                                    "@config.groupByField"
-                                  ],
-                                  [
-                                    "object/get",
-                                    "@col",
-                                    "key"
-                                  ]
-                                ]
-                              ]
-                            ]
+                          "label": [
+                            "object/get",
+                            "@col",
+                            "label"
+                          ],
+                          "variant": [
+                            "object/get",
+                            "@col",
+                            "variant",
+                            "default"
                           ]
                         }
                       ]
@@ -704,12 +991,12 @@
                     "main",
                     "@config.bodyContent"
                   ]
-                ]
+                ],
+                "event": "BoardItemsLoaded",
+                "from": "loading",
+                "to": "viewing_board"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "BoardItemsLoadFailed",
                 "effects": [
                   [
                     "set",
@@ -720,17 +1007,17 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
                       "message": "@entity.errorMessage",
-                      "title": "Failed to load board"
+                      "title": "Failed to load board",
+                      "type": "error-state"
                     }
                   ]
-                ]
+                ],
+                "event": "BoardItemsLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "BoardItemsSaveFailed",
                 "effects": [
                   [
                     "set",
@@ -746,12 +1033,12 @@
                       "type": "error-state"
                     }
                   ]
-                ]
+                ],
+                "event": "BoardItemsSaveFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "viewing_board",
-                "to": "viewing_card",
-                "event": "OPEN_CARD",
                 "effects": [
                   [
                     "set",
@@ -782,79 +1069,76 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Back",
-                              "variant": "ghost",
+                              "action": "CLOSE_CARD",
                               "icon": "arrow-left",
-                              "action": "CLOSE_CARD"
+                              "label": "Back",
+                              "type": "button",
+                              "variant": "ghost"
                             },
                             {
                               "name": "credit-card",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@entity.currentTitle",
+                              "type": "typography",
                               "variant": "h3"
                             },
                             {
+                              "label": "@entity.currentStage",
                               "type": "badge",
-                              "variant": "primary",
-                              "label": "@entity.currentStage"
+                              "variant": "primary"
                             }
                           ],
                           "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
-                              "gap": "sm",
-                              "type": "stack",
-                              "direction": "vertical",
                               "children": [
                                 {
-                                  "variant": "caption",
                                   "color": "muted",
                                   "content": "Description",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
+                                  "content": "@entity.currentDescription",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.currentDescription"
+                                  "variant": "body"
                                 },
                                 {
                                   "type": "divider"
                                 },
                                 {
+                                  "color": "muted",
                                   "content": "Notes",
                                   "type": "typography",
-                                  "color": "muted",
                                   "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "@entity.currentNotes",
+                                  "type": "typography",
                                   "variant": "body"
                                 }
-                              ]
+                              ],
+                              "direction": "vertical",
+                              "gap": "sm",
+                              "type": "stack"
                             }
                           ],
-                          "look": "@config.cardLook"
+                          "look": "@config.cardLook",
+                          "type": "card"
                         },
                         {
                           "type": "divider"
@@ -866,54 +1150,57 @@
                           "variant": "caption"
                         },
                         {
+                          "entity": "@entity.boards",
+                          "fields": [],
+                          "gap": "sm",
                           "renderItem": [
                             "fn",
                             "col",
                             {
-                              "label": "@col.label",
                               "action": "MOVE_CARD",
-                              "type": "button",
-                              "variant": "secondary",
                               "actionPayload": {
                                 "id": "@entity.currentId",
                                 "targetGroup": "@col.key"
                               },
-                              "icon": "@col.icon"
+                              "icon": "@col.icon",
+                              "label": "@col.label",
+                              "type": "button",
+                              "variant": "secondary"
                             }
                           ],
-                          "variant": "default",
                           "type": "data-list",
-                          "fields": [],
-                          "entity": "@entity.boards",
-                          "gap": "sm"
+                          "variant": "default"
                         },
                         {
-                          "type": "stack",
-                          "direction": "horizontal",
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "variant": "danger",
-                              "type": "button",
+                              "action": "DELETE_CARD",
                               "actionPayload": {
                                 "id": "@entity.currentId"
                               },
-                              "action": "DELETE_CARD",
                               "icon": "trash-2",
-                              "label": "Delete"
+                              "label": "Delete",
+                              "type": "button",
+                              "variant": "danger"
                             }
                           ],
-                          "align": "center"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "OPEN_CARD",
+                "from": "viewing_board",
+                "to": "viewing_card"
               },
               {
-                "from": "viewing_board",
-                "to": "adding",
-                "event": "ADD_CARD",
                 "effects": [
                   [
                     "set",
@@ -944,89 +1231,62 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "icon": "x",
                               "action": "CANCEL_ADD",
-                              "variant": "ghost",
+                              "icon": "x",
+                              "label": "Cancel",
                               "type": "button",
-                              "label": "Cancel"
+                              "variant": "ghost"
                             },
                             {
-                              "type": "icon",
-                              "name": "plus"
+                              "name": "plus",
+                              "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "content": "New board item",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ],
-                          "align": "center",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "fields": "@config.formFields",
-                          "entity": "@entity",
                           "cancelEvent": "CANCEL_ADD",
+                          "entity": "@entity",
+                          "fields": "@config.formFields",
                           "mode": "create",
                           "submitEvent": "SAVE_CARD",
                           "type": "form-section"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "ADD_CARD",
+                "from": "viewing_board",
+                "to": "adding"
               },
               {
-                "from": "viewing_board",
-                "to": "viewing_board",
-                "event": "MOVE_CARD",
                 "effects": [
                   [
                     "persist",
                     "update",
                     "BoardView",
                     {
-                      "stage": "@payload.targetGroup",
-                      "id": "@payload.id"
-                    },
-                    {
-                      "emit": {
-                        "success": "BoardItemsSaved",
-                        "failure": "BoardItemsSaveFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_board",
-                "to": "viewing_board",
-                "event": "REORDER_CARD"
-              },
-              {
-                "from": "viewing_board",
-                "to": "viewing_board",
-                "event": "REORDER_POSITION",
-                "effects": [
-                  [
-                    "persist",
-                    "update",
-                    "BoardView",
-                    {
-                      "position": "@payload.position",
-                      "id": "@payload.id"
+                      "id": "@payload.id",
+                      "stage": "@payload.targetGroup"
                     },
                     {
                       "emit": {
@@ -1035,29 +1295,56 @@
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "MOVE_CARD",
+                "from": "viewing_board",
+                "to": "viewing_board"
               },
               {
+                "event": "REORDER_CARD",
                 "from": "viewing_board",
-                "to": "viewing_board",
-                "event": "BoardItemsSaved",
+                "to": "viewing_board"
+              },
+              {
+                "effects": [
+                  [
+                    "persist",
+                    "update",
+                    "BoardView",
+                    {
+                      "id": "@payload.id",
+                      "position": "@payload.position"
+                    },
+                    {
+                      "emit": {
+                        "failure": "BoardItemsSaveFailed",
+                        "success": "BoardItemsSaved"
+                      }
+                    }
+                  ]
+                ],
+                "event": "REORDER_POSITION",
+                "from": "viewing_board",
+                "to": "viewing_board"
+              },
+              {
                 "effects": [
                   [
                     "fetch",
                     "BoardView",
                     {
                       "emit": {
-                        "success": "BoardItemsLoaded",
-                        "failure": "BoardItemsLoadFailed"
+                        "failure": "BoardItemsLoadFailed",
+                        "success": "BoardItemsLoaded"
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "BoardItemsSaved",
+                "from": "viewing_board",
+                "to": "viewing_board"
               },
               {
-                "from": "viewing_board",
-                "to": "viewing_board",
-                "event": "BoardItemsLoaded",
                 "effects": [
                   [
                     "set",
@@ -1069,17 +1356,6 @@
                         "fn",
                         "col",
                         {
-                          "label": [
-                            "object/get",
-                            "@col",
-                            "label"
-                          ],
-                          "icon": [
-                            "object/get",
-                            "@col",
-                            "icon",
-                            "circle"
-                          ],
                           "count": [
                             "array/len",
                             [
@@ -1103,6 +1379,12 @@
                                 ]
                               ]
                             ]
+                          ],
+                          "icon": [
+                            "object/get",
+                            "@col",
+                            "icon",
+                            "circle"
                           ],
                           "items": [
                             "array/sort",
@@ -1129,35 +1411,40 @@
                             ],
                             "position"
                           ],
+                          "key": [
+                            "object/get",
+                            "@col",
+                            "key"
+                          ],
+                          "label": [
+                            "object/get",
+                            "@col",
+                            "label"
+                          ],
                           "variant": [
                             "object/get",
                             "@col",
                             "variant",
                             "default"
-                          ],
-                          "key": [
-                            "object/get",
-                            "@col",
-                            "key"
                           ]
                         }
                       ]
                     ]
                   ]
-                ]
+                ],
+                "event": "BoardItemsLoaded",
+                "from": "viewing_board",
+                "to": "viewing_board"
               },
               {
-                "from": "viewing_card",
-                "to": "loading",
-                "event": "CLOSE_CARD",
                 "effects": [
                   [
                     "fetch",
                     "BoardView",
                     {
                       "emit": {
-                        "success": "BoardItemsLoaded",
-                        "failure": "BoardItemsLoadFailed"
+                        "failure": "BoardItemsLoadFailed",
+                        "success": "BoardItemsLoaded"
                       }
                     }
                   ],
@@ -1169,25 +1456,25 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "CLOSE_CARD",
+                "from": "viewing_card",
+                "to": "loading"
               },
               {
-                "from": "viewing_card",
-                "to": "loading",
-                "event": "MOVE_CARD",
                 "effects": [
                   [
                     "persist",
                     "update",
                     "BoardView",
                     {
-                      "stage": "@payload.targetGroup",
-                      "id": "@payload.id"
+                      "id": "@payload.id",
+                      "stage": "@payload.targetGroup"
                     },
                     {
                       "emit": {
-                        "success": "BoardItemsSaved",
-                        "failure": "BoardItemsSaveFailed"
+                        "failure": "BoardItemsSaveFailed",
+                        "success": "BoardItemsSaved"
                       }
                     }
                   ],
@@ -1195,16 +1482,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Moving item…"
+                      "title": "Moving item…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "MOVE_CARD",
+                "from": "viewing_card",
+                "to": "loading"
               },
               {
-                "from": "viewing_card",
-                "to": "loading",
-                "event": "DELETE_CARD",
                 "effects": [
                   [
                     "persist",
@@ -1213,8 +1500,8 @@
                     "@payload.id",
                     {
                       "emit": {
-                        "success": "BoardItemsSaved",
-                        "failure": "BoardItemsSaveFailed"
+                        "failure": "BoardItemsSaveFailed",
+                        "success": "BoardItemsSaved"
                       }
                     }
                   ],
@@ -1222,16 +1509,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Deleting item…"
+                      "title": "Deleting item…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "DELETE_CARD",
+                "from": "viewing_card",
+                "to": "loading"
               },
               {
-                "from": "adding",
-                "to": "loading",
-                "event": "SAVE_CARD",
                 "effects": [
                   [
                     "persist",
@@ -1253,333 +1540,46 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
-              },
-              {
+                ],
+                "event": "SAVE_CARD",
                 "from": "adding",
-                "to": "viewing_board",
-                "event": "CANCEL_ADD",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "loading-state",
-                      "title": "Cancelling…"
-                    }
-                  ]
-                ]
+                "to": "loading"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Retrying…"
+                      "title": "Cancelling…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "CANCEL_ADD",
+                "from": "adding",
+                "to": "viewing_board"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "title": "Retrying…",
+                      "type": "loading-state"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "config": {
-            "columns": {
-              "type": "[ColumnSpec]",
-              "default": [
-                {
-                  "variant": "default",
-                  "icon": "circle",
-                  "label": "To Do",
-                  "key": "todo"
-                },
-                {
-                  "icon": "circle-dot",
-                  "variant": "primary",
-                  "label": "In Progress",
-                  "key": "doing"
-                },
-                {
-                  "key": "done",
-                  "variant": "success",
-                  "icon": "check-circle",
-                  "label": "Done"
-                }
-              ],
-              "label": "Columns",
-              "description": "Board columns; each row's stage maps to a column key",
-              "tier": "domain",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": true
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "gridCols": {
-              "type": "number",
-              "default": 3.0,
-              "label": "Grid columns",
-              "description": "Outer grid column count before the board wraps",
-              "tier": "presentation"
-            },
-            "bodyContent": {
-              "type": "render-ui",
-              "default": {
-                "gap": "md",
-                "direction": "vertical",
-                "type": "stack",
-                "children": [
-                  {
-                    "children": [
-                      {
-                        "name": "kanban-square",
-                        "type": "icon"
-                      },
-                      {
-                        "content": "@config.title",
-                        "variant": "h3",
-                        "type": "typography"
-                      }
-                    ],
-                    "type": "stack",
-                    "gap": "sm",
-                    "direction": "horizontal",
-                    "align": "center"
-                  },
-                  {
-                    "type": "divider"
-                  },
-                  {
-                    "cols": "@config.gridCols",
-                    "dndRoot": true,
-                    "renderItem": [
-                      "fn",
-                      "col",
-                      {
-                        "children": [
-                          {
-                            "children": [
-                              {
-                                "type": "stack",
-                                "direction": "horizontal",
-                                "children": [
-                                  {
-                                    "name": "@col.icon",
-                                    "type": "icon"
-                                  },
-                                  {
-                                    "content": "@col.label",
-                                    "type": "typography",
-                                    "variant": "h4"
-                                  },
-                                  {
-                                    "type": "badge",
-                                    "variant": "@col.variant",
-                                    "label": "@col.count"
-                                  }
-                                ],
-                                "align": "center",
-                                "gap": "xs"
-                              },
-                              {
-                                "sortable": true,
-                                "positionEvent": "REORDER_POSITION",
-                                "gap": "sm",
-                                "dragGroup": "@col.key",
-                                "type": "data-list",
-                                "reorderEvent": "REORDER_CARD",
-                                "dropEvent": "MOVE_CARD",
-                                "accepts": "*",
-                                "fields": [],
-                                "renderItem": [
-                                  "fn",
-                                  "item",
-                                  {
-                                    "look": "@config.cardLook",
-                                    "children": [
-                                      {
-                                        "direction": "vertical",
-                                        "gap": "xs",
-                                        "type": "stack",
-                                        "children": [
-                                          {
-                                            "variant": "h4",
-                                            "type": "typography",
-                                            "content": "@config.cardTitleBinding"
-                                          },
-                                          {
-                                            "variant": "caption",
-                                            "type": "typography",
-                                            "color": "muted",
-                                            "content": "@config.cardDescriptionBinding"
-                                          },
-                                          {
-                                            "direction": "horizontal",
-                                            "gap": "xs",
-                                            "type": "stack",
-                                            "align": "center",
-                                            "children": [
-                                              {
-                                                "actionPayload": {
-                                                  "row": "@item",
-                                                  "id": "@config.cardIdBinding"
-                                                },
-                                                "type": "button",
-                                                "icon": "arrow-right",
-                                                "label": "Open",
-                                                "action": "OPEN_CARD",
-                                                "variant": "ghost"
-                                              }
-                                            ]
-                                          }
-                                        ]
-                                      }
-                                    ],
-                                    "type": "card"
-                                  }
-                                ],
-                                "entity": "@col.items"
-                              }
-                            ],
-                            "type": "stack",
-                            "direction": "vertical",
-                            "gap": "sm"
-                          }
-                        ],
-                        "look": "@config.cardLook",
-                        "type": "card"
-                      }
-                    ],
-                    "type": "data-grid",
-                    "entity": "@entity.boards",
-                    "fields": [],
-                    "gap": "md"
-                  },
-                  {
-                    "label": "Add item",
-                    "action": "ADD_CARD",
-                    "type": "floating-action-button",
-                    "icon": "plus",
-                    "variant": "primary"
-                  }
-                ]
-              },
-              "label": "Body content tree",
-              "description": "Render-ui SExpr rendered after the board loads. Default is the canonical column data-grid with nested per-column data-lists. Layer 3 variants override this with their own tree (swim-lanes, timeline-roadmap, etc.) while inheriting the same trait, state machine, emits, and listens.",
-              "tier": "internal"
-            },
-            "title": {
-              "type": "string",
-              "default": "Board",
-              "label": "Board title",
-              "description": "Heading shown above the column board",
-              "tier": "presentation"
-            },
-            "formFields": {
-              "type": "[string]",
-              "default": [
-                "title",
-                "description",
-                "stage",
-                "notes"
-              ],
-              "label": "New-card fields",
-              "description": "Fields shown in the add-card form",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "cardTitleBinding": {
-              "type": "string",
-              "default": "@item.title",
-              "label": "Card title binding",
-              "description": "Per-card binding for the title slot.",
-              "tier": "presentation"
-            },
-            "cardIdBinding": {
-              "type": "string",
-              "default": "@item.id",
-              "label": "Card id binding",
-              "description": "Per-card binding for the id used in action payloads.",
-              "tier": "presentation"
-            },
-            "groupByField": {
-              "type": "string",
-              "default": "stage",
-              "label": "Group-by field",
-              "description": "Entity field whose value matches a column key — items are filtered into columns by it. Default 'stage'; set to 'status' (or any field) for entities that track state under a different name.",
-              "tier": "presentation"
-            },
-            "cardLook": {
-              "type": "string",
-              "default": "elevated",
-              "label": "Card look",
-              "description": "Layer 2 visual treatment for cards rendered by this board.",
-              "tier": "presentation",
-              "values": [
-                "elevated",
-                "flat-bordered",
-                "borderless-divider",
-                "ticket",
-                "invoice",
-                "chip",
-                "tile-image-first"
-              ]
-            },
-            "cardDescriptionBinding": {
-              "type": "string",
-              "default": "@item.description",
-              "label": "Card description binding",
-              "description": "Per-card binding for the description slot.",
-              "tier": "presentation"
-            },
-            "cardStageBinding": {
-              "type": "string",
-              "default": "@item.stage",
-              "label": "Card stage binding",
-              "description": "Per-card binding for the stage/status slot.",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "BoardPage",
-          "path": "/board",
-          "traits": [
-            {
-              "ref": "BoardItemBoard"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.1.0"
 }

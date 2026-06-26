@@ -1,110 +1,20 @@
 {
-  "name": "std-tabs-layout",
-  "version": "2.0.0",
   "description": "std-tabs-layout — chrome with std-tabs strip; consumer overrides config.tabs[].content with @trait.X references.",
+  "name": "std-tabs-layout",
   "orbitals": [
     {
-      "name": "TabsLayoutOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-tabs",
-          "as": "Tabs"
-        }
-      ],
       "entity": {
-        "name": "TabsLayoutData",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           }
-        ]
+        ],
+        "name": "TabsLayoutData",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "ref": "Tabs.traits.TabsItemTabs",
-          "name": "TabsLayoutTabs"
-        },
-        {
-          "name": "TabsLayout",
-          "category": "interaction",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "composing",
-                "isInitial": true
-              }
-            ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              }
-            ],
-            "transitions": [
-              {
-                "from": "composing",
-                "to": "composing",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "children": [
-                            {
-                              "name": "@config.icon",
-                              "type": "icon"
-                            },
-                            {
-                              "content": "@config.title",
-                              "type": "typography",
-                              "variant": "h2"
-                            }
-                          ],
-                          "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        "@trait.TabsLayoutTabs"
-                      ],
-                      "className": "max-w-6xl mx-auto w-full"
-                    }
-                  ]
-                ]
-              }
-            ]
-          },
-          "config": {
-            "icon": {
-              "type": "string",
-              "default": "layout",
-              "label": "Header icon",
-              "description": "Icon name displayed next to the title",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Tabbed View",
-              "label": "Page title",
-              "description": "Heading shown above the tab strip",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
+      "name": "TabsLayoutOrbital",
       "pages": [
         {
           "name": "TabsLayoutPage",
@@ -118,7 +28,97 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "name": "TabsLayoutTabs",
+          "ref": "Tabs.traits.TabsItemTabs"
+        },
+        {
+          "category": "interaction",
+          "config": {
+            "icon": {
+              "default": "layout",
+              "description": "Icon name displayed next to the title",
+              "label": "Header icon",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Tabbed View",
+              "description": "Heading shown above the tab strip",
+              "label": "Page title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "name": "TabsLayout",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "composing"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "name": "@config.icon",
+                              "type": "icon"
+                            },
+                            {
+                              "content": "@config.title",
+                              "type": "typography",
+                              "variant": "h2"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        "@trait.TabsLayoutTabs"
+                      ],
+                      "className": "max-w-6xl mx-auto w-full",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "composing",
+                "to": "composing"
+              }
+            ]
+          }
+        }
+      ],
+      "uses": [
+        {
+          "as": "Tabs",
+          "from": "std/behaviors/std-tabs"
+        }
       ]
     }
-  ]
+  ],
+  "version": "2.0.0"
 }

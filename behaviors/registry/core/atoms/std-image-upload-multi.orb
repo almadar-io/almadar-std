@@ -1,113 +1,149 @@
 {
-  "name": "std-image-upload-multi",
-  "version": "1.0.0",
   "description": "std-image-upload-multi — multi-image upload with drop zone, gallery preview, and per-batch progress.",
+  "name": "std-image-upload-multi",
   "orbitals": [
     {
-      "name": "UploadedImageOrbital",
       "entity": {
-        "name": "UploadedImage",
         "collection": "uploadedimages",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "url",
-            "type": "string",
             "required": true,
+            "type": "string"
+          },
+          {
             "description": "The accessible address for retrieving the image data.",
-            "synonyms": "link, path, address"
+            "name": "url",
+            "required": true,
+            "synonyms": "link, path, address",
+            "type": "string"
           },
           {
-            "name": "name",
-            "type": "string",
             "description": "The filename or identifier for the uploaded image.",
-            "synonyms": "filename, originalName, identifier"
+            "name": "name",
+            "synonyms": "filename, originalName, identifier",
+            "type": "string"
           },
           {
-            "name": "sizeBytes",
-            "type": "number",
             "description": "The file size in bytes.",
-            "synonyms": "length, filesize, bytes"
+            "name": "sizeBytes",
+            "synonyms": "length, filesize, bytes",
+            "type": "number"
           },
           {
-            "name": "mimeType",
-            "type": "string",
             "description": "The file's internet media type.",
-            "synonyms": "type, format, media type"
+            "name": "mimeType",
+            "synonyms": "type, format, media type",
+            "type": "string"
           },
           {
-            "name": "width",
-            "type": "number",
             "description": "The image's width in pixels.",
-            "synonyms": "imageWidth, pixelWidth"
+            "name": "width",
+            "synonyms": "imageWidth, pixelWidth",
+            "type": "number"
           },
           {
-            "name": "height",
-            "type": "number",
             "description": "The vertical dimension of the image, in pixels.",
-            "synonyms": "vertical, y, dimension"
+            "name": "height",
+            "synonyms": "vertical, y, dimension",
+            "type": "number"
           },
           {
-            "name": "parentId",
-            "type": "string",
             "description": "Identifier of the parent resource this image belongs to.",
-            "synonyms": "parent, reference, source"
+            "name": "parentId",
+            "synonyms": "parent, reference, source",
+            "type": "string"
           },
           {
-            "name": "parentType",
-            "type": "string",
             "description": "Identifies the type of the parent entity.",
-            "synonyms": "parent, type, category"
+            "name": "parentType",
+            "synonyms": "parent, type, category",
+            "type": "string"
           },
           {
-            "name": "uploadedAt",
-            "type": "string",
             "description": "Timestamp indicating when the image was uploaded.",
-            "synonyms": "date, timestamp, upload time"
+            "name": "uploadedAt",
+            "synonyms": "date, timestamp, upload time",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "UploadedImage",
+        "persistence": "persistent"
       },
+      "name": "UploadedImageOrbital",
+      "pages": [
+        {
+          "name": "UploadedImageUploadPage",
+          "path": "/uploadedimages/upload",
+          "traits": [
+            {
+              "ref": "UploadedImageUpload"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "UploadedImageUpload",
           "category": "interaction",
-          "linkedEntity": "UploadedImage",
+          "config": {
+            "accept": {
+              "default": "image/*",
+              "description": "Browser accept filter for the file picker",
+              "label": "MIME filter",
+              "tier": "domain",
+              "type": "string"
+            },
+            "maxBytesPerImage": {
+              "default": 10485760.0,
+              "description": "Per-image upload size cap",
+              "label": "Size limit (bytes)",
+              "tier": "domain",
+              "type": "number"
+            },
+            "maxImages": {
+              "default": 10.0,
+              "description": "Maximum number of images accepted per upload batch",
+              "label": "Max images",
+              "tier": "domain",
+              "type": "number"
+            },
+            "title": {
+              "default": "Upload Images",
+              "description": "Heading shown above the upload zone",
+              "label": "Section title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "UPLOAD",
               "description": "Signals that an image upload process has begun.",
-              "synonyms": "start, initiate, begin",
-              "tier": "essential",
+              "event": "UPLOAD",
               "payloadSchema": [
                 {
                   "name": "files",
-                  "type": "object",
-                  "required": true
+                  "required": true,
+                  "type": "object"
                 }
-              ]
+              ],
+              "synonyms": "start, initiate, begin",
+              "tier": "essential"
             },
             {
-              "event": "UploadedImageLoaded",
               "description": "Signals a single image has finished loading.",
-              "synonyms": "loaded, received, parsed",
-              "tier": "essential",
+              "event": "UploadedImageLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[UploadedImage]"
                 }
-              ]
+              ],
+              "synonyms": "loaded, received, parsed",
+              "tier": "essential"
             },
             {
-              "event": "UploadedImageLoadFailed",
               "description": "Indicates an image failed to load during the upload process.",
-              "synonyms": "error, failure, problem, unsuccessful",
-              "tier": "internal",
+              "event": "UploadedImageLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -117,27 +153,26 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal"
             },
             {
-              "event": "UploadedImageCreated",
               "description": "A new image has been successfully uploaded.",
-              "synonyms": "added, new, received",
-              "tier": "essential",
+              "event": "UploadedImageCreated",
               "payloadSchema": [
                 {
                   "name": "row",
-                  "type": "object",
                   "properties": [
                     {
                       "name": "id",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "url",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "name",
@@ -171,15 +206,16 @@
                       "name": "uploadedAt",
                       "type": "string"
                     }
-                  ]
+                  ],
+                  "type": "object"
                 }
-              ]
+              ],
+              "synonyms": "added, new, received",
+              "tier": "essential"
             },
             {
-              "event": "UploadedImageUploadFailed",
               "description": "Indicates a single image upload encountered an error.",
-              "synonyms": "error, failure, problem, rejected",
-              "tier": "internal",
+              "event": "UploadedImageUploadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -189,26 +225,26 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failure, problem, rejected",
+              "tier": "internal"
             },
             {
-              "event": "UploadedImageDeleted",
               "description": "Signals an image has been removed from the upload queue.",
-              "synonyms": "removed, discarded, taken out",
-              "tier": "customization",
+              "event": "UploadedImageDeleted",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "removed, discarded, taken out",
+              "tier": "customization"
             },
             {
-              "event": "UploadedImageDeleteFailed",
               "description": "Indicates an image deletion operation failed.",
-              "synonyms": "failed delete, deletion error",
-              "tier": "internal",
+              "event": "UploadedImageDeleteFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -218,14 +254,144 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "failed delete, deletion error",
+              "tier": "internal"
             }
           ],
+          "linkedEntity": "UploadedImage",
+          "name": "UploadedImageUpload",
+          "scope": "collection",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals a single image has finished loading.",
+                "key": "UploadedImageLoaded",
+                "name": "UploadedImage loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[UploadedImage]"
+                  }
+                ],
+                "synonyms": "loaded, received, parsed",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates an image failed to load during the upload process.",
+                "key": "UploadedImageLoadFailed",
+                "name": "UploadedImage load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal"
+              },
+              {
+                "description": "Signals that an image upload process has begun.",
+                "key": "UPLOAD",
+                "name": "Upload",
+                "payloadSchema": [
+                  {
+                    "name": "files",
+                    "required": true,
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "start, initiate, begin",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a selected image has been removed.",
+                "key": "DELETE",
+                "name": "Delete",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "remove, discard, clear",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals an image has been removed from the upload queue.",
+                "key": "UploadedImageDeleted",
+                "name": "UploadedImage deleted",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "removed, discarded, taken out",
+                "tier": "customization"
+              },
+              {
+                "description": "Indicates an image deletion operation failed.",
+                "key": "UploadedImageDeleteFailed",
+                "name": "UploadedImage delete failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "failed delete, deletion error",
+                "tier": "internal"
+              },
+              {
+                "description": "A new image has been successfully uploaded.",
+                "key": "UploadedImageCreated",
+                "name": "UploadedImage created",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "UploadedImage"
+                  }
+                ],
+                "synonyms": "added, new, received",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a single image upload encountered an error.",
+                "key": "UploadedImageUploadFailed",
+                "name": "UploadedImage upload failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, rejected",
+                "tier": "internal"
+              }
+            ],
             "states": [
               {
-                "name": "loading",
-                "isInitial": true
+                "isInitial": true,
+                "name": "loading"
               },
               {
                 "name": "browsing"
@@ -237,136 +403,8 @@
                 "name": "error"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "UploadedImageLoaded",
-                "name": "UploadedImage loaded",
-                "description": "Signals a single image has finished loading.",
-                "synonyms": "loaded, received, parsed",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[UploadedImage]"
-                  }
-                ]
-              },
-              {
-                "key": "UploadedImageLoadFailed",
-                "name": "UploadedImage load failed",
-                "description": "Indicates an image failed to load during the upload process.",
-                "synonyms": "error, failure, problem, unsuccessful",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "UPLOAD",
-                "name": "Upload",
-                "description": "Signals that an image upload process has begun.",
-                "synonyms": "start, initiate, begin",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "files",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "DELETE",
-                "name": "Delete",
-                "description": "Indicates a selected image has been removed.",
-                "synonyms": "remove, discard, clear",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "UploadedImageDeleted",
-                "name": "UploadedImage deleted",
-                "description": "Signals an image has been removed from the upload queue.",
-                "synonyms": "removed, discarded, taken out",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "UploadedImageDeleteFailed",
-                "name": "UploadedImage delete failed",
-                "description": "Indicates an image deletion operation failed.",
-                "synonyms": "failed delete, deletion error",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "UploadedImageCreated",
-                "name": "UploadedImage created",
-                "description": "A new image has been successfully uploaded.",
-                "synonyms": "added, new, received",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "UploadedImage"
-                  }
-                ]
-              },
-              {
-                "key": "UploadedImageUploadFailed",
-                "name": "UploadedImage upload failed",
-                "description": "Indicates a single image upload encountered an error.",
-                "synonyms": "error, failure, problem, rejected",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              }
-            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -382,98 +420,98 @@
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "content": "Loading images…",
                           "type": "typography",
-                          "variant": "caption",
-                          "color": "muted"
+                          "variant": "caption"
                         }
                       ],
                       "className": "py-12",
-                      "type": "stack",
-                      "align": "center",
                       "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "browsing",
-                "event": "UploadedImageLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
                           "align": "center",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "image-plus"
+                              "name": "image-plus",
+                              "type": "icon"
                             },
                             {
                               "content": "@config.title",
                               "type": "typography",
                               "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "maxFiles": "@config.maxImages",
-                          "label": "Drop images here",
-                          "maxSize": "@config.maxBytesPerImage",
-                          "description": "or click to browse",
-                          "type": "upload-drop-zone",
                           "accept": "@config.accept",
                           "action": "UPLOAD",
-                          "icon": "image-plus"
+                          "description": "or click to browse",
+                          "icon": "image-plus",
+                          "label": "Drop images here",
+                          "maxFiles": "@config.maxImages",
+                          "maxSize": "@config.maxBytesPerImage",
+                          "type": "upload-drop-zone"
                         },
                         {
                           "entity": "@payload.data",
                           "type": "media-gallery"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "UploadedImageLoaded",
+                "from": "loading",
+                "to": "browsing"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "UploadedImageLoadFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error"
                     }
                   ]
-                ]
+                ],
+                "event": "UploadedImageLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "browsing",
-                "to": "uploading",
-                "event": "UPLOAD",
                 "effects": [
                   [
                     "persist",
@@ -491,32 +529,32 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
+                          "content": "Uploading images…",
                           "type": "typography",
-                          "variant": "h3",
-                          "content": "Uploading images…"
+                          "variant": "h3"
                         },
                         {
-                          "type": "progress-bar",
                           "max": 100.0,
-                          "value": 0.0,
-                          "progressType": "linear"
+                          "progressType": "linear",
+                          "type": "progress-bar",
+                          "value": 0.0
                         }
                       ],
-                      "direction": "vertical",
                       "className": "py-12",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "UPLOAD",
+                "from": "browsing",
+                "to": "uploading"
               },
               {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "DELETE",
                 "effects": [
                   [
                     "persist",
@@ -525,17 +563,17 @@
                     "@payload.id",
                     {
                       "emit": {
-                        "success": "UploadedImageDeleted",
-                        "failure": "UploadedImageDeleteFailed"
+                        "failure": "UploadedImageDeleteFailed",
+                        "success": "UploadedImageDeleted"
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "DELETE",
+                "from": "browsing",
+                "to": "browsing"
               },
               {
-                "from": "browsing",
-                "to": "loading",
-                "event": "UploadedImageDeleted",
                 "effects": [
                   [
                     "fetch",
@@ -547,12 +585,12 @@
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "UploadedImageDeleted",
+                "from": "browsing",
+                "to": "loading"
               },
               {
-                "from": "browsing",
-                "to": "error",
-                "event": "UploadedImageDeleteFailed",
                 "effects": [
                   [
                     "render-ui",
@@ -563,20 +601,20 @@
                       "variant": "error"
                     }
                   ]
-                ]
+                ],
+                "event": "UploadedImageDeleteFailed",
+                "from": "browsing",
+                "to": "error"
               },
               {
-                "from": "uploading",
-                "to": "loading",
-                "event": "UploadedImageCreated",
                 "effects": [
                   [
                     "fetch",
                     "UploadedImage",
                     {
                       "emit": {
-                        "success": "UploadedImageLoaded",
-                        "failure": "UploadedImageLoadFailed"
+                        "failure": "UploadedImageLoadFailed",
+                        "success": "UploadedImageLoaded"
                       }
                     }
                   ],
@@ -584,68 +622,67 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "align": "center",
                       "children": [
                         {
-                          "type": "icon",
+                          "color": "success",
                           "name": "check-circle",
-                          "color": "success"
+                          "type": "icon"
                         },
                         {
-                          "variant": "h3",
                           "content": "Upload complete",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         }
                       ],
+                      "className": "py-12",
                       "direction": "vertical",
                       "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "UploadedImageCreated",
+                "from": "uploading",
+                "to": "loading"
               },
               {
-                "from": "uploading",
-                "to": "error",
-                "event": "UploadedImageUploadFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
                       "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
+                      "type": "alert",
+                      "variant": "error"
                     }
                   ]
-                ]
+                ],
+                "event": "UploadedImageUploadFailed",
+                "from": "uploading",
+                "to": "error"
               },
               {
-                "from": "error",
-                "to": "browsing",
-                "event": "UploadedImageLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "children": [
                         {
                           "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "image-plus",
                               "type": "icon"
                             },
                             {
+                              "content": "@config.title",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "@config.title"
+                              "variant": "h3"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "sm",
                           "type": "stack"
                         },
@@ -653,72 +690,35 @@
                           "type": "divider"
                         },
                         {
-                          "maxSize": "@config.maxBytesPerImage",
-                          "maxFiles": "@config.maxImages",
-                          "icon": "image-plus",
                           "accept": "@config.accept",
                           "action": "UPLOAD",
-                          "label": "Drop images here",
                           "description": "or click to browse",
+                          "icon": "image-plus",
+                          "label": "Drop images here",
+                          "maxFiles": "@config.maxImages",
+                          "maxSize": "@config.maxBytesPerImage",
                           "type": "upload-drop-zone"
                         },
                         {
-                          "type": "media-gallery",
-                          "entity": "@payload.data"
+                          "entity": "@payload.data",
+                          "type": "media-gallery"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "UploadedImageLoaded",
+                "from": "error",
+                "to": "browsing"
               }
             ]
-          },
-          "config": {
-            "maxImages": {
-              "type": "number",
-              "default": 10.0,
-              "label": "Max images",
-              "description": "Maximum number of images accepted per upload batch",
-              "tier": "domain"
-            },
-            "maxBytesPerImage": {
-              "type": "number",
-              "default": 10485760.0,
-              "label": "Size limit (bytes)",
-              "description": "Per-image upload size cap",
-              "tier": "domain"
-            },
-            "title": {
-              "type": "string",
-              "default": "Upload Images",
-              "label": "Section title",
-              "description": "Heading shown above the upload zone",
-              "tier": "presentation"
-            },
-            "accept": {
-              "type": "string",
-              "default": "image/*",
-              "label": "MIME filter",
-              "description": "Browser accept filter for the file picker",
-              "tier": "domain"
-            }
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "UploadedImageUploadPage",
-          "path": "/uploadedimages/upload",
-          "traits": [
-            {
-              "ref": "UploadedImageUpload"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }
