@@ -1,5 +1,5 @@
 app ui-city-builder-board "1.0.0"
-"CityBuilderBoard — UI factory (1:1 with the @almadar/ui city-builder-board pattern)."
+"CityBuilderBoard — game-shell + isometric-canvas composition with HUD and animTick."
 orbital CityBuilderBoardOrbital {
   type CityBuilderBoardError = {
     message : string!
@@ -15,34 +15,54 @@ orbital CityBuilderBoardOrbital {
     terrainSprite : asset
     passable : boolean
   }
-  type CityBuilderBoardBuildingsItem = {
+  type CityBuilderBoardFeaturesItem = {
     id : string!
     x : number!
     y : number!
     type : string!
+    sprite : asset
   }
   type CityBuilderBoardBuildTypesItem = {
     type : string!
     label : string!
     cost : number!
   }
+  type CityBuilderBoardCitizensItemPosition = {
+    x : number!
+    y : number!
+  }
+  type CityBuilderBoardCitizensItem = {
+    id : string!
+    position : CityBuilderBoardCitizensItemPosition
+    sprite : asset
+    animation : string
+    frame : number
+  }
+  type CityBuilderBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
+  }
   type CityBuilderBoardAssetManifest = {
     baseUrl : asset
     terrains : Map string asset
     units : Map string asset
     features : Map string asset
+    effects : Map string asset
   }
 
   entity CityBuilderBoardItem [runtime] {
     id : string!
-    tiles : [CityBuilderBoardTilesItem]
-    buildings : [CityBuilderBoardBuildingsItem]
+    features : [CityBuilderBoardFeaturesItem]
+    citizens : [CityBuilderBoardCitizensItem]
     gold : number = 100
     wood : number = 80
     population : number = 0
     pendingBuildType : string = "house"
     result : "none" | "won" | "lost" = none
     tick : number = 0
+    effects : [CityBuilderBoardEffectItem] = []
   }
 
   trait CityBuilderBoardRender -> @rebindable CityBuilderBoardItem [interaction, instance] {
@@ -53,122 +73,83 @@ orbital CityBuilderBoardOrbital {
         (set @entity.gold @config.gold)
         (set @entity.wood @config.wood)
         (set @entity.population 0)
-        (set @entity.buildings @config.buildings)
+        (set @entity.features @config.features)
+        (set @entity.citizens @config.citizens)
         (set @entity.pendingBuildType @config.pendingBuildType)
         (set @entity.result "none")
         (set @entity.tick 0)
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          buildings: @entity.buildings
-          buildTypes: @config.buildTypes
-          pendingBuildType: @entity.pendingBuildType
-          gold: @entity.gold
-          wood: @entity.wood
-          population: @entity.population
-          result: @entity.result
-          selectBuildTypeEvent: SELECT_BUILD_TYPE
-          placeBuildingEvent: PLACE_BUILDING
-          gameEndEvent: GAME_END
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: city-builder-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       SELECT_BUILD_TYPE -> building when (== @entity.result "none")
         (set @entity.pendingBuildType ?buildType)
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          buildings: @entity.buildings
-          buildTypes: @config.buildTypes
-          pendingBuildType: @entity.pendingBuildType
-          gold: @entity.gold
-          wood: @entity.wood
-          population: @entity.population
-          result: @entity.result
-          selectBuildTypeEvent: SELECT_BUILD_TYPE
-          placeBuildingEvent: PLACE_BUILDING
-          gameEndEvent: GAME_END
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: city-builder-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
-      PLACE_BUILDING -> building when (and (== @entity.result "none") (and (>= @entity.gold (object/get (array/first (array/filter @config.buildTypes (fn b (== (object/get @b type) @entity.pendingBuildType)))) cost)) (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (== (array/len (array/filter @entity.buildings (fn b (and (== @b.x ?x) (== @b.y ?y))))) 0) (== (array/len (array/filter @config.tiles (fn tl (and (== (object/get @tl x) ?x) (and (== (object/get @tl y) ?y) (== (object/get @tl passable) false)))))) 0)))))
+      PLACE_BUILDING -> building when (and (== @entity.result "none") (and (>= @entity.gold (object/get (array/first (array/filter @config.buildTypes (fn b (== (object/get @b type) @entity.pendingBuildType)))) cost)) (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (== (array/len (array/filter @entity.features (fn b (and (== @b.x ?x) (== @b.y ?y))))) 0) (== (array/len (array/filter @config.tiles (fn tl (and (== (object/get @tl x) ?x) (and (== (object/get @tl y) ?y) (== (object/get @tl passable) false)))))) 0)))))
         (set @entity.gold (- @entity.gold (object/get (array/first (array/filter @config.buildTypes (fn b (== (object/get @b type) @entity.pendingBuildType)))) cost)))
-        (set @entity.buildings (array/concat @entity.buildings [{ id: (str/concat "bld-" (array/len @entity.buildings)), x: ?x, y: ?y, type: @entity.pendingBuildType }]))
+        (set @entity.features (array/concat @entity.features [{ id: (str/concat "bld-" (array/len @entity.features)), x: ?x, y: ?y, type: @entity.pendingBuildType, sprite: (object/get @config.featureSprites @entity.pendingBuildType) }]))
         (set @entity.population (+ @entity.population @config.populationPerBuilding))
         (set @entity.result (if (>= @entity.population @config.targetPopulation) "won" @entity.result))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          buildings: @entity.buildings
-          buildTypes: @config.buildTypes
-          pendingBuildType: @entity.pendingBuildType
-          gold: @entity.gold
-          wood: @entity.wood
-          population: @entity.population
-          result: @entity.result
-          selectBuildTypeEvent: SELECT_BUILD_TYPE
-          placeBuildingEvent: PLACE_BUILDING
-          gameEndEvent: GAME_END
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: city-builder-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       GAME_END -> gameover when (or (== @entity.result "won") (== @entity.result "lost"))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          buildings: @entity.buildings
-          buildTypes: @config.buildTypes
-          pendingBuildType: @entity.pendingBuildType
-          gold: @entity.gold
-          wood: @entity.wood
-          population: @entity.population
-          result: @entity.result
-          selectBuildTypeEvent: SELECT_BUILD_TYPE
-          placeBuildingEvent: PLACE_BUILDING
-          gameEndEvent: GAME_END
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: city-builder-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
     state gameover {
+      PLAY_AGAIN -> building
+        (set @entity.gold @config.gold)
+        (set @entity.wood @config.wood)
+        (set @entity.population 0)
+        (set @entity.features @config.features)
+        (set @entity.citizens @config.citizens)
+        (set @entity.pendingBuildType @config.pendingBuildType)
+        (set @entity.result "none")
+        (set @entity.tick 0)
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
     }
 
     ticks {
+      animTick every 100ms
+        (set @entity.citizens (array/map @entity.citizens (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
       resourceIncomeTick every 1s
         when (== @entity.result "none")
         (set @entity.tick (+ @entity.tick 1))
-        # each building yields gold + wood income per tick
-        (set @entity.gold (+ @entity.gold (* (array/len @entity.buildings) @config.goldPerBuilding)))
-        (set @entity.wood (+ @entity.wood (* (array/len @entity.buildings) @config.woodPerBuilding)))
+        (set @entity.gold (+ @entity.gold (* (array/len @entity.features) @config.goldPerBuilding)))
+        (set @entity.wood (+ @entity.wood (* (array/len @entity.features) @config.woodPerBuilding)))
+        (set @entity.citizens (array/map @entity.citizens (fn u (let ((nx (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (math/floor (* (math/random) @config.gridWidth)) (object/get (object/get @u position) x)))) 0 (- @config.gridWidth 1))) (ny (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (math/floor (* (math/random) @config.gridHeight)) (object/get (object/get @u position) y)))) 0 (- @config.gridHeight 1)))) (object/merge @u { position: { x: @nx, y: @ny }, animation: "walk" })))))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          buildings: @entity.buildings
-          buildTypes: @config.buildTypes
-          pendingBuildType: @entity.pendingBuildType
-          gold: @entity.gold
-          wood: @entity.wood
-          population: @entity.population
-          result: @entity.result
-          selectBuildTypeEvent: SELECT_BUILD_TYPE
-          placeBuildingEvent: PLACE_BUILDING
-          gameEndEvent: GAME_END
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: city-builder-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -252,17 +233,25 @@ orbital CityBuilderBoardOrbital {
         @label "Build Types"
         @description "Placeable building types shown in the build palette with cost."
         @tier "presentation"
-      buildings : [CityBuilderBoardBuildingsItem] = [{ id: "bld-0", x: 1, y: 5, type: "house" }, { id: "bld-1", x: 3, y: 5, type: "house" }, { id: "bld-2", x: 5, y: 5, type: "house" }, { id: "bld-3", x: 1, y: 7, type: "house" }, { id: "bld-4", x: 3, y: 7, type: "house" }, { id: "bld-5", x: 0, y: 9, type: "house" }, { id: "bld-6", x: 4, y: 1, type: "farm" }, { id: "bld-7", x: 8, y: 1, type: "library" }, { id: "bld-8", x: 10, y: 1, type: "treasury" }, { id: "bld-9", x: 8, y: 3, type: "barracks" }, { id: "bld-10", x: 10, y: 3, type: "tower" }, { id: "bld-11", x: 8, y: 6, type: "mine" }, { id: "bld-12", x: 10, y: 8, type: "mine" }]
-        @label "Buildings"
-        @description "Initial building placements on the board."
+      featureSprites : Map string asset = { house: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png", farm: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/farm.png", barracks: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/barracks.png", library: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/library.png", treasury: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/treasury.png", tower: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/tower.png", mine: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/mine.png" }
+        @label "Feature Sprites"
+        @description "Per-type sprite URL map for building features."
+        @tier "presentation"
+      features : [CityBuilderBoardFeaturesItem] = [{ id: "bld-0", x: 1, y: 5, type: "house", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png" }, { id: "bld-1", x: 3, y: 5, type: "house", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png" }, { id: "bld-2", x: 5, y: 5, type: "house", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png" }, { id: "bld-3", x: 1, y: 7, type: "house", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png" }, { id: "bld-4", x: 3, y: 7, type: "house", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png" }, { id: "bld-5", x: 0, y: 9, type: "house", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png" }, { id: "bld-6", x: 4, y: 1, type: "farm", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/farm.png" }, { id: "bld-7", x: 8, y: 1, type: "library", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/library.png" }, { id: "bld-8", x: 10, y: 1, type: "treasury", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/treasury.png" }, { id: "bld-9", x: 8, y: 3, type: "barracks", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/barracks.png" }, { id: "bld-10", x: 10, y: 3, type: "tower", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/tower.png" }, { id: "bld-11", x: 8, y: 6, type: "mine", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/mine.png" }, { id: "bld-12", x: 10, y: 8, type: "mine", sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/mine.png" }]
+        @label "Features"
+        @description "Initial building placements rendered as isometric-canvas features."
+        @tier "presentation"
+      citizens : [CityBuilderBoardCitizensItem] = [{ id: "c1", position: { x: 2, y: 5 }, sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/units/citizen.png", animation: "idle", frame: 0 }, { id: "c2", position: { x: 4, y: 7 }, sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/units/citizen.png", animation: "idle", frame: 0 }, { id: "c3", position: { x: 6, y: 6 }, sprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/units/citizen.png", animation: "idle", frame: 0 }]
+        @label "Citizens"
+        @description "Roaming citizen units displayed on the isometric canvas."
         @tier "presentation"
       tiles : [CityBuilderBoardTilesItem] = [{ x: 0, y: 0, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 1, y: 0, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 2, y: 0, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 3, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 5, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 6, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 0, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 8, y: 0, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 9, y: 0, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 10, y: 0, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 11, y: 0, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 0, y: 1, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 1, y: 1, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 2, y: 1, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 3, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 5, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 6, y: 1, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 1, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 8, y: 1, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 9, y: 1, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 10, y: 1, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 11, y: 1, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 0, y: 2, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 1, y: 2, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 2, y: 2, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 3, y: 2, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 2, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 5, y: 2, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 6, y: 2, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 2, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 8, y: 2, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 9, y: 2, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 10, y: 2, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 11, y: 2, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 0, y: 3, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 1, y: 3, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 2, y: 3, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 3, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 5, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 6, y: 3, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 3, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 8, y: 3, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 9, y: 3, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 10, y: 3, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 11, y: 3, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 0, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 1, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 2, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 3, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 4, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 5, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 6, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 8, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 9, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 10, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 11, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 0, y: 5, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 1, y: 5, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 5, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 3, y: 5, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 5, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 5, y: 5, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 6, y: 5, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 5, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 8, y: 5, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 9, y: 5, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 10, y: 5, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 11, y: 5, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 0, y: 6, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 1, y: 6, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 6, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 3, y: 6, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 6, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 5, y: 6, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 6, y: 6, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 6, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 8, y: 6, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 9, y: 6, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 10, y: 6, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 11, y: 6, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 0, y: 7, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 1, y: 7, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 7, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 3, y: 7, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 7, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 5, y: 7, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 6, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 7, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 8, y: 7, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 9, y: 7, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 10, y: 7, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 11, y: 7, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 0, y: 8, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 1, y: 8, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 8, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 3, y: 8, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 8, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 5, y: 8, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 6, y: 8, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 8, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 8, y: 8, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 9, y: 8, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 10, y: 8, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 11, y: 8, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 0, y: 9, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 1, y: 9, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 9, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 3, y: 9, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 9, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 5, y: 9, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 6, y: 9, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 9, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 8, y: 9, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 9, y: 9, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 10, y: 9, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 11, y: 9, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 0, y: 10, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 1, y: 10, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 10, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 3, y: 10, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 10, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 5, y: 10, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 6, y: 10, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 10, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 8, y: 10, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 9, y: 10, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 10, y: 10, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 11, y: 10, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 0, y: 11, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 1, y: 11, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 11, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 3, y: 11, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 11, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 5, y: 11, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 6, y: 11, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, { x: 7, y: 11, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 8, y: 11, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 9, y: 11, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 10, y: 11, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 11, y: 11, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }]
         @label "Tiles"
         @description "Direct tile data — takes priority over entity-derived tiles."
         @tier "presentation"
-      assetManifest : CityBuilderBoardAssetManifest = { baseUrl: "https://almadar-kflow-assets.web.app/shared/", terrains: { grass: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png", stone: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png", dirt: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png", water: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png", road: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, units: { citizen: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/units/citizen.png" }, features: { house: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png", farm: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/farm.png", barracks: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/barracks.png", library: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/library.png", treasury: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/treasury.png", tower: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/tower.png", mine: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/mine.png" } }
+      assetManifest : CityBuilderBoardAssetManifest = { baseUrl: "https://almadar-kflow-assets.web.app/shared/", terrains: { grass: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png", stone: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png", dirt: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png", water: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png", road: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/road.png" }, units: { citizen: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/units/citizen.png" }, features: { house: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png", farm: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/farm.png", barracks: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/barracks.png", library: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/library.png", treasury: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/treasury.png", tower: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/tower.png", mine: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/mine.png" }, effects: {  } }
         @label "Asset Manifest"
-        @description "Base-url + terrain/unit/structure sprite maps; buildings render as the structure asset."
+        @description "Base-url + terrain/unit/structure sprite maps."
         @tier "presentation"
     }
   }

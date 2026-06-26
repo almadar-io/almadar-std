@@ -1,5 +1,5 @@
 {
-  "description": "SpaceStationBoard — UI factory (1:1 with the @almadar/ui space-station-board pattern).",
+  "description": "SpaceStationBoard — game-shell composition with crew animation and isometric canvas.",
   "name": "ui-space-station-board",
   "orbitals": [
     {
@@ -9,6 +9,236 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "faction": {
+                  "name": "faction",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "heroId": {
+                  "name": "heroId",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "previousPosition": {
+                  "name": "previousPosition",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "spriteSheet": {
+                  "name": "spriteSheet",
+                  "required": false,
+                  "type": "string"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "traits": {
+                  "items": {
+                    "properties": {
+                      "cooldown": {
+                        "name": "cooldown",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "currentState": {
+                        "name": "currentState",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "states": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "states",
+                        "required": true,
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "traits",
+                  "required": false,
+                  "type": "array"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string"
+          },
+          {
+            "default": 100.0,
+            "name": "oxygen",
+            "type": "number"
+          },
+          {
+            "default": 3.0,
+            "name": "crewCount",
+            "type": "number"
+          },
+          {
+            "default": "idle",
+            "name": "phase",
+            "type": "string"
+          },
+          {
+            "default": 7.0,
+            "name": "gridWidth",
+            "type": "number"
+          },
+          {
+            "default": 7.0,
+            "name": "gridHeight",
+            "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "SpaceStationBoardItem",
@@ -37,19 +267,64 @@
               "tier": "presentation",
               "type": "json"
             },
-            "assetBaseUrl": {
-              "default": "https://almadar-kflow-assets.web.app/shared/",
-              "description": "Base URL prepended to manifest sprite paths",
-              "label": "Asset Base Url",
-              "tier": "presentation",
-              "type": "asset"
-            },
             "assetManifest": {
-              "default": "",
-              "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
+              "default": {
+                "effects": {},
+                "features": {
+                  "console": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png"
+                },
+                "terrains": {
+                  "console": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/console.png",
+                  "floor": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                  "wall": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
+                "units": {
+                  "crew": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png"
+                }
+              },
+              "description": "Asset sprite manifest",
               "label": "Asset Manifest",
+              "properties": {
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
+                },
+                "features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "terrains": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "terrains",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
               "tier": "presentation",
-              "type": "string"
+              "type": "SpaceStationBoardAssetManifest"
             },
             "className": {
               "default": "",
@@ -57,13 +332,6 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
-            },
-            "enableCamera": {
-              "default": true,
-              "description": "Enable camera pan/zoom controls",
-              "label": "Enable Camera",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "error": {
               "description": "Error state (UiError)",
@@ -224,13 +492,6 @@
               "label": "Selected Ids",
               "tier": "presentation",
               "type": "[string]"
-            },
-            "showMinimap": {
-              "default": true,
-              "description": "Show minimap overlay",
-              "label": "Show Minimap",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "sortBy": {
               "default": "Sort By",
@@ -676,6 +937,8 @@
             "units": {
               "default": [
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "u1",
                   "maxHealth": 10.0,
@@ -689,6 +952,8 @@
                   "unitType": "crew"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "u2",
                   "maxHealth": 10.0,
@@ -702,6 +967,8 @@
                   "unitType": "crew"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "u3",
                   "maxHealth": 10.0,
@@ -715,9 +982,14 @@
                   "unitType": "crew"
                 }
               ],
-              "description": "Units on the board",
+              "description": "Crew units on the board",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "elevation": {
                     "name": "elevation",
                     "required": false,
@@ -732,6 +1004,11 @@
                       "enemy",
                       "neutral"
                     ]
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
                   },
                   "health": {
                     "name": "health",
@@ -880,7 +1157,7 @@
           },
           "emits": [
             {
-              "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+              "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
               "event": "TILE_CLICK",
               "payloadSchema": [
                 {
@@ -898,7 +1175,7 @@
               "tier": "essential"
             },
             {
-              "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+              "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
               "event": "UNIT_CLICK",
               "payloadSchema": [
                 {
@@ -909,10 +1186,31 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{cancelEvent} with {} on cancel",
+              "event": "CANCEL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "crewCount",
+              "effects",
+              "gridHeight",
+              "gridWidth",
+              "oxygen",
+              "phase",
+              "selectedUnitId",
+              "units"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -926,7 +1224,20 @@
                 "name": "Initialize"
               },
               {
-                "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+                "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
                 "key": "TILE_CLICK",
                 "name": "Tile Click",
                 "payloadSchema": [
@@ -944,13 +1255,12 @@
                 "tier": "essential"
               },
               {
-                "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
-                "key": "UNIT_CLICK",
-                "name": "Unit Click",
+                "description": "Emits UI:{cancelEvent} with {} on cancel",
+                "key": "CANCEL",
+                "name": "Cancel",
                 "payloadSchema": [
                   {
-                    "name": "unitId",
-                    "required": true,
+                    "name": "id",
                     "type": "string"
                   }
                 ],
@@ -960,47 +1270,607 @@
             "states": [
               {
                 "isInitial": true,
-                "name": "idle"
+                "name": "playing"
               }
             ],
             "transitions": [
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.oxygen",
+                    100.0
+                  ],
+                  [
+                    "set",
+                    "@entity.crewCount",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.gridWidth",
+                    7.0
+                  ],
+                  [
+                    "set",
+                    "@entity.gridHeight",
+                    7.0
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "activeFilters": "@config.activeFilters",
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "enableCamera": "@config.enableCamera",
-                      "error": "@config.error",
-                      "features": "@config.features",
-                      "isLoading": "@config.isLoading",
-                      "page": "@config.pageProp",
-                      "pageSize": "@config.pageSize",
-                      "scale": "@config.scale",
-                      "searchValue": "@config.searchValue",
-                      "selectedIds": "@config.selectedIds",
-                      "showMinimap": "@config.showMinimap",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "totalCount": "@config.totalCount",
-                      "type": "space-station-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@config.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Crew",
+                            "value": "@entity.crewCount"
+                          },
+                          {
+                            "label": "Oxygen",
+                            "value": "@entity.oxygen"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.phase",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Crew",
+                            "value": "@entity.crewCount"
+                          },
+                          {
+                            "label": "Oxygen",
+                            "value": "@entity.oxygen"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "==",
+                    "@entity.selectedUnitId",
+                    "@payload.unitId"
+                  ],
+                  [
+                    "==",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@entity.units",
+                        [
+                          "fn",
+                          "u",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.unitId"
+                          ]
+                        ]
+                      ],
+                      "team"
+                    ],
+                    "player"
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    "@payload.unitId"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "movement"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Crew",
+                            "value": "@entity.crewCount"
+                          },
+                          {
+                            "label": "Oxygen",
+                            "value": "@entity.oxygen"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  [
+                    "object/get",
+                    [
+                      "array/find",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "==",
+                          "@u.id",
+                          "@payload.unitId"
+                        ]
+                      ]
+                    ],
+                    "team"
+                  ],
+                  "player"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@entity.selectedUnitId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "walk",
+                              "position": {
+                                "x": "@payload.x",
+                                "y": "@payload.y"
+                              }
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Crew",
+                            "value": "@entity.crewCount"
+                          },
+                          {
+                            "label": "Oxygen",
+                            "value": "@entity.oxygen"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "!=",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "and",
+                    [
+                      "grid/in-bounds",
+                      {
+                        "x": "@payload.x",
+                        "y": "@payload.y"
+                      },
+                      "@entity.gridWidth",
+                      "@entity.gridHeight"
+                    ],
+                    [
+                      "and",
+                      [
+                        "<=",
+                        [
+                          "grid/manhattan-distance",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@entity.selectedUnitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          {
+                            "x": "@payload.x",
+                            "y": "@payload.y"
+                          }
+                        ],
+                        2.0
+                      ],
+                      [
+                        "==",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    "x"
+                                  ],
+                                  "@payload.x"
+                                ],
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    "y"
+                                  ],
+                                  "@payload.y"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "idle"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Crew",
+                            "value": "@entity.crewCount"
+                          },
+                          {
+                            "label": "Oxygen",
+                            "value": "@entity.oxygen"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "CANCEL",
+                "from": "playing",
+                "guard": [
+                  "!=",
+                  "@entity.selectedUnitId",
+                  ""
+                ],
+                "to": "playing"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "@u",
+                        {
+                          "animation": [
+                            "if",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "@u",
+                                "animation"
+                              ],
+                              "walk"
+                            ],
+                            "idle",
+                            [
+                              "object/get",
+                              "@u",
+                              "animation"
+                            ]
+                          ],
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Crew",
+                          "value": "@entity.crewCount"
+                        },
+                        {
+                          "label": "Oxygen",
+                          "value": "@entity.oxygen"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            }
+          ]
         }
       ]
     }

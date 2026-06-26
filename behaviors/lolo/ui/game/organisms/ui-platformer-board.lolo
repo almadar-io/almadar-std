@@ -1,5 +1,5 @@
 app ui-platformer-board "1.0.0"
-"PlatformerBoard — gameflow layer (lives/score/win-lose) over PlatformerCanvas; canvas owns physics."
+"PlatformerBoard — game-shell composition with HUD (Score/Lives) over platformer-canvas; animTick advances frame and ages effects."
 orbital PlatformerBoardOrbital {
   type PlatformerBoardPlayer = {
     x : number!
@@ -10,6 +10,8 @@ orbital PlatformerBoardOrbital {
     vy : number
     grounded : boolean
     facingRight : boolean
+    animation : string
+    frame : number
   }
   type PlatformerBoardPlatformsItem = {
     x : number!
@@ -18,6 +20,19 @@ orbital PlatformerBoardOrbital {
     height : number!
     type : "ground" | "platform" | "hazard" | "goal"
   }
+  type PlatformerEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
+  }
+  type PlatformerBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
 
   entity PlatformerBoardItem [runtime] {
     id : string!
@@ -25,10 +40,11 @@ orbital PlatformerBoardOrbital {
     score : number = 0
     lives : number = 3
     result : "none" | "won" | "lost" = none
-    player : PlatformerBoardPlayer = { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true }
+    player : PlatformerBoardPlayer = { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 }
     goalX : number = 720
     worldWidth : number = 800
     worldHeight : number = 400
+    effects : [PlatformerEffectItem] = []
   }
 
   trait PlatformerBoardRender -> @rebindable PlatformerBoardItem [interaction, instance] {
@@ -40,46 +56,28 @@ orbital PlatformerBoardOrbital {
         (set @entity.score 0)
         (set @entity.lives 3)
         (set @entity.result "none")
-        (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true })
+        (set @entity.effects [])
+        (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 })
         (set @entity.goalX @config.goalX)
         (set @entity.worldWidth @config.worldWidth)
         (set @entity.worldHeight @config.worldHeight)
         (render-ui main {
-          entity: @entity
-          player: @entity.player
-          platforms: @config.platforms
-          level: @entity.level
-          score: @entity.score
-          lives: @entity.lives
-          result: @entity.result
-          goalX: @entity.goalX
-          worldWidth: @entity.worldWidth
-          worldHeight: @entity.worldHeight
-          canvasWidth: @config.canvasWidth
-          canvasHeight: @config.canvasHeight
-          playerSprite: @config.playerSprite
-          tileSprites: @config.tileSprites
-          bgColor: @config.bgColor
-          leftEvent: LEFT
-          rightEvent: RIGHT
-          jumpEvent: JUMP
-          stopEvent: STOP
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          type: platformer-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: platformer-canvas, player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl } ]
         })
 
       LEFT -> playing when (== @entity.result "none")
-        (set @entity.player (object/merge @entity.player { vx: (- 0 @config.moveSpeed), facingRight: false }))
+        (set @entity.player (object/merge @entity.player { vx: (- 0 @config.moveSpeed), facingRight: false, animation: "walk" }))
 
       RIGHT -> playing when (== @entity.result "none")
-        (set @entity.player (object/merge @entity.player { vx: @config.moveSpeed, facingRight: true }))
+        (set @entity.player (object/merge @entity.player { vx: @config.moveSpeed, facingRight: true, animation: "walk" }))
 
       JUMP -> playing when (and (== @entity.result "none") (== @entity.player.grounded true))
-        (set @entity.player (object/merge @entity.player { vy: (- 0 @config.jumpStrength), grounded: false }))
+        (set @entity.player (object/merge @entity.player { vy: (- 0 @config.jumpStrength), grounded: false, animation: "jump" }))
 
       STOP -> playing when (== @entity.result "none")
-        (set @entity.player (object/merge @entity.player { vx: 0 }))
+        (set @entity.player (object/merge @entity.player { vx: 0, animation: "idle" }))
 
       GAME_END -> won when (== @entity.result "won")
 
@@ -90,30 +88,12 @@ orbital PlatformerBoardOrbital {
       PLAY_AGAIN -> playing
         (set @entity.level (+ @entity.level 1))
         (set @entity.result "none")
-        (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true })
+        (set @entity.effects [])
+        (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 })
         (render-ui main {
-          entity: @entity
-          player: @entity.player
-          platforms: @config.platforms
-          level: @entity.level
-          score: @entity.score
-          lives: @entity.lives
-          result: @entity.result
-          goalX: @entity.goalX
-          worldWidth: @entity.worldWidth
-          worldHeight: @entity.worldHeight
-          canvasWidth: @config.canvasWidth
-          canvasHeight: @config.canvasHeight
-          playerSprite: @config.playerSprite
-          tileSprites: @config.tileSprites
-          bgColor: @config.bgColor
-          leftEvent: LEFT
-          rightEvent: RIGHT
-          jumpEvent: JUMP
-          stopEvent: STOP
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          type: platformer-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: platformer-canvas, player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl } ]
         })
     }
 
@@ -123,86 +103,28 @@ orbital PlatformerBoardOrbital {
         (set @entity.score 0)
         (set @entity.lives 3)
         (set @entity.result "none")
-        (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true })
+        (set @entity.effects [])
+        (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 })
         (render-ui main {
-          entity: @entity
-          player: @entity.player
-          platforms: @config.platforms
-          level: @entity.level
-          score: @entity.score
-          lives: @entity.lives
-          result: @entity.result
-          goalX: @entity.goalX
-          worldWidth: @entity.worldWidth
-          worldHeight: @entity.worldHeight
-          canvasWidth: @config.canvasWidth
-          canvasHeight: @config.canvasHeight
-          playerSprite: @config.playerSprite
-          tileSprites: @config.tileSprites
-          bgColor: @config.bgColor
-          leftEvent: LEFT
-          rightEvent: RIGHT
-          jumpEvent: JUMP
-          stopEvent: STOP
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          type: platformer-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: platformer-canvas, player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl } ]
         })
     }
 
     ticks {
+      animTick every 100ms
+        (set @entity.player (object/merge @entity.player { frame: (% (+ (object/get @entity.player frame) 1) 8) }))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: platformer-canvas, player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl } ]
+        })
+
       gameflowTick every 33ms
         when (== @entity.result "none")
-        (let ((vy1 (math/clamp (+ @entity.player.vy @config.gravity) (- 0 @config.jumpStrength) @config.maxFallSpeed))
-              (px1 (math/clamp (+ @entity.player.x @entity.player.vx) 0 (- @entity.worldWidth @entity.player.width)))
-              (py1 (+ @entity.player.y @vy1))
-              (pw @entity.player.width)
-              (ph @entity.player.height)
-              (playerRect { x: @px1, y: @py1, w: @pw, h: @ph })
-              (hit (array/find @config.platforms (fn p (and (!= (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))
-              (hitY (object/get @hit "y" @entity.worldHeight))
-              (landed (and (!= @hit null) (> @vy1 0)))
-              (py2 (if @landed (- @hitY @ph) @py1))
-              (vy2 (if @landed 0 @vy1))
-              (atGround (>= (+ @py2 @ph) @entity.worldHeight))
-              (py3 (if @atGround (- @entity.worldHeight @ph) @py2))
-              (vy3 (if @atGround 0 @vy2))
-              (grounded (or @landed @atGround))
-              (hazardHit (array/find @config.platforms (fn p (and (== (object/get @p type) "hazard") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))
-              (goalHit (array/find @config.platforms (fn p (and (== (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))
-              (fell (> @py3 @entity.worldHeight))
-              (damaged (or (!= @hazardHit null) @fell))
-              (livesLeft (- @entity.lives 1)))
-          (do
-            (set @entity.player (object/merge @entity.player { x: @px1, y: @py3, vy: @vy3, grounded: @grounded }))
-            (set @entity.result (if (!= @goalHit null) "won" (if (and @damaged (<= @livesLeft 0)) "lost" "none")))
-            (set @entity.score (if (!= @goalHit null) (+ @entity.score 100) @entity.score))
-            (set @entity.lives (if (and @damaged (> @entity.lives 0) (== @entity.result "none")) @livesLeft @entity.lives))
-            (set @entity.player (if (and @damaged (== @entity.result "none")) { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true } @entity.player))
-            (render-ui main {
-              entity: @entity
-              player: @entity.player
-              platforms: @config.platforms
-              level: @entity.level
-              score: @entity.score
-              lives: @entity.lives
-              result: @entity.result
-              goalX: @entity.goalX
-              worldWidth: @entity.worldWidth
-              worldHeight: @entity.worldHeight
-              canvasWidth: @config.canvasWidth
-              canvasHeight: @config.canvasHeight
-              playerSprite: @config.playerSprite
-              tileSprites: @config.tileSprites
-              bgColor: @config.bgColor
-              leftEvent: LEFT
-              rightEvent: RIGHT
-              jumpEvent: JUMP
-              stopEvent: STOP
-              playAgainEvent: PLAY_AGAIN
-              gameEndEvent: GAME_END
-              type: platformer-board
-            })))
+        (let ((vy1 (math/clamp (+ @entity.player.vy @config.gravity) (- 0 @config.jumpStrength) @config.maxFallSpeed)) (px1 (math/clamp (+ @entity.player.x @entity.player.vx) 0 (- @entity.worldWidth @entity.player.width))) (pw @entity.player.width) (ph @entity.player.height) (livesLeft (- @entity.lives 1))) (let ((py1 (+ @entity.player.y @vy1))) (let ((playerRect { x: @px1, y: @py1, w: @pw, h: @ph })) (let ((hit (array/find @config.platforms (fn p (and (!= (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hazardHit (array/find @config.platforms (fn p (and (== (object/get @p type) "hazard") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((goalHit (array/find @config.platforms (fn p (and (== (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hitY (object/get @hit "y" @entity.worldHeight)) (landed (and (!= @hit null) (> @vy1 0)))) (let ((py2 (if @landed (- @hitY @ph) @py1)) (vy2 (if @landed 0 @vy1))) (let ((atGround (>= (+ @py2 @ph) @entity.worldHeight))) (let ((py3 (if @atGround (- @entity.worldHeight @ph) @py2)) (vy3 (if @atGround 0 @vy2)) (grounded (or @landed @atGround))) (let ((fell (> @py3 @entity.worldHeight))) (let ((damaged (or (!= @hazardHit null) @fell))) (do (set @entity.player (object/merge @entity.player { x: @px1, y: @py3, vy: @vy3, grounded: @grounded })) (set @entity.result (if (!= @goalHit null) "won" (if (and @damaged (<= @livesLeft 0)) "lost" "none"))) (set @entity.score (if (!= @goalHit null) (+ @entity.score 100) @entity.score)) (set @entity.lives (if (and @damaged (> @entity.lives 0) (== @entity.result "none")) @livesLeft @entity.lives)) (set @entity.player (if (and @damaged (== @entity.result "none")) { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 } @entity.player)) (render-ui main { type: game-shell, hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, children: [ { type: platformer-canvas, player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl } ] }))))))))))))))
     }
 
     emits {
@@ -283,6 +205,10 @@ orbital PlatformerBoardOrbital {
         @label "Move Speed"
         @description "Horizontal vx magnitude"
         @tier "presentation"
+      followCamera : boolean = true
+        @label "Follow Camera"
+        @description "Camera follows player horizontally"
+        @tier "presentation"
       playerSprite : asset = "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/units/player.png"
         @label "Player Sprite"
         @description "Player sprite image URL"
@@ -290,6 +216,14 @@ orbital PlatformerBoardOrbital {
       tileSprites : Map string asset = { ground: "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png", platform: "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/platform.png", hazard: "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/hazard.png", goal: "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/goal.png" }
         @label "Tile Sprites"
         @description "Map of platform type to tile sprite URL"
+        @tier "presentation"
+      backgroundImage : asset = "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png"
+        @label "Background Image"
+        @description "Background image URL"
+        @tier "presentation"
+      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
+        @label "Asset Base Url"
+        @description "Base URL prefix for asset URLs"
         @tier "presentation"
       bgColor : string = "#5c94fc"
         @label "Bg Color"

@@ -1,5 +1,5 @@
 {
-  "description": "PlatformerBoard — gameflow layer (lives/score/win-lose) over PlatformerCanvas; canvas owns physics.",
+  "description": "PlatformerBoard — game-shell composition with HUD (Score/Lives) over platformer-canvas; animTick advances frame and ages effects.",
   "name": "ui-platformer-board",
   "orbitals": [
     {
@@ -37,7 +37,9 @@
           },
           {
             "default": {
+              "animation": "idle",
               "facingRight": true,
+              "frame": 0.0,
               "grounded": false,
               "height": 48.0,
               "vx": 0.0,
@@ -48,10 +50,20 @@
             },
             "name": "player",
             "properties": {
+              "animation": {
+                "name": "animation",
+                "required": false,
+                "type": "string"
+              },
               "facingRight": {
                 "name": "facingRight",
                 "required": false,
                 "type": "boolean"
+              },
+              "frame": {
+                "name": "frame",
+                "required": false,
+                "type": "number"
               },
               "grounded": {
                 "name": "grounded",
@@ -105,6 +117,36 @@
             "default": 400.0,
             "name": "worldHeight",
             "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "PlatformerBoardItem",
@@ -126,6 +168,20 @@
         {
           "category": "interaction",
           "config": {
+            "assetBaseUrl": {
+              "default": "https://almadar-kflow-assets.web.app/shared/",
+              "description": "Base URL prefix for asset URLs",
+              "label": "Asset Base Url",
+              "tier": "presentation",
+              "type": "asset"
+            },
+            "backgroundImage": {
+              "default": "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png",
+              "description": "Background image URL",
+              "label": "Background Image",
+              "tier": "presentation",
+              "type": "asset"
+            },
             "bgColor": {
               "default": "#5c94fc",
               "description": "Canvas background color",
@@ -153,6 +209,13 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
+            },
+            "followCamera": {
+              "default": true,
+              "description": "Camera follows player horizontally",
+              "label": "Follow Camera",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "goalX": {
               "default": 720.0,
@@ -384,6 +447,7 @@
           ],
           "entityContract": {
             "provides": [
+              "effects",
               "goalX",
               "level",
               "lives",
@@ -518,9 +582,16 @@
                   ],
                   [
                     "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.player",
                     {
+                      "animation": "idle",
                       "facingRight": true,
+                      "frame": 0.0,
                       "grounded": false,
                       "height": 48.0,
                       "vx": 0.0,
@@ -549,28 +620,37 @@
                     "render-ui",
                     "main",
                     {
-                      "bgColor": "@config.bgColor",
-                      "canvasHeight": "@config.canvasHeight",
-                      "canvasWidth": "@config.canvasWidth",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "goalX": "@entity.goalX",
-                      "jumpEvent": "JUMP",
-                      "leftEvent": "LEFT",
-                      "level": "@entity.level",
-                      "lives": "@entity.lives",
-                      "platforms": "@config.platforms",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "playerSprite": "@config.playerSprite",
-                      "result": "@entity.result",
-                      "rightEvent": "RIGHT",
-                      "score": "@entity.score",
-                      "stopEvent": "STOP",
-                      "tileSprites": "@config.tileSprites",
-                      "type": "platformer-board",
-                      "worldHeight": "@entity.worldHeight",
-                      "worldWidth": "@entity.worldWidth"
+                      "children": [
+                        {
+                          "assetBaseUrl": "@config.assetBaseUrl",
+                          "backgroundImage": "@config.backgroundImage",
+                          "bgColor": "@config.bgColor",
+                          "canvasHeight": "@config.canvasHeight",
+                          "canvasWidth": "@config.canvasWidth",
+                          "followCamera": "@config.followCamera",
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "platformer-canvas",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -587,6 +667,7 @@
                       "object/merge",
                       "@entity.player",
                       {
+                        "animation": "walk",
                         "facingRight": false,
                         "vx": [
                           "-",
@@ -615,6 +696,7 @@
                       "object/merge",
                       "@entity.player",
                       {
+                        "animation": "walk",
                         "facingRight": true,
                         "vx": "@config.moveSpeed"
                       }
@@ -639,6 +721,7 @@
                       "object/merge",
                       "@entity.player",
                       {
+                        "animation": "jump",
                         "grounded": false,
                         "vy": [
                           "-",
@@ -675,6 +758,7 @@
                       "object/merge",
                       "@entity.player",
                       {
+                        "animation": "idle",
                         "vx": 0.0
                       }
                     ]
@@ -727,9 +811,16 @@
                   ],
                   [
                     "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.player",
                     {
+                      "animation": "idle",
                       "facingRight": true,
+                      "frame": 0.0,
                       "grounded": false,
                       "height": 48.0,
                       "vx": 0.0,
@@ -743,28 +834,37 @@
                     "render-ui",
                     "main",
                     {
-                      "bgColor": "@config.bgColor",
-                      "canvasHeight": "@config.canvasHeight",
-                      "canvasWidth": "@config.canvasWidth",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "goalX": "@entity.goalX",
-                      "jumpEvent": "JUMP",
-                      "leftEvent": "LEFT",
-                      "level": "@entity.level",
-                      "lives": "@entity.lives",
-                      "platforms": "@config.platforms",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "playerSprite": "@config.playerSprite",
-                      "result": "@entity.result",
-                      "rightEvent": "RIGHT",
-                      "score": "@entity.score",
-                      "stopEvent": "STOP",
-                      "tileSprites": "@config.tileSprites",
-                      "type": "platformer-board",
-                      "worldHeight": "@entity.worldHeight",
-                      "worldWidth": "@entity.worldWidth"
+                      "children": [
+                        {
+                          "assetBaseUrl": "@config.assetBaseUrl",
+                          "backgroundImage": "@config.backgroundImage",
+                          "bgColor": "@config.bgColor",
+                          "canvasHeight": "@config.canvasHeight",
+                          "canvasWidth": "@config.canvasWidth",
+                          "followCamera": "@config.followCamera",
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "platformer-canvas",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -796,9 +896,16 @@
                   ],
                   [
                     "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.player",
                     {
+                      "animation": "idle",
                       "facingRight": true,
+                      "frame": 0.0,
                       "grounded": false,
                       "height": 48.0,
                       "vx": 0.0,
@@ -812,28 +919,37 @@
                     "render-ui",
                     "main",
                     {
-                      "bgColor": "@config.bgColor",
-                      "canvasHeight": "@config.canvasHeight",
-                      "canvasWidth": "@config.canvasWidth",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "goalX": "@entity.goalX",
-                      "jumpEvent": "JUMP",
-                      "leftEvent": "LEFT",
-                      "level": "@entity.level",
-                      "lives": "@entity.lives",
-                      "platforms": "@config.platforms",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "playerSprite": "@config.playerSprite",
-                      "result": "@entity.result",
-                      "rightEvent": "RIGHT",
-                      "score": "@entity.score",
-                      "stopEvent": "STOP",
-                      "tileSprites": "@config.tileSprites",
-                      "type": "platformer-board",
-                      "worldHeight": "@entity.worldHeight",
-                      "worldWidth": "@entity.worldWidth"
+                      "children": [
+                        {
+                          "assetBaseUrl": "@config.assetBaseUrl",
+                          "backgroundImage": "@config.backgroundImage",
+                          "bgColor": "@config.bgColor",
+                          "canvasHeight": "@config.canvasHeight",
+                          "canvasWidth": "@config.canvasWidth",
+                          "followCamera": "@config.followCamera",
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "platformer-canvas",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -844,6 +960,115 @@
             ]
           },
           "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.player",
+                  [
+                    "object/merge",
+                    "@entity.player",
+                    {
+                      "frame": [
+                        "%",
+                        [
+                          "+",
+                          [
+                            "object/get",
+                            "@entity.player",
+                            "frame"
+                          ],
+                          1.0
+                        ],
+                        8.0
+                      ]
+                    }
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetBaseUrl": "@config.assetBaseUrl",
+                        "backgroundImage": "@config.backgroundImage",
+                        "bgColor": "@config.bgColor",
+                        "canvasHeight": "@config.canvasHeight",
+                        "canvasWidth": "@config.canvasWidth",
+                        "followCamera": "@config.followCamera",
+                        "platforms": "@config.platforms",
+                        "player": "@entity.player",
+                        "playerSprite": "@config.playerSprite",
+                        "tileSprites": "@config.tileSprites",
+                        "type": "platformer-canvas",
+                        "worldHeight": "@entity.worldHeight",
+                        "worldWidth": "@entity.worldWidth"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Score",
+                          "value": "@entity.score"
+                        },
+                        {
+                          "label": "Lives",
+                          "value": "@entity.lives"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            },
             {
               "effects": [
                 [
@@ -884,237 +1109,12 @@
                       ]
                     ],
                     [
-                      "py1",
-                      [
-                        "+",
-                        "@entity.player.y",
-                        "@vy1"
-                      ]
-                    ],
-                    [
                       "pw",
                       "@entity.player.width"
                     ],
                     [
                       "ph",
                       "@entity.player.height"
-                    ],
-                    [
-                      "playerRect",
-                      {
-                        "h": "@ph",
-                        "w": "@pw",
-                        "x": "@px1",
-                        "y": "@py1"
-                      }
-                    ],
-                    [
-                      "hit",
-                      [
-                        "array/find",
-                        "@config.platforms",
-                        [
-                          "fn",
-                          "p",
-                          [
-                            "and",
-                            [
-                              "!=",
-                              [
-                                "object/get",
-                                "@p",
-                                "type"
-                              ],
-                              "goal"
-                            ],
-                            [
-                              "geo/aabb-overlap",
-                              "@playerRect",
-                              {
-                                "h": "@p.height",
-                                "w": "@p.width",
-                                "x": "@p.x",
-                                "y": "@p.y"
-                              }
-                            ]
-                          ]
-                        ]
-                      ]
-                    ],
-                    [
-                      "hitY",
-                      [
-                        "object/get",
-                        "@hit",
-                        "y",
-                        "@entity.worldHeight"
-                      ]
-                    ],
-                    [
-                      "landed",
-                      [
-                        "and",
-                        [
-                          "!=",
-                          "@hit",
-                          null
-                        ],
-                        [
-                          ">",
-                          "@vy1",
-                          0.0
-                        ]
-                      ]
-                    ],
-                    [
-                      "py2",
-                      [
-                        "if",
-                        "@landed",
-                        [
-                          "-",
-                          "@hitY",
-                          "@ph"
-                        ],
-                        "@py1"
-                      ]
-                    ],
-                    [
-                      "vy2",
-                      [
-                        "if",
-                        "@landed",
-                        0.0,
-                        "@vy1"
-                      ]
-                    ],
-                    [
-                      "atGround",
-                      [
-                        ">=",
-                        [
-                          "+",
-                          "@py2",
-                          "@ph"
-                        ],
-                        "@entity.worldHeight"
-                      ]
-                    ],
-                    [
-                      "py3",
-                      [
-                        "if",
-                        "@atGround",
-                        [
-                          "-",
-                          "@entity.worldHeight",
-                          "@ph"
-                        ],
-                        "@py2"
-                      ]
-                    ],
-                    [
-                      "vy3",
-                      [
-                        "if",
-                        "@atGround",
-                        0.0,
-                        "@vy2"
-                      ]
-                    ],
-                    [
-                      "grounded",
-                      [
-                        "or",
-                        "@landed",
-                        "@atGround"
-                      ]
-                    ],
-                    [
-                      "hazardHit",
-                      [
-                        "array/find",
-                        "@config.platforms",
-                        [
-                          "fn",
-                          "p",
-                          [
-                            "and",
-                            [
-                              "==",
-                              [
-                                "object/get",
-                                "@p",
-                                "type"
-                              ],
-                              "hazard"
-                            ],
-                            [
-                              "geo/aabb-overlap",
-                              "@playerRect",
-                              {
-                                "h": "@p.height",
-                                "w": "@p.width",
-                                "x": "@p.x",
-                                "y": "@p.y"
-                              }
-                            ]
-                          ]
-                        ]
-                      ]
-                    ],
-                    [
-                      "goalHit",
-                      [
-                        "array/find",
-                        "@config.platforms",
-                        [
-                          "fn",
-                          "p",
-                          [
-                            "and",
-                            [
-                              "==",
-                              [
-                                "object/get",
-                                "@p",
-                                "type"
-                              ],
-                              "goal"
-                            ],
-                            [
-                              "geo/aabb-overlap",
-                              "@playerRect",
-                              {
-                                "h": "@p.height",
-                                "w": "@p.width",
-                                "x": "@p.x",
-                                "y": "@p.y"
-                              }
-                            ]
-                          ]
-                        ]
-                      ]
-                    ],
-                    [
-                      "fell",
-                      [
-                        ">",
-                        "@py3",
-                        "@entity.worldHeight"
-                      ]
-                    ],
-                    [
-                      "damaged",
-                      [
-                        "or",
-                        [
-                          "!=",
-                          "@hazardHit",
-                          null
-                        ],
-                        "@fell"
-                      ]
                     ],
                     [
                       "livesLeft",
@@ -1126,143 +1126,434 @@
                     ]
                   ],
                   [
-                    "do",
+                    "let",
                     [
-                      "set",
-                      "@entity.player",
                       [
-                        "object/merge",
-                        "@entity.player",
-                        {
-                          "grounded": "@grounded",
-                          "vy": "@vy3",
-                          "x": "@px1",
-                          "y": "@py3"
-                        }
-                      ]
-                    ],
-                    [
-                      "set",
-                      "@entity.result",
-                      [
-                        "if",
+                        "py1",
                         [
-                          "!=",
-                          "@goalHit",
-                          null
-                        ],
-                        "won",
-                        [
-                          "if",
-                          [
-                            "and",
-                            "@damaged",
-                            [
-                              "<=",
-                              "@livesLeft",
-                              0.0
-                            ]
-                          ],
-                          "lost",
-                          "none"
+                          "+",
+                          "@entity.player.y",
+                          "@vy1"
                         ]
                       ]
                     ],
                     [
-                      "set",
-                      "@entity.score",
+                      "let",
                       [
-                        "if",
                         [
-                          "!=",
-                          "@goalHit",
-                          null
-                        ],
-                        [
-                          "+",
-                          "@entity.score",
-                          100.0
-                        ],
-                        "@entity.score"
-                      ]
-                    ],
-                    [
-                      "set",
-                      "@entity.lives",
+                          "playerRect",
+                          {
+                            "h": "@ph",
+                            "w": "@pw",
+                            "x": "@px1",
+                            "y": "@py1"
+                          }
+                        ]
+                      ],
                       [
-                        "if",
+                        "let",
                         [
-                          "and",
-                          "@damaged",
                           [
-                            ">",
-                            "@entity.lives",
-                            0.0
+                            "hit",
+                            [
+                              "array/find",
+                              "@config.platforms",
+                              [
+                                "fn",
+                                "p",
+                                [
+                                  "and",
+                                  [
+                                    "!=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "type"
+                                    ],
+                                    "goal"
+                                  ],
+                                  [
+                                    "geo/aabb-overlap",
+                                    "@playerRect",
+                                    {
+                                      "h": "@p.height",
+                                      "w": "@p.width",
+                                      "x": "@p.x",
+                                      "y": "@p.y"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "hazardHit",
+                              [
+                                "array/find",
+                                "@config.platforms",
+                                [
+                                  "fn",
+                                  "p",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@p",
+                                        "type"
+                                      ],
+                                      "hazard"
+                                    ],
+                                    [
+                                      "geo/aabb-overlap",
+                                      "@playerRect",
+                                      {
+                                        "h": "@p.height",
+                                        "w": "@p.width",
+                                        "x": "@p.x",
+                                        "y": "@p.y"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
                           ],
                           [
-                            "==",
-                            "@entity.result",
-                            "none"
+                            "let",
+                            [
+                              [
+                                "goalHit",
+                                [
+                                  "array/find",
+                                  "@config.platforms",
+                                  [
+                                    "fn",
+                                    "p",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@p",
+                                          "type"
+                                        ],
+                                        "goal"
+                                      ],
+                                      [
+                                        "geo/aabb-overlap",
+                                        "@playerRect",
+                                        {
+                                          "h": "@p.height",
+                                          "w": "@p.width",
+                                          "x": "@p.x",
+                                          "y": "@p.y"
+                                        }
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "hitY",
+                                  [
+                                    "object/get",
+                                    "@hit",
+                                    "y",
+                                    "@entity.worldHeight"
+                                  ]
+                                ],
+                                [
+                                  "landed",
+                                  [
+                                    "and",
+                                    [
+                                      "!=",
+                                      "@hit",
+                                      null
+                                    ],
+                                    [
+                                      ">",
+                                      "@vy1",
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "py2",
+                                    [
+                                      "if",
+                                      "@landed",
+                                      [
+                                        "-",
+                                        "@hitY",
+                                        "@ph"
+                                      ],
+                                      "@py1"
+                                    ]
+                                  ],
+                                  [
+                                    "vy2",
+                                    [
+                                      "if",
+                                      "@landed",
+                                      0.0,
+                                      "@vy1"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "atGround",
+                                      [
+                                        ">=",
+                                        [
+                                          "+",
+                                          "@py2",
+                                          "@ph"
+                                        ],
+                                        "@entity.worldHeight"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "py3",
+                                        [
+                                          "if",
+                                          "@atGround",
+                                          [
+                                            "-",
+                                            "@entity.worldHeight",
+                                            "@ph"
+                                          ],
+                                          "@py2"
+                                        ]
+                                      ],
+                                      [
+                                        "vy3",
+                                        [
+                                          "if",
+                                          "@atGround",
+                                          0.0,
+                                          "@vy2"
+                                        ]
+                                      ],
+                                      [
+                                        "grounded",
+                                        [
+                                          "or",
+                                          "@landed",
+                                          "@atGround"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "let",
+                                      [
+                                        [
+                                          "fell",
+                                          [
+                                            ">",
+                                            "@py3",
+                                            "@entity.worldHeight"
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "let",
+                                        [
+                                          [
+                                            "damaged",
+                                            [
+                                              "or",
+                                              [
+                                                "!=",
+                                                "@hazardHit",
+                                                null
+                                              ],
+                                              "@fell"
+                                            ]
+                                          ]
+                                        ],
+                                        [
+                                          "do",
+                                          [
+                                            "set",
+                                            "@entity.player",
+                                            [
+                                              "object/merge",
+                                              "@entity.player",
+                                              {
+                                                "grounded": "@grounded",
+                                                "vy": "@vy3",
+                                                "x": "@px1",
+                                                "y": "@py3"
+                                              }
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.result",
+                                            [
+                                              "if",
+                                              [
+                                                "!=",
+                                                "@goalHit",
+                                                null
+                                              ],
+                                              "won",
+                                              [
+                                                "if",
+                                                [
+                                                  "and",
+                                                  "@damaged",
+                                                  [
+                                                    "<=",
+                                                    "@livesLeft",
+                                                    0.0
+                                                  ]
+                                                ],
+                                                "lost",
+                                                "none"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.score",
+                                            [
+                                              "if",
+                                              [
+                                                "!=",
+                                                "@goalHit",
+                                                null
+                                              ],
+                                              [
+                                                "+",
+                                                "@entity.score",
+                                                100.0
+                                              ],
+                                              "@entity.score"
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.lives",
+                                            [
+                                              "if",
+                                              [
+                                                "and",
+                                                "@damaged",
+                                                [
+                                                  ">",
+                                                  "@entity.lives",
+                                                  0.0
+                                                ],
+                                                [
+                                                  "==",
+                                                  "@entity.result",
+                                                  "none"
+                                                ]
+                                              ],
+                                              "@livesLeft",
+                                              "@entity.lives"
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.player",
+                                            [
+                                              "if",
+                                              [
+                                                "and",
+                                                "@damaged",
+                                                [
+                                                  "==",
+                                                  "@entity.result",
+                                                  "none"
+                                                ]
+                                              ],
+                                              {
+                                                "animation": "idle",
+                                                "facingRight": true,
+                                                "frame": 0.0,
+                                                "grounded": false,
+                                                "height": 48.0,
+                                                "vx": 0.0,
+                                                "vy": 0.0,
+                                                "width": 32.0,
+                                                "x": 80.0,
+                                                "y": 320.0
+                                              },
+                                              "@entity.player"
+                                            ]
+                                          ],
+                                          [
+                                            "render-ui",
+                                            "main",
+                                            {
+                                              "children": [
+                                                {
+                                                  "assetBaseUrl": "@config.assetBaseUrl",
+                                                  "backgroundImage": "@config.backgroundImage",
+                                                  "bgColor": "@config.bgColor",
+                                                  "canvasHeight": "@config.canvasHeight",
+                                                  "canvasWidth": "@config.canvasWidth",
+                                                  "followCamera": "@config.followCamera",
+                                                  "platforms": "@config.platforms",
+                                                  "player": "@entity.player",
+                                                  "playerSprite": "@config.playerSprite",
+                                                  "tileSprites": "@config.tileSprites",
+                                                  "type": "platformer-canvas",
+                                                  "worldHeight": "@entity.worldHeight",
+                                                  "worldWidth": "@entity.worldWidth"
+                                                }
+                                              ],
+                                              "hud": {
+                                                "stats": [
+                                                  {
+                                                    "label": "Score",
+                                                    "value": "@entity.score"
+                                                  },
+                                                  {
+                                                    "label": "Lives",
+                                                    "value": "@entity.lives"
+                                                  }
+                                                ],
+                                                "type": "game-hud"
+                                              },
+                                              "type": "game-shell"
+                                            }
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
                           ]
-                        ],
-                        "@livesLeft",
-                        "@entity.lives"
+                        ]
                       ]
-                    ],
-                    [
-                      "set",
-                      "@entity.player",
-                      [
-                        "if",
-                        [
-                          "and",
-                          "@damaged",
-                          [
-                            "==",
-                            "@entity.result",
-                            "none"
-                          ]
-                        ],
-                        {
-                          "facingRight": true,
-                          "grounded": false,
-                          "height": 48.0,
-                          "vx": 0.0,
-                          "vy": 0.0,
-                          "width": 32.0,
-                          "x": 80.0,
-                          "y": 320.0
-                        },
-                        "@entity.player"
-                      ]
-                    ],
-                    [
-                      "render-ui",
-                      "main",
-                      {
-                        "bgColor": "@config.bgColor",
-                        "canvasHeight": "@config.canvasHeight",
-                        "canvasWidth": "@config.canvasWidth",
-                        "entity": "@entity",
-                        "gameEndEvent": "GAME_END",
-                        "goalX": "@entity.goalX",
-                        "jumpEvent": "JUMP",
-                        "leftEvent": "LEFT",
-                        "level": "@entity.level",
-                        "lives": "@entity.lives",
-                        "platforms": "@config.platforms",
-                        "playAgainEvent": "PLAY_AGAIN",
-                        "player": "@entity.player",
-                        "playerSprite": "@config.playerSprite",
-                        "result": "@entity.result",
-                        "rightEvent": "RIGHT",
-                        "score": "@entity.score",
-                        "stopEvent": "STOP",
-                        "tileSprites": "@config.tileSprites",
-                        "type": "platformer-board",
-                        "worldHeight": "@entity.worldHeight",
-                        "worldWidth": "@entity.worldWidth"
-                      }
                     ]
                   ]
                 ]

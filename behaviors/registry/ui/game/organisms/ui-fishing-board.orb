@@ -1,5 +1,5 @@
 {
-  "description": "FishingBoard — UI factory (1:1 with the @almadar/ui fishing-board pattern).",
+  "description": "FishingBoard — game-shell composition with LOLO-driven sprite animation and catch effects.",
   "name": "ui-fishing-board",
   "orbitals": [
     {
@@ -9,6 +9,217 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "faction": {
+                  "name": "faction",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "heroId": {
+                  "name": "heroId",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "previousPosition": {
+                  "name": "previousPosition",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "spriteSheet": {
+                  "name": "spriteSheet",
+                  "required": false,
+                  "type": "string"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "traits": {
+                  "items": {
+                    "properties": {
+                      "cooldown": {
+                        "name": "cooldown",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "currentState": {
+                        "name": "currentState",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "states": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "states",
+                        "required": true,
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "traits",
+                  "required": false,
+                  "type": "array"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "catchCount",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "FishingBoardItem",
@@ -37,19 +248,65 @@
               "tier": "presentation",
               "type": "json"
             },
-            "assetBaseUrl": {
-              "default": "https://almadar-kflow-assets.web.app/shared/",
-              "description": "Base URL prepended to manifest sprite paths",
-              "label": "Asset Base Url",
-              "tier": "presentation",
-              "type": "asset"
-            },
             "assetManifest": {
-              "default": "",
-              "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
+              "default": {
+                "effects": {},
+                "features": {
+                  "fish": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png",
+                  "seaweed": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png"
+                },
+                "terrains": {
+                  "seabed": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                  "water": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                },
+                "units": {
+                  "boat": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png",
+                  "hook": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png"
+                }
+              },
+              "description": "Asset sprite manifest",
               "label": "Asset Manifest",
+              "properties": {
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
+                },
+                "features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "terrains": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "terrains",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
               "tier": "presentation",
-              "type": "string"
+              "type": "FishingBoardAssetManifest"
             },
             "className": {
               "default": "",
@@ -57,13 +314,6 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
-            },
-            "enableCamera": {
-              "default": true,
-              "description": "Enable camera pan/zoom controls",
-              "label": "Enable Camera",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "error": {
               "description": "Error state (UiError)",
@@ -166,7 +416,7 @@
                   "y": 4.0
                 }
               ],
-              "description": "Features on the board (fish spots)",
+              "description": "Features on the board (fish spots, seaweed)",
               "items": {
                 "properties": {
                   "assetUrl": {
@@ -266,13 +516,6 @@
               "label": "Selected Ids",
               "tier": "presentation",
               "type": "[string]"
-            },
-            "showMinimap": {
-              "default": false,
-              "description": "Show minimap overlay",
-              "label": "Show Minimap",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "sortBy": {
               "default": "Sort By",
@@ -550,6 +793,8 @@
             "units": {
               "default": [
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "u1",
                   "maxHealth": 10.0,
@@ -563,6 +808,8 @@
                   "unitType": "boat"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "u2",
                   "maxHealth": 10.0,
@@ -579,6 +826,11 @@
               "description": "Units on the board (boat, hook)",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "elevation": {
                     "name": "elevation",
                     "required": false,
@@ -593,6 +845,11 @@
                       "enemy",
                       "neutral"
                     ]
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
                   },
                   "health": {
                     "name": "health",
@@ -741,7 +998,7 @@
           },
           "emits": [
             {
-              "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+              "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
               "event": "TILE_CLICK",
               "payloadSchema": [
                 {
@@ -759,7 +1016,7 @@
               "tier": "essential"
             },
             {
-              "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+              "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
               "event": "UNIT_CLICK",
               "payloadSchema": [
                 {
@@ -770,10 +1027,46 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "Emits when a cast action is triggered",
+              "event": "CAST",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "hitFish",
+                  "type": "boolean"
+                },
+                {
+                  "name": "points",
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "catchCount",
+              "effects",
+              "score",
+              "units"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -787,7 +1080,7 @@
                 "name": "Initialize"
               },
               {
-                "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+                "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
                 "key": "TILE_CLICK",
                 "name": "Tile Click",
                 "payloadSchema": [
@@ -805,7 +1098,7 @@
                 "tier": "essential"
               },
               {
-                "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+                "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
                 "key": "UNIT_CLICK",
                 "name": "Unit Click",
                 "payloadSchema": [
@@ -816,52 +1109,430 @@
                   }
                 ],
                 "tier": "essential"
+              },
+              {
+                "description": "Emits when a cast action is triggered",
+                "key": "CAST",
+                "name": "Cast",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "hitFish",
+                    "type": "boolean"
+                  },
+                  {
+                    "name": "points",
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
               }
             ],
             "states": [
               {
                 "isInitial": true,
-                "name": "idle"
+                "name": "playing"
               }
             ],
             "transitions": [
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.catchCount",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "activeFilters": "@config.activeFilters",
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "enableCamera": "@config.enableCamera",
-                      "error": "@config.error",
-                      "features": "@config.features",
-                      "isLoading": "@config.isLoading",
-                      "page": "@config.pageProp",
-                      "pageSize": "@config.pageSize",
-                      "scale": "@config.scale",
-                      "searchValue": "@config.searchValue",
-                      "selectedIds": "@config.selectedIds",
-                      "showMinimap": "@config.showMinimap",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "totalCount": "@config.totalCount",
-                      "type": "fishing-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@config.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Catch",
+                            "value": "@entity.catchCount"
+                          },
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Catch",
+                            "value": "@entity.catchCount"
+                          },
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Catch",
+                            "value": "@entity.catchCount"
+                          },
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.unitId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "cast"
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@payload.hitFish",
+                      true
+                    ],
+                    [
+                      "set",
+                      "@entity.catchCount",
+                      [
+                        "+",
+                        "@entity.catchCount",
+                        1.0
+                      ]
+                    ],
+                    null
+                  ],
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@payload.hitFish",
+                      true
+                    ],
+                    [
+                      "set",
+                      "@entity.score",
+                      [
+                        "+",
+                        "@entity.score",
+                        "@payload.points"
+                      ]
+                    ],
+                    null
+                  ],
+                  [
+                    "if",
+                    [
+                      "==",
+                      "@payload.hitFish",
+                      true
+                    ],
+                    [
+                      "set",
+                      "@entity.effects",
+                      [
+                        "array/append",
+                        "@entity.effects",
+                        {
+                          "key": "splash",
+                          "ttl": 4.0,
+                          "x": "@payload.x",
+                          "y": "@payload.y"
+                        }
+                      ]
+                    ],
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Catch",
+                            "value": "@entity.catchCount"
+                          },
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "CAST",
+                "from": "playing",
+                "to": "playing"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "@u",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": false,
+                        "tileLayout": "flat",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Catch",
+                          "value": "@entity.catchCount"
+                        },
+                        {
+                          "label": "Score",
+                          "value": "@entity.score"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            }
+          ]
         }
       ]
     }

@@ -1,5 +1,5 @@
 {
-  "description": "CityBuilderBoard — UI factory (1:1 with the @almadar/ui city-builder-board pattern).",
+  "description": "CityBuilderBoard — game-shell + isometric-canvas composition with HUD and animTick.",
   "name": "ui-city-builder-board",
   "orbitals": [
     {
@@ -15,46 +15,12 @@
               "properties": {
                 "id": {
                   "name": "id",
-                  "required": false,
+                  "required": true,
                   "type": "string"
                 },
-                "passable": {
-                  "name": "passable",
+                "sprite": {
+                  "name": "sprite",
                   "required": false,
-                  "type": "boolean"
-                },
-                "terrain": {
-                  "name": "terrain",
-                  "required": false,
-                  "type": "string"
-                },
-                "terrainSprite": {
-                  "name": "terrainSprite",
-                  "required": false,
-                  "type": "string"
-                },
-                "x": {
-                  "name": "x",
-                  "required": true,
-                  "type": "number"
-                },
-                "y": {
-                  "name": "y",
-                  "required": true,
-                  "type": "number"
-                }
-              },
-              "type": "object"
-            },
-            "name": "tiles",
-            "type": "array"
-          },
-          {
-            "items": {
-              "properties": {
-                "id": {
-                  "name": "id",
-                  "required": true,
                   "type": "string"
                 },
                 "type": {
@@ -75,7 +41,53 @@
               },
               "type": "object"
             },
-            "name": "buildings",
+            "name": "features",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "citizens",
             "type": "array"
           },
           {
@@ -112,6 +124,36 @@
             "default": 0.0,
             "name": "tick",
             "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "CityBuilderBoardItem",
@@ -136,6 +178,7 @@
             "assetManifest": {
               "default": {
                 "baseUrl": "https://almadar-kflow-assets.web.app/shared/",
+                "effects": {},
                 "features": {
                   "barracks": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/barracks.png",
                   "farm": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/farm.png",
@@ -156,13 +199,21 @@
                   "citizen": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/units/citizen.png"
                 }
               },
-              "description": "Base-url + terrain/unit/structure sprite maps; buildings render as the structure asset.",
+              "description": "Base-url + terrain/unit/structure sprite maps.",
               "label": "Asset Manifest",
               "properties": {
                 "baseUrl": {
                   "name": "baseUrl",
                   "required": false,
                   "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
                 },
                 "features": {
                   "items": {
@@ -255,116 +306,85 @@
               "tier": "presentation",
               "type": "[CityBuilderBoardBuildTypesItem]"
             },
-            "buildings": {
+            "citizens": {
               "default": [
                 {
-                  "id": "bld-0",
-                  "type": "house",
-                  "x": 1.0,
-                  "y": 5.0
+                  "animation": "idle",
+                  "frame": 0.0,
+                  "id": "c1",
+                  "position": {
+                    "x": 2.0,
+                    "y": 5.0
+                  },
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/units/citizen.png"
                 },
                 {
-                  "id": "bld-1",
-                  "type": "house",
-                  "x": 3.0,
-                  "y": 5.0
+                  "animation": "idle",
+                  "frame": 0.0,
+                  "id": "c2",
+                  "position": {
+                    "x": 4.0,
+                    "y": 7.0
+                  },
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/units/citizen.png"
                 },
                 {
-                  "id": "bld-2",
-                  "type": "house",
-                  "x": 5.0,
-                  "y": 5.0
-                },
-                {
-                  "id": "bld-3",
-                  "type": "house",
-                  "x": 1.0,
-                  "y": 7.0
-                },
-                {
-                  "id": "bld-4",
-                  "type": "house",
-                  "x": 3.0,
-                  "y": 7.0
-                },
-                {
-                  "id": "bld-5",
-                  "type": "house",
-                  "x": 0.0,
-                  "y": 9.0
-                },
-                {
-                  "id": "bld-6",
-                  "type": "farm",
-                  "x": 4.0,
-                  "y": 1.0
-                },
-                {
-                  "id": "bld-7",
-                  "type": "library",
-                  "x": 8.0,
-                  "y": 1.0
-                },
-                {
-                  "id": "bld-8",
-                  "type": "treasury",
-                  "x": 10.0,
-                  "y": 1.0
-                },
-                {
-                  "id": "bld-9",
-                  "type": "barracks",
-                  "x": 8.0,
-                  "y": 3.0
-                },
-                {
-                  "id": "bld-10",
-                  "type": "tower",
-                  "x": 10.0,
-                  "y": 3.0
-                },
-                {
-                  "id": "bld-11",
-                  "type": "mine",
-                  "x": 8.0,
-                  "y": 6.0
-                },
-                {
-                  "id": "bld-12",
-                  "type": "mine",
-                  "x": 10.0,
-                  "y": 8.0
+                  "animation": "idle",
+                  "frame": 0.0,
+                  "id": "c3",
+                  "position": {
+                    "x": 6.0,
+                    "y": 6.0
+                  },
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/units/citizen.png"
                 }
               ],
-              "description": "Initial building placements on the board.",
+              "description": "Roaming citizen units displayed on the isometric canvas.",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
+                  },
                   "id": {
                     "name": "id",
                     "required": true,
                     "type": "string"
                   },
-                  "type": {
-                    "name": "type",
-                    "required": true,
+                  "position": {
+                    "name": "position",
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
                     "type": "string"
-                  },
-                  "x": {
-                    "name": "x",
-                    "required": true,
-                    "type": "number"
-                  },
-                  "y": {
-                    "name": "y",
-                    "required": true,
-                    "type": "number"
                   }
                 },
                 "type": "object"
               },
-              "label": "Buildings",
+              "label": "Citizens",
               "tier": "presentation",
-              "type": "[CityBuilderBoardBuildingsItem]"
+              "type": "[CityBuilderBoardCitizensItem]"
             },
             "className": {
               "default": "",
@@ -400,6 +420,153 @@
               },
               "tier": "presentation",
               "type": "CityBuilderBoardError"
+            },
+            "featureSprites": {
+              "default": {
+                "barracks": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/barracks.png",
+                "farm": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/farm.png",
+                "house": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png",
+                "library": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/library.png",
+                "mine": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/mine.png",
+                "tower": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/tower.png",
+                "treasury": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/treasury.png"
+              },
+              "description": "Per-type sprite URL map for building features.",
+              "items": {
+                "type": "string"
+              },
+              "label": "Feature Sprites",
+              "tier": "presentation",
+              "type": "Map<string,asset>"
+            },
+            "features": {
+              "default": [
+                {
+                  "id": "bld-0",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png",
+                  "type": "house",
+                  "x": 1.0,
+                  "y": 5.0
+                },
+                {
+                  "id": "bld-1",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png",
+                  "type": "house",
+                  "x": 3.0,
+                  "y": 5.0
+                },
+                {
+                  "id": "bld-2",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png",
+                  "type": "house",
+                  "x": 5.0,
+                  "y": 5.0
+                },
+                {
+                  "id": "bld-3",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png",
+                  "type": "house",
+                  "x": 1.0,
+                  "y": 7.0
+                },
+                {
+                  "id": "bld-4",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png",
+                  "type": "house",
+                  "x": 3.0,
+                  "y": 7.0
+                },
+                {
+                  "id": "bld-5",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png",
+                  "type": "house",
+                  "x": 0.0,
+                  "y": 9.0
+                },
+                {
+                  "id": "bld-6",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/farm.png",
+                  "type": "farm",
+                  "x": 4.0,
+                  "y": 1.0
+                },
+                {
+                  "id": "bld-7",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/library.png",
+                  "type": "library",
+                  "x": 8.0,
+                  "y": 1.0
+                },
+                {
+                  "id": "bld-8",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/treasury.png",
+                  "type": "treasury",
+                  "x": 10.0,
+                  "y": 1.0
+                },
+                {
+                  "id": "bld-9",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/barracks.png",
+                  "type": "barracks",
+                  "x": 8.0,
+                  "y": 3.0
+                },
+                {
+                  "id": "bld-10",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/tower.png",
+                  "type": "tower",
+                  "x": 10.0,
+                  "y": 3.0
+                },
+                {
+                  "id": "bld-11",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/mine.png",
+                  "type": "mine",
+                  "x": 8.0,
+                  "y": 6.0
+                },
+                {
+                  "id": "bld-12",
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/mine.png",
+                  "type": "mine",
+                  "x": 10.0,
+                  "y": 8.0
+                }
+              ],
+              "description": "Initial building placements rendered as isometric-canvas features.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Features",
+              "tier": "presentation",
+              "type": "[CityBuilderBoardFeaturesItem]"
             },
             "gold": {
               "default": 100.0,
@@ -1585,7 +1752,9 @@
           ],
           "entityContract": {
             "provides": [
-              "buildings",
+              "citizens",
+              "effects",
+              "features",
               "gold",
               "pendingBuildType",
               "population",
@@ -1648,6 +1817,10 @@
                   }
                 ],
                 "tier": "essential"
+              },
+              {
+                "key": "PLAY_AGAIN",
+                "name": "Play Again"
               }
             ],
             "states": [
@@ -1679,8 +1852,13 @@
                   ],
                   [
                     "set",
-                    "@entity.buildings",
-                    "@config.buildings"
+                    "@entity.features",
+                    "@config.features"
+                  ],
+                  [
+                    "set",
+                    "@entity.citizens",
+                    "@config.citizens"
                   ],
                   [
                     "set",
@@ -1698,25 +1876,41 @@
                     0.0
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "buildTypes": "@config.buildTypes",
-                      "buildings": "@entity.buildings",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "gold": "@entity.gold",
-                      "pendingBuildType": "@entity.pendingBuildType",
-                      "placeBuildingEvent": "PLACE_BUILDING",
-                      "population": "@entity.population",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "selectBuildTypeEvent": "SELECT_BUILD_TYPE",
-                      "tiles": "@config.tiles",
-                      "type": "city-builder-board",
-                      "unitScale": "@config.unitScale",
-                      "wood": "@entity.wood"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.citizens"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Population",
+                            "value": "@entity.population"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -1735,22 +1929,33 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "buildTypes": "@config.buildTypes",
-                      "buildings": "@entity.buildings",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "gold": "@entity.gold",
-                      "pendingBuildType": "@entity.pendingBuildType",
-                      "placeBuildingEvent": "PLACE_BUILDING",
-                      "population": "@entity.population",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "selectBuildTypeEvent": "SELECT_BUILD_TYPE",
-                      "tiles": "@config.tiles",
-                      "type": "city-builder-board",
-                      "unitScale": "@config.unitScale",
-                      "wood": "@entity.wood"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.citizens"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Population",
+                            "value": "@entity.population"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -1799,10 +2004,10 @@
                   ],
                   [
                     "set",
-                    "@entity.buildings",
+                    "@entity.features",
                     [
                       "array/concat",
-                      "@entity.buildings",
+                      "@entity.features",
                       [
                         {
                           "id": [
@@ -1810,8 +2015,13 @@
                             "bld-",
                             [
                               "array/len",
-                              "@entity.buildings"
+                              "@entity.features"
                             ]
+                          ],
+                          "sprite": [
+                            "object/get",
+                            "@config.featureSprites",
+                            "@entity.pendingBuildType"
                           ],
                           "type": "@entity.pendingBuildType",
                           "x": "@payload.x",
@@ -1847,22 +2057,33 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "buildTypes": "@config.buildTypes",
-                      "buildings": "@entity.buildings",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "gold": "@entity.gold",
-                      "pendingBuildType": "@entity.pendingBuildType",
-                      "placeBuildingEvent": "PLACE_BUILDING",
-                      "population": "@entity.population",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "selectBuildTypeEvent": "SELECT_BUILD_TYPE",
-                      "tiles": "@config.tiles",
-                      "type": "city-builder-board",
-                      "unitScale": "@config.unitScale",
-                      "wood": "@entity.wood"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.citizens"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Population",
+                            "value": "@entity.population"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -1924,7 +2145,7 @@
                             "array/len",
                             [
                               "array/filter",
-                              "@entity.buildings",
+                              "@entity.features",
                               [
                                 "fn",
                                 "b",
@@ -2006,22 +2227,33 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "buildTypes": "@config.buildTypes",
-                      "buildings": "@entity.buildings",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "gold": "@entity.gold",
-                      "pendingBuildType": "@entity.pendingBuildType",
-                      "placeBuildingEvent": "PLACE_BUILDING",
-                      "population": "@entity.population",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "selectBuildTypeEvent": "SELECT_BUILD_TYPE",
-                      "tiles": "@config.tiles",
-                      "type": "city-builder-board",
-                      "unitScale": "@config.unitScale",
-                      "wood": "@entity.wood"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.citizens"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Population",
+                            "value": "@entity.population"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -2041,10 +2273,208 @@
                   ]
                 ],
                 "to": "gameover"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.gold",
+                    "@config.gold"
+                  ],
+                  [
+                    "set",
+                    "@entity.wood",
+                    "@config.wood"
+                  ],
+                  [
+                    "set",
+                    "@entity.population",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.features",
+                    "@config.features"
+                  ],
+                  [
+                    "set",
+                    "@entity.citizens",
+                    "@config.citizens"
+                  ],
+                  [
+                    "set",
+                    "@entity.pendingBuildType",
+                    "@config.pendingBuildType"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.tick",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.citizens"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Population",
+                            "value": "@entity.population"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "gameover",
+                "to": "building"
               }
             ]
           },
           "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.citizens",
+                  [
+                    "array/map",
+                    "@entity.citizens",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "@u",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@entity.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.citizens"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Population",
+                          "value": "@entity.population"
+                        },
+                        {
+                          "label": "Gold",
+                          "value": "@entity.gold"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            },
             {
               "effects": [
                 [
@@ -2066,7 +2496,7 @@
                       "*",
                       [
                         "array/len",
-                        "@entity.buildings"
+                        "@entity.features"
                       ],
                       "@config.goldPerBuilding"
                     ]
@@ -2082,9 +2512,135 @@
                       "*",
                       [
                         "array/len",
-                        "@entity.buildings"
+                        "@entity.features"
                       ],
                       "@config.woodPerBuilding"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.citizens",
+                  [
+                    "array/map",
+                    "@entity.citizens",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "let",
+                        [
+                          [
+                            "nx",
+                            [
+                              "math/clamp",
+                              [
+                                "+",
+                                [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "position"
+                                  ],
+                                  "x"
+                                ],
+                                [
+                                  "math/sign",
+                                  [
+                                    "-",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "*",
+                                        [
+                                          "math/random"
+                                        ],
+                                        "@config.gridWidth"
+                                      ]
+                                    ],
+                                    [
+                                      "object/get",
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "x"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              0.0,
+                              [
+                                "-",
+                                "@config.gridWidth",
+                                1.0
+                              ]
+                            ]
+                          ],
+                          [
+                            "ny",
+                            [
+                              "math/clamp",
+                              [
+                                "+",
+                                [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "position"
+                                  ],
+                                  "y"
+                                ],
+                                [
+                                  "math/sign",
+                                  [
+                                    "-",
+                                    [
+                                      "math/floor",
+                                      [
+                                        "*",
+                                        [
+                                          "math/random"
+                                        ],
+                                        "@config.gridHeight"
+                                      ]
+                                    ],
+                                    [
+                                      "object/get",
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "position"
+                                      ],
+                                      "y"
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              0.0,
+                              [
+                                "-",
+                                "@config.gridHeight",
+                                1.0
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "object/merge",
+                          "@u",
+                          {
+                            "animation": "walk",
+                            "position": {
+                              "x": "@nx",
+                              "y": "@ny"
+                            }
+                          }
+                        ]
+                      ]
                     ]
                   ]
                 ],
@@ -2092,22 +2648,33 @@
                   "render-ui",
                   "main",
                   {
-                    "assetManifest": "@config.assetManifest",
-                    "buildTypes": "@config.buildTypes",
-                    "buildings": "@entity.buildings",
-                    "entity": "@entity",
-                    "gameEndEvent": "GAME_END",
-                    "gold": "@entity.gold",
-                    "pendingBuildType": "@entity.pendingBuildType",
-                    "placeBuildingEvent": "PLACE_BUILDING",
-                    "population": "@entity.population",
-                    "result": "@entity.result",
-                    "scale": "@config.scale",
-                    "selectBuildTypeEvent": "SELECT_BUILD_TYPE",
-                    "tiles": "@config.tiles",
-                    "type": "city-builder-board",
-                    "unitScale": "@config.unitScale",
-                    "wood": "@entity.wood"
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@entity.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.citizens"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Population",
+                          "value": "@entity.population"
+                        },
+                        {
+                          "label": "Gold",
+                          "value": "@entity.gold"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
                   }
                 ]
               ],
