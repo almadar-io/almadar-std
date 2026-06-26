@@ -1,5 +1,5 @@
 {
-  "description": "CastleBoard — build-and-defend: model owns gold, buildings, garrison, wave counter, health, and win/lose; ticks drive resource income; FEATURE_CLICK purchases buildings guarded by cost.",
+  "description": "CastleBoard — build-and-defend: game-shell + isometric-canvas with LOLO-driven sprite animation and combat effects.",
   "name": "ui-castle-board",
   "orbitals": [
     {
@@ -82,6 +82,11 @@
           {
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "elevation": {
                   "name": "elevation",
                   "required": false,
@@ -96,6 +101,11 @@
                     "enemy",
                     "neutral"
                   ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
                 },
                 "health": {
                   "name": "health",
@@ -367,6 +377,36 @@
               "victory",
               "defeat"
             ]
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "CastleBoardItem",
@@ -391,6 +431,10 @@
             "assetManifest": {
               "default": {
                 "baseUrl": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default",
+                "effects": {
+                  "explosion": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png",
+                  "slash": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/slash_03.png"
+                },
                 "features": {
                   "gold_mine": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/features/gold_mine.png",
                   "portal": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/features/portal.png"
@@ -412,6 +456,14 @@
                   "name": "baseUrl",
                   "required": false,
                   "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
                 },
                 "features": {
                   "items": {
@@ -1180,81 +1232,126 @@
             "units": {
               "default": [
                 {
-                  "elevation": 0.0,
+                  "animation": "idle",
+                  "faction": "player",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "g1",
                   "maxHealth": 10.0,
                   "name": "Guardian",
+                  "position": {
+                    "x": 1.0,
+                    "y": 1.0
+                  },
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png",
                   "team": "player",
-                  "unitType": "guardian",
-                  "x": 1.0,
-                  "y": 1.0
+                  "unitType": "guardian"
                 },
                 {
-                  "elevation": 0.0,
+                  "animation": "idle",
+                  "faction": "player",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "g2",
                   "maxHealth": 10.0,
                   "name": "Guardian",
+                  "position": {
+                    "x": 7.0,
+                    "y": 1.0
+                  },
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png",
                   "team": "player",
-                  "unitType": "guardian",
-                  "x": 7.0,
-                  "y": 1.0
+                  "unitType": "guardian"
                 },
                 {
-                  "elevation": 0.0,
+                  "animation": "idle",
+                  "faction": "player",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "g3",
                   "maxHealth": 10.0,
                   "name": "Guardian",
+                  "position": {
+                    "x": 1.0,
+                    "y": 7.0
+                  },
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png",
                   "team": "player",
-                  "unitType": "guardian",
-                  "x": 1.0,
-                  "y": 7.0
+                  "unitType": "guardian"
                 },
                 {
-                  "elevation": 0.0,
+                  "animation": "idle",
+                  "faction": "player",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "g4",
                   "maxHealth": 10.0,
                   "name": "Guardian",
+                  "position": {
+                    "x": 7.0,
+                    "y": 7.0
+                  },
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png",
                   "team": "player",
-                  "unitType": "guardian",
-                  "x": 7.0,
-                  "y": 7.0
+                  "unitType": "guardian"
                 },
                 {
-                  "elevation": 0.0,
+                  "animation": "idle",
+                  "faction": "player",
+                  "frame": 0.0,
                   "health": 5.0,
                   "id": "w1",
                   "maxHealth": 5.0,
                   "name": "Worker",
+                  "position": {
+                    "x": 3.0,
+                    "y": 3.0
+                  },
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/worker.png",
                   "team": "player",
-                  "unitType": "worker",
-                  "x": 3.0,
-                  "y": 3.0
+                  "unitType": "worker"
                 },
                 {
-                  "elevation": 0.0,
+                  "animation": "idle",
+                  "faction": "player",
+                  "frame": 0.0,
                   "health": 5.0,
                   "id": "w2",
                   "maxHealth": 5.0,
                   "name": "Worker",
+                  "position": {
+                    "x": 5.0,
+                    "y": 5.0
+                  },
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/worker.png",
                   "team": "player",
-                  "unitType": "worker",
-                  "x": 5.0,
-                  "y": 5.0
+                  "unitType": "worker"
+                },
+                {
+                  "animation": "idle",
+                  "faction": "enemy",
+                  "frame": 0.0,
+                  "health": 8.0,
+                  "id": "e1",
+                  "maxHealth": 8.0,
+                  "name": "Raider",
+                  "position": {
+                    "x": 4.0,
+                    "y": 0.0
+                  },
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png",
+                  "team": "enemy",
+                  "unitType": "raider"
                 }
               ],
               "description": "Initial garrison and enemy units seeded into entity on INIT.",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "elevation": {
                     "name": "elevation",
                     "required": false,
@@ -1269,6 +1366,11 @@
                       "enemy",
                       "neutral"
                     ]
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
                   },
                   "health": {
                     "name": "health",
@@ -1411,6 +1513,36 @@
             }
           },
           "emits": [
+            {
+              "description": "-- Callbacks --",
+              "event": "ATTACK",
+              "payloadSchema": [
+                {
+                  "name": "attacker",
+                  "type": "object"
+                },
+                {
+                  "name": "target",
+                  "type": "object"
+                },
+                {
+                  "name": "damage",
+                  "type": "number"
+                },
+                {
+                  "name": "attackerId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "targetId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
             {
               "description": "-- Callback overrides --",
               "event": "FEATURE_CLICK",
@@ -1676,6 +1808,7 @@
           "entityContract": {
             "provides": [
               "buildings",
+              "effects",
               "features",
               "gold",
               "health",
@@ -1927,6 +2060,36 @@
                 "tier": "essential"
               },
               {
+                "description": "-- Callbacks --",
+                "key": "ATTACK",
+                "name": "Attack",
+                "payloadSchema": [
+                  {
+                    "name": "attacker",
+                    "type": "object"
+                  },
+                  {
+                    "name": "target",
+                    "type": "object"
+                  },
+                  {
+                    "name": "damage",
+                    "type": "number"
+                  },
+                  {
+                    "name": "attackerId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "targetId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
                 "description": "Emitted when the player defeats the current wave",
                 "key": "WAVE_DEFEATED",
                 "name": "Wave Defeated",
@@ -2039,24 +2202,45 @@
                     "none"
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "entity": "@entity",
-                      "featureClickEvent": "FEATURE_CLICK",
-                      "features": "@entity.features",
-                      "onFeatureClick": "FEATURE_CLICK",
-                      "onTileClick": "TILE_CLICK",
-                      "onUnitClick": "UNIT_CLICK",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "castle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Wall HP",
+                            "value": "@entity.health"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -2122,24 +2306,45 @@
                     "none"
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "entity": "@entity",
-                      "featureClickEvent": "FEATURE_CLICK",
-                      "features": "@entity.features",
-                      "onFeatureClick": "FEATURE_CLICK",
-                      "onTileClick": "TILE_CLICK",
-                      "onUnitClick": "UNIT_CLICK",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "castle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Wall HP",
+                            "value": "@entity.health"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -2178,21 +2383,37 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "entity": "@entity",
-                      "featureClickEvent": "FEATURE_CLICK",
-                      "features": "@entity.features",
-                      "onFeatureClick": "FEATURE_CLICK",
-                      "onTileClick": "TILE_CLICK",
-                      "onUnitClick": "UNIT_CLICK",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "castle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Wall HP",
+                            "value": "@entity.health"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -2230,24 +2451,122 @@
                     ]
                   ],
                   [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.unitId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "hit"
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "slash",
+                        "ttl": 4.0,
+                        "x": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.unitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.unitId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "y"
+                        ]
+                      }
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "entity": "@entity",
-                      "featureClickEvent": "FEATURE_CLICK",
-                      "features": "@entity.features",
-                      "onFeatureClick": "FEATURE_CLICK",
-                      "onTileClick": "TILE_CLICK",
-                      "onUnitClick": "UNIT_CLICK",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "castle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Wall HP",
+                            "value": "@entity.health"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -2261,26 +2580,392 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "entity": "@entity",
-                      "featureClickEvent": "FEATURE_CLICK",
-                      "features": "@entity.features",
-                      "onFeatureClick": "FEATURE_CLICK",
-                      "onTileClick": "TILE_CLICK",
-                      "onUnitClick": "UNIT_CLICK",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "castle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Wall HP",
+                            "value": "@entity.health"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "TILE_CLICK",
                 "from": "idle",
+                "to": "idle"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.targetId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": [
+                                "if",
+                                [
+                                  "<=",
+                                  [
+                                    "math/max",
+                                    0.0,
+                                    [
+                                      "-",
+                                      [
+                                        "object/get",
+                                        "@u",
+                                        "health"
+                                      ],
+                                      "@payload.damage"
+                                    ]
+                                  ],
+                                  0.0
+                                ],
+                                "death",
+                                "hit"
+                              ],
+                              "health": [
+                                "math/max",
+                                0.0,
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@u",
+                                    "health"
+                                  ],
+                                  "@payload.damage"
+                                ]
+                              ]
+                            }
+                          ],
+                          [
+                            "if",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.attackerId"
+                            ],
+                            [
+                              "object/merge",
+                              "@u",
+                              {
+                                "animation": "attack"
+                              }
+                            ],
+                            "@u"
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "slash",
+                        "ttl": 4.0,
+                        "x": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.targetId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.targetId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "y"
+                        ]
+                      }
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "<=",
+                      [
+                        "object/get",
+                        [
+                          "array/find",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.targetId"
+                            ]
+                          ]
+                        ],
+                        "health"
+                      ],
+                      0.0
+                    ],
+                    [
+                      "set",
+                      "@entity.effects",
+                      [
+                        "array/append",
+                        "@entity.effects",
+                        {
+                          "key": "explosion",
+                          "ttl": 5.0,
+                          "x": [
+                            "object/get",
+                            [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@payload.targetId"
+                                  ]
+                                ]
+                              ],
+                              "position"
+                            ],
+                            "x"
+                          ],
+                          "y": [
+                            "object/get",
+                            [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@payload.targetId"
+                                  ]
+                                ]
+                              ],
+                              "position"
+                            ],
+                            "y"
+                          ]
+                        }
+                      ]
+                    ],
+                    null
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Wall HP",
+                            "value": "@entity.health"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "ATTACK",
+                "from": "idle",
+                "guard": [
+                  "let",
+                  [
+                    [
+                      "ap",
+                      [
+                        "object/get",
+                        [
+                          "array/find",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.attackerId"
+                            ]
+                          ]
+                        ],
+                        "position"
+                      ]
+                    ],
+                    [
+                      "tp",
+                      [
+                        "object/get",
+                        [
+                          "array/find",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "==",
+                              "@u.id",
+                              "@payload.targetId"
+                            ]
+                          ]
+                        ],
+                        "position"
+                      ]
+                    ]
+                  ],
+                  [
+                    "and",
+                    [
+                      "<=",
+                      [
+                        "math/abs",
+                        [
+                          "-",
+                          [
+                            "object/get",
+                            "@ap",
+                            "x"
+                          ],
+                          [
+                            "object/get",
+                            "@tp",
+                            "x"
+                          ]
+                        ]
+                      ],
+                      1.0
+                    ],
+                    [
+                      "and",
+                      [
+                        "<=",
+                        [
+                          "math/abs",
+                          [
+                            "-",
+                            [
+                              "object/get",
+                              "@ap",
+                              "y"
+                            ],
+                            [
+                              "object/get",
+                              "@tp",
+                              "y"
+                            ]
+                          ]
+                        ],
+                        1.0
+                      ],
+                      [
+                        "!=",
+                        "@ap",
+                        "@tp"
+                      ]
+                    ]
+                  ]
+                ],
                 "to": "idle"
               },
               {
@@ -2294,21 +2979,37 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "entity": "@entity",
-                      "featureClickEvent": "FEATURE_CLICK",
-                      "features": "@entity.features",
-                      "onFeatureClick": "FEATURE_CLICK",
-                      "onTileClick": "TILE_CLICK",
-                      "onUnitClick": "UNIT_CLICK",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "castle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Wall HP",
+                            "value": "@entity.health"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -2332,21 +3033,37 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "entity": "@entity",
-                      "featureClickEvent": "FEATURE_CLICK",
-                      "features": "@entity.features",
-                      "onFeatureClick": "FEATURE_CLICK",
-                      "onTileClick": "TILE_CLICK",
-                      "onUnitClick": "UNIT_CLICK",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "castle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Wall HP",
+                            "value": "@entity.health"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -2417,24 +3134,45 @@
                     "none"
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "entity": "@entity",
-                      "featureClickEvent": "FEATURE_CLICK",
-                      "features": "@entity.features",
-                      "onFeatureClick": "FEATURE_CLICK",
-                      "onTileClick": "TILE_CLICK",
-                      "onUnitClick": "UNIT_CLICK",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "castle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Wall HP",
+                            "value": "@entity.health"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -2500,24 +3238,45 @@
                     "none"
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "entity": "@entity",
-                      "featureClickEvent": "FEATURE_CLICK",
-                      "features": "@entity.features",
-                      "onFeatureClick": "FEATURE_CLICK",
-                      "onTileClick": "TILE_CLICK",
-                      "onUnitClick": "UNIT_CLICK",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "castle-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Wall HP",
+                            "value": "@entity.health"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -2528,6 +3287,123 @@
             ]
           },
           "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "@u",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@entity.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@entity.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Wall HP",
+                          "value": "@entity.health"
+                        },
+                        {
+                          "label": "Gold",
+                          "value": "@entity.gold"
+                        },
+                        {
+                          "label": "Wave",
+                          "value": "@entity.wave"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            },
             {
               "effects": [
                 [
@@ -2563,21 +3439,37 @@
                   "render-ui",
                   "main",
                   {
-                    "assetManifest": "@config.assetManifest",
-                    "className": "@config.className",
-                    "entity": "@entity",
-                    "featureClickEvent": "FEATURE_CLICK",
-                    "features": "@entity.features",
-                    "onFeatureClick": "FEATURE_CLICK",
-                    "onTileClick": "TILE_CLICK",
-                    "onUnitClick": "UNIT_CLICK",
-                    "playAgainEvent": "PLAY_AGAIN",
-                    "scale": "@config.scale",
-                    "tileClickEvent": "TILE_CLICK",
-                    "tiles": "@entity.tiles",
-                    "type": "castle-board",
-                    "unitClickEvent": "UNIT_CLICK",
-                    "units": "@entity.units"
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@entity.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@entity.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Wall HP",
+                          "value": "@entity.health"
+                        },
+                        {
+                          "label": "Gold",
+                          "value": "@entity.gold"
+                        },
+                        {
+                          "label": "Wave",
+                          "value": "@entity.wave"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
                   }
                 ]
               ],
@@ -2630,24 +3522,175 @@
                   ]
                 ],
                 [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "if",
+                        [
+                          "==",
+                          "@u.team",
+                          "enemy"
+                        ],
+                        [
+                          "object/merge",
+                          "@u",
+                          {
+                            "animation": "attack"
+                          }
+                        ],
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.team",
+                            "player"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": [
+                                "if",
+                                [
+                                  "<=",
+                                  "@entity.health",
+                                  0.0
+                                ],
+                                "hit",
+                                "idle"
+                              ]
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/append",
+                    "@entity.effects",
+                    {
+                      "key": "slash",
+                      "ttl": 4.0,
+                      "x": [
+                        "object/get",
+                        [
+                          "object/get",
+                          [
+                            "array/first",
+                            [
+                              "array/filter",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.team",
+                                  "enemy"
+                                ]
+                              ]
+                            ]
+                          ],
+                          "position"
+                        ],
+                        "x"
+                      ],
+                      "y": [
+                        "object/get",
+                        [
+                          "object/get",
+                          [
+                            "array/first",
+                            [
+                              "array/filter",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.team",
+                                  "enemy"
+                                ]
+                              ]
+                            ]
+                          ],
+                          "position"
+                        ],
+                        "y"
+                      ]
+                    }
+                  ]
+                ],
+                [
+                  "if",
+                  [
+                    "<=",
+                    "@entity.health",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "explosion",
+                        "ttl": 5.0,
+                        "x": 4.0,
+                        "y": 4.0
+                      }
+                    ]
+                  ],
+                  null
+                ],
+                [
                   "render-ui",
                   "main",
                   {
-                    "assetManifest": "@config.assetManifest",
-                    "className": "@config.className",
-                    "entity": "@entity",
-                    "featureClickEvent": "FEATURE_CLICK",
-                    "features": "@entity.features",
-                    "onFeatureClick": "FEATURE_CLICK",
-                    "onTileClick": "TILE_CLICK",
-                    "onUnitClick": "UNIT_CLICK",
-                    "playAgainEvent": "PLAY_AGAIN",
-                    "scale": "@config.scale",
-                    "tileClickEvent": "TILE_CLICK",
-                    "tiles": "@entity.tiles",
-                    "type": "castle-board",
-                    "unitClickEvent": "UNIT_CLICK",
-                    "units": "@entity.units"
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@entity.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@entity.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Wall HP",
+                          "value": "@entity.health"
+                        },
+                        {
+                          "label": "Gold",
+                          "value": "@entity.gold"
+                        },
+                        {
+                          "label": "Wave",
+                          "value": "@entity.wave"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
                   }
                 ],
                 [

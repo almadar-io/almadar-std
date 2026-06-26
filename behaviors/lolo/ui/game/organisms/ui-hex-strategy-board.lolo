@@ -1,5 +1,5 @@
 app ui-hex-strategy-board "1.0.0"
-"HexStrategyBoard — UI factory (1:1 with the @almadar/ui hex-strategy-board pattern)."
+"HexStrategyBoard — game-shell composition with LOLO-driven sprite animation and hex combat effects."
 orbital HexStrategyBoardOrbital {
   type HexStrategyBoardError = {
     message : string!
@@ -40,6 +40,14 @@ orbital HexStrategyBoardOrbital {
     traits : [HexStrategyBoardUnitsItemTraitsItem]
     previousPosition : HexStrategyBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type HexStrategyBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type HexStrategyBoardUnitsItemPosition = {
     x : number!
@@ -66,53 +74,229 @@ orbital HexStrategyBoardOrbital {
     color : string
     elevation : number
   }
+  type HexStrategyBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
+  type HexStrategyBoardUNITMOVETo = {
+    x : number!
+    y : number!
+  }
 
   entity HexStrategyBoardItem [runtime] {
     id : string!
+    units : [HexStrategyBoardUnitsItem]
+    selectedUnitId : string
+    turn : number = 0
+    result : "none" | "victory" | "defeat" = none
+    phase : string = "observation"
+    territory : number = 0
+    gridWidth : number = 6
+    gridHeight : number = 6
+    movementRange : number = 2
+    enemyTurn : boolean = false
+    effects : [HexStrategyBoardEffectItem] = []
   }
 
   trait HexStrategyBoardRender -> @rebindable HexStrategyBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state menu {
+      START -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.territory 0)
+        (set @entity.enemyTurn false)
+        (set @entity.effects [])
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: hex-strategy-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.territory 0)
+        (set @entity.enemyTurn false)
+        (set @entity.effects [])
+        (set @entity.gridWidth 6)
+        (set @entity.gridHeight 6)
+        (set @entity.movementRange 2)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.phase "action")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.phase "movement")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?y }, animation: "walk" }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+        })
+
+      ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)), animation: (if (<= (math/max 0 (- (object/get @u health) ?damage)) 0) "death" "hit") }) (if (== @u.id ?attackerId) (object/merge @u { animation: "attack" }) @u)))))
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 4 }))
+        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 5 })) null)
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+        })
+
+      END_TURN -> playing when (== @entity.result "none")
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.selectedUnitId "")
+        (set @entity.enemyTurn true)
+        (set @entity.phase "enemy_turn")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+        })
+
+      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "defeat" "victory"))
+        (set @entity.phase "game_over")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.turn 0)
+        (set @entity.result "none")
+        (set @entity.phase "observation")
+        (set @entity.territory 0)
+        (set @entity.enemyTurn false)
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+        })
+
+      enemyAiTick every 1s
+        when (and (== @entity.enemyTurn true) (== @entity.result "none"))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "player") (> @u.health 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== @e.team "enemy") (> @e.health 0)) (== (grid/manhattan-distance (object/get @e position) (object/get @u position)) 1))))) 0) (object/merge @u { health: (math/max 0 (- @u.health 1)), animation: (if (<= (math/max 0 (- @u.health 1)) 0) "death" "hit") }) @u) @u))))
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/first (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) position) x), y: (object/get (object/get (array/first (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) position) y), ttl: 4 }))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.team "enemy") (> @u.health 0)) (if (== (array/len (array/filter @entity.units (fn p (and (and (== @p.team "player") (> @p.health 0)) (== (grid/manhattan-distance (object/get @u position) (object/get @p position)) 1))))) 0) (let ((target (array/first (array/filter @entity.units (fn p (and (== @p.team "player") (> @p.health 0))))))) (object/merge @u { position: { x: (math/clamp (+ (object/get (object/get @u position) x) (math/sign (- (object/get (object/get @target position) x) (object/get (object/get @u position) x)))) 0 (- @entity.gridWidth 1)), y: (math/clamp (+ (object/get (object/get @u position) y) (math/sign (- (object/get (object/get @target position) y) (object/get (object/get @u position) y)))) 0 (- @entity.gridHeight 1)) } })) @u) @u))))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> @u.health 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> @u.health 0))))) 0) "victory" "none")))
+        (set @entity.enemyTurn false)
+        (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
         })
     }
 
     emits {
+      ATTACK -> external {
+        attacker : object
+        target : object
+        damage : number
+        attackerId : string!
+        targetId : string!
+      }
+        @description "-- Callbacks --"
+        @tier "essential"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Called when strategy game ends"
+        @tier "essential"
+      UNIT_MOVE -> external {
+        unit : object
+        to : HexStrategyBoardUNITMOVETo
+      }
+        @description "Called after a unit moves to a new hex"
+        @tier "essential"
       TILE_CLICK -> external {
         x : number!
         y : number!
       }
-        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @description "-- Declarative event props --"
         @tier "essential"
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+      END_TURN -> external {
+        id : string
+      }
+        @description "Emits UI:{endTurnEvent} with {} on end turn"
+        @tier "essential"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
         @tier "essential"
     }
 
@@ -154,7 +338,7 @@ orbital HexStrategyBoardOrbital {
         @label "Total Count"
         @description "Total number of items"
         @tier "presentation"
-      activeFilters : json = {}
+      activeFilters : json
         @label "Active Filters"
         @description "Active filters"
         @tier "presentation"
@@ -166,7 +350,7 @@ orbital HexStrategyBoardOrbital {
         @label "Tiles"
         @description "Hex grid tiles"
         @tier "presentation"
-      units : [HexStrategyBoardUnitsItem] = [{ id: "u1", position: { x: 3, y: 2 }, unitType: "worker", name: "Miner", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png" }, { id: "u2", position: { x: 2, y: 3 }, unitType: "ranger", name: "Thornbow", team: player, health: 8, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png" }, { id: "u3", position: { x: 2, y: 4 }, unitType: "guardian", name: "Ironwall", team: player, health: 12, maxHealth: 12, sprite: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png" }]
+      units : [HexStrategyBoardUnitsItem] = [{ id: "u1", position: { x: 3, y: 2 }, unitType: "worker", name: "Miner", team: player, faction: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png", animation: "idle", frame: 0 }, { id: "u2", position: { x: 2, y: 3 }, unitType: "ranger", name: "Thornbow", team: player, faction: player, health: 8, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png", animation: "idle", frame: 0 }, { id: "u3", position: { x: 2, y: 4 }, unitType: "guardian", name: "Ironwall", team: player, faction: player, health: 12, maxHealth: 12, sprite: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png", animation: "idle", frame: 0 }, { id: "e1", position: { x: 4, y: 1 }, unitType: "ranger", name: "Foe", team: enemy, faction: enemy, health: 8, maxHealth: 8, sprite: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png", animation: "idle", frame: 0 }, { id: "e2", position: { x: 3, y: 1 }, unitType: "guardian", name: "Foe", team: enemy, faction: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png", animation: "idle", frame: 0 }]
         @label "Units"
         @description "Units on the board"
         @tier "presentation"
@@ -174,9 +358,9 @@ orbital HexStrategyBoardOrbital {
         @label "Features"
         @description "Features (resources, structures, etc.) on the board"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : HexStrategyBoardAssetManifest = { terrains: { grass: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png", stone: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png", dirt: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png", sand: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png" }, units: { worker: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png", ranger: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png", guardian: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png" }, features: { resource: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png", outpost: "https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png" }, effects: { slash: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/slash_03.png", explosion: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png" } }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
+        @description "Asset sprite manifest"
         @tier "presentation"
       assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
         @label "Asset Base Url"

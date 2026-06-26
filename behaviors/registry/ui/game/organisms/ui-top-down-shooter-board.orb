@@ -1,5 +1,5 @@
 {
-  "description": "TopDownShooterBoard — UI factory (1:1 with the @almadar/ui top-down-shooter-board pattern).",
+  "description": "TopDownShooterBoard — game-shell composition with LOLO-driven sprite animation and shoot/hit effects.",
   "name": "ui-top-down-shooter-board",
   "orbitals": [
     {
@@ -13,6 +13,16 @@
           {
             "name": "player",
             "properties": {
+              "animation": {
+                "name": "animation",
+                "required": false,
+                "type": "string"
+              },
+              "frame": {
+                "name": "frame",
+                "required": false,
+                "type": "number"
+              },
               "x": {
                 "name": "x",
                 "required": true,
@@ -29,6 +39,16 @@
           {
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
                 "hp": {
                   "name": "hp",
                   "required": true,
@@ -123,6 +143,36 @@
             "default": 0.0,
             "name": "nextId",
             "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "TopDownShooterBoardItem",
@@ -148,6 +198,10 @@
               "default": {
                 "background": "backgrounds/bg-parallax/trait-wars/scenes/world/streets.png",
                 "baseUrl": "https://almadar-kflow-assets.web.app/shared/",
+                "effects": {
+                  "explosion": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png",
+                  "spark": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png"
+                },
                 "features": {
                   "pickup": "features/props-items/kenney-vendored/items/platformPack_item001.png",
                   "projectile": "features/props-items/kenney-vendored/items/platformPack_item001.png"
@@ -157,7 +211,7 @@
                   "player": "units/chars-toon/kenney-vendored/toon/platformChar_idle.png"
                 }
               },
-              "description": "Base-url + unit/feature sprite maps + background; player/enemy/projectile draw from these URLs.",
+              "description": "Base-url + unit/feature/effect sprite maps + background.",
               "label": "Asset Manifest",
               "properties": {
                 "background": {
@@ -169,6 +223,14 @@
                   "name": "baseUrl",
                   "required": false,
                   "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
                 },
                 "features": {
                   "items": {
@@ -295,6 +357,13 @@
               "tier": "presentation",
               "type": "number"
             },
+            "scale": {
+              "default": 1.0,
+              "description": "Canvas render scale",
+              "label": "Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
             "scorePerKill": {
               "default": 10.0,
               "description": "Score awarded for each enemy destroyed",
@@ -382,6 +451,7 @@
           ],
           "entityContract": {
             "provides": [
+              "effects",
               "enemies",
               "lives",
               "nextId",
@@ -482,6 +552,8 @@
                     "set",
                     "@entity.player",
                     {
+                      "animation": "idle",
+                      "frame": 0.0,
                       "x": [
                         "/",
                         "@config.width",
@@ -508,6 +580,8 @@
                         "fn",
                         "i",
                         {
+                          "animation": "idle",
+                          "frame": 0.0,
                           "hp": "@config.enemyHp",
                           "id": [
                             "str/concat",
@@ -568,26 +642,157 @@
                     0.0
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "enemies": "@entity.enemies",
-                      "entity": "@entity",
-                      "fireEvent": "FIRE",
-                      "gameEndEvent": "GAME_END",
-                      "height": "@config.height",
-                      "lives": "@entity.lives",
-                      "moveEvent": "MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "projectiles": "@entity.projectiles",
-                      "result": "@entity.result",
-                      "score": "@entity.score",
-                      "spriteSize": "@config.spriteSize",
-                      "type": "top-down-shooter-board",
-                      "wave": "@entity.wave",
-                      "width": "@config.width"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": [
+                            "array/map",
+                            "@entity.projectiles",
+                            [
+                              "fn",
+                              "p",
+                              {
+                                "id": "@p.id",
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "features"
+                                  ],
+                                  "projectile"
+                                ],
+                                "type": "projectile",
+                                "x": [
+                                  "object/get",
+                                  "@p",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@p",
+                                  "y"
+                                ]
+                              }
+                            ]
+                          ],
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": [],
+                          "type": "isometric-canvas",
+                          "units": [
+                            "array/concat",
+                            [
+                              {
+                                "animation": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "animation"
+                                ],
+                                "frame": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "frame"
+                                ],
+                                "id": "player",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "y"
+                                  ]
+                                },
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "units"
+                                  ],
+                                  "player"
+                                ],
+                                "team": "player"
+                              }
+                            ],
+                            [
+                              "array/map",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                {
+                                  "animation": [
+                                    "object/get",
+                                    "@e",
+                                    "animation"
+                                  ],
+                                  "frame": [
+                                    "object/get",
+                                    "@e",
+                                    "frame"
+                                  ],
+                                  "id": "@e.id",
+                                  "position": {
+                                    "x": [
+                                      "object/get",
+                                      "@e",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@e",
+                                      "y"
+                                    ]
+                                  },
+                                  "sprite": [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@config.assetManifest",
+                                      "units"
+                                    ],
+                                    "enemy"
+                                  ],
+                                  "team": "enemy"
+                                }
+                              ]
+                            ]
+                          ]
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -600,72 +805,203 @@
                   [
                     "set",
                     "@entity.player",
-                    {
-                      "x": [
-                        "math/max",
-                        0.0,
-                        [
-                          "math/min",
-                          "@config.width",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "walk",
+                        "x": [
+                          "math/max",
+                          0.0,
                           [
-                            "+",
+                            "math/min",
+                            "@config.width",
                             [
-                              "object/get",
-                              "@entity.player",
-                              "x"
-                            ],
+                              "+",
+                              [
+                                "object/get",
+                                "@entity.player",
+                                "x"
+                              ],
+                              [
+                                "*",
+                                "@payload.dx",
+                                "@config.moveStep"
+                              ]
+                            ]
+                          ]
+                        ],
+                        "y": [
+                          "math/max",
+                          0.0,
+                          [
+                            "math/min",
+                            "@config.height",
                             [
-                              "*",
-                              "@payload.dx",
-                              "@config.moveStep"
+                              "+",
+                              [
+                                "object/get",
+                                "@entity.player",
+                                "y"
+                              ],
+                              [
+                                "*",
+                                "@payload.dy",
+                                "@config.moveStep"
+                              ]
                             ]
                           ]
                         ]
-                      ],
-                      "y": [
-                        "math/max",
-                        0.0,
-                        [
-                          "math/min",
-                          "@config.height",
-                          [
-                            "+",
-                            [
-                              "object/get",
-                              "@entity.player",
-                              "y"
-                            ],
-                            [
-                              "*",
-                              "@payload.dy",
-                              "@config.moveStep"
-                            ]
-                          ]
-                        ]
-                      ]
-                    }
+                      }
+                    ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "enemies": "@entity.enemies",
-                      "entity": "@entity",
-                      "fireEvent": "FIRE",
-                      "gameEndEvent": "GAME_END",
-                      "height": "@config.height",
-                      "lives": "@entity.lives",
-                      "moveEvent": "MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "projectiles": "@entity.projectiles",
-                      "result": "@entity.result",
-                      "score": "@entity.score",
-                      "spriteSize": "@config.spriteSize",
-                      "type": "top-down-shooter-board",
-                      "wave": "@entity.wave",
-                      "width": "@config.width"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": [
+                            "array/map",
+                            "@entity.projectiles",
+                            [
+                              "fn",
+                              "p",
+                              {
+                                "id": "@p.id",
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "features"
+                                  ],
+                                  "projectile"
+                                ],
+                                "type": "projectile",
+                                "x": [
+                                  "object/get",
+                                  "@p",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@p",
+                                  "y"
+                                ]
+                              }
+                            ]
+                          ],
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": [],
+                          "type": "isometric-canvas",
+                          "units": [
+                            "array/concat",
+                            [
+                              {
+                                "animation": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "animation"
+                                ],
+                                "frame": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "frame"
+                                ],
+                                "id": "player",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "y"
+                                  ]
+                                },
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "units"
+                                  ],
+                                  "player"
+                                ],
+                                "team": "player"
+                              }
+                            ],
+                            [
+                              "array/map",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                {
+                                  "animation": [
+                                    "object/get",
+                                    "@e",
+                                    "animation"
+                                  ],
+                                  "frame": [
+                                    "object/get",
+                                    "@e",
+                                    "frame"
+                                  ],
+                                  "id": "@e.id",
+                                  "position": {
+                                    "x": [
+                                      "object/get",
+                                      "@e",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@e",
+                                      "y"
+                                    ]
+                                  },
+                                  "sprite": [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@config.assetManifest",
+                                      "units"
+                                    ],
+                                    "enemy"
+                                  ],
+                                  "team": "enemy"
+                                }
+                              ]
+                            ]
+                          ]
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -680,6 +1016,17 @@
               },
               {
                 "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "attack"
+                      }
+                    ]
+                  ],
                   [
                     "set",
                     "@entity.projectiles",
@@ -726,23 +1073,149 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "enemies": "@entity.enemies",
-                      "entity": "@entity",
-                      "fireEvent": "FIRE",
-                      "gameEndEvent": "GAME_END",
-                      "height": "@config.height",
-                      "lives": "@entity.lives",
-                      "moveEvent": "MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "projectiles": "@entity.projectiles",
-                      "result": "@entity.result",
-                      "score": "@entity.score",
-                      "spriteSize": "@config.spriteSize",
-                      "type": "top-down-shooter-board",
-                      "wave": "@entity.wave",
-                      "width": "@config.width"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": [
+                            "array/map",
+                            "@entity.projectiles",
+                            [
+                              "fn",
+                              "p",
+                              {
+                                "id": "@p.id",
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "features"
+                                  ],
+                                  "projectile"
+                                ],
+                                "type": "projectile",
+                                "x": [
+                                  "object/get",
+                                  "@p",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@p",
+                                  "y"
+                                ]
+                              }
+                            ]
+                          ],
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": [],
+                          "type": "isometric-canvas",
+                          "units": [
+                            "array/concat",
+                            [
+                              {
+                                "animation": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "animation"
+                                ],
+                                "frame": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "frame"
+                                ],
+                                "id": "player",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "y"
+                                  ]
+                                },
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "units"
+                                  ],
+                                  "player"
+                                ],
+                                "team": "player"
+                              }
+                            ],
+                            [
+                              "array/map",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                {
+                                  "animation": [
+                                    "object/get",
+                                    "@e",
+                                    "animation"
+                                  ],
+                                  "frame": [
+                                    "object/get",
+                                    "@e",
+                                    "frame"
+                                  ],
+                                  "id": "@e.id",
+                                  "position": {
+                                    "x": [
+                                      "object/get",
+                                      "@e",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@e",
+                                      "y"
+                                    ]
+                                  },
+                                  "sprite": [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@config.assetManifest",
+                                      "units"
+                                    ],
+                                    "enemy"
+                                  ],
+                                  "team": "enemy"
+                                }
+                              ]
+                            ]
+                          ]
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -761,23 +1234,149 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "enemies": "@entity.enemies",
-                      "entity": "@entity",
-                      "fireEvent": "FIRE",
-                      "gameEndEvent": "GAME_END",
-                      "height": "@config.height",
-                      "lives": "@entity.lives",
-                      "moveEvent": "MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "projectiles": "@entity.projectiles",
-                      "result": "@entity.result",
-                      "score": "@entity.score",
-                      "spriteSize": "@config.spriteSize",
-                      "type": "top-down-shooter-board",
-                      "wave": "@entity.wave",
-                      "width": "@config.width"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": [
+                            "array/map",
+                            "@entity.projectiles",
+                            [
+                              "fn",
+                              "p",
+                              {
+                                "id": "@p.id",
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "features"
+                                  ],
+                                  "projectile"
+                                ],
+                                "type": "projectile",
+                                "x": [
+                                  "object/get",
+                                  "@p",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@p",
+                                  "y"
+                                ]
+                              }
+                            ]
+                          ],
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": [],
+                          "type": "isometric-canvas",
+                          "units": [
+                            "array/concat",
+                            [
+                              {
+                                "animation": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "animation"
+                                ],
+                                "frame": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "frame"
+                                ],
+                                "id": "player",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "y"
+                                  ]
+                                },
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "units"
+                                  ],
+                                  "player"
+                                ],
+                                "team": "player"
+                              }
+                            ],
+                            [
+                              "array/map",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                {
+                                  "animation": [
+                                    "object/get",
+                                    "@e",
+                                    "animation"
+                                  ],
+                                  "frame": [
+                                    "object/get",
+                                    "@e",
+                                    "frame"
+                                  ],
+                                  "id": "@e.id",
+                                  "position": {
+                                    "x": [
+                                      "object/get",
+                                      "@e",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@e",
+                                      "y"
+                                    ]
+                                  },
+                                  "sprite": [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@config.assetManifest",
+                                      "units"
+                                    ],
+                                    "enemy"
+                                  ],
+                                  "team": "enemy"
+                                }
+                              ]
+                            ]
+                          ]
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -804,6 +1403,8 @@
                     "set",
                     "@entity.player",
                     {
+                      "animation": "idle",
+                      "frame": 0.0,
                       "x": [
                         "/",
                         "@config.width",
@@ -830,6 +1431,8 @@
                         "fn",
                         "i",
                         {
+                          "animation": "idle",
+                          "frame": 0.0,
                           "hp": "@config.enemyHp",
                           "id": [
                             "str/concat",
@@ -890,26 +1493,157 @@
                     0.0
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "enemies": "@entity.enemies",
-                      "entity": "@entity",
-                      "fireEvent": "FIRE",
-                      "gameEndEvent": "GAME_END",
-                      "height": "@config.height",
-                      "lives": "@entity.lives",
-                      "moveEvent": "MOVE",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "projectiles": "@entity.projectiles",
-                      "result": "@entity.result",
-                      "score": "@entity.score",
-                      "spriteSize": "@config.spriteSize",
-                      "type": "top-down-shooter-board",
-                      "wave": "@entity.wave",
-                      "width": "@config.width"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": [
+                            "array/map",
+                            "@entity.projectiles",
+                            [
+                              "fn",
+                              "p",
+                              {
+                                "id": "@p.id",
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "features"
+                                  ],
+                                  "projectile"
+                                ],
+                                "type": "projectile",
+                                "x": [
+                                  "object/get",
+                                  "@p",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@p",
+                                  "y"
+                                ]
+                              }
+                            ]
+                          ],
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": [],
+                          "type": "isometric-canvas",
+                          "units": [
+                            "array/concat",
+                            [
+                              {
+                                "animation": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "animation"
+                                ],
+                                "frame": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "frame"
+                                ],
+                                "id": "player",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "y"
+                                  ]
+                                },
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "units"
+                                  ],
+                                  "player"
+                                ],
+                                "team": "player"
+                              }
+                            ],
+                            [
+                              "array/map",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                {
+                                  "animation": [
+                                    "object/get",
+                                    "@e",
+                                    "animation"
+                                  ],
+                                  "frame": [
+                                    "object/get",
+                                    "@e",
+                                    "frame"
+                                  ],
+                                  "id": "@e.id",
+                                  "position": {
+                                    "x": [
+                                      "object/get",
+                                      "@e",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@e",
+                                      "y"
+                                    ]
+                                  },
+                                  "sprite": [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@config.assetManifest",
+                                      "units"
+                                    ],
+                                    "enemy"
+                                  ],
+                                  "team": "enemy"
+                                }
+                              ]
+                            ]
+                          ]
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -920,6 +1654,258 @@
             ]
           },
           "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.player",
+                  [
+                    "object/merge",
+                    "@entity.player",
+                    {
+                      "frame": [
+                        "%",
+                        [
+                          "+",
+                          [
+                            "object/get",
+                            "@entity.player",
+                            "frame"
+                          ],
+                          1.0
+                        ],
+                        8.0
+                      ]
+                    }
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.enemies",
+                  [
+                    "array/map",
+                    "@entity.enemies",
+                    [
+                      "fn",
+                      "e",
+                      [
+                        "object/merge",
+                        "@e",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@e",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "ef",
+                        [
+                          "object/merge",
+                          "@ef",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@ef",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "ef",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@ef",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": [
+                          "array/map",
+                          "@entity.projectiles",
+                          [
+                            "fn",
+                            "p",
+                            {
+                              "id": "@p.id",
+                              "sprite": [
+                                "object/get",
+                                [
+                                  "object/get",
+                                  "@config.assetManifest",
+                                  "features"
+                                ],
+                                "projectile"
+                              ],
+                              "type": "projectile",
+                              "x": [
+                                "object/get",
+                                "@p",
+                                "x"
+                              ],
+                              "y": [
+                                "object/get",
+                                "@p",
+                                "y"
+                              ]
+                            }
+                          ]
+                        ],
+                        "scale": "@config.scale",
+                        "showMinimap": false,
+                        "tileLayout": "flat",
+                        "tiles": [],
+                        "type": "isometric-canvas",
+                        "units": [
+                          "array/concat",
+                          [
+                            {
+                              "animation": [
+                                "object/get",
+                                "@entity.player",
+                                "animation"
+                              ],
+                              "frame": [
+                                "object/get",
+                                "@entity.player",
+                                "frame"
+                              ],
+                              "id": "player",
+                              "position": {
+                                "x": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "y"
+                                ]
+                              },
+                              "sprite": [
+                                "object/get",
+                                [
+                                  "object/get",
+                                  "@config.assetManifest",
+                                  "units"
+                                ],
+                                "player"
+                              ],
+                              "team": "player"
+                            }
+                          ],
+                          [
+                            "array/map",
+                            "@entity.enemies",
+                            [
+                              "fn",
+                              "e",
+                              {
+                                "animation": [
+                                  "object/get",
+                                  "@e",
+                                  "animation"
+                                ],
+                                "frame": [
+                                  "object/get",
+                                  "@e",
+                                  "frame"
+                                ],
+                                "id": "@e.id",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@e",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@e",
+                                    "y"
+                                  ]
+                                },
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "units"
+                                  ],
+                                  "enemy"
+                                ],
+                                "team": "enemy"
+                              }
+                            ]
+                          ]
+                        ]
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Score",
+                          "value": "@entity.score"
+                        },
+                        {
+                          "label": "Wave",
+                          "value": "@entity.wave"
+                        },
+                        {
+                          "label": "Lives",
+                          "value": "@entity.lives"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            },
             {
               "effects": [
                 [
@@ -1021,6 +2007,7 @@
                         "object/merge",
                         "@e",
                         {
+                          "animation": "walk",
                           "y": [
                             "+",
                             [
@@ -1106,6 +2093,230 @@
                 ],
                 [
                   "set",
+                  "@entity.effects",
+                  [
+                    "array/concat",
+                    "@entity.effects",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@entity.enemies",
+                        [
+                          "fn",
+                          "e",
+                          [
+                            ">",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.projectiles",
+                                [
+                                  "fn",
+                                  "p",
+                                  [
+                                    "<=",
+                                    [
+                                      "vec/distance",
+                                      {
+                                        "x": [
+                                          "object/get",
+                                          "@e",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@e",
+                                          "y"
+                                        ]
+                                      },
+                                      {
+                                        "x": [
+                                          "object/get",
+                                          "@p",
+                                          "x"
+                                        ],
+                                        "y": [
+                                          "object/get",
+                                          "@p",
+                                          "y"
+                                        ]
+                                      }
+                                    ],
+                                    "@config.hitRadius"
+                                  ]
+                                ]
+                              ]
+                            ],
+                            0.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "e",
+                        {
+                          "key": "spark",
+                          "ttl": 4.0,
+                          "x": [
+                            "object/get",
+                            "@e",
+                            "x"
+                          ],
+                          "y": [
+                            "object/get",
+                            "@e",
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.enemies",
+                  [
+                    "array/map",
+                    "@entity.enemies",
+                    [
+                      "fn",
+                      "e",
+                      [
+                        "if",
+                        [
+                          ">",
+                          [
+                            "array/len",
+                            [
+                              "array/filter",
+                              "@entity.projectiles",
+                              [
+                                "fn",
+                                "p",
+                                [
+                                  "<=",
+                                  [
+                                    "vec/distance",
+                                    {
+                                      "x": [
+                                        "object/get",
+                                        "@e",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@e",
+                                        "y"
+                                      ]
+                                    },
+                                    {
+                                      "x": [
+                                        "object/get",
+                                        "@p",
+                                        "x"
+                                      ],
+                                      "y": [
+                                        "object/get",
+                                        "@p",
+                                        "y"
+                                      ]
+                                    }
+                                  ],
+                                  "@config.hitRadius"
+                                ]
+                              ]
+                            ]
+                          ],
+                          0.0
+                        ],
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "animation": [
+                              "if",
+                              [
+                                "<=",
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "@e",
+                                    "hp"
+                                  ],
+                                  1.0
+                                ],
+                                0.0
+                              ],
+                              "death",
+                              "hit"
+                            ],
+                            "hp": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "hp"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ],
+                        "@e"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/concat",
+                    "@entity.effects",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@entity.enemies",
+                        [
+                          "fn",
+                          "e",
+                          [
+                            "<=",
+                            [
+                              "object/get",
+                              "@e",
+                              "hp"
+                            ],
+                            0.0
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "e",
+                        {
+                          "key": "explosion",
+                          "ttl": 5.0,
+                          "x": [
+                            "object/get",
+                            "@e",
+                            "x"
+                          ],
+                          "y": [
+                            "object/get",
+                            "@e",
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
                   "@entity.enemies",
                   [
                     "array/filter",
@@ -1114,48 +2325,11 @@
                       "fn",
                       "e",
                       [
-                        "==",
+                        ">",
                         [
-                          "array/len",
-                          [
-                            "array/filter",
-                            "@entity.projectiles",
-                            [
-                              "fn",
-                              "p",
-                              [
-                                "<=",
-                                [
-                                  "vec/distance",
-                                  {
-                                    "x": [
-                                      "object/get",
-                                      "@e",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@e",
-                                      "y"
-                                    ]
-                                  },
-                                  {
-                                    "x": [
-                                      "object/get",
-                                      "@p",
-                                      "x"
-                                    ],
-                                    "y": [
-                                      "object/get",
-                                      "@p",
-                                      "y"
-                                    ]
-                                  }
-                                ],
-                                "@config.hitRadius"
-                              ]
-                            ]
-                          ]
+                          "object/get",
+                          "@e",
+                          "hp"
                         ],
                         0.0
                       ]
@@ -1319,6 +2493,8 @@
                         "fn",
                         "i",
                         {
+                          "animation": "idle",
+                          "frame": 0.0,
                           "hp": "@config.enemyHp",
                           "id": [
                             "str/concat",
@@ -1357,23 +2533,149 @@
                   "render-ui",
                   "main",
                   {
-                    "assetManifest": "@config.assetManifest",
-                    "enemies": "@entity.enemies",
-                    "entity": "@entity",
-                    "fireEvent": "FIRE",
-                    "gameEndEvent": "GAME_END",
-                    "height": "@config.height",
-                    "lives": "@entity.lives",
-                    "moveEvent": "MOVE",
-                    "playAgainEvent": "PLAY_AGAIN",
-                    "player": "@entity.player",
-                    "projectiles": "@entity.projectiles",
-                    "result": "@entity.result",
-                    "score": "@entity.score",
-                    "spriteSize": "@config.spriteSize",
-                    "type": "top-down-shooter-board",
-                    "wave": "@entity.wave",
-                    "width": "@config.width"
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": [
+                          "array/map",
+                          "@entity.projectiles",
+                          [
+                            "fn",
+                            "p",
+                            {
+                              "id": "@p.id",
+                              "sprite": [
+                                "object/get",
+                                [
+                                  "object/get",
+                                  "@config.assetManifest",
+                                  "features"
+                                ],
+                                "projectile"
+                              ],
+                              "type": "projectile",
+                              "x": [
+                                "object/get",
+                                "@p",
+                                "x"
+                              ],
+                              "y": [
+                                "object/get",
+                                "@p",
+                                "y"
+                              ]
+                            }
+                          ]
+                        ],
+                        "scale": "@config.scale",
+                        "showMinimap": false,
+                        "tileLayout": "flat",
+                        "tiles": [],
+                        "type": "isometric-canvas",
+                        "units": [
+                          "array/concat",
+                          [
+                            {
+                              "animation": [
+                                "object/get",
+                                "@entity.player",
+                                "animation"
+                              ],
+                              "frame": [
+                                "object/get",
+                                "@entity.player",
+                                "frame"
+                              ],
+                              "id": "player",
+                              "position": {
+                                "x": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "y"
+                                ]
+                              },
+                              "sprite": [
+                                "object/get",
+                                [
+                                  "object/get",
+                                  "@config.assetManifest",
+                                  "units"
+                                ],
+                                "player"
+                              ],
+                              "team": "player"
+                            }
+                          ],
+                          [
+                            "array/map",
+                            "@entity.enemies",
+                            [
+                              "fn",
+                              "e",
+                              {
+                                "animation": [
+                                  "object/get",
+                                  "@e",
+                                  "animation"
+                                ],
+                                "frame": [
+                                  "object/get",
+                                  "@e",
+                                  "frame"
+                                ],
+                                "id": "@e.id",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@e",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@e",
+                                    "y"
+                                  ]
+                                },
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "units"
+                                  ],
+                                  "enemy"
+                                ],
+                                "team": "enemy"
+                              }
+                            ]
+                          ]
+                        ]
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Score",
+                          "value": "@entity.score"
+                        },
+                        {
+                          "label": "Wave",
+                          "value": "@entity.wave"
+                        },
+                        {
+                          "label": "Lives",
+                          "value": "@entity.lives"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
                   }
                 ]
               ],

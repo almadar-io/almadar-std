@@ -1,5 +1,5 @@
 app ui-world-map-board "1.0.0"
-"WorldMapBoard — overworld exploration: model owns hero selection, movement validation (Manhattan range + passable), battle encounters, and win/lose conditions."
+"WorldMapBoard — game-shell composition with isometric canvas, overworld hero movement, battle encounters, and walk/idle animation ticks."
 orbital WorldMapBoardOrbital {
   type WorldMapBoardError = {
     message : string!
@@ -40,6 +40,14 @@ orbital WorldMapBoardOrbital {
     traits : [WorldMapBoardUnitsItemTraitsItem]
     previousPosition : WorldMapBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type WorldMapBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type WorldMapBoardUnitsItemPosition = {
     x : number!
@@ -71,6 +79,7 @@ orbital WorldMapBoardOrbital {
     terrains : Map string asset
     units : Map string asset
     features : Map string asset
+    effects : Map string asset
   }
 
   entity WorldMapBoardItem [runtime] {
@@ -84,6 +93,7 @@ orbital WorldMapBoardOrbital {
     gridWidth : number = 16
     gridHeight : number = 16
     movementRange : number = 3
+    effects : [WorldMapBoardEffectItem] = []
   }
 
   trait WorldMapBoardRender -> @rebindable WorldMapBoardItem [interaction, instance] {
@@ -91,7 +101,7 @@ orbital WorldMapBoardOrbital {
 
     state menu {
       START -> playing
-        (set @entity.units @config.units)
+        (set @entity.units (array/map @config.units (fn u (object/merge @u { animation: "idle", frame: 0 }))))
         (set @entity.tiles @config.tiles)
         (set @entity.features @config.features)
         (set @entity.selectedHeroId "")
@@ -100,34 +110,17 @@ orbital WorldMapBoardOrbital {
         (set @entity.gridWidth 16)
         (set @entity.gridHeight 16)
         (set @entity.movementRange 3)
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          allowMoveAllHeroes: @config.allowMoveAllHeroes
-          heroSelectEvent: HERO_SELECT
-          heroMoveEvent: HERO_MOVE
-          battleEncounterEvent: BATTLE_ENCOUNTER
-          featureEnterEvent: FEATURE_ENTER
-          tileClickEvent: TILE_CLICK
-          onHeroSelect: HERO_SELECT
-          onHeroMove: HERO_MOVE
-          onBattleEncounter: BATTLE_ENCOUNTER
-          onFeatureEnter: FEATURE_ENTER
-          diamondTopY: @config.diamondTopY
-          enableCamera: @config.enableCamera
-          effectSpriteUrls: @config.effectSpriteUrls
-          type: world-map-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
     state playing {
       INIT -> playing
-        (set @entity.units @config.units)
+        (set @entity.units (array/map @config.units (fn u (object/merge @u { animation: "idle", frame: 0 }))))
         (set @entity.tiles @config.tiles)
         (set @entity.features @config.features)
         (set @entity.selectedHeroId "")
@@ -136,219 +129,89 @@ orbital WorldMapBoardOrbital {
         (set @entity.gridWidth 16)
         (set @entity.gridHeight 16)
         (set @entity.movementRange 3)
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          allowMoveAllHeroes: @config.allowMoveAllHeroes
-          heroSelectEvent: HERO_SELECT
-          heroMoveEvent: HERO_MOVE
-          battleEncounterEvent: BATTLE_ENCOUNTER
-          featureEnterEvent: FEATURE_ENTER
-          tileClickEvent: TILE_CLICK
-          onHeroSelect: HERO_SELECT
-          onHeroMove: HERO_MOVE
-          onBattleEncounter: BATTLE_ENCOUNTER
-          onFeatureEnter: FEATURE_ENTER
-          diamondTopY: @config.diamondTopY
-          enableCamera: @config.enableCamera
-          effectSpriteUrls: @config.effectSpriteUrls
-          type: world-map-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       HERO_SELECT -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?heroId))) team) "player")
         (set @entity.selectedHeroId ?heroId)
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          allowMoveAllHeroes: @config.allowMoveAllHeroes
-          heroSelectEvent: HERO_SELECT
-          heroMoveEvent: HERO_MOVE
-          battleEncounterEvent: BATTLE_ENCOUNTER
-          featureEnterEvent: FEATURE_ENTER
-          tileClickEvent: TILE_CLICK
-          onHeroSelect: HERO_SELECT
-          onHeroMove: HERO_MOVE
-          onBattleEncounter: BATTLE_ENCOUNTER
-          onFeatureEnter: FEATURE_ENTER
-          diamondTopY: @config.diamondTopY
-          enableCamera: @config.enableCamera
-          effectSpriteUrls: @config.effectSpriteUrls
-          type: world-map-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       HERO_MOVE -> playing when (and (!= @entity.selectedHeroId "") (and (grid/in-bounds { x: ?toX, y: ?toY } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedHeroId))) position) { x: ?toX, y: ?toY }) @entity.movementRange) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) ?toX) (== (object/get @t y) ?toY)))) passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?toX) (== (object/get (object/get @u position) y) ?toY))))) 0)))))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedHeroId) (object/merge @u { position: { x: ?toX, y: ?toY } }) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedHeroId) (object/merge @u { position: { x: ?toX, y: ?toY }, animation: "walk" }) @u))))
         (set @entity.selectedHeroId "")
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          allowMoveAllHeroes: @config.allowMoveAllHeroes
-          heroSelectEvent: HERO_SELECT
-          heroMoveEvent: HERO_MOVE
-          battleEncounterEvent: BATTLE_ENCOUNTER
-          featureEnterEvent: FEATURE_ENTER
-          tileClickEvent: TILE_CLICK
-          onHeroSelect: HERO_SELECT
-          onHeroMove: HERO_MOVE
-          onBattleEncounter: BATTLE_ENCOUNTER
-          onFeatureEnter: FEATURE_ENTER
-          diamondTopY: @config.diamondTopY
-          enableCamera: @config.enableCamera
-          effectSpriteUrls: @config.effectSpriteUrls
-          type: world-map-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       BATTLE_ENCOUNTER -> playing when (and (!= @entity.selectedHeroId "") (== (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?defenderId))) position)) 1))
-        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?defenderId) (object/merge @u { health: (math/max 0 (- (object/get @u health) 3)) }) @u))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?defenderId) (object/merge @u { health: (math/max 0 (- (object/get @u health) 3)), animation: "hit" }) @u))))
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?defenderId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?defenderId))) position) y), ttl: 4 }))
         (set @entity.selectedHeroId "")
         (set @entity.turn (+ @entity.turn 1))
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          allowMoveAllHeroes: @config.allowMoveAllHeroes
-          heroSelectEvent: HERO_SELECT
-          heroMoveEvent: HERO_MOVE
-          battleEncounterEvent: BATTLE_ENCOUNTER
-          featureEnterEvent: FEATURE_ENTER
-          tileClickEvent: TILE_CLICK
-          onHeroSelect: HERO_SELECT
-          onHeroMove: HERO_MOVE
-          onBattleEncounter: BATTLE_ENCOUNTER
-          onFeatureEnter: FEATURE_ENTER
-          diamondTopY: @config.diamondTopY
-          enableCamera: @config.enableCamera
-          effectSpriteUrls: @config.effectSpriteUrls
-          type: world-map-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       FEATURE_ENTER -> playing
         (set @entity.turn (+ @entity.turn 1))
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          allowMoveAllHeroes: @config.allowMoveAllHeroes
-          heroSelectEvent: HERO_SELECT
-          heroMoveEvent: HERO_MOVE
-          battleEncounterEvent: BATTLE_ENCOUNTER
-          featureEnterEvent: FEATURE_ENTER
-          tileClickEvent: TILE_CLICK
-          onHeroSelect: HERO_SELECT
-          onHeroMove: HERO_MOVE
-          onBattleEncounter: BATTLE_ENCOUNTER
-          onFeatureEnter: FEATURE_ENTER
-          diamondTopY: @config.diamondTopY
-          enableCamera: @config.enableCamera
-          effectSpriteUrls: @config.effectSpriteUrls
-          type: world-map-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       TILE_CLICK -> playing
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          allowMoveAllHeroes: @config.allowMoveAllHeroes
-          heroSelectEvent: HERO_SELECT
-          heroMoveEvent: HERO_MOVE
-          battleEncounterEvent: BATTLE_ENCOUNTER
-          featureEnterEvent: FEATURE_ENTER
-          tileClickEvent: TILE_CLICK
-          onHeroSelect: HERO_SELECT
-          onHeroMove: HERO_MOVE
-          onBattleEncounter: BATTLE_ENCOUNTER
-          onFeatureEnter: FEATURE_ENTER
-          diamondTopY: @config.diamondTopY
-          enableCamera: @config.enableCamera
-          effectSpriteUrls: @config.effectSpriteUrls
-          type: world-map-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
         (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0) "lose" "win"))
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          allowMoveAllHeroes: @config.allowMoveAllHeroes
-          heroSelectEvent: HERO_SELECT
-          heroMoveEvent: HERO_MOVE
-          battleEncounterEvent: BATTLE_ENCOUNTER
-          featureEnterEvent: FEATURE_ENTER
-          tileClickEvent: TILE_CLICK
-          onHeroSelect: HERO_SELECT
-          onHeroMove: HERO_MOVE
-          onBattleEncounter: BATTLE_ENCOUNTER
-          onFeatureEnter: FEATURE_ENTER
-          diamondTopY: @config.diamondTopY
-          enableCamera: @config.enableCamera
-          effectSpriteUrls: @config.effectSpriteUrls
-          type: world-map-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
     state gameover {
       PLAY_AGAIN -> menu
-        (set @entity.units @config.units)
+        (set @entity.units (array/map @config.units (fn u (object/merge @u { animation: "idle", frame: 0 }))))
         (set @entity.tiles @config.tiles)
         (set @entity.features @config.features)
         (set @entity.selectedHeroId "")
         (set @entity.turn 0)
         (set @entity.result "none")
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          unitScale: @config.unitScale
-          allowMoveAllHeroes: @config.allowMoveAllHeroes
-          heroSelectEvent: HERO_SELECT
-          heroMoveEvent: HERO_MOVE
-          battleEncounterEvent: BATTLE_ENCOUNTER
-          featureEnterEvent: FEATURE_ENTER
-          tileClickEvent: TILE_CLICK
-          onHeroSelect: HERO_SELECT
-          onHeroMove: HERO_MOVE
-          onBattleEncounter: BATTLE_ENCOUNTER
-          onFeatureEnter: FEATURE_ENTER
-          diamondTopY: @config.diamondTopY
-          enableCamera: @config.enableCamera
-          effectSpriteUrls: @config.effectSpriteUrls
-          type: world-map-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -413,7 +276,7 @@ orbital WorldMapBoardOrbital {
         @label "Tiles"
         @description "Initial tile map seeded into entity on INIT — passable drives movement validation in the model."
         @tier "presentation"
-      units : [WorldMapBoardUnitsItem] = [{ id: "u_hero", position: { x: 3, y: 10 }, unitType: "hero", name: "Hero", team: player, health: 10, maxHealth: 10, movement: 3, sprite: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/hero.png" }, { id: "u_guard", position: { x: 13, y: 4 }, unitType: "guard", name: "Guard", team: enemy, health: 8, maxHealth: 8, movement: 2, sprite: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/guard.png" }]
+      units : [WorldMapBoardUnitsItem] = [{ id: "u_hero", position: { x: 3, y: 10 }, unitType: "hero", name: "Hero", team: player, health: 10, maxHealth: 10, movement: 3, sprite: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/hero.png", animation: "idle", frame: 0 }, { id: "u_guard", position: { x: 13, y: 4 }, unitType: "guard", name: "Guard", team: enemy, health: 8, maxHealth: 8, movement: 2, sprite: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/guard.png", animation: "idle", frame: 0 }]
         @label "Units"
         @description "Initial hero/unit roster seeded into entity on INIT — team+health drive win/lose conditions."
         @tier "presentation"
@@ -421,7 +284,7 @@ orbital WorldMapBoardOrbital {
         @label "Features"
         @description "World features seeded into entity on INIT."
         @tier "presentation"
-      assetManifest : WorldMapBoardAssetManifest = { terrains: { grass: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png", forest: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png", stone: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png" }, units: { hero: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/hero.png", guard: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/guard.png" }, features: { gold_mine: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/gold_mine.png", portal: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/portal.png" } }
+      assetManifest : WorldMapBoardAssetManifest = { terrains: { grass: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png", forest: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png", stone: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png" }, units: { hero: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/hero.png", guard: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/guard.png" }, features: { gold_mine: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/gold_mine.png", portal: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/portal.png" }, effects: { slash: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/effects/slash_03.png" } }
         @label "Asset Manifest"
         @description "Direct asset manifest — takes priority over entity-derived manifest."
         @tier "presentation"

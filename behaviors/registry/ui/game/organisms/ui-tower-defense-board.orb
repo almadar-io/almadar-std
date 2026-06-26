@@ -1,5 +1,5 @@
 {
-  "description": "TowerDefenseBoard — UI factory (1:1 with the @almadar/ui tower-defense-board pattern).",
+  "description": "TowerDefenseBoard — game-shell composition with LOLO-driven sprite animation and combat effects.",
   "name": "ui-tower-defense-board",
   "orbitals": [
     {
@@ -115,6 +115,16 @@
           {
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
                 "hp": {
                   "name": "hp",
                   "required": true,
@@ -216,6 +226,36 @@
             "default": false,
             "name": "waveActive",
             "type": "boolean"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "TowerDefenseBoardItem",
@@ -240,6 +280,9 @@
             "assetManifest": {
               "default": {
                 "baseUrl": "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/",
+                "effects": {
+                  "explosion": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png"
+                },
                 "features": {
                   "tower": "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/features/tower.png"
                 },
@@ -260,6 +303,14 @@
                   "name": "baseUrl",
                   "required": false,
                   "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
                 },
                 "features": {
                   "items": {
@@ -351,6 +402,43 @@
               },
               "tier": "presentation",
               "type": "TowerDefenseBoardError"
+            },
+            "features": {
+              "default": [],
+              "description": "Static map features (structures, decorations) rendered on the board.",
+              "items": {
+                "properties": {
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Features",
+              "tier": "presentation",
+              "type": "[TowerDefenseBoardFeaturesItem]"
             },
             "gold": {
               "default": 100.0,
@@ -2905,6 +2993,7 @@
           "entityContract": {
             "provides": [
               "creeps",
+              "effects",
               "gold",
               "hero",
               "lives",
@@ -3064,31 +3153,45 @@
                     "@config.hero"
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "creeps": "@entity.creeps",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "gold": "@entity.gold",
-                      "hero": "@entity.hero",
-                      "lives": "@entity.lives",
-                      "maxWaves": "@entity.maxWaves",
-                      "moveHeroEvent": "MOVE_HERO",
-                      "path": "@config.path",
-                      "placeTowerEvent": "PLACE_TOWER",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "startWaveEvent": "START_WAVE",
-                      "tiles": "@config.tiles",
-                      "towerCost": "@config.towerCost",
-                      "towers": "@entity.towers",
-                      "type": "tower-defense-board",
-                      "unitScale": "@config.unitScale",
-                      "wave": "@entity.wave",
-                      "waveActive": "@entity.waveActive"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.creeps"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3137,28 +3240,37 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "creeps": "@entity.creeps",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "gold": "@entity.gold",
-                      "hero": "@entity.hero",
-                      "lives": "@entity.lives",
-                      "maxWaves": "@entity.maxWaves",
-                      "moveHeroEvent": "MOVE_HERO",
-                      "path": "@config.path",
-                      "placeTowerEvent": "PLACE_TOWER",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "startWaveEvent": "START_WAVE",
-                      "tiles": "@config.tiles",
-                      "towerCost": "@config.towerCost",
-                      "towers": "@entity.towers",
-                      "type": "tower-defense-board",
-                      "unitScale": "@config.unitScale",
-                      "wave": "@entity.wave",
-                      "waveActive": "@entity.waveActive"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.creeps"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3274,6 +3386,8 @@
                         "fn",
                         "i",
                         {
+                          "animation": "walk",
+                          "frame": 0.0,
                           "hp": [
                             "+",
                             "@config.creepBaseHp",
@@ -3323,28 +3437,37 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "creeps": "@entity.creeps",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "gold": "@entity.gold",
-                      "hero": "@entity.hero",
-                      "lives": "@entity.lives",
-                      "maxWaves": "@entity.maxWaves",
-                      "moveHeroEvent": "MOVE_HERO",
-                      "path": "@config.path",
-                      "placeTowerEvent": "PLACE_TOWER",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "startWaveEvent": "START_WAVE",
-                      "tiles": "@config.tiles",
-                      "towerCost": "@config.towerCost",
-                      "towers": "@entity.towers",
-                      "type": "tower-defense-board",
-                      "unitScale": "@config.unitScale",
-                      "wave": "@entity.wave",
-                      "waveActive": "@entity.waveActive"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.creeps"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3423,28 +3546,37 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "creeps": "@entity.creeps",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "gold": "@entity.gold",
-                      "hero": "@entity.hero",
-                      "lives": "@entity.lives",
-                      "maxWaves": "@entity.maxWaves",
-                      "moveHeroEvent": "MOVE_HERO",
-                      "path": "@config.path",
-                      "placeTowerEvent": "PLACE_TOWER",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "startWaveEvent": "START_WAVE",
-                      "tiles": "@config.tiles",
-                      "towerCost": "@config.towerCost",
-                      "towers": "@entity.towers",
-                      "type": "tower-defense-board",
-                      "unitScale": "@config.unitScale",
-                      "wave": "@entity.wave",
-                      "waveActive": "@entity.waveActive"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.creeps"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3463,28 +3595,37 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "creeps": "@entity.creeps",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "gold": "@entity.gold",
-                      "hero": "@entity.hero",
-                      "lives": "@entity.lives",
-                      "maxWaves": "@entity.maxWaves",
-                      "moveHeroEvent": "MOVE_HERO",
-                      "path": "@config.path",
-                      "placeTowerEvent": "PLACE_TOWER",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "startWaveEvent": "START_WAVE",
-                      "tiles": "@config.tiles",
-                      "towerCost": "@config.towerCost",
-                      "towers": "@entity.towers",
-                      "type": "tower-defense-board",
-                      "unitScale": "@config.unitScale",
-                      "wave": "@entity.wave",
-                      "waveActive": "@entity.waveActive"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.creeps"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3553,31 +3694,45 @@
                     "@config.hero"
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "creeps": "@entity.creeps",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "gold": "@entity.gold",
-                      "hero": "@entity.hero",
-                      "lives": "@entity.lives",
-                      "maxWaves": "@entity.maxWaves",
-                      "moveHeroEvent": "MOVE_HERO",
-                      "path": "@config.path",
-                      "placeTowerEvent": "PLACE_TOWER",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "startWaveEvent": "START_WAVE",
-                      "tiles": "@config.tiles",
-                      "towerCost": "@config.towerCost",
-                      "towers": "@entity.towers",
-                      "type": "tower-defense-board",
-                      "unitScale": "@config.unitScale",
-                      "wave": "@entity.wave",
-                      "waveActive": "@entity.waveActive"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.creeps"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Gold",
+                            "value": "@entity.gold"
+                          },
+                          {
+                            "label": "Lives",
+                            "value": "@entity.lives"
+                          },
+                          {
+                            "label": "Wave",
+                            "value": "@entity.wave"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3588,6 +3743,123 @@
             ]
           },
           "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.creeps",
+                  [
+                    "array/map",
+                    "@entity.creeps",
+                    [
+                      "fn",
+                      "c",
+                      [
+                        "object/merge",
+                        "@c",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@c",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.creeps"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Gold",
+                          "value": "@entity.gold"
+                        },
+                        {
+                          "label": "Lives",
+                          "value": "@entity.lives"
+                        },
+                        {
+                          "label": "Wave",
+                          "value": "@entity.wave"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            },
             {
               "effects": [
                 [
@@ -3666,6 +3938,7 @@
                           "object/merge",
                           "@c",
                           {
+                            "animation": "walk",
                             "pathIndex": "@nextIndex",
                             "x": [
                               "object/get",
@@ -3682,6 +3955,115 @@
                       ]
                     ]
                   ]
+                ],
+                [
+                  "if",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.creeps",
+                        [
+                          "fn",
+                          "c",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "@c",
+                              "pathIndex"
+                            ],
+                            [
+                              "-",
+                              [
+                                "array/len",
+                                "@config.path"
+                              ],
+                              1.0
+                            ]
+                          ]
+                        ]
+                      ]
+                    ],
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "explosion",
+                        "ttl": 5.0,
+                        "x": [
+                          "object/get",
+                          [
+                            "array/first",
+                            [
+                              "array/filter",
+                              "@entity.creeps",
+                              [
+                                "fn",
+                                "c",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "@c",
+                                    "pathIndex"
+                                  ],
+                                  [
+                                    "-",
+                                    [
+                                      "array/len",
+                                      "@config.path"
+                                    ],
+                                    1.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          [
+                            "array/first",
+                            [
+                              "array/filter",
+                              "@entity.creeps",
+                              [
+                                "fn",
+                                "c",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "@c",
+                                    "pathIndex"
+                                  ],
+                                  [
+                                    "-",
+                                    [
+                                      "array/len",
+                                      "@config.path"
+                                    ],
+                                    1.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          "y"
+                        ]
+                      }
+                    ]
+                  ],
+                  null
                 ],
                 [
                   "set",
@@ -3860,28 +4242,37 @@
                   "render-ui",
                   "main",
                   {
-                    "assetManifest": "@config.assetManifest",
-                    "creeps": "@entity.creeps",
-                    "entity": "@entity",
-                    "gameEndEvent": "GAME_END",
-                    "gold": "@entity.gold",
-                    "hero": "@entity.hero",
-                    "lives": "@entity.lives",
-                    "maxWaves": "@entity.maxWaves",
-                    "moveHeroEvent": "MOVE_HERO",
-                    "path": "@config.path",
-                    "placeTowerEvent": "PLACE_TOWER",
-                    "playAgainEvent": "PLAY_AGAIN",
-                    "result": "@entity.result",
-                    "scale": "@config.scale",
-                    "startWaveEvent": "START_WAVE",
-                    "tiles": "@config.tiles",
-                    "towerCost": "@config.towerCost",
-                    "towers": "@entity.towers",
-                    "type": "tower-defense-board",
-                    "unitScale": "@config.unitScale",
-                    "wave": "@entity.wave",
-                    "waveActive": "@entity.waveActive"
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.creeps"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Gold",
+                          "value": "@entity.gold"
+                        },
+                        {
+                          "label": "Lives",
+                          "value": "@entity.lives"
+                        },
+                        {
+                          "label": "Wave",
+                          "value": "@entity.wave"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
                   }
                 ]
               ],
@@ -3987,6 +4378,35 @@
                             "object/merge",
                             "@c",
                             {
+                              "animation": [
+                                "if",
+                                [
+                                  "<=",
+                                  [
+                                    "math/max",
+                                    0.0,
+                                    [
+                                      "-",
+                                      [
+                                        "object/get",
+                                        "@c",
+                                        "hp"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          "@inRangeTowers"
+                                        ],
+                                        "damage"
+                                      ]
+                                    ]
+                                  ],
+                                  0.0
+                                ],
+                                "death",
+                                "walk"
+                              ],
                               "hp": [
                                 "math/max",
                                 0.0,
@@ -4014,6 +4434,94 @@
                       ]
                     ]
                   ]
+                ],
+                [
+                  "if",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      [
+                        "array/filter",
+                        "@entity.creeps",
+                        [
+                          "fn",
+                          "c",
+                          [
+                            "<=",
+                            [
+                              "object/get",
+                              "@c",
+                              "hp"
+                            ],
+                            0.0
+                          ]
+                        ]
+                      ]
+                    ],
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "explosion",
+                        "ttl": 5.0,
+                        "x": [
+                          "object/get",
+                          [
+                            "array/first",
+                            [
+                              "array/filter",
+                              "@entity.creeps",
+                              [
+                                "fn",
+                                "c",
+                                [
+                                  "<=",
+                                  [
+                                    "object/get",
+                                    "@c",
+                                    "hp"
+                                  ],
+                                  0.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          [
+                            "array/first",
+                            [
+                              "array/filter",
+                              "@entity.creeps",
+                              [
+                                "fn",
+                                "c",
+                                [
+                                  "<=",
+                                  [
+                                    "object/get",
+                                    "@c",
+                                    "hp"
+                                  ],
+                                  0.0
+                                ]
+                              ]
+                            ]
+                          ],
+                          "y"
+                        ]
+                      }
+                    ]
+                  ],
+                  null
                 ],
                 [
                   "set",
@@ -4072,28 +4580,37 @@
                   "render-ui",
                   "main",
                   {
-                    "assetManifest": "@config.assetManifest",
-                    "creeps": "@entity.creeps",
-                    "entity": "@entity",
-                    "gameEndEvent": "GAME_END",
-                    "gold": "@entity.gold",
-                    "hero": "@entity.hero",
-                    "lives": "@entity.lives",
-                    "maxWaves": "@entity.maxWaves",
-                    "moveHeroEvent": "MOVE_HERO",
-                    "path": "@config.path",
-                    "placeTowerEvent": "PLACE_TOWER",
-                    "playAgainEvent": "PLAY_AGAIN",
-                    "result": "@entity.result",
-                    "scale": "@config.scale",
-                    "startWaveEvent": "START_WAVE",
-                    "tiles": "@config.tiles",
-                    "towerCost": "@config.towerCost",
-                    "towers": "@entity.towers",
-                    "type": "tower-defense-board",
-                    "unitScale": "@config.unitScale",
-                    "wave": "@entity.wave",
-                    "waveActive": "@entity.waveActive"
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.creeps"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Gold",
+                          "value": "@entity.gold"
+                        },
+                        {
+                          "label": "Lives",
+                          "value": "@entity.lives"
+                        },
+                        {
+                          "label": "Wave",
+                          "value": "@entity.wave"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
                   }
                 ]
               ],
