@@ -1,128 +1,170 @@
 {
-  "name": "std-billable-hour",
-  "version": "1.0.0",
   "description": "std-billable-hour — generic billable-hour timesheet primitive for legal, agency, and consulting domains. Lists entries in `browsing`; opens entry detail in `viewing_single` with Invoice / Write Off actions.",
+  "name": "std-billable-hour",
   "orbitals": [
     {
-      "name": "BillableHourOrbital",
       "entity": {
-        "name": "BillableHour",
         "collection": "billablehours",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "workerId",
-            "type": "string",
             "required": true,
-            "description": "Unique identifier for the worker.",
-            "synonyms": "employeeId, staffId, userId"
+            "type": "string"
           },
           {
-            "name": "workerName",
-            "type": "string",
+            "description": "Unique identifier for the worker.",
+            "name": "workerId",
+            "required": true,
+            "synonyms": "employeeId, staffId, userId",
+            "type": "string"
+          },
+          {
             "default": "",
             "description": "The name of the worker associated with the time entry.",
-            "synonyms": "employee, staff, personnel"
+            "name": "workerName",
+            "synonyms": "employee, staff, personnel",
+            "type": "string"
           },
           {
-            "name": "matterId",
-            "type": "string",
             "default": "",
             "description": "Unique identifier for the associated case or project.",
-            "synonyms": "caseId, projectID, reference"
+            "name": "matterId",
+            "synonyms": "caseId, projectID, reference",
+            "type": "string"
           },
           {
-            "name": "projectId",
-            "type": "string",
             "default": "",
             "description": "Identifier for the project associated with the time entry.",
-            "synonyms": "project, task, reference"
+            "name": "projectId",
+            "synonyms": "project, task, reference",
+            "type": "string"
           },
           {
-            "name": "workDate",
-            "type": "string",
-            "required": true,
             "description": "The date on which the work was performed.",
-            "synonyms": "date, transaction date, service date"
+            "name": "workDate",
+            "required": true,
+            "synonyms": "date, transaction date, service date",
+            "type": "string"
           },
           {
-            "name": "hours",
-            "type": "number",
             "default": 0.0,
             "description": "The quantity of time recorded.",
-            "synonyms": "duration, time, amount"
+            "name": "hours",
+            "synonyms": "duration, time, amount",
+            "type": "number"
           },
           {
-            "name": "rate",
-            "type": "number",
             "default": 0.0,
             "description": "The hourly charge for the work performed.",
-            "synonyms": "price, cost, amount"
+            "name": "rate",
+            "synonyms": "price, cost, amount",
+            "type": "number"
           },
           {
-            "name": "description",
-            "type": "string",
             "default": "",
             "description": "A textual explanation of the hour entry.",
-            "synonyms": "explanation, notes, details, comment"
+            "name": "description",
+            "synonyms": "explanation, notes, details, comment",
+            "type": "string"
           },
           {
-            "name": "isBillable",
-            "type": "boolean",
             "default": true,
             "description": "Indicates whether the hour is eligible for billing.",
-            "synonyms": "billable flag, billing status, billable indicator"
+            "name": "isBillable",
+            "synonyms": "billable flag, billing status, billable indicator",
+            "type": "boolean"
           },
           {
-            "name": "invoiceStatus",
-            "type": "string",
             "default": "unbilled",
+            "description": "The current billing status of the hour entry.",
+            "name": "invoiceStatus",
+            "synonyms": "status, billing status, payment status",
+            "type": "string",
             "values": [
               "unbilled",
               "invoiced",
               "paid",
               "written_off"
-            ],
-            "description": "The current billing status of the hour entry.",
-            "synonyms": "status, billing status, payment status"
+            ]
           }
-        ]
+        ],
+        "name": "BillableHour",
+        "persistence": "persistent"
       },
+      "name": "BillableHourOrbital",
+      "pages": [
+        {
+          "name": "BillableHourPage",
+          "path": "/timesheet",
+          "traits": [
+            {
+              "ref": "BillableHourTimesheet"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "BillableHourTimesheet",
           "category": "interaction",
-          "linkedEntity": "BillableHour",
+          "config": {
+            "statLook": {
+              "default": "elevated",
+              "description": "Layer 2 visual treatment for stat / KPI cards.",
+              "label": "Stat display look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "elevated",
+                "flat",
+                "progress-backed",
+                "gauge",
+                "sparkline"
+              ]
+            },
+            "tableLook": {
+              "default": "dense",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "label": "Table look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "title": {
+              "default": "Time Entries",
+              "description": "Heading shown above the time-entries list",
+              "label": "Section title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "OPEN_HOURS",
               "description": "Signals the display of the hours list.",
-              "synonyms": "show, display, list",
-              "tier": "essential",
+              "event": "OPEN_HOURS",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "row",
-                  "type": "object",
                   "properties": [
                     {
                       "name": "id",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "workerId",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "workerName",
@@ -138,8 +180,8 @@
                     },
                     {
                       "name": "workDate",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "hours",
@@ -161,59 +203,60 @@
                       "name": "invoiceStatus",
                       "type": "string"
                     }
-                  ]
+                  ],
+                  "type": "object"
                 }
-              ]
+              ],
+              "synonyms": "show, display, list",
+              "tier": "essential"
             },
             {
-              "event": "CLOSE_VIEW",
               "description": "Indicates the detail view has been dismissed.",
+              "event": "CLOSE_VIEW",
               "synonyms": "dismiss, close, hide",
               "tier": "essential"
             },
             {
-              "event": "INVOICE_HOURS",
               "description": "Signals that billable hours have been invoiced.",
+              "event": "INVOICE_HOURS",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
               "synonyms": "invoice, charge, bill",
-              "tier": "customization",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                }
-              ]
+              "tier": "customization"
             },
             {
-              "event": "WRITE_OFF_HOURS",
               "description": "Indicates billable hours have been written off.",
-              "synonyms": "deduct, remove, cancel",
-              "tier": "customization",
+              "event": "WRITE_OFF_HOURS",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "deduct, remove, cancel",
+              "tier": "customization"
             },
             {
-              "event": "BillableHourLoaded",
               "description": "Signals that a billable hour data set has been successfully retrieved.",
-              "synonyms": "loaded, fetched, retrieved, populated",
-              "tier": "essential",
+              "event": "BillableHourLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[BillableHour]"
                 }
-              ]
+              ],
+              "synonyms": "loaded, fetched, retrieved, populated",
+              "tier": "essential"
             },
             {
-              "event": "BillableHourLoadFailed",
               "description": "Indicates a failure to load billable hour data.",
-              "synonyms": "error, failed, problem, unsuccessful",
-              "tier": "internal",
+              "event": "BillableHourLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -223,14 +266,108 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failed, problem, unsuccessful",
+              "tier": "internal"
             }
           ],
+          "linkedEntity": "BillableHour",
+          "name": "BillableHourTimesheet",
+          "scope": "collection",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals that a billable hour data set has been successfully retrieved.",
+                "key": "BillableHourLoaded",
+                "name": "BillableHour loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[BillableHour]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved, populated",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a failure to load billable hour data.",
+                "key": "BillableHourLoadFailed",
+                "name": "BillableHour load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failed, problem, unsuccessful",
+                "tier": "internal"
+              },
+              {
+                "description": "Signals the display of the hours list.",
+                "key": "OPEN_HOURS",
+                "name": "Open Hours",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "type": "BillableHour"
+                  }
+                ],
+                "synonyms": "show, display, list",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates billable hours have been written off.",
+                "key": "WRITE_OFF_HOURS",
+                "name": "Write Off Hours",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "deduct, remove, cancel",
+                "tier": "customization"
+              },
+              {
+                "description": "Indicates the detail view has been dismissed.",
+                "key": "CLOSE_VIEW",
+                "name": "Close View",
+                "synonyms": "dismiss, close, hide",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals that billable hours have been invoiced.",
+                "key": "INVOICE_HOURS",
+                "name": "Invoice Hours",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "invoice, charge, bill",
+                "tier": "customization"
+              }
+            ],
             "states": [
               {
-                "name": "loading",
-                "isInitial": true
+                "isInitial": true,
+                "name": "loading"
               },
               {
                 "name": "browsing"
@@ -242,100 +379,8 @@
                 "name": "error"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "BillableHourLoaded",
-                "name": "BillableHour loaded",
-                "description": "Signals that a billable hour data set has been successfully retrieved.",
-                "synonyms": "loaded, fetched, retrieved, populated",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[BillableHour]"
-                  }
-                ]
-              },
-              {
-                "key": "BillableHourLoadFailed",
-                "name": "BillableHour load failed",
-                "description": "Indicates a failure to load billable hour data.",
-                "synonyms": "error, failed, problem, unsuccessful",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "OPEN_HOURS",
-                "name": "Open Hours",
-                "description": "Signals the display of the hours list.",
-                "synonyms": "show, display, list",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "BillableHour"
-                  }
-                ]
-              },
-              {
-                "key": "WRITE_OFF_HOURS",
-                "name": "Write Off Hours",
-                "description": "Indicates billable hours have been written off.",
-                "synonyms": "deduct, remove, cancel",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE_VIEW",
-                "name": "Close View",
-                "description": "Indicates the detail view has been dismissed.",
-                "synonyms": "dismiss, close, hide",
-                "tier": "essential"
-              },
-              {
-                "key": "INVOICE_HOURS",
-                "name": "Invoice Hours",
-                "description": "Signals that billable hours have been invoiced.",
-                "synonyms": "invoice, charge, bill",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              }
-            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -351,44 +396,42 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Loading time entries…"
+                          "content": "Loading time entries…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "type": "stack",
+                      "className": "py-12",
+                      "direction": "vertical",
                       "gap": "md",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "browsing",
-                "event": "BillableHourLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
                       "children": [
                         {
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "clock"
+                              "name": "clock",
+                              "type": "icon"
                             },
                             {
                               "content": "@config.title",
@@ -397,38 +440,38 @@
                             }
                           ],
                           "direction": "horizontal",
-                          "align": "center",
+                          "gap": "sm",
                           "type": "stack"
                         },
                         {
                           "children": [
                             {
                               "icon": "clock",
-                              "look": "@config.statLook",
                               "label": "Total entries",
-                              "value": "@payload.data.length",
-                              "type": "stat-display"
+                              "look": "@config.statLook",
+                              "type": "stat-display",
+                              "value": "@payload.data.length"
                             },
                             {
+                              "icon": "hourglass",
                               "label": "Unbilled hours",
-                              "type": "stat-display",
-                              "value": "248",
                               "look": "@config.statLook",
-                              "icon": "hourglass"
+                              "type": "stat-display",
+                              "value": "248"
                             },
                             {
                               "icon": "file-text",
                               "label": "Invoiced this month",
+                              "look": "@config.statLook",
                               "type": "stat-display",
-                              "value": "32",
-                              "look": "@config.statLook"
+                              "value": "32"
                             },
                             {
                               "icon": "x-circle",
-                              "type": "stat-display",
-                              "value": "4",
+                              "label": "Written off",
                               "look": "@config.statLook",
-                              "label": "Written off"
+                              "type": "stat-display",
+                              "value": "4"
                             }
                           ],
                           "cols": 4.0,
@@ -438,10 +481,12 @@
                           "type": "divider"
                         },
                         {
+                          "cols": 1.0,
+                          "entity": "@payload.data",
                           "fields": [
                             {
-                              "name": "workerName",
                               "label": "Worker",
+                              "name": "workerName",
                               "variant": "caption"
                             },
                             {
@@ -450,14 +495,14 @@
                               "variant": "caption"
                             },
                             {
-                              "variant": "caption",
                               "label": "Date",
-                              "name": "workDate"
+                              "name": "workDate",
+                              "variant": "caption"
                             },
                             {
-                              "variant": "caption",
+                              "label": "Hours",
                               "name": "hours",
-                              "label": "Hours"
+                              "variant": "caption"
                             },
                             {
                               "label": "Rate",
@@ -466,12 +511,11 @@
                             },
                             {
                               "label": "Status",
-                              "variant": "badge",
-                              "name": "invoiceStatus"
+                              "name": "invoiceStatus",
+                              "variant": "badge"
                             }
                           ],
                           "gap": "sm",
-                          "entity": "@payload.data",
                           "itemActions": [
                             {
                               "event": "OPEN_HOURS",
@@ -486,35 +530,36 @@
                             }
                           ],
                           "look": "@config.tableLook",
-                          "type": "data-grid",
-                          "cols": 1.0
+                          "type": "data-grid"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "BillableHourLoaded",
+                "from": "loading",
+                "to": "browsing"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "BillableHourLoadFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "alert",
                       "message": "@payload.error",
+                      "type": "alert",
                       "variant": "error"
                     }
                   ]
-                ]
+                ],
+                "event": "BillableHourLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "browsing",
-                "to": "viewing_single",
-                "event": "OPEN_HOURS",
                 "effects": [
                   [
                     "set",
@@ -575,24 +620,24 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
                               "action": "CLOSE_VIEW",
+                              "label": "Back",
                               "type": "button",
-                              "variant": "ghost",
-                              "label": "Back"
+                              "variant": "ghost"
                             },
                             {
                               "name": "clock",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
+                              "content": "@entity.workerName",
                               "type": "typography",
-                              "content": "@entity.workerName"
+                              "variant": "h3"
                             },
                             {
                               "label": "@entity.invoiceStatus",
@@ -600,142 +645,142 @@
                               "variant": "default"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center",
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "direction": "vertical",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "content": "Matter",
-                                  "variant": "caption",
                                   "color": "muted",
-                                  "type": "typography"
+                                  "content": "Matter",
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
+                                  "content": "@entity.matterId",
                                   "type": "typography",
-                                  "variant": "body",
-                                  "content": "@entity.matterId"
+                                  "variant": "body"
                                 }
                               ],
+                              "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack"
                             },
                             {
                               "children": [
                                 {
-                                  "type": "typography",
-                                  "content": "Project",
                                   "color": "muted",
+                                  "content": "Project",
+                                  "type": "typography",
                                   "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "@entity.projectId",
+                                  "type": "typography",
                                   "variant": "body"
                                 }
                               ],
+                              "direction": "horizontal",
                               "gap": "md",
-                              "type": "stack",
-                              "direction": "horizontal"
+                              "type": "stack"
                             },
                             {
-                              "direction": "horizontal",
-                              "type": "stack",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "color": "muted",
-                                  "variant": "caption",
-                                  "content": "Description"
+                                  "content": "Description",
+                                  "type": "typography",
+                                  "variant": "caption"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "@entity.description",
+                                  "type": "typography",
                                   "variant": "body"
                                 }
                               ],
-                              "gap": "md"
+                              "direction": "horizontal",
+                              "gap": "md",
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "direction": "vertical",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "simple-grid",
-                          "cols": 3.0,
                           "children": [
                             {
-                              "type": "stat-display",
-                              "value": "@entity.hours",
                               "icon": "clock",
                               "label": "Hours",
-                              "look": "@config.statLook"
+                              "look": "@config.statLook",
+                              "type": "stat-display",
+                              "value": "@entity.hours"
                             },
                             {
-                              "value": "@entity.rate",
-                              "look": "@config.statLook",
                               "icon": "dollar-sign",
                               "label": "Rate",
-                              "type": "stat-display"
+                              "look": "@config.statLook",
+                              "type": "stat-display",
+                              "value": "@entity.rate"
                             },
                             {
+                              "icon": "calendar",
                               "label": "Date",
-                              "type": "stat-display",
-                              "value": "@entity.workDate",
                               "look": "@config.statLook",
-                              "icon": "calendar"
+                              "type": "stat-display",
+                              "value": "@entity.workDate"
                             }
-                          ]
+                          ],
+                          "cols": 3.0,
+                          "type": "simple-grid"
                         },
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "align": "center",
                           "children": [
                             {
+                              "action": "INVOICE_HOURS",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "label": "Invoice",
                               "type": "button",
-                              "variant": "primary",
-                              "action": "INVOICE_HOURS"
+                              "variant": "primary"
                             },
                             {
-                              "type": "button",
                               "action": "WRITE_OFF_HOURS",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
                               "label": "Write Off",
+                              "type": "button",
                               "variant": "danger"
                             }
                           ],
+                          "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
-              },
-              {
+                ],
+                "event": "OPEN_HOURS",
                 "from": "browsing",
-                "to": "loading",
-                "event": "WRITE_OFF_HOURS",
+                "to": "viewing_single"
+              },
+              {
                 "effects": [
                   [
                     "set",
@@ -756,113 +801,69 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "variant": "caption",
-                          "color": "muted",
-                          "type": "typography",
-                          "content": "Writing off hours…"
-                        }
-                      ],
-                      "className": "py-12",
-                      "gap": "md",
-                      "align": "center"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
-                "event": "CLOSE_VIEW",
-                "effects": [
-                  [
-                    "fetch",
-                    "BillableHour",
-                    {
-                      "emit": {
-                        "failure": "BillableHourLoadFailed",
-                        "success": "BillableHourLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "className": "py-12",
-                      "gap": "md",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading time entries…",
                           "color": "muted",
+                          "content": "Writing off hours…",
                           "type": "typography",
                           "variant": "caption"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "viewing_single",
-                "to": "loading",
-                "event": "INVOICE_HOURS",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.id"
-                  ],
-                  [
-                    "fetch",
-                    "BillableHour",
-                    {
-                      "emit": {
-                        "success": "BillableHourLoaded",
-                        "failure": "BillableHourLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "color": "muted",
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Invoicing hours…"
-                        }
-                      ],
                       "className": "py-12",
-                      "align": "center",
-                      "gap": "md",
                       "direction": "vertical",
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "WRITE_OFF_HOURS",
+                "from": "browsing",
+                "to": "loading"
               },
               {
+                "effects": [
+                  [
+                    "fetch",
+                    "BillableHour",
+                    {
+                      "emit": {
+                        "failure": "BillableHourLoadFailed",
+                        "success": "BillableHourLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading time entries…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "CLOSE_VIEW",
                 "from": "viewing_single",
-                "to": "loading",
-                "event": "WRITE_OFF_HOURS",
+                "to": "loading"
+              },
+              {
                 "effects": [
                   [
                     "set",
@@ -883,38 +884,43 @@
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "align": "center",
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Writing off hours…",
                           "color": "muted",
+                          "content": "Invoicing hours…",
                           "type": "typography",
                           "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INVOICE_HOURS",
+                "from": "viewing_single",
+                "to": "loading"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.id"
+                  ],
                   [
                     "fetch",
                     "BillableHour",
                     {
                       "emit": {
-                        "success": "BillableHourLoaded",
-                        "failure": "BillableHourLoadFailed"
+                        "failure": "BillableHourLoadFailed",
+                        "success": "BillableHourLoaded"
                       }
                     }
                   ],
@@ -922,65 +928,59 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "spinner",
-                      "size": "sm"
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Writing off hours…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "WRITE_OFF_HOURS",
+                "from": "viewing_single",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "BillableHour",
+                    {
+                      "emit": {
+                        "failure": "BillableHourLoadFailed",
+                        "success": "BillableHourLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "size": "sm",
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "config": {
-            "tableLook": {
-              "type": "string",
-              "default": "dense",
-              "label": "Table look",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            },
-            "statLook": {
-              "type": "string",
-              "default": "elevated",
-              "label": "Stat display look",
-              "description": "Layer 2 visual treatment for stat / KPI cards.",
-              "tier": "presentation",
-              "values": [
-                "elevated",
-                "flat",
-                "progress-backed",
-                "gauge",
-                "sparkline"
-              ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Time Entries",
-              "label": "Section title",
-              "description": "Heading shown above the time-entries list",
-              "tier": "presentation"
-            }
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "BillableHourPage",
-          "path": "/timesheet",
-          "traits": [
-            {
-              "ref": "BillableHourTimesheet"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

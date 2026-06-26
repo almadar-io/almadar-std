@@ -1,109 +1,168 @@
 {
-  "name": "std-autocomplete",
-  "version": "1.0.0",
   "description": "std-autocomplete — reusable inline typeahead: as the user types (AUTO_QUERY), fetches the linked entity filtered by @config.searchField and shows a compact suggestions list; picking one emits AUTO_SELECTED { id } for the consumer to open the record or fill a field. Rebind to any entity; configure searchField + the label field shown per suggestion.",
+  "name": "std-autocomplete",
   "orbitals": [
     {
-      "name": "AutocompleteOrbital",
       "entity": {
-        "name": "AutoTarget",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "name",
-            "type": "string",
             "description": "The primary label matched + shown per suggestion.",
-            "synonyms": "title, label, productName"
+            "name": "name",
+            "synonyms": "title, label, productName",
+            "type": "string"
           },
           {
-            "name": "searchTerm",
-            "type": "string",
             "default": "",
-            "intrinsic": true,
             "description": "The current typed query.",
-            "synonyms": "query, term, q"
+            "intrinsic": true,
+            "name": "searchTerm",
+            "synonyms": "query, term, q",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "AutoTarget",
+        "persistence": "runtime"
       },
+      "name": "AutocompleteOrbital",
+      "pages": [
+        {
+          "name": "AutocompletePage",
+          "path": "/autocomplete",
+          "traits": [
+            {
+              "ref": "Autocomplete"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "Autocomplete",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "searchTerm"
-            ]
-          },
           "category": "interaction",
-          "linkedEntity": "AutoTarget",
+          "config": {
+            "placeholder": {
+              "default": "Search…",
+              "description": "Hint text in the empty typeahead input.",
+              "label": "Placeholder",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "searchField": {
+              "default": "name",
+              "description": "Entity field matched against the typed query (case-insensitive substring).",
+              "label": "Search field",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "suggestionFields": {
+              "default": [
+                {
+                  "label": "Name",
+                  "name": "name",
+                  "variant": "body"
+                }
+              ],
+              "description": "Fields shown per suggestion row.",
+              "items": {
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Suggestion fields",
+              "tier": "presentation",
+              "type": "[AutoSuggestSpec]"
+            }
+          },
           "emits": [
             {
-              "event": "AutoLoaded",
               "description": "Suggestion matches loaded",
-              "scope": "internal",
+              "event": "AutoLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[AutoTarget]"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AutoFailed",
               "description": "Suggestion fetch failed",
-              "scope": "internal",
+              "event": "AutoFailed",
               "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AUTO_SELECTED",
               "description": "A suggestion was picked; carries the chosen record id for the consumer to open or bind.",
-              "synonyms": "select, choose, pick",
-              "tier": "essential",
-              "scope": "external",
+              "event": "AUTO_SELECTED",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "scope": "external",
+              "synonyms": "select, choose, pick",
+              "tier": "essential"
             }
           ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
+          "entityContract": {
+            "provides": [
+              "searchTerm"
             ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AutoTarget",
+          "name": "Autocomplete",
+          "scope": "collection",
+          "stateMachine": {
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "The user typed/submitted a query in the typeahead input.",
                 "key": "AUTO_QUERY",
                 "name": "Auto Query",
-                "description": "The user typed/submitted a query in the typeahead input.",
-                "synonyms": "type, query, search",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "value",
                     "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "type, query, search",
+                "tier": "essential"
               },
               {
                 "key": "AutoLoaded",
@@ -116,18 +175,18 @@
                 ]
               },
               {
+                "description": "The user clicked a suggestion.",
                 "key": "AUTO_SELECT",
                 "name": "Auto Select",
-                "description": "The user clicked a suggestion.",
-                "synonyms": "pick, choose, open",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "pick, choose, open",
+                "tier": "essential"
               },
               {
                 "key": "AutoFailed",
@@ -140,25 +199,28 @@
                 ]
               },
               {
+                "description": "A suggestion was picked; carries the chosen record id for the consumer to open or bind.",
                 "key": "AUTO_SELECTED",
                 "name": "Auto Selected",
-                "description": "A suggestion was picked; carries the chosen record id for the consumer to open or bind.",
-                "synonyms": "select, choose, pick",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "id",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "select, choose, pick",
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
               }
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -169,18 +231,18 @@
                     "render-ui",
                     "main",
                     {
-                      "query": "@entity.searchTerm",
                       "event": "AUTO_QUERY",
-                      "type": "search-input",
-                      "placeholder": "@config.placeholder"
+                      "placeholder": "@config.placeholder",
+                      "query": "@entity.searchTerm",
+                      "type": "search-input"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "AUTO_QUERY",
                 "effects": [
                   [
                     "set",
@@ -191,6 +253,10 @@
                     "fetch",
                     "AutoTarget",
                     {
+                      "emit": {
+                        "failure": "AutoFailed",
+                        "success": "AutoLoaded"
+                      },
                       "filter": [
                         "or",
                         [
@@ -207,56 +273,51 @@
                           ],
                           "@payload.value"
                         ]
-                      ],
-                      "emit": {
-                        "success": "AutoLoaded",
-                        "failure": "AutoFailed"
-                      }
+                      ]
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "xs",
                       "children": [
                         {
-                          "placeholder": "@config.placeholder",
                           "event": "AUTO_QUERY",
-                          "type": "search-input",
-                          "query": "@entity.searchTerm"
+                          "placeholder": "@config.placeholder",
+                          "query": "@entity.searchTerm",
+                          "type": "search-input"
                         },
                         {
                           "size": "sm",
                           "type": "spinner"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "xs",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AUTO_QUERY",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "AutoLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "gap": "xs",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "type": "search-input",
                           "event": "AUTO_QUERY",
                           "placeholder": "@config.placeholder",
-                          "query": "@entity.searchTerm"
+                          "query": "@entity.searchTerm",
+                          "type": "search-input"
                         },
                         {
-                          "type": "data-list",
+                          "entity": "@payload.data",
+                          "fields": "@config.suggestionFields",
                           "itemActions": [
                             {
                               "event": "AUTO_SELECT",
@@ -264,19 +325,20 @@
                               "variant": "ghost"
                             }
                           ],
-                          "entity": "@payload.data",
-                          "fields": "@config.suggestionFields"
+                          "type": "data-list"
                         }
                       ],
+                      "direction": "vertical",
+                      "gap": "xs",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AutoLoaded",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "AUTO_SELECT",
                 "effects": [
                   [
                     "emit",
@@ -289,101 +351,39 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "search-input",
-                      "query": "@entity.searchTerm",
                       "event": "AUTO_QUERY",
-                      "placeholder": "@config.placeholder"
+                      "placeholder": "@config.placeholder",
+                      "query": "@entity.searchTerm",
+                      "type": "search-input"
                     }
                   ]
-                ]
+                ],
+                "event": "AUTO_SELECT",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "AutoFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "search-input",
-                      "query": "@entity.searchTerm",
+                      "event": "AUTO_QUERY",
                       "placeholder": "@config.placeholder",
-                      "event": "AUTO_QUERY"
+                      "query": "@entity.searchTerm",
+                      "type": "search-input"
                     }
                   ]
-                ]
+                ],
+                "event": "AutoFailed",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "suggestionFields": {
-              "type": "[AutoSuggestSpec]",
-              "default": [
-                {
-                  "label": "Name",
-                  "name": "name",
-                  "variant": "body"
-                }
-              ],
-              "label": "Suggestion fields",
-              "description": "Fields shown per suggestion row.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "placeholder": {
-              "type": "string",
-              "default": "Search…",
-              "label": "Placeholder",
-              "description": "Hint text in the empty typeahead input.",
-              "tier": "presentation"
-            },
-            "searchField": {
-              "type": "string",
-              "default": "name",
-              "label": "Search field",
-              "description": "Entity field matched against the typed query (case-insensitive substring).",
-              "tier": "presentation"
-            }
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "AutocompletePage",
-          "path": "/autocomplete",
-          "traits": [
-            {
-              "ref": "Autocomplete"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

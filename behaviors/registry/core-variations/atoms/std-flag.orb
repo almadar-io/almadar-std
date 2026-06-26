@@ -1,51 +1,43 @@
 {
-  "name": "std-flag",
-  "version": "2.0.0",
   "description": "std-flag — user content-report form. A std-form-advanced variation bound to a Flag entity (reason + details): the form persists the report and emits FlagSubmitted for cross-trait moderation listeners. Stays importable so a consumer orbital gains the Flag entity + report form via `uses` alongside its own primary entity.",
+  "name": "std-flag",
   "orbitals": [
     {
-      "name": "FlagOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-form-advanced",
-          "as": "FormAdvanced"
-        }
-      ],
       "entity": {
-        "name": "Flag",
         "collection": "flags",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "targetId",
-            "type": "string",
             "default": "",
             "description": "Unique identifier of the resource being flagged.",
-            "synonyms": "reference, identifier, key"
+            "name": "targetId",
+            "synonyms": "reference, identifier, key",
+            "type": "string"
           },
           {
-            "name": "targetType",
-            "type": "string",
             "default": "",
             "description": "Specifies the type of the target being flagged.",
-            "synonyms": "type, kind, category"
+            "name": "targetType",
+            "synonyms": "type, kind, category",
+            "type": "string"
           },
           {
-            "name": "reportedBy",
-            "type": "string",
             "default": "",
             "description": "The user who submitted the report.",
-            "synonyms": "reporter, submitter, user"
+            "name": "reportedBy",
+            "synonyms": "reporter, submitter, user",
+            "type": "string"
           },
           {
-            "name": "reason",
-            "type": "string",
             "default": "spam",
+            "description": "The justification for flagging content.",
+            "name": "reason",
+            "synonyms": "category, type, cause, rationale",
+            "type": "string",
             "values": [
               "spam",
               "abuse",
@@ -53,55 +45,25 @@
               "misinformation",
               "nsfw",
               "other"
-            ],
-            "description": "The justification for flagging content.",
-            "synonyms": "category, type, cause, rationale"
+            ]
           },
           {
-            "name": "notes",
-            "type": "string",
             "default": "",
             "description": "Additional textual information or comments.",
-            "synonyms": "comment, remark, details, explanation"
+            "name": "notes",
+            "synonyms": "comment, remark, details, explanation",
+            "type": "string"
           },
           {
+            "default": "",
             "name": "createdAt",
-            "type": "string",
-            "default": ""
+            "type": "string"
           }
-        ]
+        ],
+        "name": "Flag",
+        "persistence": "persistent"
       },
-      "traits": [
-        {
-          "ref": "FormAdvanced.traits.FormEntryFormAdvanced",
-          "name": "FlagReport",
-          "linkedEntity": "Flag",
-          "config": {
-            "fields": [
-              {
-                "name": "reason",
-                "type": "enum",
-                "label": "Reason",
-                "values": [
-                  "spam",
-                  "abuse",
-                  "off-topic",
-                  "misinformation",
-                  "nsfw",
-                  "other"
-                ]
-              },
-              {
-                "type": "textarea",
-                "name": "notes",
-                "label": "Details"
-              }
-            ],
-            "title": "Report content",
-            "icon": "flag"
-          }
-        }
-      ],
+      "name": "FlagOrbital",
       "pages": [
         {
           "name": "FlagReportPage",
@@ -112,7 +74,45 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "fields": [
+              {
+                "label": "Reason",
+                "name": "reason",
+                "type": "enum",
+                "values": [
+                  "spam",
+                  "abuse",
+                  "off-topic",
+                  "misinformation",
+                  "nsfw",
+                  "other"
+                ]
+              },
+              {
+                "label": "Details",
+                "name": "notes",
+                "type": "textarea"
+              }
+            ],
+            "icon": "flag",
+            "title": "Report content"
+          },
+          "linkedEntity": "Flag",
+          "name": "FlagReport",
+          "ref": "FormAdvanced.traits.FormEntryFormAdvanced"
+        }
+      ],
+      "uses": [
+        {
+          "as": "FormAdvanced",
+          "from": "std/behaviors/std-form-advanced"
+        }
       ]
     }
-  ]
+  ],
+  "version": "2.0.0"
 }

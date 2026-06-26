@@ -13,10 +13,15 @@ orbital HolidayRunnerBoardOrbital {
     y : number!
     terrain : string
     type : string
+    terrainSprite : asset
     passable : boolean
+    movementCost : number
+    tileType : string
+    elevation : number
   }
   type HolidayRunnerBoardUnitsItem = {
     id : string!
+    position : HolidayRunnerBoardUnitsItemPosition
     x : number
     y : number
     sprite : asset
@@ -25,6 +30,18 @@ orbital HolidayRunnerBoardOrbital {
     team : "player" | "enemy" | "neutral"
     health : number
     maxHealth : number
+  }
+  type HolidayRunnerBoardUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type HolidayRunnerBoardFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    sprite : asset
+    color : string
   }
 
   entity HolidayRunnerBoardItem [runtime] {
@@ -42,33 +59,29 @@ orbital HolidayRunnerBoardOrbital {
           error: @config.error
           tiles: @config.tiles
           units: @config.units
-          tileSprites: @config.tileSprites
+          features: @config.features
           assetManifest: @config.assetManifest
           assetBaseUrl: @config.assetBaseUrl
           scale: @config.scale
           showMinimap: @config.showMinimap
           enableCamera: @config.enableCamera
-          width: @config.width
-          height: @config.height
-          fps: @config.fps
-          backgroundImage: @config.backgroundImage
-          tickEvent: TICK
-          drawEvent: DRAW
+          tileClickEvent: TILE_CLICK
+          unitClickEvent: UNIT_CLICK
           type: holiday-runner-board
         })
     }
 
     emits {
-      TICK -> external {
-        dt : number!
-        frame : number!
+      TILE_CLICK -> external {
+        x : number!
+        y : number!
       }
-        @description "Declarative event: emits UI:{tickEvent} with { dt, frame } each tick"
+        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
         @tier "essential"
-      DRAW -> external {
-        frame : number!
+      UNIT_CLICK -> external {
+        unitId : string!
       }
-        @description "Declarative event: emits UI:{drawEvent} with { frame } each draw frame"
+        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
         @tier "essential"
     }
 
@@ -85,43 +98,27 @@ orbital HolidayRunnerBoardOrbital {
         @label "Error"
         @description "Error state (UiError)"
         @tier "presentation"
-      tiles : [HolidayRunnerBoardTilesItem] = [{ x: 0, y: 0, terrain: "ground", passable: true }, { x: 1, y: 0, terrain: "ground", passable: true }, { x: 2, y: 0, terrain: "platform", passable: true }, { x: 3, y: 0, terrain: "ground", passable: true }, { x: 4, y: 0, terrain: "ground", passable: true }]
+      tiles : [HolidayRunnerBoardTilesItem] = [{ x: 0, y: 0, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 1, y: 0, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 2, y: 0, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 3, y: 0, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 4, y: 0, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 5, y: 0, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 6, y: 0, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 7, y: 0, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 0, y: 1, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 1, y: 1, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 2, y: 1, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 3, y: 1, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 4, y: 1, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 5, y: 1, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 6, y: 1, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 7, y: 1, terrain: "sky", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png" }, { x: 0, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 1, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 2, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 3, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 4, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 5, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 6, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 7, y: 2, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 0, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 1, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 2, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 3, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 4, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 5, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 6, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }, { x: 7, y: 3, terrain: "ground", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }]
         @label "Tiles"
-        @description "Flat side-scroll level tiles (ground, platform, gap)"
+        @description "Side-scroll strip: rows 0–1 sky, rows 2–3 snow ground"
         @tier "presentation"
-      units : [HolidayRunnerBoardUnitsItem] = [{ id: "runner1", x: 1, y: 0, unitType: "runner", name: "Holiday Runner", team: player, health: 3, maxHealth: 3, sprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/units/runner.png" }]
+      units : [HolidayRunnerBoardUnitsItem] = [{ id: "runner1", position: { x: 1, y: 2 }, unitType: "runner", name: "Holiday Runner", team: player, health: 3, maxHealth: 3, sprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/units/runner.png" }]
         @label "Units"
-        @description "Units on the board"
+        @description "Runner unit standing on the ground row"
         @tier "presentation"
-      tileSprites : Map string asset = { ground: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png", platform: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png" }
-        @label "Tile Sprites"
-        @description "Map of terrain type to tile sprite URL (Tappy Plane groundSnow)"
+      features : [HolidayRunnerBoardFeaturesItem] = [{ id: "obs1", x: 4, y: 2, type: "obstacle", sprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/features/obstacle.png", color: "#c0392b" }, { id: "obs2", x: 6, y: 2, type: "obstacle", sprite: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/features/obstacle.png", color: "#c0392b" }]
+        @label "Features"
+        @description "Obstacle features on the ground row"
         @tier "presentation"
       assetManifest : string = ""
         @label "Asset Manifest"
-        @description "Asset sprite manifest"
+        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
         @tier "presentation"
       assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
         @label "Asset Base Url"
         @description "Base URL prepended to manifest sprite paths"
         @tier "presentation"
-      backgroundImage : asset = "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/backgrounds/winter.png"
-        @label "Background Image"
-        @description "Ice/snow parallax sky background (Tappy Plane)"
-        @tier "presentation"
-      width : number = 800
-        @label "Width"
-        @description "Canvas width in pixels"
-        @tier "presentation"
-      height : number = 400
-        @label "Height"
-        @description "Canvas height in pixels"
-        @tier "presentation"
-      fps : number = 60
-        @label "FPS"
-        @description "Target frames per second"
-        @tier "presentation"
-      scale : number = 1.0
+      scale : number = 0.45
         @label "Scale"
         @description "Render scale"
         @tier "presentation"
@@ -129,7 +126,7 @@ orbital HolidayRunnerBoardOrbital {
         @label "Show Minimap"
         @description "Show minimap overlay"
         @tier "presentation"
-      enableCamera : boolean = false
+      enableCamera : boolean = true
         @label "Enable Camera"
         @description "Enable camera pan/zoom controls"
         @tier "presentation"

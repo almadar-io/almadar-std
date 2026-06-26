@@ -1,121 +1,127 @@
 {
-  "name": "std-sidebar-meta",
-  "version": "1.0.0",
   "description": "Right-rail meta panel — Linear/Jira/GitHub-style issue sidebar. Stacked label/value rows grouped with dividers. Standalone atom; fetches one SidebarRecord and renders inline.",
+  "name": "std-sidebar-meta",
   "orbitals": [
     {
-      "name": "SidebarMetaOrbital",
       "entity": {
-        "name": "SidebarRecord",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "title",
-            "type": "string",
-            "required": true,
             "default": "Untitled",
             "description": "The descriptive name of the record.",
-            "synonyms": "name, heading, subject"
+            "name": "title",
+            "required": true,
+            "synonyms": "name, heading, subject",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "open",
+            "description": "Current state of the record.",
+            "name": "status",
+            "synonyms": "state, condition, phase",
+            "type": "string",
             "values": [
               "open",
               "in_progress",
               "closed"
-            ],
-            "description": "Current state of the record.",
-            "synonyms": "state, condition, phase"
+            ]
           },
           {
-            "name": "priority",
-            "type": "string",
             "default": "medium",
+            "description": "Indicates the level of importance or urgency.",
+            "name": "priority",
+            "synonyms": "severity, importance, urgency",
+            "type": "string",
             "values": [
               "low",
               "medium",
               "high"
-            ],
-            "description": "Indicates the level of importance or urgency.",
-            "synonyms": "severity, importance, urgency"
+            ]
           },
           {
-            "name": "assignee",
-            "type": "string",
             "default": "",
             "description": "The user currently responsible for the item.",
-            "synonyms": "owner, responsible, assignedTo"
+            "name": "assignee",
+            "synonyms": "owner, responsible, assignedTo",
+            "type": "string"
           },
           {
-            "name": "reporter",
-            "type": "string",
             "default": "",
             "description": "The user who initially reported the item.",
-            "synonyms": "owner, submitter, creator"
+            "name": "reporter",
+            "synonyms": "owner, submitter, creator",
+            "type": "string"
           },
           {
-            "name": "milestone",
-            "type": "string",
             "default": "",
             "description": "The target date for completing related work.",
-            "synonyms": "due date, target date, completion date"
+            "name": "milestone",
+            "synonyms": "due date, target date, completion date",
+            "type": "string"
           },
           {
-            "name": "labels",
-            "type": "string",
             "default": "",
             "description": "A collection of descriptive tags or categories.",
-            "synonyms": "tags, categories, keywords, markers"
+            "name": "labels",
+            "synonyms": "tags, categories, keywords, markers",
+            "type": "string"
           },
           {
+            "default": "",
             "name": "createdAt",
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           {
+            "default": "",
             "name": "updatedAt",
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           {
-            "name": "errorMessage",
-            "type": "string",
             "default": "",
             "description": "Error message associated with the record.",
-            "synonyms": "error, fault, issue"
+            "name": "errorMessage",
+            "synonyms": "error, fault, issue",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "SidebarRecord",
+        "persistence": "runtime"
       },
+      "name": "SidebarMetaOrbital",
+      "pages": [
+        {
+          "name": "SidebarMetaPage",
+          "path": "/sidebar-meta",
+          "traits": [
+            {
+              "ref": "SidebarMeta"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "SidebarMeta",
           "category": "interaction",
-          "linkedEntity": "SidebarRecord",
           "emits": [
             {
-              "event": "SidebarRecordLoaded",
               "description": "Signals successful retrieval of data for the sidebar.",
-              "synonyms": "loaded, fetched, received, updated",
-              "tier": "essential",
+              "event": "SidebarRecordLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[object]"
                 }
-              ]
+              ],
+              "synonyms": "loaded, fetched, received, updated",
+              "tier": "essential"
             },
             {
-              "event": "SidebarRecordLoadFailed",
               "description": "Indicates failure to load the sidebar record.",
-              "synonyms": "error, failed, problem, unsuccessful",
-              "tier": "internal",
+              "event": "SidebarRecordLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -125,43 +131,37 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failed, problem, unsuccessful",
+              "tier": "internal"
             }
           ],
+          "linkedEntity": "SidebarRecord",
+          "name": "SidebarMeta",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "loading",
-                "isInitial": true
-              },
-              {
-                "name": "error"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Signals successful retrieval of data for the sidebar.",
                 "key": "SidebarRecordLoaded",
                 "name": "SidebarRecord loaded",
-                "description": "Signals successful retrieval of data for the sidebar.",
-                "synonyms": "loaded, fetched, received, updated",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[object]"
                   }
-                ]
+                ],
+                "synonyms": "loaded, fetched, received, updated",
+                "tier": "essential"
               },
               {
+                "description": "Indicates failure to load the sidebar record.",
                 "key": "SidebarRecordLoadFailed",
                 "name": "SidebarRecord load failed",
-                "description": "Indicates failure to load the sidebar record.",
-                "synonyms": "error, failed, problem, unsuccessful",
-                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -171,40 +171,48 @@
                     "name": "code",
                     "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "error, failed, problem, unsuccessful",
+                "tier": "internal"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "loading"
+              },
+              {
+                "name": "error"
               }
             ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
                     "SidebarRecord",
                     {
-                      "limit": 1.0,
                       "emit": {
-                        "success": "SidebarRecordLoaded",
-                        "failure": "SidebarRecordLoadFailed"
-                      }
+                        "failure": "SidebarRecordLoadFailed",
+                        "success": "SidebarRecordLoaded"
+                      },
+                      "limit": 1.0
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Loading…"
+                      "title": "Loading…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "SidebarRecordLoaded",
                 "effects": [
                   [
                     "set",
@@ -330,133 +338,22 @@
                     "render-ui",
                     "main",
                     {
-                      "padding": "md",
                       "children": [
                         {
                           "children": [
                             {
-                              "type": "stack",
-                              "direction": "vertical",
                               "children": [
                                 {
                                   "color": "muted",
-                                  "variant": "caption",
+                                  "content": "@entity.id",
                                   "type": "typography",
-                                  "content": "@entity.id"
+                                  "variant": "caption"
                                 },
                                 {
                                   "content": "@entity.title",
-                                  "weight": "semibold",
+                                  "type": "typography",
                                   "variant": "h4",
-                                  "type": "typography"
-                                }
-                              ],
-                              "gap": "xs"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "justify": "between",
-                              "type": "stack",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "variant": "overline",
-                                  "color": "muted",
-                                  "content": "Status"
-                                },
-                                {
-                                  "size": "sm",
-                                  "variant": "default",
-                                  "label": "@entity.status",
-                                  "type": "badge"
-                                }
-                              ],
-                              "direction": "horizontal",
-                              "gap": "sm"
-                            },
-                            {
-                              "justify": "between",
-                              "direction": "horizontal",
-                              "align": "center",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "content": "Priority",
-                                  "variant": "overline"
-                                },
-                                {
-                                  "label": "@entity.priority",
-                                  "size": "sm",
-                                  "type": "badge",
-                                  "variant": "neutral"
-                                }
-                              ],
-                              "gap": "sm"
-                            },
-                            {
-                              "type": "divider"
-                            },
-                            {
-                              "gap": "xs",
-                              "type": "stack",
-                              "children": [
-                                {
-                                  "color": "muted",
-                                  "variant": "overline",
-                                  "type": "typography",
-                                  "content": "Assignee"
-                                },
-                                {
-                                  "gap": "sm",
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "type": "avatar",
-                                      "name": "@entity.assignee",
-                                      "size": "xs"
-                                    },
-                                    {
-                                      "variant": "body",
-                                      "content": "@entity.assignee",
-                                      "type": "typography"
-                                    }
-                                  ]
-                                }
-                              ],
-                              "direction": "vertical"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "overline",
-                                  "content": "Reporter"
-                                },
-                                {
-                                  "align": "center",
-                                  "gap": "sm",
-                                  "type": "stack",
-                                  "children": [
-                                    {
-                                      "type": "avatar",
-                                      "name": "@entity.reporter",
-                                      "size": "xs"
-                                    },
-                                    {
-                                      "type": "typography",
-                                      "content": "@entity.reporter",
-                                      "variant": "body"
-                                    }
-                                  ],
-                                  "direction": "horizontal"
+                                  "weight": "semibold"
                                 }
                               ],
                               "direction": "vertical",
@@ -467,105 +364,216 @@
                               "type": "divider"
                             },
                             {
-                              "gap": "sm",
-                              "justify": "between",
-                              "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
                                   "color": "muted",
-                                  "variant": "overline",
-                                  "content": "Milestone",
-                                  "type": "typography"
+                                  "content": "Status",
+                                  "type": "typography",
+                                  "variant": "overline"
                                 },
                                 {
-                                  "variant": "body",
-                                  "type": "typography",
-                                  "content": "@entity.milestone"
+                                  "label": "@entity.status",
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "default"
                                 }
                               ],
                               "direction": "horizontal",
-                              "align": "center"
+                              "gap": "sm",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
-                              "type": "stack",
-                              "direction": "vertical",
+                              "align": "center",
                               "children": [
                                 {
                                   "color": "muted",
-                                  "content": "Labels",
-                                  "variant": "overline",
-                                  "type": "typography"
+                                  "content": "Priority",
+                                  "type": "typography",
+                                  "variant": "overline"
                                 },
                                 {
-                                  "variant": "neutral",
-                                  "label": "@entity.labels",
+                                  "label": "@entity.priority",
+                                  "size": "sm",
                                   "type": "badge",
-                                  "size": "sm"
+                                  "variant": "neutral"
                                 }
                               ],
-                              "gap": "xs"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "between",
+                              "type": "stack"
                             },
                             {
                               "type": "divider"
                             },
                             {
-                              "direction": "horizontal",
                               "children": [
                                 {
-                                  "content": "Created",
                                   "color": "muted",
+                                  "content": "Assignee",
                                   "type": "typography",
                                   "variant": "overline"
                                 },
                                 {
-                                  "variant": "caption",
-                                  "content": "@entity.createdAt",
-                                  "color": "muted",
-                                  "type": "typography"
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "name": "@entity.assignee",
+                                      "size": "xs",
+                                      "type": "avatar"
+                                    },
+                                    {
+                                      "content": "@entity.assignee",
+                                      "type": "typography",
+                                      "variant": "body"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
                                 }
                               ],
-                              "type": "stack",
-                              "gap": "sm",
-                              "align": "center",
-                              "justify": "between"
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Reporter",
+                                  "type": "typography",
+                                  "variant": "overline"
+                                },
+                                {
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "name": "@entity.reporter",
+                                      "size": "xs",
+                                      "type": "avatar"
+                                    },
+                                    {
+                                      "content": "@entity.reporter",
+                                      "type": "typography",
+                                      "variant": "body"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
                             },
                             {
                               "align": "center",
-                              "type": "stack",
-                              "gap": "sm",
-                              "justify": "between",
                               "children": [
                                 {
-                                  "content": "Updated",
                                   "color": "muted",
+                                  "content": "Milestone",
                                   "type": "typography",
                                   "variant": "overline"
                                 },
                                 {
-                                  "content": "@entity.updatedAt",
-                                  "variant": "caption",
+                                  "content": "@entity.milestone",
                                   "type": "typography",
-                                  "color": "muted"
+                                  "variant": "body"
                                 }
                               ],
-                              "direction": "horizontal"
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Labels",
+                                  "type": "typography",
+                                  "variant": "overline"
+                                },
+                                {
+                                  "label": "@entity.labels",
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "neutral"
+                                }
+                              ],
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "type": "divider"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Created",
+                                  "type": "typography",
+                                  "variant": "overline"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": "@entity.createdAt",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "between",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "Updated",
+                                  "type": "typography",
+                                  "variant": "overline"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": "@entity.updatedAt",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "between",
+                              "type": "stack"
                             }
                           ],
+                          "direction": "vertical",
                           "gap": "md",
-                          "type": "stack",
-                          "direction": "vertical"
+                          "type": "stack"
                         }
                       ],
                       "look": "flat-bordered",
+                      "padding": "md",
                       "type": "card"
                     }
                   ]
-                ]
+                ],
+                "event": "SidebarRecordLoaded",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "SidebarRecordLoadFailed",
                 "effects": [
                   [
                     "set",
@@ -581,39 +589,31 @@
                       "type": "error-state"
                     }
                   ]
-                ]
+                ],
+                "event": "SidebarRecordLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Retrying…"
+                      "title": "Retrying…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "SidebarMetaPage",
-          "path": "/sidebar-meta",
-          "traits": [
-            {
-              "ref": "SidebarMeta"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

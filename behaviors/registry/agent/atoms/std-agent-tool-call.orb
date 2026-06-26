@@ -1,131 +1,136 @@
 {
-  "name": "std-agent-tool-call",
-  "version": "1.0.0",
   "description": "std-agent-tool-call as a Function",
+  "name": "std-agent-tool-call",
   "orbitals": [
     {
-      "name": "AgentToolCallOrbital",
       "entity": {
-        "name": "AgentToolCall",
         "collection": "agenttoolcalls",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
             "type": "string"
           },
           {
-            "name": "name",
-            "type": "string",
             "description": "A human-readable identifier for the tool call.",
-            "synonyms": "label, identifier, title"
+            "name": "name",
+            "synonyms": "label, identifier, title",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A human-readable explanation of the call's purpose.",
-            "synonyms": "explanation, summary, notes"
+            "name": "description",
+            "synonyms": "explanation, summary, notes",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "idle",
+            "description": "Current operational state of the process.",
+            "name": "status",
+            "synonyms": "state, condition, phase",
+            "type": "string",
             "values": [
               "idle",
               "executing",
               "completed",
               "failed"
-            ],
-            "description": "Current operational state of the process.",
-            "synonyms": "state, condition, phase"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "toolName",
-            "type": "string",
             "default": "",
             "description": "The identifier of the tool used.",
-            "synonyms": "tool, identifier, reference"
+            "name": "toolName",
+            "synonyms": "tool, identifier, reference",
+            "type": "string"
           },
           {
-            "name": "args",
-            "type": "string",
             "default": "",
             "description": "Input parameters passed to the function.",
-            "synonyms": "parameters, input, arguments"
+            "name": "args",
+            "synonyms": "parameters, input, arguments",
+            "type": "string"
           },
           {
-            "name": "result",
-            "type": "string",
             "default": "",
             "description": "The outcome of the operation.",
-            "synonyms": "output, value, response"
+            "name": "result",
+            "synonyms": "output, value, response",
+            "type": "string"
           },
           {
-            "name": "error",
-            "type": "string",
             "default": "",
             "description": "Details about any error encountered during execution.",
-            "synonyms": "failure, problem, issue, fault"
+            "name": "error",
+            "synonyms": "failure, problem, issue, fault",
+            "type": "string"
           },
           {
-            "name": "duration",
-            "type": "number",
             "default": 0.0,
             "description": "Time elapsed for the operation, typically in milliseconds.",
-            "synonyms": "elapsed, time, length"
+            "name": "duration",
+            "synonyms": "elapsed, time, length",
+            "type": "number"
           },
           {
-            "name": "action",
-            "type": "string",
             "default": "",
             "description": "The specific operation performed.",
-            "synonyms": "operation, task, verb"
+            "name": "action",
+            "synonyms": "operation, task, verb",
+            "type": "string"
           },
           {
-            "name": "detail",
-            "type": "string",
             "default": "",
             "description": "Provides additional information or context about the call.",
-            "synonyms": "notes, remarks, specifics, details"
+            "name": "detail",
+            "synonyms": "notes, remarks, specifics, details",
+            "type": "string"
           },
           {
-            "name": "timestamp",
-            "type": "string",
             "default": "",
             "description": "The date and time when the event occurred.",
-            "synonyms": "date, time, when"
+            "name": "timestamp",
+            "synonyms": "date, time, when",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "AgentToolCall",
+        "persistence": "persistent"
       },
+      "name": "AgentToolCallOrbital",
+      "pages": [
+        {
+          "name": "AgentToolCallPage",
+          "path": "/agenttoolcalls",
+          "traits": [
+            {
+              "ref": "AgentToolCallModal"
+            },
+            {
+              "ref": "AgentToolCallAgent"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "AgentToolCallModal",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "AgentToolCall",
           "emits": [
             {
               "event": "INVOKED",
-              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "external"
             },
             {
-              "event": "AgentToolCallLoaded",
               "description": "Fired when AgentToolCall finishes loading",
-              "scope": "internal",
+              "event": "AgentToolCallLoaded",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -179,32 +184,32 @@
                   "name": "timestamp",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentToolCallLoadFailed",
               "description": "Fired when AgentToolCall fails to load",
-              "scope": "internal",
+              "event": "AgentToolCallLoadFailed",
               "payloadSchema": [
                 {
                   "name": "message",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
               "event": "AgentToolCallSaved",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
               "event": "AgentToolCallSaveFailed",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -214,19 +219,19 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             }
           ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AgentToolCall",
+          "name": "AgentToolCallModal",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "closed",
-                "isInitial": true
-              },
-              {
-                "name": "open"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
@@ -246,8 +251,8 @@
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "object",
-                    "required": true
+                    "required": true,
+                    "type": "object"
                   }
                 ]
               },
@@ -354,11 +359,17 @@
                 ]
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "closed"
+              },
+              {
+                "name": "open"
+              }
+            ],
             "transitions": [
               {
-                "from": "closed",
-                "to": "closed",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -374,73 +385,70 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "justify": "between",
-                          "type": "stack",
                           "children": [
                             {
-                              "gap": "md",
                               "children": [
                                 {
                                   "name": "wrench",
                                   "type": "icon"
                                 },
                                 {
-                                  "type": "typography",
                                   "content": "Invoke Tool",
+                                  "type": "typography",
                                   "variant": "h2"
                                 }
                               ],
                               "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack"
                             },
                             {
                               "action": "INVOKE",
-                              "variant": "primary",
                               "icon": "wrench",
                               "label": "Open",
-                              "type": "button"
+                              "type": "button",
+                              "variant": "primary"
                             }
                           ],
                           "direction": "horizontal",
-                          "gap": "md"
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "title": "Nothing open",
                           "description": "Click Open to view details in a modal overlay.",
                           "icon": "wrench",
+                          "title": "Nothing open",
                           "type": "empty-state"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "closed",
+                "to": "closed"
               },
               {
-                "from": "closed",
-                "to": "open",
-                "event": "INVOKE",
                 "effects": [
                   [
                     "render-ui",
                     "modal",
                     {
-                      "direction": "vertical",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "wrench"
+                              "name": "wrench",
+                              "type": "icon"
                             },
                             {
                               "content": "Invoke Tool",
@@ -448,32 +456,35 @@
                               "variant": "h3"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "mode": "create",
+                          "cancelEvent": "CLOSE",
                           "fields": [
                             "toolName",
                             "args"
                           ],
-                          "cancelEvent": "CLOSE",
+                          "mode": "create",
                           "submitEvent": "SAVE",
                           "type": "form-section"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INVOKE",
+                "from": "closed",
+                "to": "open"
               },
               {
-                "from": "open",
-                "to": "closed",
-                "event": "CLOSE",
                 "effects": [
                   [
                     "render-ui",
@@ -490,8 +501,8 @@
                     "AgentToolCall",
                     {
                       "emit": {
-                        "success": "AgentToolCallLoaded",
-                        "failure": "AgentToolCallLoadFailed"
+                        "failure": "AgentToolCallLoadFailed",
+                        "success": "AgentToolCallLoaded"
                       }
                     }
                   ],
@@ -501,19 +512,17 @@
                     {
                       "children": [
                         {
-                          "gap": "md",
-                          "type": "stack",
                           "children": [
                             {
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "wrench"
+                                  "name": "wrench",
+                                  "type": "icon"
                                 },
                                 {
                                   "content": "Invoke Tool",
-                                  "variant": "h2",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
                               "direction": "horizontal",
@@ -521,37 +530,39 @@
                               "type": "stack"
                             },
                             {
-                              "type": "button",
+                              "action": "INVOKE",
                               "icon": "wrench",
                               "label": "Open",
-                              "variant": "primary",
-                              "action": "INVOKE"
+                              "type": "button",
+                              "variant": "primary"
                             }
                           ],
                           "direction": "horizontal",
-                          "justify": "between"
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "description": "Click Open to view details in a modal overlay.",
                           "icon": "wrench",
                           "title": "Nothing open",
-                          "description": "Click Open to view details in a modal overlay.",
                           "type": "empty-state"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "CLOSE",
+                "from": "open",
+                "to": "closed"
               },
               {
-                "from": "open",
-                "to": "closed",
-                "event": "SAVE",
                 "effects": [
                   [
                     "persist",
@@ -588,77 +599,76 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "justify": "between",
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "md",
                               "children": [
                                 {
                                   "name": "wrench",
                                   "type": "icon"
                                 },
                                 {
-                                  "variant": "h2",
                                   "content": "Invoke Tool",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "h2"
                                 }
                               ],
+                              "direction": "horizontal",
+                              "gap": "md",
                               "type": "stack"
                             },
                             {
-                              "variant": "primary",
-                              "icon": "wrench",
                               "action": "INVOKE",
+                              "icon": "wrench",
+                              "label": "Open",
                               "type": "button",
-                              "label": "Open"
+                              "variant": "primary"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "title": "Nothing open",
-                          "icon": "wrench",
                           "description": "Click Open to view details in a modal overlay.",
+                          "icon": "wrench",
+                          "title": "Nothing open",
                           "type": "empty-state"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "SAVE",
+                "from": "open",
+                "to": "closed"
               }
             ]
-          },
-          "scope": "instance"
+          }
         },
         {
-          "name": "AgentToolCallAgent",
           "category": "interaction",
-          "linkedEntity": "AgentToolCall",
           "emits": [
             {
               "event": "TOOL_STARTED",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "toolName",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
               "event": "TOOL_COMPLETED",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "toolName",
@@ -668,11 +678,11 @@
                   "name": "result",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
               "event": "LOG_ENTRY",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "action",
@@ -686,12 +696,12 @@
                   "name": "status",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentToolCallLoaded",
               "description": "Fired when AgentToolCall finishes loading",
-              "scope": "internal",
+              "event": "AgentToolCallLoaded",
               "payloadSchema": [
                 {
                   "name": "id",
@@ -745,46 +755,35 @@
                   "name": "timestamp",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentToolCallLoadFailed",
               "description": "Fired when AgentToolCall fails to load",
-              "scope": "internal",
+              "event": "AgentToolCallLoadFailed",
               "payloadSchema": [
                 {
                   "name": "message",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             }
           ],
+          "linkedEntity": "AgentToolCall",
           "listens": [
             {
               "event": "INVOKED",
-              "triggers": "INVOKED",
               "source": {
                 "kind": "trait",
                 "trait": "AgentToolCallModal"
-              }
+              },
+              "triggers": "INVOKED"
             }
           ],
+          "name": "AgentToolCallAgent",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              },
-              {
-                "name": "executing"
-              },
-              {
-                "name": "completed"
-              },
-              {
-                "name": "failed"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
@@ -796,8 +795,8 @@
                 "payloadSchema": [
                   {
                     "name": "data",
-                    "type": "object",
-                    "required": true
+                    "required": true,
+                    "type": "object"
                   }
                 ]
               },
@@ -920,11 +919,23 @@
                 ]
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "executing"
+              },
+              {
+                "name": "completed"
+              },
+              {
+                "name": "failed"
+              }
+            ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -941,17 +952,17 @@
                     "main",
                     {
                       "description": "Tool Call is ready",
-                      "type": "empty-state",
+                      "icon": "wrench",
                       "title": "Tool Call",
-                      "icon": "wrench"
+                      "type": "empty-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "executing",
-                "event": "DO_INVOKE",
                 "effects": [
                   [
                     "set",
@@ -981,12 +992,12 @@
                     "@payload.data.toolName",
                     "@payload.data.args"
                   ]
-                ]
+                ],
+                "event": "DO_INVOKE",
+                "from": "idle",
+                "to": "executing"
               },
               {
-                "from": "idle",
-                "to": "executing",
-                "event": "INVOKED",
                 "effects": [
                   [
                     "set",
@@ -1006,12 +1017,12 @@
                     "@entity.toolName",
                     "@entity.args"
                   ]
-                ]
+                ],
+                "event": "INVOKED",
+                "from": "idle",
+                "to": "executing"
               },
               {
-                "from": "executing",
-                "to": "completed",
-                "event": "DO_INVOKE",
                 "effects": [
                   [
                     "set",
@@ -1031,17 +1042,12 @@
                     "emit",
                     "LOG_ENTRY"
                   ]
-                ]
+                ],
+                "event": "DO_INVOKE",
+                "from": "executing",
+                "to": "completed"
               },
               {
-                "from": "executing",
-                "to": "failed",
-                "event": "CANCEL",
-                "guard": [
-                  "=",
-                  "@entity.status",
-                  "executing"
-                ],
                 "effects": [
                   [
                     "set",
@@ -1057,12 +1063,17 @@
                     "emit",
                     "TOOL_COMPLETED"
                   ]
-                ]
+                ],
+                "event": "CANCEL",
+                "from": "executing",
+                "guard": [
+                  "=",
+                  "@entity.status",
+                  "executing"
+                ],
+                "to": "failed"
               },
               {
-                "from": "executing",
-                "to": "idle",
-                "event": "CANCEL",
                 "effects": [
                   [
                     "set",
@@ -1073,47 +1084,47 @@
                     "emit",
                     "TOOL_COMPLETED"
                   ]
-                ]
+                ],
+                "event": "CANCEL",
+                "from": "executing",
+                "to": "idle"
               },
               {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.toolName",
+                    "@payload.data.toolName"
+                  ],
+                  [
+                    "set",
+                    "@entity.args",
+                    "@payload.data.args"
+                  ],
+                  [
+                    "set",
+                    "@entity.status",
+                    "executing"
+                  ],
+                  [
+                    "emit",
+                    "TOOL_STARTED"
+                  ],
+                  [
+                    "emit",
+                    "LOG_ENTRY"
+                  ],
+                  [
+                    "agent/invoke",
+                    "@payload.data.toolName",
+                    "@payload.data.args"
+                  ]
+                ],
+                "event": "DO_INVOKE",
                 "from": "completed",
-                "to": "executing",
-                "event": "DO_INVOKE",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.toolName",
-                    "@payload.data.toolName"
-                  ],
-                  [
-                    "set",
-                    "@entity.args",
-                    "@payload.data.args"
-                  ],
-                  [
-                    "set",
-                    "@entity.status",
-                    "executing"
-                  ],
-                  [
-                    "emit",
-                    "TOOL_STARTED"
-                  ],
-                  [
-                    "emit",
-                    "LOG_ENTRY"
-                  ],
-                  [
-                    "agent/invoke",
-                    "@payload.data.toolName",
-                    "@payload.data.args"
-                  ]
-                ]
+                "to": "executing"
               },
               {
-                "from": "failed",
-                "to": "executing",
-                "event": "DO_INVOKE",
                 "effects": [
                   [
                     "set",
@@ -1143,27 +1154,16 @@
                     "@payload.data.toolName",
                     "@payload.data.args"
                   ]
-                ]
+                ],
+                "event": "DO_INVOKE",
+                "from": "failed",
+                "to": "executing"
               }
             ]
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "AgentToolCallPage",
-          "path": "/agenttoolcalls",
-          "traits": [
-            {
-              "ref": "AgentToolCallModal"
-            },
-            {
-              "ref": "AgentToolCallAgent"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

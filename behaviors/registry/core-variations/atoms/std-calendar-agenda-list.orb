@@ -1,229 +1,82 @@
 {
-  "name": "std-calendar-agenda-list",
-  "version": "1.2.0",
   "description": "Day-grouped agenda — events organized by date with overline day headers (Today, Tomorrow, Mon Jun 5) and a time marker per event. Inherits std-calendar's fetch + SELECT_DAY state machine; only bodyContent differs from std-calendar's month-grid and std-calendar-week-timeline's 7-col timeline. For appointment queues, class-roster schedules, court-deadline lists where users scan a vertical chronological flow grouped by day.",
+  "name": "std-calendar-agenda-list",
   "orbitals": [
     {
-      "name": "AgendaListCalendarOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-calendar",
-          "as": "Calendar"
-        }
-      ],
       "entity": {
-        "name": "AgendaListEvent",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "name",
-            "type": "string",
             "required": true,
+            "type": "string"
+          },
+          {
             "description": "The event's title or short identifier.",
-            "synonyms": "title, label, eventName"
+            "name": "name",
+            "required": true,
+            "synonyms": "title, label, eventName",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A brief explanation of the event.",
-            "synonyms": "summary, details, notes"
+            "name": "description",
+            "synonyms": "summary, details, notes",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Indicates the current operational state of the event.",
+            "name": "status",
+            "synonyms": "state, condition, flag",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Indicates the current operational state of the event.",
-            "synonyms": "state, condition, flag"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "date",
-            "type": "datetime",
             "default": "",
-            "intrinsic": true
+            "intrinsic": true,
+            "name": "date",
+            "type": "datetime"
           },
           {
-            "name": "time",
-            "type": "string",
             "default": "",
             "description": "The time of the event.",
-            "synonyms": "start time, scheduled time, time slot"
+            "name": "time",
+            "synonyms": "start time, scheduled time, time slot",
+            "type": "string"
           },
           {
-            "name": "duration",
-            "type": "number",
             "default": 60.0,
             "description": "The length of time the event lasts, in minutes.",
-            "synonyms": "length, time, span"
+            "name": "duration",
+            "synonyms": "length, time, span",
+            "type": "number"
           },
           {
-            "name": "dateGroup",
-            "type": "string",
             "default": "",
             "description": "The date to which this event belongs.",
-            "synonyms": "day, date"
+            "name": "dateGroup",
+            "synonyms": "day, date",
+            "type": "string"
           },
           {
-            "name": "selectedRange",
-            "type": "string",
             "default": "month",
-            "intrinsic": true
+            "intrinsic": true,
+            "name": "selectedRange",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "AgendaListEvent",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "ref": "Calendar.traits.CalendarEventCalendar",
-          "name": "AgendaListCalendar",
-          "linkedEntity": "AgendaListEvent",
-          "config": {
-            "bodyContent": {
-              "children": [
-                {
-                  "direction": "horizontal",
-                  "gap": "md",
-                  "type": "stack",
-                  "align": "center",
-                  "justify": "between",
-                  "children": [
-                    {
-                      "type": "stack",
-                      "direction": "horizontal",
-                      "children": [
-                        {
-                          "name": "list",
-                          "type": "icon"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Agenda",
-                          "variant": "h2"
-                        }
-                      ],
-                      "gap": "sm",
-                      "align": "center"
-                    },
-                    {
-                      "type": "date-range-selector",
-                      "selected": "@entity.selectedRange",
-                      "onSelect": "SELECT_DAY"
-                    }
-                  ]
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "renderItem": [
-                    "fn",
-                    "item",
-                    {
-                      "children": [
-                        {
-                          "type": "stack",
-                          "children": [
-                            {
-                              "align": "center",
-                              "gap": "xs",
-                              "children": [
-                                {
-                                  "content": "@config.timeBinding",
-                                  "type": "typography",
-                                  "variant": "overline",
-                                  "color": "muted"
-                                },
-                                {
-                                  "color": "muted",
-                                  "size": "sm",
-                                  "type": "icon",
-                                  "name": "clock"
-                                }
-                              ],
-                              "direction": "vertical",
-                              "type": "stack",
-                              "className": "w-16 shrink-0"
-                            },
-                            {
-                              "orientation": "vertical",
-                              "type": "divider"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "justify": "between",
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "variant": "h4",
-                                      "content": "@config.titleBinding",
-                                      "className": "truncate",
-                                      "weight": "medium"
-                                    },
-                                    {
-                                      "type": "badge",
-                                      "label": "@config.badgeBinding",
-                                      "size": "sm",
-                                      "variant": "default"
-                                    }
-                                  ],
-                                  "type": "stack"
-                                },
-                                {
-                                  "className": "truncate",
-                                  "content": "@config.descriptionBinding",
-                                  "color": "muted",
-                                  "type": "typography",
-                                  "variant": "body2"
-                                }
-                              ],
-                              "type": "stack",
-                              "direction": "vertical",
-                              "className": "flex-1 min-w-0",
-                              "gap": "xs"
-                            }
-                          ],
-                          "align": "start",
-                          "direction": "horizontal",
-                          "gap": "md"
-                        }
-                      ],
-                      "look": "flat-bordered",
-                      "padding": "md",
-                      "type": "card"
-                    }
-                  ],
-                  "fields": [],
-                  "type": "data-list",
-                  "variant": "default",
-                  "gap": "md",
-                  "entity": "@payload.data",
-                  "groupBy": "date"
-                }
-              ],
-              "direction": "vertical",
-              "className": "w-full p-card-md",
-              "gap": "lg",
-              "type": "stack"
-            }
-          }
-        }
-      ],
+      "name": "AgendaListCalendarOrbital",
       "pages": [
         {
           "name": "AgendaListCalendarPage",
@@ -234,7 +87,154 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "list",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "Agenda",
+                          "type": "typography",
+                          "variant": "h2"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    {
+                      "onSelect": "SELECT_DAY",
+                      "selected": "@entity.selectedRange",
+                      "type": "date-range-selector"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "justify": "between",
+                  "type": "stack"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "entity": "@payload.data",
+                  "fields": [],
+                  "gap": "md",
+                  "groupBy": "date",
+                  "renderItem": [
+                    "fn",
+                    "item",
+                    {
+                      "children": [
+                        {
+                          "align": "start",
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "@config.timeBinding",
+                                  "type": "typography",
+                                  "variant": "overline"
+                                },
+                                {
+                                  "color": "muted",
+                                  "name": "clock",
+                                  "size": "sm",
+                                  "type": "icon"
+                                }
+                              ],
+                              "className": "w-16 shrink-0",
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            },
+                            {
+                              "orientation": "vertical",
+                              "type": "divider"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "className": "truncate",
+                                      "content": "@config.titleBinding",
+                                      "type": "typography",
+                                      "variant": "h4",
+                                      "weight": "medium"
+                                    },
+                                    {
+                                      "label": "@config.badgeBinding",
+                                      "size": "sm",
+                                      "type": "badge",
+                                      "variant": "default"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "justify": "between",
+                                  "type": "stack"
+                                },
+                                {
+                                  "className": "truncate",
+                                  "color": "muted",
+                                  "content": "@config.descriptionBinding",
+                                  "type": "typography",
+                                  "variant": "body2"
+                                }
+                              ],
+                              "className": "flex-1 min-w-0",
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "look": "flat-bordered",
+                      "padding": "md",
+                      "type": "card"
+                    }
+                  ],
+                  "type": "data-list",
+                  "variant": "default"
+                }
+              ],
+              "className": "w-full p-card-md",
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            }
+          },
+          "linkedEntity": "AgendaListEvent",
+          "name": "AgendaListCalendar",
+          "ref": "Calendar.traits.CalendarEventCalendar"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Calendar",
+          "from": "std/behaviors/std-calendar"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.2.0"
 }

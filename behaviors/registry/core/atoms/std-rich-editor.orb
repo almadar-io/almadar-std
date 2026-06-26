@@ -1,95 +1,91 @@
 {
-  "name": "std-rich-editor",
-  "version": "1.0.0",
   "description": "std-rich-editor — wiki/CMS Notion-style block editor. Browses documents in `browsing`; opens the rich-block-editor on a selected row; persists block edits + publish status.",
+  "name": "std-rich-editor",
   "orbitals": [
     {
-      "name": "DocumentOrbital",
       "entity": {
-        "name": "Document",
         "collection": "documents",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "title",
-            "type": "string",
             "required": true,
-            "description": "The human-readable name of the document.",
-            "synonyms": "name, heading, label"
+            "type": "string"
           },
           {
-            "name": "blocksJson",
-            "type": "array",
+            "description": "The human-readable name of the document.",
+            "name": "title",
+            "required": true,
+            "synonyms": "name, heading, label",
+            "type": "string"
+          },
+          {
+            "description": "Serialized representation of the document's content blocks.",
             "items": {
-              "type": "object",
               "properties": {
+                "content": {
+                  "name": "content",
+                  "required": false,
+                  "type": "string"
+                },
                 "id": {
                   "name": "id",
-                  "type": "string",
-                  "required": false
+                  "required": false,
+                  "type": "string"
                 },
                 "type": {
                   "name": "type",
-                  "type": "string",
-                  "required": true
-                },
-                "content": {
-                  "name": "content",
-                  "type": "string",
-                  "required": false
+                  "required": true,
+                  "type": "string"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "Serialized representation of the document's content blocks.",
-            "synonyms": "content, data, structure, blocks"
+            "name": "blocksJson",
+            "synonyms": "content, data, structure, blocks",
+            "type": "array"
           },
           {
-            "name": "authorId",
-            "type": "string",
             "description": "Unique identifier of the user who created the document.",
-            "synonyms": "creatorId, userId, ownerId"
+            "name": "authorId",
+            "synonyms": "creatorId, userId, ownerId",
+            "type": "string"
           },
           {
-            "name": "parentId",
-            "type": "string",
             "description": "Reference to the parent document or container.",
-            "synonyms": "parent, container, owner"
+            "name": "parentId",
+            "synonyms": "parent, container, owner",
+            "type": "string"
           },
           {
-            "name": "kind",
-            "type": "string",
             "default": "page",
+            "description": "Specifies the document type.",
+            "name": "kind",
+            "synonyms": "type, documentType, category",
+            "type": "string",
             "values": [
               "page",
               "doc",
               "post"
-            ],
-            "description": "Specifies the document type.",
-            "synonyms": "type, documentType, category"
+            ]
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "draft",
+            "description": "Indicates the current state of the document.",
+            "name": "status",
+            "synonyms": "state, condition, lifecycle",
+            "type": "string",
             "values": [
               "draft",
               "published",
               "archived"
-            ],
-            "description": "Indicates the current state of the document.",
-            "synonyms": "state, condition, lifecycle"
+            ]
           },
           {
-            "name": "version",
-            "type": "number",
             "default": 1.0,
             "description": "Represents the version number of the document.",
-            "synonyms": "revision, release, iteration"
+            "name": "version",
+            "synonyms": "revision, release, iteration",
+            "type": "number"
           },
           {
             "name": "createdAt",
@@ -99,38 +95,84 @@
             "name": "updatedAt",
             "type": "string"
           }
-        ]
+        ],
+        "name": "Document",
+        "persistence": "persistent"
       },
+      "name": "DocumentOrbital",
+      "pages": [
+        {
+          "name": "DocumentEditPage",
+          "path": "/documents/edit",
+          "traits": [
+            {
+              "ref": "DocumentEdit"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "DocumentEdit",
           "category": "interaction",
-          "linkedEntity": "Document",
+          "config": {
+            "statLook": {
+              "default": "elevated",
+              "description": "Layer 2 visual treatment for stat / KPI cards.",
+              "label": "Stat display look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "elevated",
+                "flat",
+                "progress-backed",
+                "gauge",
+                "sparkline"
+              ]
+            },
+            "tableLook": {
+              "default": "dense",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "label": "Table look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "title": {
+              "default": "Documents",
+              "description": "Heading shown above the document list",
+              "label": "Section title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "OPEN",
               "description": "Signals the editor is being displayed.",
-              "synonyms": "show, launch, reveal",
-              "tier": "essential",
+              "event": "OPEN",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 {
                   "name": "row",
-                  "type": "object",
                   "properties": [
                     {
                       "name": "id",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "title",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "blocksJson",
@@ -164,71 +206,72 @@
                       "name": "updatedAt",
                       "type": "string"
                     }
-                  ]
+                  ],
+                  "type": "object"
                 }
-              ]
+              ],
+              "synonyms": "show, launch, reveal",
+              "tier": "essential"
             },
             {
-              "event": "CLOSE_VIEW",
               "description": "Indicates the editor view is being closed.",
+              "event": "CLOSE_VIEW",
               "synonyms": "dismiss, hide, exit",
               "tier": "essential"
             },
             {
-              "event": "BLOCKS_CHANGE",
               "description": "Signals that the content of a block has been modified.",
-              "synonyms": "update, modify, changed, edit",
-              "tier": "essential",
+              "event": "BLOCKS_CHANGE",
               "payloadSchema": [
                 {
                   "name": "blocks",
                   "type": "[ObjectSpec]"
                 }
-              ]
+              ],
+              "synonyms": "update, modify, changed, edit",
+              "tier": "essential"
             },
             {
-              "event": "SAVE",
               "description": "Signals that changes have been saved.",
+              "event": "SAVE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
               "synonyms": "persist, update, commit",
-              "tier": "essential",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                }
-              ]
+              "tier": "essential"
             },
             {
-              "event": "PUBLISH",
               "description": "Signals that content has been published.",
-              "synonyms": "publish, release, finalize",
-              "tier": "essential",
+              "event": "PUBLISH",
               "payloadSchema": [
                 {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "publish, release, finalize",
+              "tier": "essential"
             },
             {
-              "event": "DocumentLoaded",
               "description": "Signals that a document has been successfully loaded.",
-              "synonyms": "loaded, fetched, retrieved",
-              "tier": "essential",
+              "event": "DocumentLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[Document]"
                 }
-              ]
+              ],
+              "synonyms": "loaded, fetched, retrieved",
+              "tier": "essential"
             },
             {
-              "event": "DocumentLoadFailed",
               "description": "Indicates that loading a document failed.",
-              "synonyms": "error, failure, problem, unsuccessful",
-              "tier": "internal",
+              "event": "DocumentLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -238,83 +281,82 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal"
             },
             {
-              "event": "DocumentSaved",
               "description": "Signals that a document has been successfully saved.",
+              "event": "DocumentSaved",
+              "payloadSchema": [
+                {
+                  "name": "row",
+                  "properties": [
+                    {
+                      "name": "id",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "title",
+                      "required": true,
+                      "type": "string"
+                    },
+                    {
+                      "name": "blocksJson",
+                      "type": "[BlockSpec]"
+                    },
+                    {
+                      "name": "authorId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "parentId",
+                      "type": "string"
+                    },
+                    {
+                      "name": "kind",
+                      "type": "string"
+                    },
+                    {
+                      "name": "status",
+                      "type": "string"
+                    },
+                    {
+                      "name": "version",
+                      "type": "number"
+                    },
+                    {
+                      "name": "createdAt",
+                      "type": "string"
+                    },
+                    {
+                      "name": "updatedAt",
+                      "type": "string"
+                    }
+                  ],
+                  "type": "object"
+                }
+              ],
               "synonyms": "saved, persisted, updated",
-              "tier": "essential",
-              "payloadSchema": [
-                {
-                  "name": "row",
-                  "type": "object",
-                  "properties": [
-                    {
-                      "name": "id",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "title",
-                      "type": "string",
-                      "required": true
-                    },
-                    {
-                      "name": "blocksJson",
-                      "type": "[BlockSpec]"
-                    },
-                    {
-                      "name": "authorId",
-                      "type": "string"
-                    },
-                    {
-                      "name": "parentId",
-                      "type": "string"
-                    },
-                    {
-                      "name": "kind",
-                      "type": "string"
-                    },
-                    {
-                      "name": "status",
-                      "type": "string"
-                    },
-                    {
-                      "name": "version",
-                      "type": "number"
-                    },
-                    {
-                      "name": "createdAt",
-                      "type": "string"
-                    },
-                    {
-                      "name": "updatedAt",
-                      "type": "string"
-                    }
-                  ]
-                }
-              ]
+              "tier": "essential"
             },
             {
-              "event": "DocumentPublished",
               "description": "Indicates a document has been successfully published.",
-              "synonyms": "published, released, finalized",
-              "tier": "customization",
+              "event": "DocumentPublished",
               "payloadSchema": [
                 {
                   "name": "row",
-                  "type": "object",
                   "properties": [
                     {
                       "name": "id",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "title",
-                      "type": "string",
-                      "required": true
+                      "required": true,
+                      "type": "string"
                     },
                     {
                       "name": "blocksJson",
@@ -348,15 +390,16 @@
                       "name": "updatedAt",
                       "type": "string"
                     }
-                  ]
+                  ],
+                  "type": "object"
                 }
-              ]
+              ],
+              "synonyms": "published, released, finalized",
+              "tier": "customization"
             },
             {
-              "event": "DocumentSaveFailed",
               "description": "Indicates that saving the document failed.",
-              "synonyms": "error, failure, problem, unsuccessful",
-              "tier": "internal",
+              "event": "DocumentSaveFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -366,14 +409,164 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal"
             }
           ],
+          "linkedEntity": "Document",
+          "name": "DocumentEdit",
+          "scope": "collection",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals that a document has been successfully loaded.",
+                "key": "DocumentLoaded",
+                "name": "Document loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Document]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, retrieved",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals that a document has been successfully saved.",
+                "key": "DocumentSaved",
+                "name": "Document saved",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "Document"
+                  }
+                ],
+                "synonyms": "saved, persisted, updated",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a document has been successfully published.",
+                "key": "DocumentPublished",
+                "name": "Document published",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "Document"
+                  }
+                ],
+                "synonyms": "published, released, finalized",
+                "tier": "customization"
+              },
+              {
+                "description": "Indicates that saving the document failed.",
+                "key": "DocumentSaveFailed",
+                "name": "Document save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates that loading a document failed.",
+                "key": "DocumentLoadFailed",
+                "name": "Document load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal"
+              },
+              {
+                "description": "Signals the editor is being displayed.",
+                "key": "OPEN",
+                "name": "Open",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "row",
+                    "type": "Document"
+                  }
+                ],
+                "synonyms": "show, launch, reveal",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals that content has been published.",
+                "key": "PUBLISH",
+                "name": "Publish",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "publish, release, finalize",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals that the content of a block has been modified.",
+                "key": "BLOCKS_CHANGE",
+                "name": "Blocks Change",
+                "payloadSchema": [
+                  {
+                    "name": "blocks",
+                    "type": "[ObjectSpec]"
+                  }
+                ],
+                "synonyms": "update, modify, changed, edit",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates the editor view is being closed.",
+                "key": "CLOSE_VIEW",
+                "name": "Close View",
+                "synonyms": "dismiss, hide, exit",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals that changes have been saved.",
+                "key": "SAVE",
+                "name": "Save",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "persist, update, commit",
+                "tier": "essential"
+              }
+            ],
             "states": [
               {
-                "name": "loading",
-                "isInitial": true
+                "isInitial": true,
+                "name": "loading"
               },
               {
                 "name": "browsing"
@@ -385,156 +578,8 @@
                 "name": "error"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "DocumentLoaded",
-                "name": "Document loaded",
-                "description": "Signals that a document has been successfully loaded.",
-                "synonyms": "loaded, fetched, retrieved",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Document]"
-                  }
-                ]
-              },
-              {
-                "key": "DocumentSaved",
-                "name": "Document saved",
-                "description": "Signals that a document has been successfully saved.",
-                "synonyms": "saved, persisted, updated",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "Document"
-                  }
-                ]
-              },
-              {
-                "key": "DocumentPublished",
-                "name": "Document published",
-                "description": "Indicates a document has been successfully published.",
-                "synonyms": "published, released, finalized",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "Document"
-                  }
-                ]
-              },
-              {
-                "key": "DocumentSaveFailed",
-                "name": "Document save failed",
-                "description": "Indicates that saving the document failed.",
-                "synonyms": "error, failure, problem, unsuccessful",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "DocumentLoadFailed",
-                "name": "Document load failed",
-                "description": "Indicates that loading a document failed.",
-                "synonyms": "error, failure, problem, unsuccessful",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "OPEN",
-                "name": "Open",
-                "description": "Signals the editor is being displayed.",
-                "synonyms": "show, launch, reveal",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  },
-                  {
-                    "name": "row",
-                    "type": "Document"
-                  }
-                ]
-              },
-              {
-                "key": "PUBLISH",
-                "name": "Publish",
-                "description": "Signals that content has been published.",
-                "synonyms": "publish, release, finalize",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "BLOCKS_CHANGE",
-                "name": "Blocks Change",
-                "description": "Signals that the content of a block has been modified.",
-                "synonyms": "update, modify, changed, edit",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "blocks",
-                    "type": "[ObjectSpec]"
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE_VIEW",
-                "name": "Close View",
-                "description": "Indicates the editor view is being closed.",
-                "synonyms": "dismiss, hide, exit",
-                "tier": "essential"
-              },
-              {
-                "key": "SAVE",
-                "name": "Save",
-                "description": "Signals that changes have been saved.",
-                "synonyms": "persist, update, commit",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              }
-            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -550,81 +595,79 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "py-12",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
-                          "variant": "caption",
-                          "content": "Loading documents…"
+                          "content": "Loading documents…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "gap": "md",
+                      "className": "py-12",
                       "direction": "vertical",
-                      "align": "center"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "browsing",
-                "event": "DocumentLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "children": [
                         {
                           "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "file-text"
+                              "name": "file-text",
+                              "type": "icon"
                             },
                             {
                               "content": "@config.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             }
                           ],
                           "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
                         },
                         {
                           "children": [
                             {
-                              "type": "stat-display",
+                              "icon": "file-text",
                               "label": "Total docs",
-                              "value": "@payload.data.length",
                               "look": "@config.statLook",
-                              "icon": "file-text"
+                              "type": "stat-display",
+                              "value": "@payload.data.length"
                             },
                             {
                               "icon": "edit-3",
                               "label": "Drafts",
-                              "type": "stat-display",
                               "look": "@config.statLook",
+                              "type": "stat-display",
                               "value": "12"
                             },
                             {
-                              "value": "84",
-                              "type": "stat-display",
                               "icon": "check-circle",
                               "label": "Published",
-                              "look": "@config.statLook"
+                              "look": "@config.statLook",
+                              "type": "stat-display",
+                              "value": "84"
                             },
                             {
-                              "label": "Archived",
                               "icon": "archive",
+                              "label": "Archived",
                               "look": "@config.statLook",
                               "type": "stat-display",
                               "value": "9"
@@ -637,42 +680,28 @@
                           "type": "divider"
                         },
                         {
-                          "gap": "sm",
-                          "itemActions": [
-                            {
-                              "variant": "primary",
-                              "icon": "edit",
-                              "event": "OPEN",
-                              "label": "Open"
-                            },
-                            {
-                              "label": "Publish",
-                              "icon": "send",
-                              "variant": "secondary",
-                              "event": "PUBLISH"
-                            }
-                          ],
-                          "type": "data-grid",
+                          "cols": 1.0,
+                          "entity": "@payload.data",
                           "fields": [
                             {
+                              "label": "Title",
                               "name": "title",
-                              "variant": "caption",
-                              "label": "Title"
+                              "variant": "caption"
                             },
                             {
+                              "label": "Kind",
                               "name": "kind",
-                              "variant": "badge",
-                              "label": "Kind"
-                            },
-                            {
-                              "name": "status",
-                              "label": "Status",
                               "variant": "badge"
                             },
                             {
-                              "variant": "caption",
+                              "label": "Status",
+                              "name": "status",
+                              "variant": "badge"
+                            },
+                            {
                               "label": "v",
-                              "name": "version"
+                              "name": "version",
+                              "variant": "caption"
                             },
                             {
                               "label": "Updated",
@@ -680,37 +709,36 @@
                               "variant": "caption"
                             }
                           ],
+                          "gap": "sm",
+                          "itemActions": [
+                            {
+                              "event": "OPEN",
+                              "icon": "edit",
+                              "label": "Open",
+                              "variant": "primary"
+                            },
+                            {
+                              "event": "PUBLISH",
+                              "icon": "send",
+                              "label": "Publish",
+                              "variant": "secondary"
+                            }
+                          ],
                           "look": "@config.tableLook",
-                          "cols": 1.0,
-                          "entity": "@payload.data"
+                          "type": "data-grid"
                         }
                       ],
+                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "DocumentLoaded",
+                "from": "loading",
+                "to": "browsing"
               },
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "DocumentSaved",
-                "effects": [
-                  [
-                    "fetch",
-                    "Document",
-                    {
-                      "emit": {
-                        "success": "DocumentLoaded",
-                        "failure": "DocumentLoadFailed"
-                      }
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "loading",
-                "event": "DocumentPublished",
                 "effects": [
                   [
                     "fetch",
@@ -722,12 +750,29 @@
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "DocumentSaved",
+                "from": "loading",
+                "to": "loading"
               },
               {
+                "effects": [
+                  [
+                    "fetch",
+                    "Document",
+                    {
+                      "emit": {
+                        "failure": "DocumentLoadFailed",
+                        "success": "DocumentLoaded"
+                      }
+                    }
+                  ]
+                ],
+                "event": "DocumentPublished",
                 "from": "loading",
-                "to": "error",
-                "event": "DocumentSaveFailed",
+                "to": "loading"
+              },
+              {
                 "effects": [
                   [
                     "render-ui",
@@ -738,28 +783,28 @@
                       "variant": "error"
                     }
                   ]
-                ]
+                ],
+                "event": "DocumentSaveFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "DocumentLoadFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
+                      "message": "@payload.error",
                       "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
+                      "variant": "error"
                     }
                   ]
-                ]
+                ],
+                "event": "DocumentLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "browsing",
-                "to": "editing",
-                "event": "OPEN",
                 "effects": [
                   [
                     "set",
@@ -815,83 +860,83 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
                               "action": "CLOSE_VIEW",
                               "label": "Back",
-                              "variant": "ghost",
-                              "type": "button"
+                              "type": "button",
+                              "variant": "ghost"
                             },
                             {
                               "name": "file-text",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "content": "@entity.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             },
                             {
+                              "label": "@entity.status",
                               "type": "badge",
-                              "variant": "secondary",
-                              "label": "@entity.status"
+                              "variant": "secondary"
                             }
                           ],
-                          "type": "stack",
-                          "align": "center",
                           "direction": "horizontal",
-                          "gap": "sm"
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "rich-block-editor",
+                          "changeEvent": "BLOCKS_CHANGE",
+                          "initialBlocks": "@entity.blocksJson",
                           "placeholder": "Start writing…",
                           "showToolbar": true,
-                          "changeEvent": "BLOCKS_CHANGE",
-                          "initialBlocks": "@entity.blocksJson"
+                          "type": "rich-block-editor"
                         },
                         {
                           "align": "center",
                           "children": [
                             {
-                              "type": "button",
-                              "label": "Save",
                               "action": "SAVE",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
+                              "label": "Save",
+                              "type": "button",
                               "variant": "primary"
                             },
                             {
-                              "type": "button",
-                              "variant": "secondary",
+                              "action": "PUBLISH",
                               "actionPayload": {
                                 "id": "@entity.id"
                               },
-                              "action": "PUBLISH",
-                              "label": "Publish"
+                              "label": "Publish",
+                              "type": "button",
+                              "variant": "secondary"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "type": "stack"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "OPEN",
+                "from": "browsing",
+                "to": "editing"
               },
               {
-                "from": "browsing",
-                "to": "loading",
-                "event": "PUBLISH",
                 "effects": [
                   [
                     "set",
@@ -903,8 +948,8 @@
                     "Document",
                     {
                       "emit": {
-                        "success": "DocumentLoaded",
-                        "failure": "DocumentLoadFailed"
+                        "failure": "DocumentLoadFailed",
+                        "success": "DocumentLoaded"
                       }
                     }
                   ],
@@ -912,9 +957,7 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
                       "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
@@ -922,32 +965,34 @@
                         {
                           "color": "muted",
                           "content": "Publishing document…",
-                          "variant": "caption",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
+                      "className": "py-12",
                       "direction": "vertical",
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "PUBLISH",
+                "from": "browsing",
+                "to": "loading"
               },
               {
-                "from": "editing",
-                "to": "editing",
-                "event": "BLOCKS_CHANGE",
                 "effects": [
                   [
                     "set",
                     "@entity.blocksJson",
                     "@payload.blocks"
                   ]
-                ]
+                ],
+                "event": "BLOCKS_CHANGE",
+                "from": "editing",
+                "to": "editing"
               },
               {
-                "from": "editing",
-                "to": "loading",
-                "event": "CLOSE_VIEW",
                 "effects": [
                   [
                     "fetch",
@@ -963,8 +1008,6 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "className": "py-12",
                       "align": "center",
                       "children": [
                         {
@@ -972,21 +1015,23 @@
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
                           "content": "Loading documents…",
+                          "type": "typography",
                           "variant": "caption"
                         }
                       ],
+                      "className": "py-12",
                       "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "CLOSE_VIEW",
+                "from": "editing",
+                "to": "loading"
               },
               {
-                "from": "editing",
-                "to": "loading",
-                "event": "SAVE",
                 "effects": [
                   [
                     "set",
@@ -1000,8 +1045,8 @@
                     "@entity",
                     {
                       "emit": {
-                        "success": "DocumentSaved",
-                        "failure": "DocumentSaveFailed"
+                        "failure": "DocumentSaveFailed",
+                        "success": "DocumentSaved"
                       }
                     }
                   ],
@@ -1009,30 +1054,30 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "content": "Saving document…",
                           "type": "typography",
-                          "color": "muted",
                           "variant": "caption"
                         }
                       ],
-                      "align": "center",
-                      "className": "py-12"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "SAVE",
+                "from": "editing",
+                "to": "loading"
               },
               {
-                "from": "editing",
-                "to": "loading",
-                "event": "PUBLISH",
                 "effects": [
                   [
                     "set",
@@ -1061,37 +1106,37 @@
                     "main",
                     {
                       "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "variant": "caption",
                           "color": "muted",
-                          "content": "Publishing document…"
+                          "content": "Publishing document…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
+                      "className": "py-12",
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "PUBLISH",
+                "from": "editing",
+                "to": "loading"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
                     "Document",
                     {
                       "emit": {
-                        "success": "DocumentLoaded",
-                        "failure": "DocumentLoadFailed"
+                        "failure": "DocumentLoadFailed",
+                        "success": "DocumentLoaded"
                       }
                     }
                   ],
@@ -1103,61 +1148,16 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "config": {
-            "title": {
-              "type": "string",
-              "default": "Documents",
-              "label": "Section title",
-              "description": "Heading shown above the document list",
-              "tier": "presentation"
-            },
-            "tableLook": {
-              "type": "string",
-              "default": "dense",
-              "label": "Table look",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            },
-            "statLook": {
-              "type": "string",
-              "default": "elevated",
-              "label": "Stat display look",
-              "description": "Layer 2 visual treatment for stat / KPI cards.",
-              "tier": "presentation",
-              "values": [
-                "elevated",
-                "flat",
-                "progress-backed",
-                "gauge",
-                "sparkline"
-              ]
-            }
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "DocumentEditPage",
-          "path": "/documents/edit",
-          "traits": [
-            {
-              "ref": "DocumentEdit"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

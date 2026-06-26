@@ -1,513 +1,163 @@
 {
-  "name": "std-thread-email-threaded",
-  "version": "1.3.5",
   "description": "Email-threaded — Gmail/Outlook/Mail.app split-pane: left message list (sender, subject, preview), right pane shows the focused message with from/to/subject header and quoted-reply nested tree. For helpdesk email threads, support tickets, document discussions that read like email.",
+  "name": "std-thread-email-threaded",
   "orbitals": [
     {
-      "name": "EmailThreadedOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-thread",
-          "as": "Thread"
-        }
-      ],
       "entity": {
-        "name": "EmailThreadedPost",
         "collection": "emailthreadedposts",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "parentId",
-            "type": "string",
             "description": "Identifier of the parent message in the thread.",
-            "synonyms": "parent, reference, source"
+            "name": "parentId",
+            "synonyms": "parent, reference, source",
+            "type": "string"
           },
           {
-            "name": "threadRootId",
-            "type": "string",
-            "required": true,
             "description": "Identifier of the top-level message in the thread.",
-            "synonyms": "root id, top id, original id"
+            "name": "threadRootId",
+            "required": true,
+            "synonyms": "root id, top id, original id",
+            "type": "string"
           },
           {
-            "name": "authorId",
-            "type": "string",
-            "required": true,
             "description": "Unique identifier for the post's author.",
-            "synonyms": "author, user, creator"
+            "name": "authorId",
+            "required": true,
+            "synonyms": "author, user, creator",
+            "type": "string"
           },
           {
-            "name": "authorName",
-            "type": "string",
-            "required": true,
             "description": "The name of the post's author.",
-            "synonyms": "author, creator, user"
+            "name": "authorName",
+            "required": true,
+            "synonyms": "author, creator, user",
+            "type": "string"
           },
           {
-            "name": "fromAddress",
-            "type": "string",
-            "required": true,
             "description": "The email sender's address.",
-            "synonyms": "sender, originator, email"
+            "name": "fromAddress",
+            "required": true,
+            "synonyms": "sender, originator, email",
+            "type": "string"
           },
           {
-            "name": "toAddress",
-            "type": "string",
-            "required": true,
             "description": "Recipient(s) of the email message.",
-            "synonyms": "recipient, cc, to"
+            "name": "toAddress",
+            "required": true,
+            "synonyms": "recipient, cc, to",
+            "type": "string"
           },
           {
-            "name": "subject",
-            "type": "string",
-            "required": true,
             "description": "The title or heading of the message.",
-            "synonyms": "title, heading, topic"
-          },
-          {
-            "name": "preview",
-            "type": "string",
-            "description": "A short excerpt of the post's content.",
-            "synonyms": "snippet, excerpt, summary, abstract"
-          },
-          {
-            "name": "content",
-            "type": "string",
+            "name": "subject",
             "required": true,
+            "synonyms": "title, heading, topic",
+            "type": "string"
+          },
+          {
+            "description": "A short excerpt of the post's content.",
+            "name": "preview",
+            "synonyms": "snippet, excerpt, summary, abstract",
+            "type": "string"
+          },
+          {
             "description": "The main text of the post's message.",
-            "synonyms": "body, message, text"
+            "name": "content",
+            "required": true,
+            "synonyms": "body, message, text",
+            "type": "string"
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "voteCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of votes or ratings associated with this item.",
-            "synonyms": "rating, score, likes, upvotes"
+            "name": "voteCount",
+            "synonyms": "rating, score, likes, upvotes",
+            "type": "number"
           },
           {
-            "name": "replyCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of replies to this post.",
-            "synonyms": "count, number of replies, response count"
+            "name": "replyCount",
+            "synonyms": "count, number of replies, response count",
+            "type": "number"
           },
           {
-            "name": "replies",
-            "type": "relation",
-            "relation": {
-              "entity": "EmailThreadedPost",
-              "cardinality": "many"
-            },
             "description": "Nested replies to this post, forming a threaded conversation.",
-            "synonyms": "replies, children, nested replies, descendants"
+            "name": "replies",
+            "relation": {
+              "cardinality": "many",
+              "entity": "EmailThreadedPost"
+            },
+            "synonyms": "replies, children, nested replies, descendants",
+            "type": "relation"
           },
           {
-            "name": "focusedRow",
-            "type": "object",
             "default": {},
+            "description": "The complete, rendered content of the currently selected message.",
+            "name": "focusedRow",
             "properties": {
               "authorName": {
                 "name": "authorName",
-                "type": "string",
-                "required": false
-              },
-              "createdAt": {
-                "name": "createdAt",
-                "type": "string",
-                "required": false
-              },
-              "subject": {
-                "name": "subject",
-                "type": "string",
-                "required": false
-              },
-              "fromAddress": {
-                "name": "fromAddress",
-                "type": "string",
-                "required": false
-              },
-              "id": {
-                "name": "id",
-                "type": "string",
-                "required": false
-              },
-              "toAddress": {
-                "name": "toAddress",
-                "type": "string",
-                "required": false
+                "required": false,
+                "type": "string"
               },
               "content": {
                 "name": "content",
-                "type": "string",
-                "required": false
+                "required": false,
+                "type": "string"
+              },
+              "createdAt": {
+                "name": "createdAt",
+                "required": false,
+                "type": "string"
+              },
+              "fromAddress": {
+                "name": "fromAddress",
+                "required": false,
+                "type": "string"
+              },
+              "id": {
+                "name": "id",
+                "required": false,
+                "type": "string"
               },
               "replies": {
                 "name": "replies",
-                "type": "relation",
-                "required": false,
                 "relation": {
-                  "entity": "EmailThreadedPost",
-                  "cardinality": "many"
-                }
+                  "cardinality": "many",
+                  "entity": "EmailThreadedPost"
+                },
+                "required": false,
+                "type": "relation"
+              },
+              "subject": {
+                "name": "subject",
+                "required": false,
+                "type": "string"
+              },
+              "toAddress": {
+                "name": "toAddress",
+                "required": false,
+                "type": "string"
               }
             },
-            "description": "The complete, rendered content of the currently selected message.",
-            "synonyms": "message, body, full text"
+            "synonyms": "message, body, full text",
+            "type": "object"
           }
-        ]
+        ],
+        "name": "EmailThreadedPost",
+        "persistence": "persistent"
       },
-      "traits": [
-        {
-          "ref": "Thread.traits.ThreadPostBrowse",
-          "name": "EmailThreaded",
-          "linkedEntity": "EmailThreadedPost",
-          "config": {
-            "bodyContent": {
-              "children": [
-                {
-                  "children": [
-                    {
-                      "type": "stack",
-                      "className": "p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface-subtle)] z-10",
-                      "children": [
-                        {
-                          "name": "inbox",
-                          "size": "sm",
-                          "type": "icon"
-                        },
-                        {
-                          "weight": "medium",
-                          "type": "typography",
-                          "content": "Inbox",
-                          "variant": "label"
-                        }
-                      ],
-                      "align": "center",
-                      "direction": "horizontal",
-                      "gap": "sm"
-                    },
-                    {
-                      "variant": "default",
-                      "gap": "none",
-                      "entity": "@payload.data",
-                      "renderItem": [
-                        "fn",
-                        "item",
-                        {
-                          "gap": "sm",
-                          "type": "stack",
-                          "className": "min-w-0 px-4 py-3",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "type": "avatar",
-                              "size": "sm",
-                              "name": "@config.emailAuthorBinding",
-                              "className": "shrink-0 mt-0.5"
-                            },
-                            {
-                              "gap": "xs",
-                              "type": "stack",
-                              "direction": "vertical",
-                              "className": "flex-1 min-w-0",
-                              "children": [
-                                {
-                                  "align": "center",
-                                  "type": "stack",
-                                  "direction": "horizontal",
-                                  "gap": "sm",
-                                  "children": [
-                                    {
-                                      "weight": "semibold",
-                                      "content": "@config.emailAuthorBinding",
-                                      "variant": "body2",
-                                      "type": "typography",
-                                      "className": "flex-1 truncate"
-                                    },
-                                    {
-                                      "className": "shrink-0 text-[var(--color-text-muted)]",
-                                      "type": "icon",
-                                      "name": "chevron-right",
-                                      "size": "xs"
-                                    }
-                                  ],
-                                  "className": "min-w-0"
-                                },
-                                {
-                                  "className": "truncate",
-                                  "type": "typography",
-                                  "content": "@config.emailSubjectBinding",
-                                  "variant": "body2"
-                                },
-                                {
-                                  "className": "truncate",
-                                  "color": "muted",
-                                  "content": "@config.emailPreviewBinding",
-                                  "type": "typography",
-                                  "variant": "caption"
-                                }
-                              ]
-                            }
-                          ],
-                          "align": "start"
-                        }
-                      ],
-                      "itemClickEvent": "SELECT",
-                      "type": "data-list",
-                      "fields": []
-                    }
-                  ],
-                  "type": "stack",
-                  "gap": "none",
-                  "direction": "vertical",
-                  "className": "w-80 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-subtle)] overflow-y-auto"
-                },
-                {
-                  "className": "flex-1 min-w-0 p-card-lg overflow-y-auto",
-                  "gap": "lg",
-                  "children": [
-                    {
-                      "children": [
-                        {
-                          "align": "start",
-                          "direction": "horizontal",
-                          "gap": "md",
-                          "justify": "between",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "type": "typography",
-                              "className": "flex-1 min-w-0",
-                              "variant": "h3",
-                              "content": "@config.detailSubjectBinding"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "type": "button",
-                                  "action": "REPLY",
-                                  "actionPayload": {
-                                    "parentId": "@entity.focusedRow.id"
-                                  },
-                                  "size": "sm",
-                                  "variant": "secondary",
-                                  "icon": "corner-up-left",
-                                  "label": "Reply"
-                                },
-                                {
-                                  "action": "REPLY",
-                                  "type": "button",
-                                  "size": "sm",
-                                  "variant": "ghost",
-                                  "icon": "corner-up-right",
-                                  "label": "Forward"
-                                }
-                              ],
-                              "className": "shrink-0",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "type": "stack",
-                              "align": "center"
-                            }
-                          ]
-                        },
-                        {
-                          "gap": "md",
-                          "align": "center",
-                          "type": "stack",
-                          "children": [
-                            {
-                              "className": "shrink-0",
-                              "size": "md",
-                              "type": "avatar",
-                              "name": "@config.detailAuthorBinding"
-                            },
-                            {
-                              "direction": "vertical",
-                              "className": "flex-1 min-w-0",
-                              "type": "stack",
-                              "gap": "none",
-                              "children": [
-                                {
-                                  "children": [
-                                    {
-                                      "variant": "caption",
-                                      "content": "From",
-                                      "color": "muted",
-                                      "className": "w-10 shrink-0",
-                                      "type": "typography"
-                                    },
-                                    {
-                                      "content": "@config.detailFromBinding",
-                                      "className": "truncate",
-                                      "weight": "medium",
-                                      "type": "typography",
-                                      "variant": "body2"
-                                    }
-                                  ],
-                                  "type": "stack",
-                                  "align": "center",
-                                  "direction": "horizontal",
-                                  "gap": "xs"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "className": "w-10 shrink-0",
-                                      "color": "muted",
-                                      "variant": "caption",
-                                      "content": "To",
-                                      "type": "typography"
-                                    },
-                                    {
-                                      "content": "@config.detailToBinding",
-                                      "type": "typography",
-                                      "variant": "body2",
-                                      "className": "truncate"
-                                    }
-                                  ],
-                                  "direction": "horizontal",
-                                  "align": "center",
-                                  "type": "stack",
-                                  "gap": "xs"
-                                }
-                              ]
-                            },
-                            {
-                              "className": "shrink-0",
-                              "type": "typography",
-                              "content": "@config.detailDateBinding",
-                              "color": "muted",
-                              "variant": "caption"
-                            }
-                          ],
-                          "direction": "horizontal"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "pb-4 border-b border-[var(--color-border)]",
-                      "gap": "md"
-                    },
-                    {
-                      "type": "card",
-                      "children": {
-                        "content": "@config.detailContentBinding",
-                        "variant": "body",
-                        "className": "leading-relaxed whitespace-pre-wrap",
-                        "type": "typography"
-                      },
-                      "padding": "lg",
-                      "look": "flat-bordered"
-                    },
-                    {
-                      "type": "stack",
-                      "gap": "sm",
-                      "children": [
-                        {
-                          "name": "corner-down-right",
-                          "size": "xs",
-                          "type": "icon"
-                        },
-                        {
-                          "color": "muted",
-                          "variant": "label",
-                          "type": "typography",
-                          "content": "Quoted replies"
-                        }
-                      ],
-                      "direction": "horizontal",
-                      "align": "center"
-                    },
-                    {
-                      "entity": "@entity.focusedRow.replies",
-                      "renderItem": [
-                        "fn",
-                        "reply",
-                        {
-                          "type": "card",
-                          "padding": "md",
-                          "children": {
-                            "children": [
-                              {
-                                "direction": "horizontal",
-                                "type": "stack",
-                                "align": "center",
-                                "children": [
-                                  {
-                                    "size": "xs",
-                                    "name": "@config.replyAuthorBinding",
-                                    "type": "avatar"
-                                  },
-                                  {
-                                    "type": "typography",
-                                    "content": "@config.replyAuthorBinding",
-                                    "variant": "body2",
-                                    "weight": "medium"
-                                  },
-                                  {
-                                    "type": "typography",
-                                    "variant": "caption",
-                                    "content": "@config.replyFromBinding",
-                                    "color": "muted"
-                                  },
-                                  {
-                                    "content": "·",
-                                    "variant": "caption",
-                                    "color": "muted",
-                                    "type": "typography"
-                                  },
-                                  {
-                                    "variant": "caption",
-                                    "type": "typography",
-                                    "content": "@config.replyDateBinding",
-                                    "color": "muted"
-                                  }
-                                ],
-                                "gap": "sm"
-                              },
-                              {
-                                "type": "typography",
-                                "variant": "body",
-                                "content": "@config.replyContentBinding"
-                              }
-                            ],
-                            "type": "stack",
-                            "direction": "vertical",
-                            "gap": "sm"
-                          },
-                          "look": "flat-bordered",
-                          "className": "border-l-4 border-l-[var(--color-primary)] ml-card-md"
-                        }
-                      ],
-                      "type": "data-list",
-                      "gap": "sm",
-                      "fields": [],
-                      "variant": "default"
-                    }
-                  ],
-                  "direction": "vertical",
-                  "type": "stack"
-                }
-              ],
-              "align": "stretch",
-              "type": "stack",
-              "direction": "horizontal",
-              "className": "w-full my-section min-h-[32rem] max-h-[80vh] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-sm bg-[var(--color-surface)]",
-              "gap": "none"
-            }
-          }
-        }
-      ],
+      "name": "EmailThreadedOrbital",
       "pages": [
         {
           "name": "EmailThreadedPage",
@@ -518,7 +168,357 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "bodyContent": {
+              "align": "stretch",
+              "children": [
+                {
+                  "children": [
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "inbox",
+                          "size": "sm",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "Inbox",
+                          "type": "typography",
+                          "variant": "label",
+                          "weight": "medium"
+                        }
+                      ],
+                      "className": "p-card-md border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface-subtle)] z-10",
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    {
+                      "entity": "@payload.data",
+                      "fields": [],
+                      "gap": "none",
+                      "itemClickEvent": "SELECT",
+                      "renderItem": [
+                        "fn",
+                        "item",
+                        {
+                          "align": "start",
+                          "children": [
+                            {
+                              "className": "shrink-0 mt-0.5",
+                              "name": "@config.emailAuthorBinding",
+                              "size": "sm",
+                              "type": "avatar"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "className": "flex-1 truncate",
+                                      "content": "@config.emailAuthorBinding",
+                                      "type": "typography",
+                                      "variant": "body2",
+                                      "weight": "semibold"
+                                    },
+                                    {
+                                      "className": "shrink-0 text-[var(--color-text-muted)]",
+                                      "name": "chevron-right",
+                                      "size": "xs",
+                                      "type": "icon"
+                                    }
+                                  ],
+                                  "className": "min-w-0",
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
+                                },
+                                {
+                                  "className": "truncate",
+                                  "content": "@config.emailSubjectBinding",
+                                  "type": "typography",
+                                  "variant": "body2"
+                                },
+                                {
+                                  "className": "truncate",
+                                  "color": "muted",
+                                  "content": "@config.emailPreviewBinding",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "className": "flex-1 min-w-0",
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
+                            }
+                          ],
+                          "className": "min-w-0 px-4 py-3",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        }
+                      ],
+                      "type": "data-list",
+                      "variant": "default"
+                    }
+                  ],
+                  "className": "w-80 shrink-0 border-r border-[var(--color-border)] bg-[var(--color-surface-subtle)] overflow-y-auto",
+                  "direction": "vertical",
+                  "gap": "none",
+                  "type": "stack"
+                },
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "align": "start",
+                          "children": [
+                            {
+                              "className": "flex-1 min-w-0",
+                              "content": "@config.detailSubjectBinding",
+                              "type": "typography",
+                              "variant": "h3"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "action": "REPLY",
+                                  "actionPayload": {
+                                    "parentId": "@entity.focusedRow.id"
+                                  },
+                                  "icon": "corner-up-left",
+                                  "label": "Reply",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "secondary"
+                                },
+                                {
+                                  "action": "REPLY",
+                                  "icon": "corner-up-right",
+                                  "label": "Forward",
+                                  "size": "sm",
+                                  "type": "button",
+                                  "variant": "ghost"
+                                }
+                              ],
+                              "className": "shrink-0",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
+                        },
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "className": "shrink-0",
+                              "name": "@config.detailAuthorBinding",
+                              "size": "md",
+                              "type": "avatar"
+                            },
+                            {
+                              "children": [
+                                {
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "className": "w-10 shrink-0",
+                                      "color": "muted",
+                                      "content": "From",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "className": "truncate",
+                                      "content": "@config.detailFromBinding",
+                                      "type": "typography",
+                                      "variant": "body2",
+                                      "weight": "medium"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                },
+                                {
+                                  "align": "center",
+                                  "children": [
+                                    {
+                                      "className": "w-10 shrink-0",
+                                      "color": "muted",
+                                      "content": "To",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    },
+                                    {
+                                      "className": "truncate",
+                                      "content": "@config.detailToBinding",
+                                      "type": "typography",
+                                      "variant": "body2"
+                                    }
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "flex-1 min-w-0",
+                              "direction": "vertical",
+                              "gap": "none",
+                              "type": "stack"
+                            },
+                            {
+                              "className": "shrink-0",
+                              "color": "muted",
+                              "content": "@config.detailDateBinding",
+                              "type": "typography",
+                              "variant": "caption"
+                            }
+                          ],
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "className": "pb-4 border-b border-[var(--color-border)]",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    },
+                    {
+                      "children": {
+                        "className": "leading-relaxed whitespace-pre-wrap",
+                        "content": "@config.detailContentBinding",
+                        "type": "typography",
+                        "variant": "body"
+                      },
+                      "look": "flat-bordered",
+                      "padding": "lg",
+                      "type": "card"
+                    },
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "corner-down-right",
+                          "size": "xs",
+                          "type": "icon"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Quoted replies",
+                          "type": "typography",
+                          "variant": "label"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    {
+                      "entity": "@entity.focusedRow.replies",
+                      "fields": [],
+                      "gap": "sm",
+                      "renderItem": [
+                        "fn",
+                        "reply",
+                        {
+                          "children": {
+                            "children": [
+                              {
+                                "align": "center",
+                                "children": [
+                                  {
+                                    "name": "@config.replyAuthorBinding",
+                                    "size": "xs",
+                                    "type": "avatar"
+                                  },
+                                  {
+                                    "content": "@config.replyAuthorBinding",
+                                    "type": "typography",
+                                    "variant": "body2",
+                                    "weight": "medium"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": "@config.replyFromBinding",
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": "·",
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  },
+                                  {
+                                    "color": "muted",
+                                    "content": "@config.replyDateBinding",
+                                    "type": "typography",
+                                    "variant": "caption"
+                                  }
+                                ],
+                                "direction": "horizontal",
+                                "gap": "sm",
+                                "type": "stack"
+                              },
+                              {
+                                "content": "@config.replyContentBinding",
+                                "type": "typography",
+                                "variant": "body"
+                              }
+                            ],
+                            "direction": "vertical",
+                            "gap": "sm",
+                            "type": "stack"
+                          },
+                          "className": "border-l-4 border-l-[var(--color-primary)] ml-card-md",
+                          "look": "flat-bordered",
+                          "padding": "md",
+                          "type": "card"
+                        }
+                      ],
+                      "type": "data-list",
+                      "variant": "default"
+                    }
+                  ],
+                  "className": "flex-1 min-w-0 p-card-lg overflow-y-auto",
+                  "direction": "vertical",
+                  "gap": "lg",
+                  "type": "stack"
+                }
+              ],
+              "className": "w-full my-section min-h-[32rem] max-h-[80vh] border border-[var(--color-border)] rounded-lg overflow-hidden shadow-sm bg-[var(--color-surface)]",
+              "direction": "horizontal",
+              "gap": "none",
+              "type": "stack"
+            }
+          },
+          "linkedEntity": "EmailThreadedPost",
+          "name": "EmailThreaded",
+          "ref": "Thread.traits.ThreadPostBrowse"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Thread",
+          "from": "std/behaviors/std-thread"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.3.5"
 }

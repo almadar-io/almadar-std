@@ -1,106 +1,59 @@
 {
-  "name": "std-tabs-segmented-pills",
-  "version": "1.0.0",
   "description": "Segmented-pills tabs — iOS-style segmented control: pill-shaped tabs sit in a single rounded background bar, no underline, active tab carries a filled background. Compact and modern; ideal for settings UIs and mode-switchers. Same TabsItemTabs trait, state machine, emits/listens as std-tabs — only the bodyContent tree differs.",
+  "name": "std-tabs-segmented-pills",
   "orbitals": [
     {
-      "name": "SegmentedPillsTabsOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-tabs",
-          "as": "Tabs"
-        }
-      ],
       "entity": {
-        "name": "SegmentedPillsTabsItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "activeTab",
-            "type": "string",
             "default": "",
             "description": "Index of the currently selected tab.",
-            "synonyms": "selectedIndex, selectedIndex, currentTab"
+            "name": "activeTab",
+            "synonyms": "selectedIndex, selectedIndex, currentTab",
+            "type": "string"
           },
           {
-            "name": "items",
-            "type": "array",
             "default": [],
+            "description": "A collection of tab specifications defining the available options.",
             "items": {
-              "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
                 },
                 "id": {
                   "name": "id",
-                  "type": "string",
-                  "required": false
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 },
                 "value": {
                   "name": "value",
-                  "type": "string",
-                  "required": false
-                },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
+                  "required": false,
+                  "type": "string"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "A collection of tab specifications defining the available options.",
-            "synonyms": "tabs, options, choices, entries"
+            "name": "items",
+            "synonyms": "tabs, options, choices, entries",
+            "type": "array"
           }
-        ]
+        ],
+        "name": "SegmentedPillsTabsItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "ref": "Tabs.traits.TabsItemTabs",
-          "name": "SegmentedPillsTabs",
-          "linkedEntity": "SegmentedPillsTabsItem",
-          "config": {
-            "bodyContent": {
-              "children": [
-                {
-                  "activeTab": "@entity.activeTab",
-                  "items": [
-                    {
-                      "label": "Tab 1",
-                      "id": "tab1"
-                    },
-                    {
-                      "id": "tab2",
-                      "label": "Tab 2"
-                    },
-                    {
-                      "id": "tab3",
-                      "label": "Tab 3"
-                    }
-                  ],
-                  "tabChangeEvent": "TAB_CHANGED",
-                  "type": "tabs",
-                  "orientation": "horizontal",
-                  "variant": "pills",
-                  "className": "gap-1"
-                }
-              ],
-              "direction": "horizontal",
-              "type": "stack",
-              "align": "center",
-              "gap": "none",
-              "className": "inline-flex p-1 rounded-pill bg-muted"
-            }
-          }
-        }
-      ],
+      "name": "SegmentedPillsTabsOrbital",
       "pages": [
         {
           "name": "SegmentedPillsTabsPage",
@@ -111,7 +64,54 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "bodyContent": {
+              "align": "center",
+              "children": [
+                {
+                  "activeTab": "@entity.activeTab",
+                  "className": "gap-1",
+                  "items": [
+                    {
+                      "id": "tab1",
+                      "label": "Tab 1"
+                    },
+                    {
+                      "id": "tab2",
+                      "label": "Tab 2"
+                    },
+                    {
+                      "id": "tab3",
+                      "label": "Tab 3"
+                    }
+                  ],
+                  "orientation": "horizontal",
+                  "tabChangeEvent": "TAB_CHANGED",
+                  "type": "tabs",
+                  "variant": "pills"
+                }
+              ],
+              "className": "inline-flex p-1 rounded-pill bg-muted",
+              "direction": "horizontal",
+              "gap": "none",
+              "type": "stack"
+            }
+          },
+          "linkedEntity": "SegmentedPillsTabsItem",
+          "name": "SegmentedPillsTabs",
+          "ref": "Tabs.traits.TabsItemTabs"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Tabs",
+          "from": "std/behaviors/std-tabs"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

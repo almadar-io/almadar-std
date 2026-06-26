@@ -1,112 +1,105 @@
 {
-  "name": "std-stats-hero-metric",
-  "version": "1.2.0",
   "description": "Hero metric — one elevated card, one oversize number. The headline KPI for executive landing pages and finance hero dashboards.",
+  "name": "std-stats-hero-metric",
   "orbitals": [
     {
-      "name": "HeroMetricStatsOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-stats",
-          "as": "Stats"
-        }
-      ],
       "entity": {
-        "name": "HeroMetricStats",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "cards",
-            "type": "array",
             "default": [],
+            "description": "A collection of statistical cards displayed together.",
             "items": {
-              "type": "object",
               "properties": {
-                "trend": {
-                  "name": "trend",
-                  "type": "number",
-                  "required": false
-                },
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "trendFormat": {
-                  "name": "trendFormat",
-                  "type": "string",
+                "clickEvent": {
+                  "name": "clickEvent",
                   "required": false,
-                  "values": [
-                    "absolute",
-                    "percent"
-                  ]
-                },
-                "value": {
-                  "name": "value",
-                  "type": "number",
-                  "required": false
-                },
-                "prefix": {
-                  "name": "prefix",
-                  "type": "string",
-                  "required": false
+                  "type": "string"
                 },
                 "format": {
                   "name": "format",
-                  "type": "string",
                   "required": false,
+                  "type": "string",
                   "values": [
                     "number",
                     "currency",
                     "percent"
                   ]
                 },
-                "target": {
-                  "name": "target",
-                  "type": "number",
-                  "required": false
-                },
-                "sparklineData": {
-                  "name": "sparklineData",
-                  "type": "array",
+                "icon": {
+                  "name": "icon",
                   "required": false,
-                  "items": {
-                    "type": "number"
-                  }
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 },
                 "max": {
                   "name": "max",
-                  "type": "number",
-                  "required": false
+                  "required": false,
+                  "type": "number"
                 },
-                "clickEvent": {
-                  "name": "clickEvent",
+                "prefix": {
+                  "name": "prefix",
+                  "required": false,
+                  "type": "string"
+                },
+                "sparklineData": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "name": "sparklineData",
+                  "required": false,
+                  "type": "array"
+                },
+                "suffix": {
+                  "name": "suffix",
+                  "required": false,
+                  "type": "string"
+                },
+                "target": {
+                  "name": "target",
+                  "required": false,
+                  "type": "number"
+                },
+                "trend": {
+                  "name": "trend",
+                  "required": false,
+                  "type": "number"
+                },
+                "trendFormat": {
+                  "name": "trendFormat",
+                  "required": false,
                   "type": "string",
-                  "required": false
+                  "values": [
+                    "absolute",
+                    "percent"
+                  ]
                 },
                 "trendPolarity": {
                   "name": "trendPolarity",
-                  "type": "string",
                   "required": false,
+                  "type": "string",
                   "values": [
                     "higher-is-better",
                     "lower-is-better"
                   ]
                 },
-                "icon": {
-                  "name": "icon",
-                  "type": "string",
-                  "required": false
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "number"
                 },
                 "variant": {
                   "name": "variant",
-                  "type": "string",
                   "required": false,
+                  "type": "string",
                   "values": [
                     "default",
                     "primary",
@@ -115,36 +108,140 @@
                     "error",
                     "info"
                   ]
-                },
-                "suffix": {
-                  "name": "suffix",
-                  "type": "string",
-                  "required": false
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "A collection of statistical cards displayed together.",
-            "synonyms": "statistics, data, visualizations, reports"
+            "name": "cards",
+            "synonyms": "statistics, data, visualizations, reports",
+            "type": "array"
           }
-        ]
+        ],
+        "name": "HeroMetricStats",
+        "persistence": "runtime"
       },
+      "name": "HeroMetricStatsOrbital",
+      "pages": [
+        {
+          "name": "HeroMetricStatsPage",
+          "path": "/hero-metric",
+          "traits": [
+            {
+              "ref": "HeroMetricStatsItemStats"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "ref": "Stats.traits.StatsItemStats",
-          "name": "HeroMetricStatsItemStats",
-          "linkedEntity": "HeroMetricStats",
           "config": {
+            "bodyContent": {
+              "entity": "@entity.cards",
+              "fields": [],
+              "gap": "none",
+              "renderItem": [
+                "fn",
+                "card",
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "name": "@card.icon",
+                                  "size": "md",
+                                  "type": "icon"
+                                },
+                                {
+                                  "className": "uppercase tracking-widest",
+                                  "color": "muted",
+                                  "content": "@card.label",
+                                  "type": "typography",
+                                  "variant": "overline",
+                                  "weight": "bold"
+                                }
+                              ],
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "justify": "center",
+                              "type": "stack"
+                            },
+                            {
+                              "align": "baseline",
+                              "children": [
+                                {
+                                  "color": "muted",
+                                  "content": "@card.prefix",
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "weight": "normal"
+                                },
+                                {
+                                  "className": "text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]",
+                                  "type": "animated-counter",
+                                  "value": "@card.value"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": "@card.suffix",
+                                  "type": "typography",
+                                  "variant": "h2",
+                                  "weight": "normal"
+                                }
+                              ],
+                              "className": "py-section",
+                              "direction": "horizontal",
+                              "gap": "xs",
+                              "justify": "center",
+                              "type": "stack"
+                            },
+                            {
+                              "showValue": true,
+                              "size": "md",
+                              "type": "trend-indicator",
+                              "value": "@card.trend"
+                            }
+                          ],
+                          "className": "relative z-10 w-full max-w-2xl mx-auto text-center",
+                          "direction": "vertical",
+                          "gap": "md",
+                          "type": "stack"
+                        },
+                        {
+                          "className": "absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none",
+                          "color": "auto",
+                          "data": "@card.sparklineData",
+                          "fill": true,
+                          "height": 96.0,
+                          "strokeWidth": 1.0,
+                          "type": "sparkline"
+                        }
+                      ],
+                      "look": "elevated",
+                      "padding": "lg",
+                      "type": "card"
+                    }
+                  ],
+                  "className": "relative w-full rounded-xl shadow-lg overflow-hidden",
+                  "direction": "vertical",
+                  "gap": "none",
+                  "type": "stack"
+                }
+              ],
+              "type": "data-list"
+            },
             "metrics": [
               {
-                "icon": "dollar-sign",
-                "value": 128400.0,
-                "variant": "success",
                 "format": "currency",
+                "icon": "dollar-sign",
                 "label": "Monthly Recurring Revenue",
-                "trendPolarity": "higher-is-better",
-                "trend": 12.5,
                 "prefix": "$",
-                "trendFormat": "percent",
                 "sparklineData": [
                   86000.0,
                   91000.0,
@@ -158,124 +255,27 @@
                   123000.0,
                   126200.0,
                   128400.0
-                ]
+                ],
+                "trend": 12.5,
+                "trendFormat": "percent",
+                "trendPolarity": "higher-is-better",
+                "value": 128400.0,
+                "variant": "success"
               }
-            ],
-            "bodyContent": {
-              "type": "data-list",
-              "gap": "none",
-              "entity": "@entity.cards",
-              "renderItem": [
-                "fn",
-                "card",
-                {
-                  "children": [
-                    {
-                      "padding": "lg",
-                      "type": "card",
-                      "children": [
-                        {
-                          "gap": "md",
-                          "children": [
-                            {
-                              "type": "stack",
-                              "direction": "horizontal",
-                              "gap": "sm",
-                              "children": [
-                                {
-                                  "name": "@card.icon",
-                                  "type": "icon",
-                                  "size": "md",
-                                  "color": "muted"
-                                },
-                                {
-                                  "className": "uppercase tracking-widest",
-                                  "color": "muted",
-                                  "variant": "overline",
-                                  "weight": "bold",
-                                  "type": "typography",
-                                  "content": "@card.label"
-                                }
-                              ],
-                              "align": "center",
-                              "justify": "center"
-                            },
-                            {
-                              "children": [
-                                {
-                                  "variant": "h2",
-                                  "weight": "normal",
-                                  "content": "@card.prefix",
-                                  "color": "muted",
-                                  "type": "typography"
-                                },
-                                {
-                                  "type": "animated-counter",
-                                  "className": "text-7xl md:text-8xl font-bold tracking-tighter tabular-nums text-[var(--color-foreground)]",
-                                  "value": "@card.value"
-                                },
-                                {
-                                  "weight": "normal",
-                                  "content": "@card.suffix",
-                                  "variant": "h2",
-                                  "color": "muted",
-                                  "type": "typography"
-                                }
-                              ],
-                              "className": "py-section",
-                              "direction": "horizontal",
-                              "gap": "xs",
-                              "align": "baseline",
-                              "justify": "center",
-                              "type": "stack"
-                            },
-                            {
-                              "size": "md",
-                              "showValue": true,
-                              "value": "@card.trend",
-                              "type": "trend-indicator"
-                            }
-                          ],
-                          "className": "relative z-10 w-full max-w-2xl mx-auto text-center",
-                          "align": "center",
-                          "direction": "vertical",
-                          "type": "stack"
-                        },
-                        {
-                          "height": 96.0,
-                          "fill": true,
-                          "data": "@card.sparklineData",
-                          "strokeWidth": 1.0,
-                          "type": "sparkline",
-                          "className": "absolute inset-x-0 bottom-0 w-full opacity-10 pointer-events-none",
-                          "color": "auto"
-                        }
-                      ],
-                      "look": "elevated"
-                    }
-                  ],
-                  "direction": "vertical",
-                  "gap": "none",
-                  "className": "relative w-full rounded-xl shadow-lg overflow-hidden",
-                  "type": "stack"
-                }
-              ],
-              "fields": []
-            }
-          }
+            ]
+          },
+          "linkedEntity": "HeroMetricStats",
+          "name": "HeroMetricStatsItemStats",
+          "ref": "Stats.traits.StatsItemStats"
         }
       ],
-      "pages": [
+      "uses": [
         {
-          "name": "HeroMetricStatsPage",
-          "path": "/hero-metric",
-          "traits": [
-            {
-              "ref": "HeroMetricStatsItemStats"
-            }
-          ]
+          "as": "Stats",
+          "from": "std/behaviors/std-stats"
         }
       ]
     }
-  ]
+  ],
+  "version": "1.2.0"
 }

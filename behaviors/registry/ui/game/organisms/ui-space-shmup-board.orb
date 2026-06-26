@@ -1,5 +1,5 @@
 {
-  "description": "SpaceShmupBoard — UI factory (1:1 with the @almadar/ui space-shmup-board pattern).",
+  "description": "SpaceShmupBoard — vertical SHMUP field on a flat IsometricCanvas tile grid.",
   "name": "ui-space-shmup-board",
   "orbitals": [
     {
@@ -39,17 +39,17 @@
             },
             "assetBaseUrl": {
               "default": "https://almadar-kflow-assets.web.app/shared/",
-              "description": "Base URL prefix for asset URLs",
+              "description": "Base URL prepended to manifest sprite paths",
               "label": "Asset Base Url",
               "tier": "presentation",
               "type": "asset"
             },
-            "backgroundImage": {
-              "default": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/backgrounds/space.png",
-              "description": "Starfield background (Space Shooter Redux darkPurple)",
-              "label": "Background Image",
+            "assetManifest": {
+              "default": "",
+              "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
+              "label": "Asset Manifest",
               "tier": "presentation",
-              "type": "asset"
+              "type": "string"
             },
             "className": {
               "default": "",
@@ -58,12 +58,12 @@
               "tier": "presentation",
               "type": "string"
             },
-            "enemySprite": {
-              "default": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png",
-              "description": "Enemy ship (Space Shooter Redux enemyRed1)",
-              "label": "Enemy Sprite",
+            "enableCamera": {
+              "default": true,
+              "description": "Enable camera pan/zoom controls",
+              "label": "Enable Camera",
               "tier": "presentation",
-              "type": "asset"
+              "type": "boolean"
             },
             "error": {
               "description": "Error state (UiError)",
@@ -93,26 +93,62 @@
               "tier": "presentation",
               "type": "SpaceShmupBoardError"
             },
-            "fps": {
-              "default": 60.0,
-              "description": "Target frames per second",
-              "label": "FPS",
+            "features": {
+              "default": [],
+              "description": "Optional hazards or power-ups on the field",
+              "items": {
+                "properties": {
+                  "assetUrl": {
+                    "name": "assetUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "elevation": {
+                    "name": "elevation",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "z": {
+                    "name": "z",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Features",
               "tier": "presentation",
-              "type": "number"
-            },
-            "height": {
-              "default": 600.0,
-              "description": "Canvas height in pixels",
-              "label": "Height",
-              "tier": "presentation",
-              "type": "number"
-            },
-            "hudLifeSprite": {
-              "default": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/ui/life.png",
-              "description": "Life icon in HUD (Space Shooter Redux playerLife1_green)",
-              "label": "HUD Life Sprite",
-              "tier": "presentation",
-              "type": "asset"
+              "type": "[SpaceShmupBoardFeaturesItem]"
             },
             "isLoading": {
               "default": false,
@@ -136,12 +172,12 @@
               "tier": "presentation",
               "type": "number"
             },
-            "playerSprite": {
-              "default": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png",
-              "description": "Player ship (Space Shooter Redux playerShip1_green)",
-              "label": "Player Sprite",
+            "scale": {
+              "default": 0.45,
+              "description": "Render scale",
+              "label": "Scale",
               "tier": "presentation",
-              "type": "asset"
+              "type": "number"
             },
             "searchValue": {
               "default": "Search Value",
@@ -159,6 +195,13 @@
               "label": "Selected Ids",
               "tier": "presentation",
               "type": "[string]"
+            },
+            "showMinimap": {
+              "default": false,
+              "description": "Show minimap overlay",
+              "label": "Show Minimap",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "sortBy": {
               "default": "Sort By",
@@ -178,6 +221,415 @@
                 "desc"
               ]
             },
+            "tiles": {
+              "default": [
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 1.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 2.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 3.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 4.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 5.0,
+                  "y": 0.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 0.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 1.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 2.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 3.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 4.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 5.0,
+                  "y": 1.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 0.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 1.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 2.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 3.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 4.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 5.0,
+                  "y": 2.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 0.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 1.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 2.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 3.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 4.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 5.0,
+                  "y": 3.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 0.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 1.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 2.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 3.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 4.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 5.0,
+                  "y": 4.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 0.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 1.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 2.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 3.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 4.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 5.0,
+                  "y": 5.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 0.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 1.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 2.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 3.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 4.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 5.0,
+                  "y": 6.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 0.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 1.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 2.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 3.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 4.0,
+                  "y": 7.0
+                },
+                {
+                  "passable": true,
+                  "terrain": "space",
+                  "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "x": 5.0,
+                  "y": 7.0
+                }
+              ],
+              "description": "6×8 flat space-terrain tile grid",
+              "items": {
+                "properties": {
+                  "elevation": {
+                    "name": "elevation",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "modelUrl": {
+                    "name": "modelUrl",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "movementCost": {
+                    "name": "movementCost",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "passable": {
+                    "name": "passable",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "terrain": {
+                    "name": "terrain",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "terrainSprite": {
+                    "name": "terrainSprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "tileType": {
+                    "name": "tileType",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "z": {
+                    "name": "z",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Tiles",
+              "tier": "presentation",
+              "type": "[SpaceShmupBoardTilesItem]"
+            },
             "totalCount": {
               "default": 0.0,
               "description": "Total number of items",
@@ -188,47 +640,72 @@
             "units": {
               "default": [
                 {
-                  "health": 3.0,
-                  "id": "player1",
-                  "maxHealth": 3.0,
-                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png",
-                  "team": "player",
-                  "unitType": "ship",
-                  "x": 400.0,
-                  "y": 500.0
-                },
-                {
                   "health": 1.0,
                   "id": "enemy1",
                   "maxHealth": 1.0,
+                  "name": "Invader A",
+                  "position": {
+                    "x": 1.0,
+                    "y": 0.0
+                  },
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png",
                   "team": "enemy",
-                  "unitType": "ship",
-                  "x": 200.0,
-                  "y": 100.0
+                  "unitType": "ship"
                 },
                 {
                   "health": 1.0,
                   "id": "enemy2",
                   "maxHealth": 1.0,
+                  "name": "Invader B",
+                  "position": {
+                    "x": 3.0,
+                    "y": 0.0
+                  },
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png",
                   "team": "enemy",
-                  "unitType": "ship",
-                  "x": 400.0,
-                  "y": 80.0
+                  "unitType": "ship"
                 },
                 {
                   "health": 1.0,
                   "id": "enemy3",
                   "maxHealth": 1.0,
+                  "name": "Invader C",
+                  "position": {
+                    "x": 0.0,
+                    "y": 1.0
+                  },
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png",
                   "team": "enemy",
-                  "unitType": "ship",
-                  "x": 600.0,
-                  "y": 100.0
+                  "unitType": "ship"
+                },
+                {
+                  "health": 1.0,
+                  "id": "enemy4",
+                  "maxHealth": 1.0,
+                  "name": "Invader D",
+                  "position": {
+                    "x": 4.0,
+                    "y": 1.0
+                  },
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png",
+                  "team": "enemy",
+                  "unitType": "ship"
+                },
+                {
+                  "health": 3.0,
+                  "id": "player1",
+                  "maxHealth": 3.0,
+                  "name": "Player",
+                  "position": {
+                    "x": 2.0,
+                    "y": 7.0
+                  },
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png",
+                  "team": "player",
+                  "unitType": "ship"
                 }
               ],
-              "description": "Player ship + enemy ships on the field",
+              "description": "Player ship (bottom centre) and 4 enemy ships across the top rows",
               "items": {
                 "properties": {
                   "elevation": {
@@ -389,13 +866,6 @@
               "label": "Units",
               "tier": "presentation",
               "type": "[SpaceShmupBoardUnitsItem]"
-            },
-            "width": {
-              "default": 800.0,
-              "description": "Canvas width in pixels",
-              "label": "Width",
-              "tier": "presentation",
-              "type": "number"
             }
           },
           "emits": [
@@ -492,27 +962,26 @@
                     {
                       "activeFilters": "@config.activeFilters",
                       "assetBaseUrl": "@config.assetBaseUrl",
-                      "backgroundImage": "@config.backgroundImage",
+                      "assetManifest": "@config.assetManifest",
                       "className": "@config.className",
-                      "enemySprite": "@config.enemySprite",
+                      "enableCamera": "@config.enableCamera",
                       "error": "@config.error",
-                      "fps": "@config.fps",
-                      "height": "@config.height",
-                      "hudLifeSprite": "@config.hudLifeSprite",
+                      "features": "@config.features",
                       "isLoading": "@config.isLoading",
                       "page": "@config.pageProp",
                       "pageSize": "@config.pageSize",
-                      "playerSprite": "@config.playerSprite",
+                      "scale": "@config.scale",
                       "searchValue": "@config.searchValue",
                       "selectedIds": "@config.selectedIds",
+                      "showMinimap": "@config.showMinimap",
                       "sortBy": "@config.sortBy",
                       "sortDirection": "@config.sortDirection",
                       "tileClickEvent": "TILE_CLICK",
+                      "tiles": "@config.tiles",
                       "totalCount": "@config.totalCount",
                       "type": "space-shmup-board",
                       "unitClickEvent": "UNIT_CLICK",
-                      "units": "@config.units",
-                      "width": "@config.width"
+                      "units": "@config.units"
                     }
                   ]
                 ],

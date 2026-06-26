@@ -1,80 +1,137 @@
 {
-  "name": "std-reminder-scheduler",
-  "version": "1.1.0",
   "description": "std-reminder-scheduler — deadline reminders for a target entity. A periodic tick scans the target for records whose `dateField` deadline is within `offsetHours` of now and that have not been reminded yet, and emits `ReminderDue` for each — every matching record, via a self-driving scan loop. Marks each record `remindedAt` so it isn't reminded twice. Compose alongside std-notify-on-event to deliver the reminder.",
+  "name": "std-reminder-scheduler",
   "orbitals": [
     {
-      "name": "ReminderSchedulerOrbital",
       "entity": {
-        "name": "ReminderRunLog",
         "collection": "reminder_runs",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "targetEntity",
-            "type": "string",
             "default": "",
             "description": "The entity to which the reminder applies.",
-            "synonyms": "subject, referenced entity, related object"
+            "name": "targetEntity",
+            "synonyms": "subject, referenced entity, related object",
+            "type": "string"
           },
           {
-            "name": "recordCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of records processed during this run.",
-            "synonyms": "count, total, size"
+            "name": "recordCount",
+            "synonyms": "count, total, size",
+            "type": "number"
           },
           {
-            "name": "ranAt",
-            "type": "number",
             "default": 0.0,
             "description": "Timestamp indicating when the process was executed.",
-            "synonyms": "execution time, timestamp, run time"
+            "name": "ranAt",
+            "synonyms": "execution time, timestamp, run time",
+            "type": "number"
           },
           {
-            "name": "errors",
-            "type": "string",
             "default": "",
             "description": "Records any errors encountered during processing.",
-            "synonyms": "error, problem, fault"
+            "name": "errors",
+            "synonyms": "error, problem, fault",
+            "type": "string"
           },
           {
-            "name": "dueAt",
-            "type": "number",
             "default": 0.0,
             "description": "Deadline timestamp (also lets the standalone default target validate).",
-            "synonyms": "deadline, due, expiry"
+            "name": "dueAt",
+            "synonyms": "deadline, due, expiry",
+            "type": "number"
           },
           {
-            "name": "remindedAt",
-            "type": "number",
             "default": 0.0,
             "description": "When this record was last reminded — the dedup marker; 0 = not yet reminded.",
-            "synonyms": "notified at, last reminder"
+            "name": "remindedAt",
+            "synonyms": "notified at, last reminder",
+            "type": "number"
           },
           {
-            "name": "headId",
-            "type": "string",
             "default": "",
             "description": "Scratch: id of the record the scan loop is currently reminding.",
-            "synonyms": "current id, cursor"
+            "name": "headId",
+            "synonyms": "current id, cursor",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "ReminderRunLog",
+        "persistence": "persistent"
       },
+      "name": "ReminderSchedulerOrbital",
+      "pages": [
+        {
+          "name": "ReminderSchedulerPage",
+          "path": "/reminders/scheduler",
+          "traits": [
+            {
+              "ref": "ReminderScheduler"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "ReminderScheduler",
           "category": "lifecycle",
-          "linkedEntity": "ReminderRunLog",
+          "config": {
+            "dateField": {
+              "default": "dueAt",
+              "description": "Numeric (ms-epoch) field on the target holding the deadline (e.g. 'dueAt', 'startsAt').",
+              "label": "Deadline field",
+              "synonyms": "due date field, timestamp field, cutoff field, expiry field, when it's due",
+              "tier": "internal",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "Automatically remind about upcoming deadlines. Off by default.",
+              "label": "Send deadline reminders",
+              "synonyms": "enable, turn on, activate, switch on, reminders, deadline reminders, due-date reminders, advance notice, heads up, nudge before due",
+              "tier": "infra",
+              "type": "boolean"
+            },
+            "offsetHours": {
+              "default": 24.0,
+              "description": "A reminder fires once the deadline is within this many hours of now.",
+              "label": "Remind this many hours before the deadline",
+              "synonyms": "advance notice, lead time, heads up, early warning hours, how far ahead",
+              "tier": "infra",
+              "type": "number"
+            },
+            "severity": {
+              "default": "info",
+              "description": "Severity passed to the notifier: info / warning / error.",
+              "label": "Severity",
+              "synonyms": "urgency level, priority, importance, alert level, how urgent",
+              "tier": "infra",
+              "type": "string"
+            },
+            "targetEntity": {
+              "default": "ReminderRunLog",
+              "description": "Entity to scan for upcoming deadlines (e.g. 'Task', 'ClassSession'). Defaults to the atom's own log so the standalone validates; rebind per composition.",
+              "label": "Target entity",
+              "synonyms": "entity to monitor, entity to watch, record type, object type",
+              "tier": "internal",
+              "type": "string"
+            },
+            "template": {
+              "default": "",
+              "description": "Message body passed to the notifier.",
+              "label": "Message template",
+              "synonyms": "message text, reminder body, notification copy, alert message, what to say",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
               "event": "ReminderDue",
-              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "entityId",
@@ -88,7 +145,8 @@
                   "name": "template",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "external"
             },
             {
               "event": "ScanRecordsLoaded",
@@ -122,16 +180,10 @@
               ]
             }
           ],
+          "linkedEntity": "ReminderRunLog",
+          "name": "ReminderScheduler",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              },
-              {
-                "name": "scanning"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
@@ -190,28 +242,22 @@
                 ]
               }
             ],
-            "transitions": [
+            "states": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT"
+                "isInitial": true,
+                "name": "idle"
               },
               {
+                "name": "scanning"
+              }
+            ],
+            "transitions": [
+              {
+                "event": "INIT",
                 "from": "idle",
-                "to": "scanning",
-                "event": "ScanRecordsLoaded",
-                "guard": [
-                  "and",
-                  "@config.enabled",
-                  [
-                    ">",
-                    [
-                      "array/len",
-                      "@payload.data"
-                    ],
-                    0.0
-                  ]
-                ],
+                "to": "idle"
+              },
+              {
                 "effects": [
                   [
                     "set",
@@ -239,22 +285,36 @@
                     "update",
                     "@config.targetEntity",
                     {
-                      "remindedAt": "@now",
-                      "id": "@entity.headId"
+                      "id": "@entity.headId",
+                      "remindedAt": "@now"
                     },
                     {
                       "emit": {
-                        "success": "ReminderStepped",
-                        "failure": "ScanFailed"
+                        "failure": "ScanFailed",
+                        "success": "ReminderStepped"
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "ScanRecordsLoaded",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  "@config.enabled",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@payload.data"
+                    ],
+                    0.0
+                  ]
+                ],
+                "to": "scanning"
               },
               {
-                "from": "idle",
-                "to": "idle",
                 "event": "ScanRecordsLoaded",
+                "from": "idle",
                 "guard": [
                   "=",
                   [
@@ -262,22 +322,24 @@
                     "@payload.data"
                   ],
                   0.0
-                ]
+                ],
+                "to": "idle"
               },
               {
+                "event": "ScanFailed",
                 "from": "idle",
-                "to": "idle",
-                "event": "ScanFailed"
+                "to": "idle"
               },
               {
-                "from": "scanning",
-                "to": "scanning",
-                "event": "ReminderStepped",
                 "effects": [
                   [
                     "fetch",
                     "@config.targetEntity",
                     {
+                      "emit": {
+                        "failure": "ScanFailed",
+                        "success": "ScanRecordsLoaded"
+                      },
                       "filter": [
                         "and",
                         [
@@ -315,27 +377,15 @@
                             3600000.0
                           ]
                         ]
-                      ],
-                      "emit": {
-                        "failure": "ScanFailed",
-                        "success": "ScanRecordsLoaded"
-                      }
+                      ]
                     }
                   ]
-                ]
+                ],
+                "event": "ReminderStepped",
+                "from": "scanning",
+                "to": "scanning"
               },
               {
-                "from": "scanning",
-                "to": "scanning",
-                "event": "ScanRecordsLoaded",
-                "guard": [
-                  ">",
-                  [
-                    "array/len",
-                    "@payload.data"
-                  ],
-                  0.0
-                ],
                 "effects": [
                   [
                     "set",
@@ -353,9 +403,9 @@
                     "emit",
                     "ReminderDue",
                     {
-                      "template": "@config.template",
+                      "entityId": "@entity.headId",
                       "severity": "@config.severity",
-                      "entityId": "@entity.headId"
+                      "template": "@config.template"
                     }
                   ],
                   [
@@ -363,22 +413,32 @@
                     "update",
                     "@config.targetEntity",
                     {
-                      "remindedAt": "@now",
-                      "id": "@entity.headId"
+                      "id": "@entity.headId",
+                      "remindedAt": "@now"
                     },
                     {
                       "emit": {
-                        "success": "ReminderStepped",
-                        "failure": "ScanFailed"
+                        "failure": "ScanFailed",
+                        "success": "ReminderStepped"
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "ScanRecordsLoaded",
+                "from": "scanning",
+                "guard": [
+                  ">",
+                  [
+                    "array/len",
+                    "@payload.data"
+                  ],
+                  0.0
+                ],
+                "to": "scanning"
               },
               {
-                "from": "scanning",
-                "to": "idle",
                 "event": "ScanRecordsLoaded",
+                "from": "scanning",
                 "guard": [
                   "=",
                   [
@@ -386,24 +446,27 @@
                     "@payload.data"
                   ],
                   0.0
-                ]
+                ],
+                "to": "idle"
               },
               {
+                "event": "ScanFailed",
                 "from": "scanning",
-                "to": "idle",
-                "event": "ScanFailed"
+                "to": "idle"
               }
             ]
           },
           "ticks": [
             {
-              "name": "scanCycle",
-              "interval": 900000.0,
               "effects": [
                 [
                   "fetch",
                   "@config.targetEntity",
                   {
+                    "emit": {
+                      "failure": "ScanFailed",
+                      "success": "ScanRecordsLoaded"
+                    },
                     "filter": [
                       "and",
                       [
@@ -441,80 +504,17 @@
                           3600000.0
                         ]
                       ]
-                    ],
-                    "emit": {
-                      "success": "ScanRecordsLoaded",
-                      "failure": "ScanFailed"
-                    }
+                    ]
                   }
                 ]
-              ]
-            }
-          ],
-          "config": {
-            "offsetHours": {
-              "type": "number",
-              "default": 24.0,
-              "label": "Remind this many hours before the deadline",
-              "description": "A reminder fires once the deadline is within this many hours of now.",
-              "synonyms": "advance notice, lead time, heads up, early warning hours, how far ahead",
-              "tier": "infra"
-            },
-            "severity": {
-              "type": "string",
-              "default": "info",
-              "label": "Severity",
-              "description": "Severity passed to the notifier: info / warning / error.",
-              "synonyms": "urgency level, priority, importance, alert level, how urgent",
-              "tier": "infra"
-            },
-            "template": {
-              "type": "string",
-              "default": "",
-              "label": "Message template",
-              "description": "Message body passed to the notifier.",
-              "synonyms": "message text, reminder body, notification copy, alert message, what to say",
-              "tier": "presentation"
-            },
-            "dateField": {
-              "type": "string",
-              "default": "dueAt",
-              "label": "Deadline field",
-              "description": "Numeric (ms-epoch) field on the target holding the deadline (e.g. 'dueAt', 'startsAt').",
-              "synonyms": "due date field, timestamp field, cutoff field, expiry field, when it's due",
-              "tier": "internal"
-            },
-            "targetEntity": {
-              "type": "string",
-              "default": "ReminderRunLog",
-              "label": "Target entity",
-              "description": "Entity to scan for upcoming deadlines (e.g. 'Task', 'ClassSession'). Defaults to the atom's own log so the standalone validates; rebind per composition.",
-              "synonyms": "entity to monitor, entity to watch, record type, object type",
-              "tier": "internal"
-            },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Send deadline reminders",
-              "description": "Automatically remind about upcoming deadlines. Off by default.",
-              "synonyms": "enable, turn on, activate, switch on, reminders, deadline reminders, due-date reminders, advance notice, heads up, nudge before due",
-              "tier": "infra"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "ReminderSchedulerPage",
-          "path": "/reminders/scheduler",
-          "traits": [
-            {
-              "ref": "ReminderScheduler"
+              ],
+              "interval": 900000.0,
+              "name": "scanCycle"
             }
           ]
         }
       ]
     }
-  ]
+  ],
+  "version": "1.1.0"
 }

@@ -1,103 +1,127 @@
 {
-  "name": "std-search",
-  "version": "1.0.0",
   "description": "std-search — single primitive: search-input. Owns a SearchResult runtime entity; SEARCH persists @payload.searchTerm (matching SearchInput's emit shape) so cross-trait listeners can route it into data atoms (Browse REFETCH_QUERY).",
+  "name": "std-search",
   "orbitals": [
     {
-      "name": "SearchResultOrbital",
       "entity": {
-        "name": "SearchResult",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "searchTerm",
-            "type": "string",
             "description": "The text entered by the user in the search field.",
-            "synonyms": "query, search term, input, text"
+            "name": "searchTerm",
+            "synonyms": "query, search term, input, text",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "SearchResult",
+        "persistence": "runtime"
       },
+      "name": "SearchResultOrbital",
+      "pages": [
+        {
+          "name": "SearchResultSearchPage",
+          "path": "/searchresults/search",
+          "traits": [
+            {
+              "ref": "SearchResultSearch"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "SearchResultSearch",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "searchTerm"
-            ]
-          },
           "category": "interaction",
-          "linkedEntity": "SearchResult",
+          "config": {
+            "event": {
+              "default": "SEARCH",
+              "description": "Event emitted when the user submits a query",
+              "label": "Search event",
+              "tier": "internal",
+              "type": "string"
+            },
+            "placeholder": {
+              "default": "Search…",
+              "description": "Hint text shown inside the empty search input",
+              "label": "Placeholder text",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "SEARCH",
               "description": "Initiates a search operation based on the input term.",
-              "synonyms": "query, lookup, find",
-              "tier": "essential",
-              "scope": "external",
+              "event": "SEARCH",
               "payloadSchema": [
                 {
                   "name": "searchTerm",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "scope": "external",
+              "synonyms": "query, lookup, find",
+              "tier": "essential"
             }
           ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
+          "entityContract": {
+            "provides": [
+              "searchTerm"
             ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SearchResult",
+          "name": "SearchResultSearch",
+          "scope": "instance",
+          "stateMachine": {
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Initiates a search operation based on the input term.",
                 "key": "SEARCH",
                 "name": "Search",
-                "description": "Initiates a search operation based on the input term.",
-                "synonyms": "query, lookup, find",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "searchTerm",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "query, lookup, find",
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
               }
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
                       "event": "@config.event",
-                      "type": "search-input",
-                      "placeholder": "@config.placeholder"
+                      "placeholder": "@config.placeholder",
+                      "type": "search-input"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "SEARCH",
                 "effects": [
                   [
                     "set",
@@ -113,40 +137,16 @@
                       "type": "search-input"
                     }
                   ]
-                ]
+                ],
+                "event": "SEARCH",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "event": {
-              "type": "string",
-              "default": "SEARCH",
-              "label": "Search event",
-              "description": "Event emitted when the user submits a query",
-              "tier": "internal"
-            },
-            "placeholder": {
-              "type": "string",
-              "default": "Search…",
-              "label": "Placeholder text",
-              "description": "Hint text shown inside the empty search input",
-              "tier": "presentation"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "SearchResultSearchPage",
-          "path": "/searchresults/search",
-          "traits": [
-            {
-              "ref": "SearchResultSearch"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

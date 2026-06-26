@@ -1,59 +1,42 @@
 {
-  "name": "std-graphs-bar",
-  "version": "1.0.0",
   "description": "Bar chart view. Embeds std-graphs with the bar chartType — vertical bars, one per category bucket. Default for distribution-of-categories visualisations.",
+  "name": "std-graphs-bar",
   "orbitals": [
     {
-      "name": "BarGraphItemOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-graphs",
-          "as": "Graph"
-        }
-      ],
       "entity": {
-        "name": "BarGraphItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "chartData",
-            "type": "array",
             "default": [],
+            "description": "Data points used to render the chart.",
             "items": {
-              "type": "object",
               "properties": {
-                "value": {
-                  "name": "value",
-                  "type": "number",
-                  "required": true
-                },
                 "label": {
                   "name": "label",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "number"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "Data points used to render the chart.",
-            "synonyms": "data, values, series"
+            "name": "chartData",
+            "synonyms": "data, values, series",
+            "type": "array"
           }
-        ]
+        ],
+        "name": "BarGraphItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "ref": "Graph.traits.GraphItemGraph",
-          "name": "BarGraphItemGraph",
-          "linkedEntity": "BarGraphItem",
-          "config": {
-            "chartType": "bar"
-          }
-        }
-      ],
+      "name": "BarGraphItemOrbital",
       "pages": [
         {
           "name": "BarGraphPage",
@@ -64,7 +47,24 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "chartType": "bar"
+          },
+          "linkedEntity": "BarGraphItem",
+          "name": "BarGraphItemGraph",
+          "ref": "Graph.traits.GraphItemGraph"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Graph",
+          "from": "std/behaviors/std-graphs"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

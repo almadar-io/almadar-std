@@ -1,51 +1,60 @@
 {
-  "name": "std-recurrence",
-  "version": "2.1.0",
   "description": "std-recurrence — recurring-rule definition + upcoming runs (Stripe Subscriptions / Cron Hub style). The viewing state shows a plain-English rule sentence and the next N dated runs as an agenda timeline. Per-run exception modal supports skip / reschedule. Topology = loading / defining_rule / viewing / awaiting_exception_decision / cancelled / error.",
+  "name": "std-recurrence",
   "orbitals": [
     {
-      "name": "RecurrenceOrbital",
       "entity": {
-        "name": "RecurrenceView",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "title",
-            "type": "string",
             "default": "",
             "description": "A short, user-friendly name for the recurrence.",
-            "synonyms": "label, heading, name"
+            "name": "title",
+            "synonyms": "label, heading, name",
+            "type": "string"
           },
           {
-            "name": "notes",
-            "type": "string",
             "default": "",
             "description": "Free-form text providing additional information or context.",
-            "synonyms": "comment, remark, description, details"
+            "name": "notes",
+            "synonyms": "comment, remark, description, details",
+            "type": "string"
           },
           {
-            "name": "date",
-            "type": "string",
             "default": "",
             "description": "The date associated with this occurrence.",
-            "synonyms": "due date, scheduled date, run date"
+            "name": "date",
+            "synonyms": "due date, scheduled date, run date",
+            "type": "string"
           },
           {
-            "name": "occurrences",
-            "type": "array",
             "default": [],
+            "description": "A list of scheduled event instances.",
             "items": {
-              "type": "object",
               "properties": {
+                "date": {
+                  "name": "date",
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
                 "rawStatus": {
                   "name": "rawStatus",
-                  "type": "string",
                   "required": false,
+                  "type": "string",
                   "values": [
                     "scheduled",
                     "skipped",
@@ -53,20 +62,10 @@
                     "rescheduled"
                   ]
                 },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": false
-                },
-                "date": {
-                  "name": "date",
-                  "type": "string",
-                  "required": false
-                },
                 "status": {
                   "name": "status",
-                  "type": "string",
                   "required": false,
+                  "type": "string",
                   "values": [
                     "complete",
                     "active",
@@ -74,119 +73,323 @@
                     "error"
                   ]
                 },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
                 "title": {
                   "name": "title",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "A list of scheduled event instances.",
-            "synonyms": "events, instances, schedules, runs"
+            "name": "occurrences",
+            "synonyms": "events, instances, schedules, runs",
+            "type": "array"
           },
           {
-            "name": "frequency",
-            "type": "string",
             "default": "weekly",
+            "description": "How often the recurrence happens.",
+            "name": "frequency",
+            "synonyms": "period, repeat, schedule",
+            "type": "string",
             "values": [
               "daily",
               "weekly",
               "monthly",
               "yearly"
-            ],
-            "description": "How often the recurrence happens.",
-            "synonyms": "period, repeat, schedule"
+            ]
           },
           {
-            "name": "interval",
-            "type": "number",
             "default": 1.0,
             "description": "The number of time units between occurrences.",
-            "synonyms": "period, repetition, spacing"
+            "name": "interval",
+            "synonyms": "period, repetition, spacing",
+            "type": "number"
           },
           {
-            "name": "startDate",
-            "type": "string",
             "default": "",
             "description": "The date when the recurrence begins.",
-            "synonyms": "start date, begin date, initial date"
+            "name": "startDate",
+            "synonyms": "start date, begin date, initial date",
+            "type": "string"
           },
           {
-            "name": "endDate",
-            "type": "string",
             "default": "",
             "description": "The date when the recurrence ends.",
-            "synonyms": "end date, termination date, final date"
+            "name": "endDate",
+            "synonyms": "end date, termination date, final date",
+            "type": "string"
           },
           {
-            "name": "endAfterCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of occurrences after which the recurrence ends.",
-            "synonyms": "count, limit, total"
+            "name": "endAfterCount",
+            "synonyms": "count, limit, total",
+            "type": "number"
           },
           {
-            "name": "summaryText",
-            "type": "string",
             "default": "",
             "description": "A human-readable summary of the recurrence rule.",
-            "synonyms": "description, rule summary, explanation"
+            "name": "summaryText",
+            "synonyms": "description, rule summary, explanation",
+            "type": "string"
           },
           {
-            "name": "currentOccurrenceId",
-            "type": "string",
             "default": "",
             "description": "Unique identifier for the currently active occurrence.",
-            "synonyms": "occurrence ID, run ID, current run"
+            "name": "currentOccurrenceId",
+            "synonyms": "occurrence ID, run ID, current run",
+            "type": "string"
           },
           {
-            "name": "currentOccurrenceDate",
-            "type": "string",
             "default": "",
             "description": "The date of the currently active occurrence.",
-            "synonyms": "occurrence date, current date, run date"
+            "name": "currentOccurrenceDate",
+            "synonyms": "occurrence date, current date, run date",
+            "type": "string"
           },
           {
-            "name": "currentOccurrenceLabel",
-            "type": "string",
             "default": "",
             "description": "A human-readable label for the current occurrence.",
-            "synonyms": "current run, present instance, now"
+            "name": "currentOccurrenceLabel",
+            "synonyms": "current run, present instance, now",
+            "type": "string"
           },
           {
-            "name": "rescheduleDate",
-            "type": "string",
             "default": "",
             "description": "The date to which the recurrence is rescheduled.",
-            "synonyms": "new date, replacement date, revised date"
+            "name": "rescheduleDate",
+            "synonyms": "new date, replacement date, revised date",
+            "type": "string"
           },
           {
-            "name": "skipReason",
-            "type": "string",
             "default": "",
             "description": "Reason provided when skipping a scheduled occurrence.",
-            "synonyms": "rationale, explanation, justification"
+            "name": "skipReason",
+            "synonyms": "rationale, explanation, justification",
+            "type": "string"
           },
           {
-            "name": "errorMessage",
-            "type": "string",
             "default": "",
             "description": "Error message displayed to the user.",
-            "synonyms": "error, message, problem"
+            "name": "errorMessage",
+            "synonyms": "error, message, problem",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "RecurrenceView",
+        "persistence": "runtime"
       },
+      "name": "RecurrenceOrbital",
+      "pages": [
+        {
+          "name": "RecurrencePage",
+          "path": "/recurrence",
+          "traits": [
+            {
+              "ref": "RecurrenceEditor"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "RecurrenceEditor",
-          "entityRebindable": true,
+          "category": "interaction",
+          "config": {
+            "cardLook": {
+              "default": "elevated",
+              "description": "Layer 2 visual treatment for cards rendered by this atom.",
+              "label": "Card look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "elevated",
+                "flat-bordered",
+                "borderless-divider",
+                "ticket",
+                "invoice",
+                "chip",
+                "tile-image-first"
+              ]
+            },
+            "formFields": {
+              "default": [
+                "frequency",
+                "interval",
+                "startDate",
+                "endDate",
+                "endAfterCount"
+              ],
+              "description": "Inputs shown in the recurrence-rule definition form",
+              "items": {
+                "type": "string"
+              },
+              "label": "Rule fields",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "timelineLook": {
+              "default": "vertical-spacious",
+              "description": "Layer 2 visual treatment for the timeline.",
+              "label": "Timeline look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "vertical-compact",
+                "vertical-spacious",
+                "horizontal",
+                "swimlane"
+              ]
+            },
+            "title": {
+              "default": "Schedule",
+              "description": "Heading shown above the recurrence editor",
+              "label": "Section title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Signals the rule definition is being modified.",
+              "event": "EDIT_RULE",
+              "synonyms": "modify, change, update",
+              "tier": "customization"
+            },
+            {
+              "description": "Signals that the recurrence rule has been successfully saved.",
+              "event": "SAVE_RULE",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "object"
+                }
+              ],
+              "synonyms": "saved, persisted, updated, confirmed",
+              "tier": "essential"
+            },
+            {
+              "description": "Signals the rule has been removed or deactivated.",
+              "event": "CANCEL_RULE",
+              "synonyms": "delete, remove, deactivate, terminate",
+              "tier": "customization"
+            },
+            {
+              "description": "Signals a per-run exception modal is opening.",
+              "event": "OPEN_EXCEPTION",
+              "payloadSchema": [
+                {
+                  "name": "row",
+                  "required": true,
+                  "type": "object"
+                }
+              ],
+              "synonyms": "show, display, reveal, launch",
+              "tier": "customization"
+            },
+            {
+              "description": "Indicates the exception modal has been closed.",
+              "event": "CLOSE_EXCEPTION",
+              "synonyms": "dismiss, close, hide",
+              "tier": "customization"
+            },
+            {
+              "description": "Indicates a scheduled occurrence has been skipped.",
+              "event": "SKIP_OCCURRENCE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "skip, omit, ignore",
+              "tier": "customization"
+            },
+            {
+              "description": "Signals a scheduled occurrence has been moved to a new date/time.",
+              "event": "RESCHEDULE_OCCURRENCE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                },
+                {
+                  "name": "newDate",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "move, change, update, shift",
+              "tier": "customization"
+            },
+            {
+              "description": "Signals a scheduled occurrence has been cancelled.",
+              "event": "CANCEL_SCHEDULE",
+              "synonyms": "delete, remove, invalidate",
+              "tier": "customization"
+            },
+            {
+              "description": "Initiates a re-execution of the recurrence rule.",
+              "event": "RESTART",
+              "synonyms": "reset, rerun, refresh",
+              "tier": "customization"
+            },
+            {
+              "description": "Signals successful loading of the recurrence rule and schedule.",
+              "event": "RecurrenceLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ObjectSpec]"
+                }
+              ],
+              "synonyms": "loaded, initialized, ready",
+              "tier": "essential"
+            },
+            {
+              "description": "Indicates failure to load recurrence rule data.",
+              "event": "RecurrenceLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "load error, failed load, data error",
+              "tier": "internal"
+            },
+            {
+              "description": "Indicates the recurrence rule has been successfully saved.",
+              "event": "RecurrenceSaved",
+              "payloadSchema": [
+                {
+                  "name": "row",
+                  "type": "object"
+                }
+              ],
+              "synonyms": "saved, updated, persisted",
+              "tier": "essential"
+            },
+            {
+              "description": "Indicates that saving the recurrence rule failed.",
+              "event": "RecurrenceSaveFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "failed, error, problem, unsuccessful",
+              "tier": "internal"
+            }
+          ],
           "entityContract": {
-            "requires": [],
             "provides": [
               "currentOccurrenceDate",
               "currentOccurrenceId",
@@ -199,156 +402,176 @@
               "occurrences",
               "rescheduleDate",
               "startDate"
-            ]
+            ],
+            "requires": []
           },
-          "category": "interaction",
+          "entityRebindable": true,
           "linkedEntity": "RecurrenceView",
-          "emits": [
-            {
-              "event": "EDIT_RULE",
-              "description": "Signals the rule definition is being modified.",
-              "synonyms": "modify, change, update",
-              "tier": "customization"
-            },
-            {
-              "event": "SAVE_RULE",
-              "description": "Signals that the recurrence rule has been successfully saved.",
-              "synonyms": "saved, persisted, updated, confirmed",
-              "tier": "essential",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "object"
-                }
-              ]
-            },
-            {
-              "event": "CANCEL_RULE",
-              "description": "Signals the rule has been removed or deactivated.",
-              "synonyms": "delete, remove, deactivate, terminate",
-              "tier": "customization"
-            },
-            {
-              "event": "OPEN_EXCEPTION",
-              "description": "Signals a per-run exception modal is opening.",
-              "synonyms": "show, display, reveal, launch",
-              "tier": "customization",
-              "payloadSchema": [
-                {
-                  "name": "row",
-                  "type": "object",
-                  "required": true
-                }
-              ]
-            },
-            {
-              "event": "CLOSE_EXCEPTION",
-              "description": "Indicates the exception modal has been closed.",
-              "synonyms": "dismiss, close, hide",
-              "tier": "customization"
-            },
-            {
-              "event": "SKIP_OCCURRENCE",
-              "description": "Indicates a scheduled occurrence has been skipped.",
-              "synonyms": "skip, omit, ignore",
-              "tier": "customization",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RESCHEDULE_OCCURRENCE",
-              "description": "Signals a scheduled occurrence has been moved to a new date/time.",
-              "synonyms": "move, change, update, shift",
-              "tier": "customization",
-              "payloadSchema": [
-                {
-                  "name": "id",
-                  "type": "string"
-                },
-                {
-                  "name": "newDate",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "CANCEL_SCHEDULE",
-              "description": "Signals a scheduled occurrence has been cancelled.",
-              "synonyms": "delete, remove, invalidate",
-              "tier": "customization"
-            },
-            {
-              "event": "RESTART",
-              "description": "Initiates a re-execution of the recurrence rule.",
-              "synonyms": "reset, rerun, refresh",
-              "tier": "customization"
-            },
-            {
-              "event": "RecurrenceLoaded",
-              "description": "Signals successful loading of the recurrence rule and schedule.",
-              "synonyms": "loaded, initialized, ready",
-              "tier": "essential",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[ObjectSpec]"
-                }
-              ]
-            },
-            {
-              "event": "RecurrenceLoadFailed",
-              "description": "Indicates failure to load recurrence rule data.",
-              "synonyms": "load error, failed load, data error",
-              "tier": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "RecurrenceSaved",
-              "description": "Indicates the recurrence rule has been successfully saved.",
-              "synonyms": "saved, updated, persisted",
-              "tier": "essential",
-              "payloadSchema": [
-                {
-                  "name": "row",
-                  "type": "object"
-                }
-              ]
-            },
-            {
-              "event": "RecurrenceSaveFailed",
-              "description": "Indicates that saving the recurrence rule failed.",
-              "synonyms": "failed, error, problem, unsuccessful",
-              "tier": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
+          "name": "RecurrenceEditor",
+          "scope": "instance",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals successful loading of the recurrence rule and schedule.",
+                "key": "RecurrenceLoaded",
+                "name": "Recurrence loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ObjectSpec]"
+                  }
+                ],
+                "synonyms": "loaded, initialized, ready",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates failure to load recurrence rule data.",
+                "key": "RecurrenceLoadFailed",
+                "name": "Recurrence load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "load error, failed load, data error",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates the recurrence rule has been successfully saved.",
+                "key": "RecurrenceSaved",
+                "name": "Recurrence saved",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "saved, updated, persisted",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates that saving the recurrence rule failed.",
+                "key": "RecurrenceSaveFailed",
+                "name": "Recurrence save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "failed, error, problem, unsuccessful",
+                "tier": "internal"
+              },
+              {
+                "description": "Signals the rule definition is being modified.",
+                "key": "EDIT_RULE",
+                "name": "Edit Rule",
+                "synonyms": "modify, change, update",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals a per-run exception modal is opening.",
+                "key": "OPEN_EXCEPTION",
+                "name": "Open Exception",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "required": true,
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "show, display, reveal, launch",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals a scheduled occurrence has been cancelled.",
+                "key": "CANCEL_SCHEDULE",
+                "name": "Cancel Schedule",
+                "synonyms": "delete, remove, invalidate",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals that the recurrence rule has been successfully saved.",
+                "key": "SAVE_RULE",
+                "name": "Save Rule",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "saved, persisted, updated, confirmed",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals the rule has been removed or deactivated.",
+                "key": "CANCEL_RULE",
+                "name": "Cancel Rule",
+                "synonyms": "delete, remove, deactivate, terminate",
+                "tier": "customization"
+              },
+              {
+                "description": "Indicates a scheduled occurrence has been skipped.",
+                "key": "SKIP_OCCURRENCE",
+                "name": "Skip Occurrence",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "skip, omit, ignore",
+                "tier": "customization"
+              },
+              {
+                "description": "Signals a scheduled occurrence has been moved to a new date/time.",
+                "key": "RESCHEDULE_OCCURRENCE",
+                "name": "Reschedule Occurrence",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  },
+                  {
+                    "name": "newDate",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "move, change, update, shift",
+                "tier": "customization"
+              },
+              {
+                "description": "Indicates the exception modal has been closed.",
+                "key": "CLOSE_EXCEPTION",
+                "name": "Close Exception",
+                "synonyms": "dismiss, close, hide",
+                "tier": "customization"
+              },
+              {
+                "description": "Initiates a re-execution of the recurrence rule.",
+                "key": "RESTART",
+                "name": "Restart",
+                "synonyms": "reset, rerun, refresh",
+                "tier": "customization"
+              }
+            ],
             "states": [
               {
-                "name": "loading",
-                "isInitial": true
+                "isInitial": true,
+                "name": "loading"
               },
               {
                 "name": "viewing"
@@ -366,169 +589,8 @@
                 "name": "error"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "RecurrenceLoaded",
-                "name": "Recurrence loaded",
-                "description": "Signals successful loading of the recurrence rule and schedule.",
-                "synonyms": "loaded, initialized, ready",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[ObjectSpec]"
-                  }
-                ]
-              },
-              {
-                "key": "RecurrenceLoadFailed",
-                "name": "Recurrence load failed",
-                "description": "Indicates failure to load recurrence rule data.",
-                "synonyms": "load error, failed load, data error",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RecurrenceSaved",
-                "name": "Recurrence saved",
-                "description": "Indicates the recurrence rule has been successfully saved.",
-                "synonyms": "saved, updated, persisted",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "RecurrenceSaveFailed",
-                "name": "Recurrence save failed",
-                "description": "Indicates that saving the recurrence rule failed.",
-                "synonyms": "failed, error, problem, unsuccessful",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "EDIT_RULE",
-                "name": "Edit Rule",
-                "description": "Signals the rule definition is being modified.",
-                "synonyms": "modify, change, update",
-                "tier": "customization"
-              },
-              {
-                "key": "OPEN_EXCEPTION",
-                "name": "Open Exception",
-                "description": "Signals a per-run exception modal is opening.",
-                "synonyms": "show, display, reveal, launch",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "object",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CANCEL_SCHEDULE",
-                "name": "Cancel Schedule",
-                "description": "Signals a scheduled occurrence has been cancelled.",
-                "synonyms": "delete, remove, invalidate",
-                "tier": "customization"
-              },
-              {
-                "key": "SAVE_RULE",
-                "name": "Save Rule",
-                "description": "Signals that the recurrence rule has been successfully saved.",
-                "synonyms": "saved, persisted, updated, confirmed",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "CANCEL_RULE",
-                "name": "Cancel Rule",
-                "description": "Signals the rule has been removed or deactivated.",
-                "synonyms": "delete, remove, deactivate, terminate",
-                "tier": "customization"
-              },
-              {
-                "key": "SKIP_OCCURRENCE",
-                "name": "Skip Occurrence",
-                "description": "Indicates a scheduled occurrence has been skipped.",
-                "synonyms": "skip, omit, ignore",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "RESCHEDULE_OCCURRENCE",
-                "name": "Reschedule Occurrence",
-                "description": "Signals a scheduled occurrence has been moved to a new date/time.",
-                "synonyms": "move, change, update, shift",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  },
-                  {
-                    "name": "newDate",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "CLOSE_EXCEPTION",
-                "name": "Close Exception",
-                "description": "Indicates the exception modal has been closed.",
-                "synonyms": "dismiss, close, hide",
-                "tier": "customization"
-              },
-              {
-                "key": "RESTART",
-                "name": "Restart",
-                "description": "Initiates a re-execution of the recurrence rule.",
-                "synonyms": "reset, rerun, refresh",
-                "tier": "customization"
-              }
-            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -544,16 +606,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Loading schedule…"
+                      "title": "Loading schedule…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "viewing",
-                "event": "RecurrenceLoaded",
                 "effects": [
                   [
                     "set",
@@ -636,26 +698,26 @@
                             "date",
                             ""
                           ],
-                          "id": [
-                            "object/get",
-                            "@row",
-                            "id",
-                            ""
-                          ],
-                          "title": [
-                            "object/get",
-                            "@row",
-                            "title",
-                            "Occurrence"
-                          ],
                           "description": [
                             "object/get",
                             "@row",
                             "notes",
                             ""
                           ],
+                          "id": [
+                            "object/get",
+                            "@row",
+                            "id",
+                            ""
+                          ],
                           "rawStatus": "scheduled",
-                          "status": "active"
+                          "status": "active",
+                          "title": [
+                            "object/get",
+                            "@row",
+                            "title",
+                            "Occurrence"
+                          ]
                         }
                       ]
                     ]
@@ -666,10 +728,7 @@
                     {
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "align": "center",
-                          "gap": "sm",
                           "children": [
                             {
                               "name": "repeat",
@@ -677,22 +736,25 @@
                             },
                             {
                               "content": "@config.title",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             },
                             {
+                              "label": "Active",
                               "type": "badge",
-                              "variant": "success",
-                              "label": "Active"
+                              "variant": "success"
                             },
                             {
-                              "label": "Edit rule",
-                              "type": "button",
                               "action": "EDIT_RULE",
                               "icon": "settings",
+                              "label": "Edit rule",
+                              "type": "button",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "children": [
@@ -703,29 +765,26 @@
                                   "children": [
                                     {
                                       "color": "muted",
-                                      "type": "typography",
-                                      "content": "Repeats every"
+                                      "content": "Repeats every",
+                                      "type": "typography"
                                     },
                                     {
+                                      "content": "@entity.interval",
                                       "type": "typography",
-                                      "weight": "bold",
-                                      "content": "@entity.interval"
+                                      "weight": "bold"
                                     },
                                     {
+                                      "content": "@entity.frequency",
                                       "type": "typography",
-                                      "weight": "bold",
-                                      "content": "@entity.frequency"
+                                      "weight": "bold"
                                     }
                                   ],
-                                  "type": "stack",
+                                  "direction": "horizontal",
                                   "gap": "xs",
-                                  "direction": "horizontal"
+                                  "type": "stack"
                                 },
                                 {
                                   "align": "center",
-                                  "direction": "horizontal",
-                                  "gap": "xs",
-                                  "type": "stack",
                                   "children": [
                                     {
                                       "color": "muted",
@@ -738,8 +797,8 @@
                                       "weight": "bold"
                                     },
                                     {
-                                      "content": "·",
                                       "color": "muted",
+                                      "content": "·",
                                       "type": "typography"
                                     },
                                     {
@@ -752,25 +811,27 @@
                                       "type": "typography",
                                       "weight": "bold"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "xs",
+                                  "type": "stack"
                                 }
                               ],
-                              "gap": "xs",
                               "direction": "vertical",
+                              "gap": "xs",
                               "type": "stack"
                             }
                           ],
-                          "type": "card",
-                          "look": "@config.cardLook"
+                          "look": "@config.cardLook",
+                          "type": "card"
                         },
                         {
-                          "variant": "h4",
+                          "content": "Next runs",
                           "type": "typography",
-                          "content": "Next runs"
+                          "variant": "h4"
                         },
                         {
-                          "look": "@config.timelineLook",
-                          "type": "timeline",
+                          "entity": "@entity.occurrences",
                           "fields": [
                             "title",
                             "description",
@@ -783,35 +844,36 @@
                               "label": "Manage"
                             }
                           ],
-                          "entity": "@entity.occurrences"
+                          "look": "@config.timelineLook",
+                          "type": "timeline"
                         },
                         {
+                          "align": "center",
                           "children": [
                             {
+                              "action": "CANCEL_SCHEDULE",
+                              "icon": "x-circle",
                               "label": "End schedule",
                               "type": "button",
-                              "variant": "danger",
-                              "icon": "x-circle",
-                              "action": "CANCEL_SCHEDULE"
+                              "variant": "danger"
                             }
                           ],
-                          "gap": "sm",
-                          "align": "center",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "type": "stack"
                         }
                       ],
                       "direction": "vertical",
-                      "type": "stack",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "RecurrenceLoaded",
+                "from": "loading",
+                "to": "viewing"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "RecurrenceLoadFailed",
                 "effects": [
                   [
                     "set",
@@ -822,25 +884,25 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
                       "message": "@entity.errorMessage",
-                      "title": "Failed to load"
+                      "title": "Failed to load",
+                      "type": "error-state"
                     }
                   ]
-                ]
+                ],
+                "event": "RecurrenceLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "RecurrenceSaved",
                 "effects": [
                   [
                     "fetch",
                     "RecurrenceView",
                     {
                       "emit": {
-                        "success": "RecurrenceLoaded",
-                        "failure": "RecurrenceLoadFailed"
+                        "failure": "RecurrenceLoadFailed",
+                        "success": "RecurrenceLoaded"
                       }
                     }
                   ],
@@ -852,12 +914,12 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "RecurrenceSaved",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "RecurrenceSaveFailed",
                 "effects": [
                   [
                     "set",
@@ -868,17 +930,17 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@entity.errorMessage",
                       "title": "Save failed",
-                      "type": "error-state",
-                      "message": "@entity.errorMessage"
+                      "type": "error-state"
                     }
                   ]
-                ]
+                ],
+                "event": "RecurrenceSaveFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "viewing",
-                "to": "defining_rule",
-                "event": "EDIT_RULE",
                 "effects": [
                   [
                     "render-ui",
@@ -887,54 +949,54 @@
                       "children": [
                         {
                           "align": "center",
-                          "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "action": "CANCEL_RULE",
-                              "type": "button",
+                              "icon": "arrow-left",
                               "label": "Back",
-                              "variant": "ghost",
-                              "icon": "arrow-left"
+                              "type": "button",
+                              "variant": "ghost"
                             },
                             {
                               "name": "settings",
                               "type": "icon"
                             },
                             {
+                              "content": "Edit recurrence rule",
                               "type": "typography",
-                              "variant": "h3",
-                              "content": "Edit recurrence rule"
+                              "variant": "h3"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
-                          "look": "@config.cardLook",
-                          "type": "card",
                           "children": [
                             {
-                              "mode": "edit",
+                              "cancelEvent": "CANCEL_RULE",
                               "entity": "@entity",
                               "fields": "@config.formFields",
-                              "cancelEvent": "CANCEL_RULE",
+                              "mode": "edit",
                               "submitEvent": "SAVE_RULE",
                               "type": "form-section"
                             }
-                          ]
+                          ],
+                          "look": "@config.cardLook",
+                          "type": "card"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "md"
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "EDIT_RULE",
+                "from": "viewing",
+                "to": "defining_rule"
               },
               {
-                "from": "viewing",
-                "to": "awaiting_exception_decision",
-                "event": "OPEN_EXCEPTION",
                 "effects": [
                   [
                     "set",
@@ -955,42 +1017,37 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
+                              "action": "CLOSE_EXCEPTION",
                               "icon": "arrow-left",
-                              "type": "button",
-                              "variant": "ghost",
                               "label": "Back",
-                              "action": "CLOSE_EXCEPTION"
+                              "type": "button",
+                              "variant": "ghost"
                             },
                             {
-                              "type": "icon",
-                              "name": "calendar-clock"
+                              "name": "calendar-clock",
+                              "type": "icon"
                             },
                             {
                               "content": "@entity.currentOccurrenceLabel",
-                              "variant": "h3",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             },
                             {
-                              "variant": "primary",
+                              "label": "@entity.currentOccurrenceDate",
                               "type": "badge",
-                              "label": "@entity.currentOccurrenceDate"
+                              "variant": "primary"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
-                          "type": "card",
-                          "look": "@config.cardLook",
                           "children": [
                             {
                               "children": [
@@ -1000,93 +1057,98 @@
                                   "variant": "body"
                                 },
                                 {
-                                  "type": "stack",
+                                  "align": "center",
                                   "children": [
                                     {
-                                      "label": "Skip",
-                                      "variant": "secondary",
-                                      "type": "button",
+                                      "action": "SKIP_OCCURRENCE",
                                       "actionPayload": {
                                         "id": "@entity.currentOccurrenceId"
                                       },
                                       "icon": "skip-forward",
-                                      "action": "SKIP_OCCURRENCE"
+                                      "label": "Skip",
+                                      "type": "button",
+                                      "variant": "secondary"
                                     },
                                     {
-                                      "icon": "calendar-clock",
                                       "action": "RESCHEDULE_OCCURRENCE",
-                                      "variant": "primary",
                                       "actionPayload": {
                                         "id": "@entity.currentOccurrenceId"
                                       },
+                                      "icon": "calendar-clock",
                                       "label": "Reschedule",
-                                      "type": "button"
+                                      "type": "button",
+                                      "variant": "primary"
                                     }
                                   ],
+                                  "direction": "horizontal",
                                   "gap": "sm",
-                                  "align": "center",
-                                  "direction": "horizontal"
+                                  "type": "stack"
                                 }
                               ],
-                              "type": "stack",
+                              "direction": "vertical",
                               "gap": "sm",
-                              "direction": "vertical"
+                              "type": "stack"
                             }
-                          ]
+                          ],
+                          "look": "@config.cardLook",
+                          "type": "card"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "OPEN_EXCEPTION",
+                "from": "viewing",
+                "to": "awaiting_exception_decision"
               },
               {
-                "from": "viewing",
-                "to": "cancelled",
-                "event": "CANCEL_SCHEDULE",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
                       "align": "center",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "icon",
                           "name": "x-circle",
-                          "size": "lg"
+                          "size": "lg",
+                          "type": "icon"
                         },
                         {
                           "align": "center",
-                          "variant": "h2",
+                          "content": "Schedule ended",
                           "type": "typography",
-                          "content": "Schedule ended"
+                          "variant": "h2"
                         },
                         {
                           "align": "center",
+                          "color": "muted",
                           "content": "This recurring schedule has been cancelled. No further occurrences will fire.",
                           "type": "typography",
-                          "color": "muted",
                           "variant": "body"
                         },
                         {
-                          "type": "button",
-                          "label": "Start a new schedule",
-                          "variant": "secondary",
                           "action": "RESTART",
-                          "icon": "rotate-ccw"
+                          "icon": "rotate-ccw",
+                          "label": "Start a new schedule",
+                          "type": "button",
+                          "variant": "secondary"
                         }
                       ],
                       "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "CANCEL_SCHEDULE",
+                "from": "viewing",
+                "to": "cancelled"
               },
               {
-                "from": "defining_rule",
-                "to": "loading",
-                "event": "SAVE_RULE",
                 "effects": [
                   [
                     "persist",
@@ -1104,24 +1166,24 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Saving rule…"
+                      "title": "Saving rule…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "SAVE_RULE",
+                "from": "defining_rule",
+                "to": "loading"
               },
               {
-                "from": "defining_rule",
-                "to": "loading",
-                "event": "CANCEL_RULE",
                 "effects": [
                   [
                     "fetch",
                     "RecurrenceView",
                     {
                       "emit": {
-                        "success": "RecurrenceLoaded",
-                        "failure": "RecurrenceLoadFailed"
+                        "failure": "RecurrenceLoadFailed",
+                        "success": "RecurrenceLoaded"
                       }
                     }
                   ],
@@ -1133,20 +1195,20 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "CANCEL_RULE",
+                "from": "defining_rule",
+                "to": "loading"
               },
               {
-                "from": "awaiting_exception_decision",
-                "to": "loading",
-                "event": "SKIP_OCCURRENCE",
                 "effects": [
                   [
                     "persist",
                     "update",
                     "RecurrenceView",
                     {
-                      "status": "skipped",
-                      "id": "@payload.id"
+                      "id": "@payload.id",
+                      "status": "skipped"
                     },
                     {
                       "emit": {
@@ -1159,16 +1221,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Skipping…"
+                      "title": "Skipping…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "SKIP_OCCURRENCE",
+                "from": "awaiting_exception_decision",
+                "to": "loading"
               },
               {
-                "from": "awaiting_exception_decision",
-                "to": "loading",
-                "event": "RESCHEDULE_OCCURRENCE",
                 "effects": [
                   [
                     "set",
@@ -1181,8 +1243,8 @@
                     "RecurrenceView",
                     {
                       "date": "@payload.newDate",
-                      "status": "rescheduled",
-                      "id": "@payload.id"
+                      "id": "@payload.id",
+                      "status": "rescheduled"
                     },
                     {
                       "emit": {
@@ -1199,20 +1261,20 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "RESCHEDULE_OCCURRENCE",
+                "from": "awaiting_exception_decision",
+                "to": "loading"
               },
               {
-                "from": "awaiting_exception_decision",
-                "to": "loading",
-                "event": "CLOSE_EXCEPTION",
                 "effects": [
                   [
                     "fetch",
                     "RecurrenceView",
                     {
                       "emit": {
-                        "success": "RecurrenceLoaded",
-                        "failure": "RecurrenceLoadFailed"
+                        "failure": "RecurrenceLoadFailed",
+                        "success": "RecurrenceLoaded"
                       }
                     }
                   ],
@@ -1220,16 +1282,16 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "loading-state",
-                      "title": "Closing…"
+                      "title": "Closing…",
+                      "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "CLOSE_EXCEPTION",
+                "from": "awaiting_exception_decision",
+                "to": "loading"
               },
               {
-                "from": "cancelled",
-                "to": "loading",
-                "event": "RESTART",
                 "effects": [
                   [
                     "fetch",
@@ -1249,12 +1311,12 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "RESTART",
+                "from": "cancelled",
+                "to": "loading"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
@@ -1264,78 +1326,16 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "config": {
-            "timelineLook": {
-              "type": "string",
-              "default": "vertical-spacious",
-              "label": "Timeline look",
-              "description": "Layer 2 visual treatment for the timeline.",
-              "tier": "presentation",
-              "values": [
-                "vertical-compact",
-                "vertical-spacious",
-                "horizontal",
-                "swimlane"
-              ]
-            },
-            "cardLook": {
-              "type": "string",
-              "default": "elevated",
-              "label": "Card look",
-              "description": "Layer 2 visual treatment for cards rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "elevated",
-                "flat-bordered",
-                "borderless-divider",
-                "ticket",
-                "invoice",
-                "chip",
-                "tile-image-first"
-              ]
-            },
-            "title": {
-              "type": "string",
-              "default": "Schedule",
-              "label": "Section title",
-              "description": "Heading shown above the recurrence editor",
-              "tier": "presentation"
-            },
-            "formFields": {
-              "type": "[string]",
-              "default": [
-                "frequency",
-                "interval",
-                "startDate",
-                "endDate",
-                "endAfterCount"
-              ],
-              "label": "Rule fields",
-              "description": "Inputs shown in the recurrence-rule definition form",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "RecurrencePage",
-          "path": "/recurrence",
-          "traits": [
-            {
-              "ref": "RecurrenceEditor"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "2.1.0"
 }

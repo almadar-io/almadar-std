@@ -1,97 +1,121 @@
 {
-  "name": "std-row-access-control",
-  "version": "1.0.0",
   "description": "std-row-access-control — row-level access control gate / ownership filter / role-based row visibility. Use when a user voices that only certain users should see or edit certain records (only the owner can edit, private to owner, owner-only visibility, only see your own records, role-based visibility, admin-only access, visible to admins only, restricted to role, permission gate, ownership scoping, hide from other users, only show mine). Listens for `RowsLoaded` (rename via traitOverrides.events to the consumer's load event), filters `@payload.data` by `@user.id` (when `ownerField` is set) and/or `@user.role` (when `visibleRoles` is non-empty), re-emits `RowsFiltered` for downstream consumers (rename to wire into the UI atom's listen). Composable via `extraTraits` to interpose between a data fetch and a list/grid UI.",
+  "name": "std-row-access-control",
   "orbitals": [
     {
-      "name": "RowAccessControlOrbital",
       "entity": {
-        "name": "RowAccessGateView",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "filteredData",
-            "type": "array",
             "default": [],
+            "description": "The data returned after applying access control filters.",
             "items": {
-              "type": "object",
               "properties": {
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": false
-                },
                 "icon": {
                   "name": "icon",
-                  "type": "string",
-                  "required": false
+                  "required": false,
+                  "type": "string"
                 },
-                "value": {
-                  "name": "value",
-                  "type": "string",
-                  "required": false
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
                 },
                 "label": {
                   "name": "label",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
+                },
+                "value": {
+                  "name": "value",
+                  "required": false,
+                  "type": "string"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "The data returned after applying access control filters.",
-            "synonyms": "filtered items, processed data, results, output"
+            "name": "filteredData",
+            "synonyms": "filtered items, processed data, results, output",
+            "type": "array"
           },
           {
-            "name": "inputCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of records processed by the access control.",
-            "synonyms": "record count, item count, total records"
+            "name": "inputCount",
+            "synonyms": "record count, item count, total records",
+            "type": "number"
           },
           {
-            "name": "outputCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of records that passed the access control filter.",
-            "synonyms": "count, size, length"
+            "name": "outputCount",
+            "synonyms": "count, size, length",
+            "type": "number"
           },
           {
-            "name": "accessDenied",
-            "type": "boolean",
             "default": false,
             "description": "Indicates whether access is denied based on configured rules.",
-            "synonyms": "denied, restricted, unauthorized, access-denied"
+            "name": "accessDenied",
+            "synonyms": "denied, restricted, unauthorized, access-denied",
+            "type": "boolean"
           }
-        ]
+        ],
+        "name": "RowAccessGateView",
+        "persistence": "runtime"
       },
+      "name": "RowAccessControlOrbital",
+      "pages": [
+        {
+          "name": "RowAccessControlPage",
+          "path": "/row-access-control",
+          "traits": [
+            {
+              "ref": "RowAccessGate"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "RowAccessGate",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "accessDenied",
-              "filteredData",
-              "inputCount",
-              "outputCount"
-            ]
-          },
-          "category": "lifecycle",
           "capabilities": [
             "access",
             "privacy"
           ],
-          "linkedEntity": "RowAccessGateView",
+          "category": "lifecycle",
+          "config": {
+            "enabled": {
+              "default": false,
+              "description": "Only let people see records they own, or that match an allowed role. Off by default.",
+              "label": "Restrict who sees records",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, only owner can edit, owner-only, private to owner, only see your own, restrict to role, role-based visibility, permission gate, admin-only access, hide from other users, only show mine, ownership scoping",
+              "tier": "policy",
+              "type": "boolean"
+            },
+            "ownerField": {
+              "default": "",
+              "description": "Row field holding the owning user id (blank disables owner filter)",
+              "label": "Owner field",
+              "tier": "internal",
+              "type": "string"
+            },
+            "visibleRoles": {
+              "default": [],
+              "description": "Roles permitted to see any row (empty = no role gate)",
+              "items": {
+                "type": "string"
+              },
+              "label": "Allowed roles",
+              "tier": "policy",
+              "type": "[string]"
+            }
+          },
           "emits": [
             {
               "event": "RowsFiltered",
-              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "data",
@@ -101,16 +125,24 @@
                   "name": "filteredCount",
                   "type": "number"
                 }
-              ]
+              ],
+              "scope": "external"
             }
           ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
+          "entityContract": {
+            "provides": [
+              "accessDenied",
+              "filteredData",
+              "inputCount",
+              "outputCount"
             ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "RowAccessGateView",
+          "name": "RowAccessGate",
+          "scope": "instance",
+          "stateMachine": {
             "events": [
               {
                 "key": "RowsLoaded",
@@ -137,12 +169,14 @@
                 ]
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "RowsLoaded",
-                "guard": "@config.enabled",
                 "effects": [
                   [
                     "set",
@@ -228,55 +262,21 @@
                     "emit",
                     "RowsFiltered",
                     {
-                      "filteredCount": "@entity.outputCount",
-                      "data": "@entity.filteredData"
+                      "data": "@entity.filteredData",
+                      "filteredCount": "@entity.outputCount"
                     }
                   ]
-                ]
+                ],
+                "event": "RowsLoaded",
+                "from": "idle",
+                "guard": "@config.enabled",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "ownerField": {
-              "type": "string",
-              "default": "",
-              "label": "Owner field",
-              "description": "Row field holding the owning user id (blank disables owner filter)",
-              "tier": "internal"
-            },
-            "visibleRoles": {
-              "type": "[string]",
-              "default": [],
-              "label": "Allowed roles",
-              "description": "Roles permitted to see any row (empty = no role gate)",
-              "tier": "policy",
-              "items": {
-                "type": "string"
-              }
-            },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Restrict who sees records",
-              "description": "Only let people see records they own, or that match an allowed role. Off by default.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, only owner can edit, owner-only, private to owner, only see your own, restrict to role, role-based visibility, permission gate, admin-only access, hide from other users, only show mine, ownership scoping",
-              "tier": "policy"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "RowAccessControlPage",
-          "path": "/row-access-control",
-          "traits": [
-            {
-              "ref": "RowAccessGate"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

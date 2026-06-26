@@ -1,87 +1,136 @@
 {
-  "name": "std-cross-reference",
-  "version": "1.0.0",
   "description": "std-cross-reference — join-table primitive for N:M relationships. Listens for LinkRequested/UnlinkRequested/FETCH_LINKS_FOR and manages the junction collection (default CrossRefLink [persistent: cross_ref_links]). Rebind via linkedEntity to your consumer junction. Emits LinkCreated, LinkRemoved, LinksLoaded as external broadcasts for downstream consumers.",
+  "name": "std-cross-reference",
   "orbitals": [
     {
-      "name": "CrossReferenceOrbital",
       "entity": {
-        "name": "CrossRefLink",
         "collection": "cross_ref_links",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "leftId",
-            "type": "string",
             "default": "",
             "description": "Identifier for the related entity on the left side.",
-            "synonyms": "sourceId, originId, parentId"
+            "name": "leftId",
+            "synonyms": "sourceId, originId, parentId",
+            "type": "string"
           },
           {
-            "name": "rightId",
-            "type": "string",
             "default": "",
             "description": "Identifier for the related entity on the right side.",
-            "synonyms": "targetId, relatedId, counterpartId"
+            "name": "rightId",
+            "synonyms": "targetId, relatedId, counterpartId",
+            "type": "string"
           },
           {
+            "default": "",
             "name": "createdAt",
-            "type": "string",
-            "default": ""
+            "type": "string"
           },
           {
-            "name": "filteredLinks",
-            "type": "array",
             "default": [],
+            "description": "A list of filtered link specifications.",
             "items": {
-              "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
+                "href": {
+                  "name": "href",
+                  "required": true,
+                  "type": "string"
                 },
                 "icon": {
                   "name": "icon",
-                  "type": "string",
-                  "required": false
+                  "required": false,
+                  "type": "string"
                 },
-                "href": {
-                  "name": "href",
-                  "type": "string",
-                  "required": true
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "A list of filtered link specifications.",
-            "synonyms": "links, references, connections"
+            "name": "filteredLinks",
+            "synonyms": "links, references, connections",
+            "type": "array"
           }
-        ]
+        ],
+        "name": "CrossRefLink",
+        "persistence": "persistent"
       },
+      "name": "CrossReferenceOrbital",
+      "pages": [
+        {
+          "name": "CrossReferencePage",
+          "path": "/cross-reference",
+          "traits": [
+            {
+              "ref": "CrossReferenceGate"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "CrossReferenceGate",
           "category": "lifecycle",
-          "linkedEntity": "CrossRefLink",
+          "config": {
+            "junctionEntity": {
+              "default": "",
+              "description": "Persistent entity used as the join table",
+              "label": "Junction entity",
+              "synonyms": "join table, link table, bridge table, junction table, mapping table",
+              "tier": "internal",
+              "type": "string"
+            },
+            "leftEntity": {
+              "default": "",
+              "description": "Entity type on the left side of the N:M relationship",
+              "label": "Left entity",
+              "synonyms": "left side, source entity, from entity, parent entity",
+              "tier": "internal",
+              "type": "string"
+            },
+            "leftIdField": {
+              "default": "",
+              "description": "Junction column holding the left entity's id",
+              "label": "Left FK field",
+              "synonyms": "left foreign key, left FK, source key, parent key",
+              "tier": "internal",
+              "type": "string"
+            },
+            "rightEntity": {
+              "default": "",
+              "description": "Entity type on the right side of the N:M relationship",
+              "label": "Right entity",
+              "synonyms": "right side, target entity, to entity, child entity, related entity",
+              "tier": "internal",
+              "type": "string"
+            },
+            "rightIdField": {
+              "default": "",
+              "description": "Junction column holding the right entity's id",
+              "label": "Right FK field",
+              "synonyms": "right foreign key, right FK, target key, child key",
+              "tier": "internal",
+              "type": "string"
+            }
+          },
           "emits": [
             {
               "event": "LinkCreated",
-              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "row",
                   "type": "object"
                 }
-              ]
+              ],
+              "scope": "external"
             },
             {
               "event": "LinkRemoved",
-              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "leftId",
@@ -91,11 +140,11 @@
                   "name": "rightId",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "external"
             },
             {
               "event": "LinksLoaded",
-              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "leftId",
@@ -105,21 +154,21 @@
                   "name": "data",
                   "type": "[ObjectSpec]"
                 }
-              ]
+              ],
+              "scope": "external"
             },
             {
               "event": "LinksFetched",
-              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[ObjectSpec]"
                 }
-              ]
+              ],
+              "scope": "external"
             },
             {
               "event": "LinkOpFailed",
-              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -129,16 +178,14 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "external"
             }
           ],
+          "linkedEntity": "CrossRefLink",
+          "name": "CrossReferenceGate",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
-            ],
             "events": [
               {
                 "key": "LinkRequested",
@@ -241,19 +288,22 @@
                 ]
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "LinkRequested",
                 "effects": [
                   [
                     "persist",
                     "create",
                     "CrossRefLink",
                     {
-                      "rightId": "@payload.rightId",
-                      "leftId": "@payload.leftId"
+                      "leftId": "@payload.leftId",
+                      "rightId": "@payload.rightId"
                     },
                     {
                       "emit": {
@@ -262,12 +312,12 @@
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "LinkRequested",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "UnlinkRequested",
                 "effects": [
                   [
                     "persist",
@@ -281,12 +331,12 @@
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "UnlinkRequested",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "FETCH_LINKS_FOR",
                 "effects": [
                   [
                     "set",
@@ -298,17 +348,17 @@
                     "CrossRefLink",
                     {
                       "emit": {
-                        "success": "LinksFetched",
-                        "failure": "LinkOpFailed"
+                        "failure": "LinkOpFailed",
+                        "success": "LinksFetched"
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "FETCH_LINKS_FOR",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "LinksFetched",
                 "effects": [
                   [
                     "set",
@@ -335,70 +385,20 @@
                     "emit",
                     "LinksLoaded",
                     {
-                      "leftId": "@entity.leftId",
-                      "data": "@entity.filteredLinks"
+                      "data": "@entity.filteredLinks",
+                      "leftId": "@entity.leftId"
                     }
                   ]
-                ]
+                ],
+                "event": "LinksFetched",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "leftEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Left entity",
-              "description": "Entity type on the left side of the N:M relationship",
-              "synonyms": "left side, source entity, from entity, parent entity",
-              "tier": "internal"
-            },
-            "rightEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Right entity",
-              "description": "Entity type on the right side of the N:M relationship",
-              "synonyms": "right side, target entity, to entity, child entity, related entity",
-              "tier": "internal"
-            },
-            "leftIdField": {
-              "type": "string",
-              "default": "",
-              "label": "Left FK field",
-              "description": "Junction column holding the left entity's id",
-              "synonyms": "left foreign key, left FK, source key, parent key",
-              "tier": "internal"
-            },
-            "junctionEntity": {
-              "type": "string",
-              "default": "",
-              "label": "Junction entity",
-              "description": "Persistent entity used as the join table",
-              "synonyms": "join table, link table, bridge table, junction table, mapping table",
-              "tier": "internal"
-            },
-            "rightIdField": {
-              "type": "string",
-              "default": "",
-              "label": "Right FK field",
-              "description": "Junction column holding the right entity's id",
-              "synonyms": "right foreign key, right FK, target key, child key",
-              "tier": "internal"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "CrossReferencePage",
-          "path": "/cross-reference",
-          "traits": [
-            {
-              "ref": "CrossReferenceGate"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

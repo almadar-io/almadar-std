@@ -1,89 +1,83 @@
 {
-  "name": "std-dashboard-summary",
-  "version": "1.0.0",
   "description": "Executive dashboard summary — 4 KPI tiles, status pill strip, and a primary line-chart panel. Standalone atom with its own loading/ready/error state machine; fetches a single SummaryRecord and renders inline.",
+  "name": "std-dashboard-summary",
   "orbitals": [
     {
-      "name": "DashboardSummaryOrbital",
       "entity": {
-        "name": "SummaryRecord",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "title",
-            "type": "string",
-            "required": true,
             "default": "Performance overview",
             "description": "A brief, descriptive name for the record.",
-            "synonyms": "label, heading, name"
+            "name": "title",
+            "required": true,
+            "synonyms": "label, heading, name",
+            "type": "string"
           },
           {
-            "name": "subtitle",
-            "type": "string",
             "default": "",
             "description": "A short descriptive text appearing below the main title.",
-            "synonyms": "caption, secondary title, description"
+            "name": "subtitle",
+            "synonyms": "caption, secondary title, description",
+            "type": "string"
           },
           {
-            "name": "period",
-            "type": "string",
             "default": "Last 30 days",
             "description": "The time period or interval the data represents.",
-            "synonyms": "date range, timeframe, interval, duration"
+            "name": "period",
+            "synonyms": "date range, timeframe, interval, duration",
+            "type": "string"
           },
           {
-            "name": "tiles",
-            "type": "array",
             "default": [],
+            "description": "A collection of KPI tile configurations.",
             "items": {
-              "type": "object",
               "properties": {
-                "label": {
-                  "name": "label",
-                  "type": "string",
-                  "required": true
-                },
-                "value": {
-                  "name": "value",
-                  "type": "string",
-                  "required": true
-                },
                 "icon": {
                   "name": "icon",
-                  "type": "string",
-                  "required": false
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
                 },
                 "trend": {
                   "name": "trend",
-                  "type": "number",
-                  "required": false
+                  "required": false,
+                  "type": "number"
+                },
+                "value": {
+                  "name": "value",
+                  "required": true,
+                  "type": "string"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "A collection of KPI tile configurations.",
-            "synonyms": "tileset, tile data, KPI definitions"
+            "name": "tiles",
+            "synonyms": "tileset, tile data, KPI definitions",
+            "type": "array"
           },
           {
-            "name": "statuses",
-            "type": "array",
             "default": [],
+            "description": "Represents the current operational status.",
             "items": {
-              "type": "object",
               "properties": {
                 "label": {
                   "name": "label",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 "tone": {
                   "name": "tone",
-                  "type": "string",
                   "required": false,
+                  "type": "string",
                   "values": [
                     "default",
                     "primary",
@@ -94,92 +88,104 @@
                     "neutral"
                   ]
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "Represents the current operational status.",
-            "synonyms": "state, condition, level"
+            "name": "statuses",
+            "synonyms": "state, condition, level",
+            "type": "array"
           },
           {
-            "name": "chartTitle",
-            "type": "string",
             "default": "Performance",
             "description": "The title displayed for the chart.",
-            "synonyms": "heading, label, name"
+            "name": "chartTitle",
+            "synonyms": "heading, label, name",
+            "type": "string"
           },
           {
-            "name": "chartSubtitle",
-            "type": "string",
             "default": "",
             "description": "A brief descriptive text accompanying the chart title.",
-            "synonyms": "subtitle, description, caption"
+            "name": "chartSubtitle",
+            "synonyms": "subtitle, description, caption",
+            "type": "string"
           },
           {
-            "name": "chartData",
-            "type": "array",
             "default": [],
+            "description": "Data points for a chart visualization.",
             "items": {
-              "type": "object",
               "properties": {
                 "label": {
                   "name": "label",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 "value": {
                   "name": "value",
-                  "type": "number",
-                  "required": true
+                  "required": true,
+                  "type": "number"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "Data points for a chart visualization.",
-            "synonyms": "data, values, measurements, readings"
+            "name": "chartData",
+            "synonyms": "data, values, measurements, readings",
+            "type": "array"
           },
           {
-            "name": "filterEvent",
-            "type": "string",
             "default": "OPEN_FILTER",
             "description": "Event triggering data filtering or refresh.",
-            "synonyms": "event, trigger, update"
+            "name": "filterEvent",
+            "synonyms": "event, trigger, update",
+            "type": "string"
           },
           {
-            "name": "errorMessage",
-            "type": "string",
             "default": "",
             "description": "A textual description of an error condition.",
-            "synonyms": "error, error message, problem, issue"
+            "name": "errorMessage",
+            "synonyms": "error, error message, problem, issue",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "SummaryRecord",
+        "persistence": "runtime"
       },
+      "name": "DashboardSummaryOrbital",
+      "pages": [
+        {
+          "name": "DashboardSummaryPage",
+          "path": "/dashboard-summary",
+          "traits": [
+            {
+              "ref": "DashboardSummary"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "DashboardSummary",
           "category": "interaction",
-          "linkedEntity": "SummaryRecord",
           "emits": [
             {
-              "event": "OPEN_FILTER",
               "description": "Requests the opening of a filter panel or modal.",
+              "event": "OPEN_FILTER",
               "synonyms": "show filter, open filters, filter panel",
               "tier": "essential"
             },
             {
-              "event": "SummaryRecordLoaded",
               "description": "Signals successful data retrieval and component initialization.",
-              "synonyms": "loaded, ready, initialized, data-ready",
-              "tier": "essential",
+              "event": "SummaryRecordLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[object]"
                 }
-              ]
+              ],
+              "synonyms": "loaded, ready, initialized, data-ready",
+              "tier": "essential"
             },
             {
-              "event": "SummaryRecordLoadFailed",
               "description": "Indicates failure to retrieve the summary data.",
-              "synonyms": "error, failed, problem, issue",
-              "tier": "internal",
+              "event": "SummaryRecordLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -189,46 +195,37 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failed, problem, issue",
+              "tier": "internal"
             }
           ],
+          "linkedEntity": "SummaryRecord",
+          "name": "DashboardSummary",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "loading",
-                "isInitial": true
-              },
-              {
-                "name": "ready"
-              },
-              {
-                "name": "error"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Signals successful data retrieval and component initialization.",
                 "key": "SummaryRecordLoaded",
                 "name": "SummaryRecord loaded",
-                "description": "Signals successful data retrieval and component initialization.",
-                "synonyms": "loaded, ready, initialized, data-ready",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
                     "type": "[object]"
                   }
-                ]
+                ],
+                "synonyms": "loaded, ready, initialized, data-ready",
+                "tier": "essential"
               },
               {
+                "description": "Indicates failure to retrieve the summary data.",
                 "key": "SummaryRecordLoadFailed",
                 "name": "SummaryRecord load failed",
-                "description": "Indicates failure to retrieve the summary data.",
-                "synonyms": "error, failed, problem, issue",
-                "tier": "internal",
                 "payloadSchema": [
                   {
                     "name": "error",
@@ -238,21 +235,32 @@
                     "name": "code",
                     "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "error, failed, problem, issue",
+                "tier": "internal"
               },
               {
+                "description": "Requests the opening of a filter panel or modal.",
                 "key": "OPEN_FILTER",
                 "name": "Open Filter",
-                "description": "Requests the opening of a filter panel or modal.",
                 "synonyms": "show filter, open filters, filter panel",
                 "tier": "essential"
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "loading"
+              },
+              {
+                "name": "ready"
+              },
+              {
+                "name": "error"
+              }
+            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -273,12 +281,12 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "ready",
-                "event": "SummaryRecordLoaded",
                 "effects": [
                   [
                     "set",
@@ -392,28 +400,23 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
                               "children": [
                                 {
+                                  "content": "@entity.title",
                                   "type": "typography",
-                                  "weight": "semibold",
                                   "variant": "h3",
-                                  "content": "@entity.title"
+                                  "weight": "semibold"
                                 },
                                 {
                                   "color": "muted",
-                                  "variant": "caption",
                                   "content": "@entity.period",
-                                  "type": "typography"
+                                  "type": "typography",
+                                  "variant": "caption"
                                 }
                               ],
                               "direction": "vertical",
@@ -423,102 +426,105 @@
                             {
                               "action": "@entity.filterEvent",
                               "icon": "filter",
+                              "label": "Filter",
                               "size": "sm",
-                              "variant": "ghost",
                               "type": "button",
-                              "label": "Filter"
+                              "variant": "ghost"
                             }
                           ],
-                          "justify": "between"
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
-                          "type": "simple-grid",
-                          "gap": "md",
                           "children": [
                             {
-                              "gap": "md",
-                              "fields": [],
                               "entity": "@entity.tiles",
+                              "fields": [],
+                              "gap": "md",
                               "renderItem": [
                                 "fn",
                                 "tile",
                                 {
-                                  "type": "card",
-                                  "padding": "md",
                                   "children": [
                                     {
                                       "children": [
                                         {
-                                          "direction": "horizontal",
-                                          "type": "stack",
                                           "align": "center",
                                           "children": [
                                             {
-                                              "content": "@tile.label",
                                               "color": "muted",
+                                              "content": "@tile.label",
+                                              "type": "typography",
                                               "variant": "overline",
-                                              "weight": "semibold",
-                                              "type": "typography"
+                                              "weight": "semibold"
                                             },
                                             {
                                               "color": "muted",
+                                              "name": "@tile.icon",
                                               "size": "sm",
-                                              "type": "icon",
-                                              "name": "@tile.icon"
+                                              "type": "icon"
                                             }
                                           ],
+                                          "direction": "horizontal",
                                           "gap": "xs",
-                                          "justify": "between"
+                                          "justify": "between",
+                                          "type": "stack"
                                         },
                                         {
                                           "content": "@tile.value",
-                                          "weight": "semibold",
+                                          "type": "typography",
                                           "variant": "h2",
-                                          "type": "typography"
+                                          "weight": "semibold"
                                         },
                                         {
+                                          "showValue": true,
                                           "size": "sm",
                                           "type": "trend-indicator",
-                                          "value": "@tile.trend",
-                                          "showValue": true
+                                          "value": "@tile.trend"
                                         }
                                       ],
-                                      "gap": "xs",
                                       "direction": "vertical",
+                                      "gap": "xs",
                                       "type": "stack"
                                     }
                                   ],
-                                  "look": "elevated"
+                                  "look": "elevated",
+                                  "padding": "md",
+                                  "type": "card"
                                 }
                               ],
                               "type": "data-list"
                             }
                           ],
-                          "cols": 4.0
+                          "cols": 4.0,
+                          "gap": "md",
+                          "type": "simple-grid"
                         },
                         {
-                          "type": "stack",
                           "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
                           "children": [
                             {
                               "entity": "@entity.statuses",
+                              "fields": [],
                               "gap": "sm",
                               "renderItem": [
                                 "fn",
                                 "pill",
                                 {
+                                  "label": "@pill.label",
                                   "size": "sm",
-                                  "variant": "@pill.tone",
                                   "type": "badge",
-                                  "label": "@pill.label"
+                                  "variant": "@pill.tone"
                                 }
                               ],
-                              "type": "data-list",
-                              "fields": []
+                              "type": "data-list"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -526,52 +532,52 @@
                         {
                           "children": [
                             {
-                              "type": "stack",
-                              "gap": "md",
                               "children": [
                                 {
+                                  "align": "center",
                                   "children": [
                                     {
                                       "children": [
                                         {
                                           "content": "@entity.chartTitle",
-                                          "weight": "semibold",
+                                          "type": "typography",
                                           "variant": "h4",
-                                          "type": "typography"
+                                          "weight": "semibold"
                                         },
                                         {
                                           "color": "muted",
+                                          "content": "@entity.chartSubtitle",
                                           "type": "typography",
-                                          "variant": "caption",
-                                          "content": "@entity.chartSubtitle"
+                                          "variant": "caption"
                                         }
                                       ],
-                                      "gap": "xs",
                                       "direction": "vertical",
+                                      "gap": "xs",
                                       "type": "stack"
                                     },
                                     {
-                                      "size": "sm",
                                       "label": "@entity.period",
+                                      "size": "sm",
                                       "type": "badge",
                                       "variant": "default"
                                     }
                                   ],
-                                  "gap": "sm",
-                                  "type": "stack",
                                   "direction": "horizontal",
+                                  "gap": "sm",
                                   "justify": "between",
-                                  "align": "center"
+                                  "type": "stack"
                                 },
                                 {
-                                  "data": "@entity.chartData",
-                                  "type": "chart",
                                   "chartType": "line",
+                                  "data": "@entity.chartData",
                                   "height": 280.0,
-                                  "showLegend": false
+                                  "showLegend": false,
+                                  "type": "chart"
                                 }
                               ],
-                              "direction": "vertical"
+                              "direction": "vertical",
+                              "gap": "md",
+                              "type": "stack"
                             }
                           ],
                           "look": "elevated",
@@ -579,15 +585,17 @@
                           "type": "card"
                         }
                       ],
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "SummaryRecordLoaded",
+                "from": "loading",
+                "to": "ready"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "SummaryRecordLoadFailed",
                 "effects": [
                   [
                     "set",
@@ -598,22 +606,22 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "error-state",
                       "message": "@entity.errorMessage",
-                      "title": "Failed to load dashboard"
+                      "title": "Failed to load dashboard",
+                      "type": "error-state"
                     }
                   ]
-                ]
+                ],
+                "event": "SummaryRecordLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
+                "event": "OPEN_FILTER",
                 "from": "ready",
-                "to": "ready",
-                "event": "OPEN_FILTER"
+                "to": "ready"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
@@ -623,24 +631,16 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "DashboardSummaryPage",
-          "path": "/dashboard-summary",
-          "traits": [
-            {
-              "ref": "DashboardSummary"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

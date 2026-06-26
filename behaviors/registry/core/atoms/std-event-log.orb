@@ -1,139 +1,73 @@
 {
-  "name": "std-event-log",
-  "version": "2.1.0",
   "description": "std-event-log — generic chronological event feed (Stripe activity log / GitHub PR timeline / Linear event feed style). Renders a vertical `timeline` with type-coded dots, a single horizontal chip-bar of kind filters (All + per-kind), reverse-chronological sort, and an inline form for logging events that weren't auto-captured. `config.kindOptions` maps each kind → status/icon/label so consuming molecules/organisms get type-coded visuals without re-implementing topology. Topology = loading / viewing / backfilling / error.",
+  "name": "std-event-log",
   "orbitals": [
     {
-      "name": "EventLogOrbital",
       "entity": {
-        "name": "EventLogView",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "title",
-            "type": "string",
             "default": "",
             "description": "The descriptive name or heading for the event log.",
-            "synonyms": "heading, label, name"
+            "name": "title",
+            "synonyms": "heading, label, name",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "default": "",
             "description": "A human-readable explanation of the event.",
-            "synonyms": "text, details, explanation, summary"
+            "name": "description",
+            "synonyms": "text, details, explanation, summary",
+            "type": "string"
           },
           {
-            "name": "kind",
-            "type": "string",
             "default": "created",
+            "description": "The type of event being logged.",
+            "name": "kind",
+            "synonyms": "event type, event category, kind, status",
+            "type": "string",
             "values": [
               "created",
               "updated",
               "approved",
               "rejected"
-            ],
-            "description": "The type of event being logged.",
-            "synonyms": "event type, event category, kind, status"
+            ]
           },
           {
-            "name": "date",
-            "type": "string",
             "default": "",
             "description": "The timestamp associated with the event.",
-            "synonyms": "timestamp, time, occurred"
+            "name": "date",
+            "synonyms": "timestamp, time, occurred",
+            "type": "string"
           },
           {
-            "name": "allEntries",
-            "type": "array",
             "default": [],
-            "items": {
-              "type": "object",
-              "properties": {
-                "title": {
-                  "name": "title",
-                  "type": "string",
-                  "required": true
-                },
-                "date": {
-                  "name": "date",
-                  "type": "string",
-                  "required": false
-                },
-                "id": {
-                  "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "status": {
-                  "name": "status",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "complete",
-                    "active",
-                    "pending",
-                    "error"
-                  ]
-                },
-                "description": {
-                  "name": "description",
-                  "type": "string",
-                  "required": false
-                },
-                "kind": {
-                  "name": "kind",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "created",
-                    "updated",
-                    "approved",
-                    "rejected"
-                  ]
-                }
-              }
-            },
             "description": "An array of log entry objects.",
-            "synonyms": "entries, records, items, data"
-          },
-          {
-            "name": "entries",
-            "type": "array",
-            "default": [],
             "items": {
-              "type": "object",
               "properties": {
                 "date": {
                   "name": "date",
-                  "type": "string",
-                  "required": false
+                  "required": false,
+                  "type": "string"
+                },
+                "description": {
+                  "name": "description",
+                  "required": false,
+                  "type": "string"
                 },
                 "id": {
                   "name": "id",
-                  "type": "string",
-                  "required": true
-                },
-                "status": {
-                  "name": "status",
-                  "type": "string",
-                  "required": false,
-                  "values": [
-                    "complete",
-                    "active",
-                    "pending",
-                    "error"
-                  ]
+                  "required": true,
+                  "type": "string"
                 },
                 "kind": {
                   "name": "kind",
-                  "type": "string",
                   "required": false,
+                  "type": "string",
                   "values": [
                     "created",
                     "updated",
@@ -141,98 +75,382 @@
                     "rejected"
                   ]
                 },
+                "status": {
+                  "name": "status",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "complete",
+                    "active",
+                    "pending",
+                    "error"
+                  ]
+                },
                 "title": {
                   "name": "title",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "allEntries",
+            "synonyms": "entries, records, items, data",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "description": "A list of log entries, each with associated data.",
+            "items": {
+              "properties": {
+                "date": {
+                  "name": "date",
+                  "required": false,
+                  "type": "string"
                 },
                 "description": {
                   "name": "description",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "kind": {
+                  "name": "kind",
+                  "required": false,
                   "type": "string",
-                  "required": false
+                  "values": [
+                    "created",
+                    "updated",
+                    "approved",
+                    "rejected"
+                  ]
+                },
+                "status": {
+                  "name": "status",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "complete",
+                    "active",
+                    "pending",
+                    "error"
+                  ]
+                },
+                "title": {
+                  "name": "title",
+                  "required": true,
+                  "type": "string"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "A list of log entries, each with associated data.",
-            "synonyms": "records, items, data, events"
+            "name": "entries",
+            "synonyms": "records, items, data, events",
+            "type": "array"
           },
           {
-            "name": "filterChips",
-            "type": "array",
             "default": [],
+            "description": "Represents selectable filter options for event categories.",
             "items": {
-              "type": "object",
               "properties": {
                 "icon": {
                   "name": "icon",
-                  "type": "string",
-                  "required": false
+                  "required": false,
+                  "type": "string"
                 },
                 "id": {
                   "name": "id",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 "label": {
                   "name": "label",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "Represents selectable filter options for event categories.",
-            "synonyms": "filters, categories, types, selections"
+            "name": "filterChips",
+            "synonyms": "filters, categories, types, selections",
+            "type": "array"
           },
           {
-            "name": "filterKind",
-            "type": "string",
             "default": "",
             "description": "The type of filter currently applied to the event log.",
-            "synonyms": "filter, category, type"
+            "name": "filterKind",
+            "synonyms": "filter, category, type",
+            "type": "string"
           },
           {
-            "name": "backfillTitle",
-            "type": "string",
             "default": "",
             "description": "A descriptive title for a manually added event.",
-            "synonyms": "manual title, user-provided title, custom title"
+            "name": "backfillTitle",
+            "synonyms": "manual title, user-provided title, custom title",
+            "type": "string"
           },
           {
-            "name": "backfillDescription",
-            "type": "string",
             "default": "",
             "description": "A textual explanation for the event backfill process.",
-            "synonyms": "explanation, details, notes, information"
+            "name": "backfillDescription",
+            "synonyms": "explanation, details, notes, information",
+            "type": "string"
           },
           {
-            "name": "backfillDate",
-            "type": "string",
             "default": "",
             "description": "The date and time when the event was manually added.",
-            "synonyms": "timestamp, entered date, manual date"
+            "name": "backfillDate",
+            "synonyms": "timestamp, entered date, manual date",
+            "type": "string"
           },
           {
-            "name": "backfillKind",
-            "type": "string",
             "default": "",
             "description": "Specifies the category or type of the manually added event.",
-            "synonyms": "event type, category, kind"
+            "name": "backfillKind",
+            "synonyms": "event type, category, kind",
+            "type": "string"
           },
           {
-            "name": "errorMessage",
-            "type": "string",
             "default": "",
             "description": "A human-readable message indicating an error condition.",
-            "synonyms": "error, error message, problem, issue"
+            "name": "errorMessage",
+            "synonyms": "error, error message, problem, issue",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "EventLogView",
+        "persistence": "runtime"
       },
+      "name": "EventLogOrbital",
+      "pages": [
+        {
+          "name": "EventLogPage",
+          "path": "/event-log",
+          "traits": [
+            {
+              "ref": "EventLogTimeline"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "EventLogTimeline",
-          "entityRebindable": true,
+          "category": "interaction",
+          "config": {
+            "cardLook": {
+              "default": "elevated",
+              "description": "Layer 2 visual treatment for cards rendered by this atom.",
+              "label": "Card look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "elevated",
+                "flat-bordered",
+                "borderless-divider",
+                "ticket",
+                "invoice",
+                "chip",
+                "tile-image-first"
+              ]
+            },
+            "formFields": {
+              "default": [
+                "backfillTitle",
+                "backfillDescription",
+                "backfillKind",
+                "backfillDate"
+              ],
+              "description": "Inputs shown in the form for manually logging missed events",
+              "items": {
+                "type": "string"
+              },
+              "label": "Backfill fields",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "kindOptions": {
+              "default": [
+                {
+                  "icon": "plus-circle",
+                  "key": "created",
+                  "label": "Created",
+                  "status": "active"
+                },
+                {
+                  "icon": "edit-3",
+                  "key": "updated",
+                  "label": "Updated",
+                  "status": "pending"
+                },
+                {
+                  "icon": "check-circle",
+                  "key": "approved",
+                  "label": "Approved",
+                  "status": "complete"
+                },
+                {
+                  "icon": "x-circle",
+                  "key": "rejected",
+                  "label": "Rejected",
+                  "status": "error"
+                }
+              ],
+              "description": "Maps each event kind to its label, icon, and status color",
+              "items": {
+                "properties": {
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "key": {
+                    "name": "key",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "status": {
+                    "name": "status",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "complete",
+                      "active",
+                      "pending",
+                      "error"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Event kinds",
+              "tier": "presentation",
+              "type": "[KindOption]"
+            },
+            "timelineLook": {
+              "default": "vertical-spacious",
+              "description": "Layer 2 visual treatment for the timeline.",
+              "label": "Timeline look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "vertical-compact",
+                "vertical-spacious",
+                "horizontal",
+                "swimlane"
+              ]
+            },
+            "title": {
+              "default": "Activity",
+              "description": "Heading shown above the activity timeline",
+              "label": "Section title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
+          "emits": [
+            {
+              "description": "Signals a filter has been applied to the event log.",
+              "event": "APPLY_FILTER",
+              "payloadSchema": [
+                {
+                  "name": "tabId",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "filter, refine, narrow, update",
+              "tier": "customization"
+            },
+            {
+              "description": "Initiates a backfill operation to retrieve historical events.",
+              "event": "OPEN_BACKFILL",
+              "synonyms": "refresh, retrieve, load history",
+              "tier": "advanced"
+            },
+            {
+              "description": "Indicates successful completion of backfill data saving.",
+              "event": "SAVE_BACKFILL",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "object"
+                }
+              ],
+              "synonyms": "saved, persisted, committed",
+              "tier": "customization"
+            },
+            {
+              "description": "Aborts the backfill process.",
+              "event": "CANCEL_BACKFILL",
+              "synonyms": "abort, stop, dismiss, undo",
+              "tier": "customization"
+            },
+            {
+              "description": "Signals the event log has finished loading.",
+              "event": "EventLogLoaded",
+              "payloadSchema": [
+                {
+                  "name": "data",
+                  "type": "[ObjectSpec]"
+                }
+              ],
+              "synonyms": "loaded, ready, initialized",
+              "tier": "essential"
+            },
+            {
+              "description": "Indicates that loading the event log failed.",
+              "event": "EventLogLoadFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "error, failure, failed, problem",
+              "tier": "internal"
+            },
+            {
+              "description": "Indicates a new event has been successfully logged.",
+              "event": "EventLogSaved",
+              "payloadSchema": [
+                {
+                  "name": "row",
+                  "type": "object"
+                }
+              ],
+              "synonyms": "saved, added, created, recorded",
+              "tier": "essential"
+            },
+            {
+              "description": "Indicates that saving an event failed.",
+              "event": "EventLogSaveFailed",
+              "payloadSchema": [
+                {
+                  "name": "error",
+                  "type": "string"
+                },
+                {
+                  "name": "code",
+                  "type": "string"
+                }
+              ],
+              "synonyms": "error, failure, failed, problem",
+              "tier": "internal"
+            }
+          ],
           "entityContract": {
-            "requires": [],
             "provides": [
               "allEntries",
               "backfillDate",
@@ -243,109 +461,124 @@
               "errorMessage",
               "filterChips",
               "filterKind"
-            ]
+            ],
+            "requires": []
           },
-          "category": "interaction",
+          "entityRebindable": true,
           "linkedEntity": "EventLogView",
-          "emits": [
-            {
-              "event": "APPLY_FILTER",
-              "description": "Signals a filter has been applied to the event log.",
-              "synonyms": "filter, refine, narrow, update",
-              "tier": "customization",
-              "payloadSchema": [
-                {
-                  "name": "tabId",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "OPEN_BACKFILL",
-              "description": "Initiates a backfill operation to retrieve historical events.",
-              "synonyms": "refresh, retrieve, load history",
-              "tier": "advanced"
-            },
-            {
-              "event": "SAVE_BACKFILL",
-              "description": "Indicates successful completion of backfill data saving.",
-              "synonyms": "saved, persisted, committed",
-              "tier": "customization",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "object"
-                }
-              ]
-            },
-            {
-              "event": "CANCEL_BACKFILL",
-              "description": "Aborts the backfill process.",
-              "synonyms": "abort, stop, dismiss, undo",
-              "tier": "customization"
-            },
-            {
-              "event": "EventLogLoaded",
-              "description": "Signals the event log has finished loading.",
-              "synonyms": "loaded, ready, initialized",
-              "tier": "essential",
-              "payloadSchema": [
-                {
-                  "name": "data",
-                  "type": "[ObjectSpec]"
-                }
-              ]
-            },
-            {
-              "event": "EventLogLoadFailed",
-              "description": "Indicates that loading the event log failed.",
-              "synonyms": "error, failure, failed, problem",
-              "tier": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            },
-            {
-              "event": "EventLogSaved",
-              "description": "Indicates a new event has been successfully logged.",
-              "synonyms": "saved, added, created, recorded",
-              "tier": "essential",
-              "payloadSchema": [
-                {
-                  "name": "row",
-                  "type": "object"
-                }
-              ]
-            },
-            {
-              "event": "EventLogSaveFailed",
-              "description": "Indicates that saving an event failed.",
-              "synonyms": "error, failure, failed, problem",
-              "tier": "internal",
-              "payloadSchema": [
-                {
-                  "name": "error",
-                  "type": "string"
-                },
-                {
-                  "name": "code",
-                  "type": "string"
-                }
-              ]
-            }
-          ],
+          "name": "EventLogTimeline",
+          "scope": "instance",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals the event log has finished loading.",
+                "key": "EventLogLoaded",
+                "name": "Event log loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[ObjectSpec]"
+                  }
+                ],
+                "synonyms": "loaded, ready, initialized",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates that loading the event log failed.",
+                "key": "EventLogLoadFailed",
+                "name": "Event log load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, failed, problem",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates a new event has been successfully logged.",
+                "key": "EventLogSaved",
+                "name": "Event log saved",
+                "payloadSchema": [
+                  {
+                    "name": "row",
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "saved, added, created, recorded",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates that saving an event failed.",
+                "key": "EventLogSaveFailed",
+                "name": "Event log save failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, failed, problem",
+                "tier": "internal"
+              },
+              {
+                "description": "Signals a filter has been applied to the event log.",
+                "key": "APPLY_FILTER",
+                "name": "Apply Filter",
+                "payloadSchema": [
+                  {
+                    "name": "tabId",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "filter, refine, narrow, update",
+                "tier": "customization"
+              },
+              {
+                "description": "Initiates a backfill operation to retrieve historical events.",
+                "key": "OPEN_BACKFILL",
+                "name": "Open Backfill",
+                "synonyms": "refresh, retrieve, load history",
+                "tier": "advanced"
+              },
+              {
+                "description": "Indicates successful completion of backfill data saving.",
+                "key": "SAVE_BACKFILL",
+                "name": "Save Backfill",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "object"
+                  }
+                ],
+                "synonyms": "saved, persisted, committed",
+                "tier": "customization"
+              },
+              {
+                "description": "Aborts the backfill process.",
+                "key": "CANCEL_BACKFILL",
+                "name": "Cancel Backfill",
+                "synonyms": "abort, stop, dismiss, undo",
+                "tier": "customization"
+              }
+            ],
             "states": [
               {
-                "name": "loading",
-                "isInitial": true
+                "isInitial": true,
+                "name": "loading"
               },
               {
                 "name": "viewing"
@@ -357,117 +590,8 @@
                 "name": "error"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "EventLogLoaded",
-                "name": "Event log loaded",
-                "description": "Signals the event log has finished loading.",
-                "synonyms": "loaded, ready, initialized",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[ObjectSpec]"
-                  }
-                ]
-              },
-              {
-                "key": "EventLogLoadFailed",
-                "name": "Event log load failed",
-                "description": "Indicates that loading the event log failed.",
-                "synonyms": "error, failure, failed, problem",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "EventLogSaved",
-                "name": "Event log saved",
-                "description": "Indicates a new event has been successfully logged.",
-                "synonyms": "saved, added, created, recorded",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "row",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "EventLogSaveFailed",
-                "name": "Event log save failed",
-                "description": "Indicates that saving an event failed.",
-                "synonyms": "error, failure, failed, problem",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "APPLY_FILTER",
-                "name": "Apply Filter",
-                "description": "Signals a filter has been applied to the event log.",
-                "synonyms": "filter, refine, narrow, update",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "tabId",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "OPEN_BACKFILL",
-                "name": "Open Backfill",
-                "description": "Initiates a backfill operation to retrieve historical events.",
-                "synonyms": "refresh, retrieve, load history",
-                "tier": "advanced"
-              },
-              {
-                "key": "SAVE_BACKFILL",
-                "name": "Save Backfill",
-                "description": "Indicates successful completion of backfill data saving.",
-                "synonyms": "saved, persisted, committed",
-                "tier": "customization",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "object"
-                  }
-                ]
-              },
-              {
-                "key": "CANCEL_BACKFILL",
-                "name": "Cancel Backfill",
-                "description": "Aborts the backfill process.",
-                "synonyms": "abort, stop, dismiss, undo",
-                "tier": "customization"
-              }
-            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -487,12 +611,12 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "viewing",
-                "event": "EventLogLoaded",
                 "effects": [
                   [
                     "set",
@@ -506,6 +630,12 @@
                           "fn",
                           "k",
                           {
+                            "icon": [
+                              "object/get",
+                              "@k",
+                              "icon",
+                              "circle"
+                            ],
                             "id": [
                               "object/get",
                               "@k",
@@ -515,20 +645,14 @@
                               "object/get",
                               "@k",
                               "label"
-                            ],
-                            "icon": [
-                              "object/get",
-                              "@k",
-                              "icon",
-                              "circle"
                             ]
                           }
                         ]
                       ],
                       {
                         "icon": "list",
-                        "label": "All",
-                        "id": ""
+                        "id": "",
+                        "label": "All"
                       }
                     ]
                   ],
@@ -544,10 +668,33 @@
                           "fn",
                           "row",
                           {
+                            "date": [
+                              "object/get",
+                              "@row",
+                              "createdAt",
+                              [
+                                "object/get",
+                                "@row",
+                                "date",
+                                ""
+                              ]
+                            ],
+                            "description": [
+                              "object/get",
+                              "@row",
+                              "description",
+                              ""
+                            ],
                             "id": [
                               "object/get",
                               "@row",
                               "id",
+                              ""
+                            ],
+                            "kind": [
+                              "object/get",
+                              "@row",
+                              "kind",
                               ""
                             ],
                             "status": [
@@ -581,33 +728,10 @@
                               "status",
                               "pending"
                             ],
-                            "date": [
-                              "object/get",
-                              "@row",
-                              "createdAt",
-                              [
-                                "object/get",
-                                "@row",
-                                "date",
-                                ""
-                              ]
-                            ],
                             "title": [
                               "object/get",
                               "@row",
                               "title",
-                              ""
-                            ],
-                            "kind": [
-                              "object/get",
-                              "@row",
-                              "kind",
-                              ""
-                            ],
-                            "description": [
-                              "object/get",
-                              "@row",
-                              "description",
                               ""
                             ]
                           }
@@ -629,10 +753,21 @@
                           "fn",
                           "row",
                           {
-                            "kind": [
+                            "date": [
                               "object/get",
                               "@row",
-                              "kind",
+                              "createdAt",
+                              [
+                                "object/get",
+                                "@row",
+                                "date",
+                                ""
+                              ]
+                            ],
+                            "description": [
+                              "object/get",
+                              "@row",
+                              "description",
                               ""
                             ],
                             "id": [
@@ -641,10 +776,10 @@
                               "id",
                               ""
                             ],
-                            "description": [
+                            "kind": [
                               "object/get",
                               "@row",
-                              "description",
+                              "kind",
                               ""
                             ],
                             "status": [
@@ -683,17 +818,6 @@
                               "@row",
                               "title",
                               ""
-                            ],
-                            "date": [
-                              "object/get",
-                              "@row",
-                              "createdAt",
-                              [
-                                "object/get",
-                                "@row",
-                                "date",
-                                ""
-                              ]
                             ]
                           }
                         ]
@@ -709,17 +833,14 @@
                       "children": [
                         {
                           "align": "center",
-                          "direction": "horizontal",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "history"
+                              "name": "history",
+                              "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3"
                             },
                             {
@@ -729,37 +850,40 @@
                               "type": "button",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
-                          "tabs": "@entity.filterChips",
                           "activeTab": "@entity.filterKind",
-                          "type": "tabs",
-                          "tabChangeEvent": "APPLY_FILTER"
+                          "tabChangeEvent": "APPLY_FILTER",
+                          "tabs": "@entity.filterChips",
+                          "type": "tabs"
                         },
                         {
                           "entity": "@entity.entries",
-                          "type": "timeline",
-                          "look": "@config.timelineLook",
                           "fields": [
                             "title",
                             "description",
                             "date",
                             "status"
-                          ]
+                          ],
+                          "look": "@config.timelineLook",
+                          "type": "timeline"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "EventLogLoaded",
+                "from": "loading",
+                "to": "viewing"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "EventLogLoadFailed",
                 "effects": [
                   [
                     "set",
@@ -771,16 +895,16 @@
                     "main",
                     {
                       "message": "@entity.errorMessage",
-                      "type": "error-state",
-                      "title": "Failed to load"
+                      "title": "Failed to load",
+                      "type": "error-state"
                     }
                   ]
-                ]
+                ],
+                "event": "EventLogLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "EventLogSaved",
                 "effects": [
                   [
                     "fetch",
@@ -800,12 +924,12 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "EventLogSaved",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "EventLogSaveFailed",
                 "effects": [
                   [
                     "set",
@@ -816,17 +940,17 @@
                     "render-ui",
                     "main",
                     {
+                      "message": "@entity.errorMessage",
                       "title": "Save failed",
-                      "type": "error-state",
-                      "message": "@entity.errorMessage"
+                      "type": "error-state"
                     }
                   ]
-                ]
+                ],
+                "event": "EventLogSaveFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "viewing",
-                "to": "viewing",
-                "event": "APPLY_FILTER",
                 "effects": [
                   [
                     "set",
@@ -868,58 +992,58 @@
                     {
                       "children": [
                         {
-                          "gap": "sm",
-                          "type": "stack",
                           "align": "center",
-                          "direction": "horizontal",
                           "children": [
                             {
                               "name": "history",
                               "type": "icon"
                             },
                             {
-                              "type": "typography",
                               "content": "@config.title",
+                              "type": "typography",
                               "variant": "h3"
                             },
                             {
-                              "type": "button",
+                              "action": "OPEN_BACKFILL",
                               "icon": "plus",
                               "label": "Log event",
-                              "action": "OPEN_BACKFILL",
+                              "type": "button",
                               "variant": "primary"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "activeTab": "@entity.filterKind",
-                          "tabs": "@entity.filterChips",
                           "tabChangeEvent": "APPLY_FILTER",
+                          "tabs": "@entity.filterChips",
                           "type": "tabs"
                         },
                         {
-                          "look": "@config.timelineLook",
+                          "entity": "@entity.entries",
                           "fields": [
                             "title",
                             "description",
                             "date",
                             "status"
                           ],
-                          "entity": "@entity.entries",
+                          "look": "@config.timelineLook",
                           "type": "timeline"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "APPLY_FILTER",
+                "from": "viewing",
+                "to": "viewing"
               },
               {
-                "from": "viewing",
-                "to": "backfilling",
-                "event": "OPEN_BACKFILL",
                 "effects": [
                   [
                     "set",
@@ -947,16 +1071,14 @@
                     {
                       "children": [
                         {
-                          "direction": "horizontal",
-                          "type": "stack",
                           "align": "center",
                           "children": [
                             {
-                              "variant": "ghost",
-                              "icon": "arrow-left",
                               "action": "CANCEL_BACKFILL",
+                              "icon": "arrow-left",
                               "label": "Back",
-                              "type": "button"
+                              "type": "button",
+                              "variant": "ghost"
                             },
                             {
                               "name": "plus-circle",
@@ -968,24 +1090,26 @@
                               "variant": "h3"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "card",
                           "children": [
                             {
                               "cancelEvent": "CANCEL_BACKFILL",
-                              "type": "form-section",
+                              "entity": "@entity",
                               "fields": "@config.formFields",
                               "mode": "create",
                               "submitEvent": "SAVE_BACKFILL",
-                              "entity": "@entity"
+                              "type": "form-section"
                             }
                           ],
-                          "look": "@config.cardLook"
+                          "look": "@config.cardLook",
+                          "type": "card"
                         }
                       ],
                       "direction": "vertical",
@@ -993,12 +1117,12 @@
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "OPEN_BACKFILL",
+                "from": "viewing",
+                "to": "backfilling"
               },
               {
-                "from": "backfilling",
-                "to": "loading",
-                "event": "SAVE_BACKFILL",
                 "effects": [
                   [
                     "persist",
@@ -1007,8 +1131,8 @@
                     "@payload.data",
                     {
                       "emit": {
-                        "success": "EventLogSaved",
-                        "failure": "EventLogSaveFailed"
+                        "failure": "EventLogSaveFailed",
+                        "success": "EventLogSaved"
                       }
                     }
                   ],
@@ -1020,12 +1144,12 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "SAVE_BACKFILL",
+                "from": "backfilling",
+                "to": "loading"
               },
               {
-                "from": "backfilling",
-                "to": "viewing",
-                "event": "CANCEL_BACKFILL",
                 "effects": [
                   [
                     "render-ui",
@@ -1033,58 +1157,58 @@
                     {
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
                               "name": "history",
                               "type": "icon"
                             },
                             {
-                              "variant": "h3",
                               "content": "@config.title",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h3"
                             },
                             {
                               "action": "OPEN_BACKFILL",
+                              "icon": "plus",
                               "label": "Log event",
                               "type": "button",
-                              "icon": "plus",
                               "variant": "primary"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
-                          "type": "tabs",
                           "activeTab": "@entity.filterKind",
                           "tabChangeEvent": "APPLY_FILTER",
-                          "tabs": "@entity.filterChips"
+                          "tabs": "@entity.filterChips",
+                          "type": "tabs"
                         },
                         {
+                          "entity": "@entity.entries",
                           "fields": [
                             "title",
                             "description",
                             "date",
                             "status"
                           ],
-                          "entity": "@entity.entries",
                           "look": "@config.timelineLook",
                           "type": "timeline"
                         }
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "CANCEL_BACKFILL",
+                "from": "backfilling",
+                "to": "viewing"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "render-ui",
@@ -1094,140 +1218,16 @@
                       "type": "loading-state"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "config": {
-            "timelineLook": {
-              "type": "string",
-              "default": "vertical-spacious",
-              "label": "Timeline look",
-              "description": "Layer 2 visual treatment for the timeline.",
-              "tier": "presentation",
-              "values": [
-                "vertical-compact",
-                "vertical-spacious",
-                "horizontal",
-                "swimlane"
-              ]
-            },
-            "cardLook": {
-              "type": "string",
-              "default": "elevated",
-              "label": "Card look",
-              "description": "Layer 2 visual treatment for cards rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "elevated",
-                "flat-bordered",
-                "borderless-divider",
-                "ticket",
-                "invoice",
-                "chip",
-                "tile-image-first"
-              ]
-            },
-            "formFields": {
-              "type": "[string]",
-              "default": [
-                "backfillTitle",
-                "backfillDescription",
-                "backfillKind",
-                "backfillDate"
-              ],
-              "label": "Backfill fields",
-              "description": "Inputs shown in the form for manually logging missed events",
-              "tier": "presentation",
-              "items": {
-                "type": "string"
-              }
-            },
-            "title": {
-              "type": "string",
-              "default": "Activity",
-              "label": "Section title",
-              "description": "Heading shown above the activity timeline",
-              "tier": "presentation"
-            },
-            "kindOptions": {
-              "type": "[KindOption]",
-              "default": [
-                {
-                  "icon": "plus-circle",
-                  "key": "created",
-                  "status": "active",
-                  "label": "Created"
-                },
-                {
-                  "status": "pending",
-                  "label": "Updated",
-                  "icon": "edit-3",
-                  "key": "updated"
-                },
-                {
-                  "label": "Approved",
-                  "status": "complete",
-                  "icon": "check-circle",
-                  "key": "approved"
-                },
-                {
-                  "key": "rejected",
-                  "icon": "x-circle",
-                  "label": "Rejected",
-                  "status": "error"
-                }
-              ],
-              "label": "Event kinds",
-              "description": "Maps each event kind to its label, icon, and status color",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": true
-                  },
-                  "key": {
-                    "name": "key",
-                    "type": "string",
-                    "required": true
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "status": {
-                    "name": "status",
-                    "type": "string",
-                    "required": false,
-                    "values": [
-                      "complete",
-                      "active",
-                      "pending",
-                      "error"
-                    ]
-                  }
-                }
-              }
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "EventLogPage",
-          "path": "/event-log",
-          "traits": [
-            {
-              "ref": "EventLogTimeline"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "2.1.0"
 }

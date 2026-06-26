@@ -1,80 +1,139 @@
 {
-  "name": "std-lifecycle",
-  "version": "1.1.0",
   "description": "std-lifecycle — age-based status lifecycle for a target entity. A periodic tick scans the target for records in `fromStatus` whose `dateField` is older than `ageDays`, and transitions each one to `toStatus` — every matching record, via a self-driving scan loop (process the head of a filtered fetch, persist the status, re-fetch until the set drains). Compose onto any orbital and bind `targetEntity` + the status/date knobs.",
+  "name": "std-lifecycle",
   "orbitals": [
     {
-      "name": "LifecycleOrbital",
       "entity": {
-        "name": "LifecycleRunLog",
         "collection": "lifecycle_runs",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "targetEntity",
-            "type": "string",
             "default": "",
             "description": "The entity to which lifecycle rules apply.",
-            "synonyms": "subject, reference, target"
+            "name": "targetEntity",
+            "synonyms": "subject, reference, target",
+            "type": "string"
           },
           {
-            "name": "recordCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of records processed.",
-            "synonyms": "count, size, quantity"
+            "name": "recordCount",
+            "synonyms": "count, size, quantity",
+            "type": "number"
           },
           {
-            "name": "ranAt",
-            "type": "number",
             "default": 0.0,
             "description": "Timestamp indicating when the lifecycle run occurred.",
-            "synonyms": "timestamp, execution time, run time"
+            "name": "ranAt",
+            "synonyms": "timestamp, execution time, run time",
+            "type": "number"
           },
           {
-            "name": "errors",
-            "type": "string",
             "default": "",
             "description": "A textual description of any errors encountered.",
-            "synonyms": "error message, problem, issue, fault"
+            "name": "errors",
+            "synonyms": "error message, problem, issue, fault",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "",
             "description": "Lifecycle status (also lets the standalone default target validate).",
-            "synonyms": "state, stage"
+            "name": "status",
+            "synonyms": "state, stage",
+            "type": "string"
           },
           {
-            "name": "headId",
-            "type": "string",
             "default": "",
             "description": "Scratch: id of the record the scan loop is currently transitioning.",
-            "synonyms": "current id, cursor"
+            "name": "headId",
+            "synonyms": "current id, cursor",
+            "type": "string"
           },
           {
-            "name": "headStatus",
-            "type": "string",
             "default": "",
             "description": "Scratch: the status applied to the current record.",
-            "synonyms": "new status, to status"
+            "name": "headStatus",
+            "synonyms": "new status, to status",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "LifecycleRunLog",
+        "persistence": "persistent"
       },
+      "name": "LifecycleOrbital",
+      "pages": [
+        {
+          "name": "LifecycleSchedulerPage",
+          "path": "/lifecycle/scheduler",
+          "traits": [
+            {
+              "ref": "LifecycleScheduler"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "LifecycleScheduler",
           "category": "lifecycle",
-          "linkedEntity": "LifecycleRunLog",
+          "config": {
+            "ageDays": {
+              "default": 30.0,
+              "description": "Records older than this many days transition fromStatus → toStatus.",
+              "label": "Age threshold (days)",
+              "tier": "infra",
+              "type": "number"
+            },
+            "dateField": {
+              "default": "ranAt",
+              "description": "Numeric (ms-epoch) entity field measured against the age threshold (e.g. 'createdAt').",
+              "label": "Age date field",
+              "tier": "internal",
+              "type": "string"
+            },
+            "dryRun": {
+              "default": false,
+              "description": "When true, surfaces the knobs but the scan does not persist transitions.",
+              "label": "Dry-run mode",
+              "tier": "infra",
+              "type": "boolean"
+            },
+            "enabled": {
+              "default": false,
+              "description": "Automatically change the status of records once they age past a threshold. Off by default.",
+              "label": "Auto-archive old records",
+              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive",
+              "tier": "infra",
+              "type": "boolean"
+            },
+            "fromStatus": {
+              "default": "",
+              "description": "Only records currently in this status are eligible to transition.",
+              "label": "From status",
+              "tier": "infra",
+              "type": "string"
+            },
+            "targetEntity": {
+              "default": "LifecycleRunLog",
+              "description": "Entity name to scan and transition (e.g. 'Task'). Defaults to the atom's own log so the standalone validates; rebind per composition.",
+              "label": "Target entity",
+              "tier": "internal",
+              "type": "string"
+            },
+            "toStatus": {
+              "default": "",
+              "description": "Status applied to a record once it ages past the threshold (e.g. 'archived').",
+              "label": "To status",
+              "tier": "infra",
+              "type": "string"
+            }
+          },
           "emits": [
             {
               "event": "LifecycleTransitioned",
-              "scope": "external",
               "payloadSchema": [
                 {
                   "name": "entityId",
@@ -84,7 +143,8 @@
                   "name": "status",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "external"
             },
             {
               "event": "ScanRecordsLoaded",
@@ -118,16 +178,10 @@
               ]
             }
           ],
+          "linkedEntity": "LifecycleRunLog",
+          "name": "LifecycleScheduler",
+          "scope": "instance",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              },
-              {
-                "name": "scanning"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
@@ -182,28 +236,22 @@
                 ]
               }
             ],
-            "transitions": [
+            "states": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT"
+                "isInitial": true,
+                "name": "idle"
               },
               {
+                "name": "scanning"
+              }
+            ],
+            "transitions": [
+              {
+                "event": "INIT",
                 "from": "idle",
-                "to": "scanning",
-                "event": "ScanRecordsLoaded",
-                "guard": [
-                  "and",
-                  "@config.enabled",
-                  [
-                    ">",
-                    [
-                      "array/len",
-                      "@payload.data"
-                    ],
-                    0.0
-                  ]
-                ],
+                "to": "idle"
+              },
+              {
                 "effects": [
                   [
                     "set",
@@ -226,8 +274,8 @@
                     "emit",
                     "LifecycleTransitioned",
                     {
-                      "status": "@entity.headStatus",
-                      "entityId": "@entity.headId"
+                      "entityId": "@entity.headId",
+                      "status": "@entity.headStatus"
                     }
                   ],
                   [
@@ -235,22 +283,36 @@
                     "update",
                     "@config.targetEntity",
                     {
-                      "status": "@entity.headStatus",
-                      "id": "@entity.headId"
+                      "id": "@entity.headId",
+                      "status": "@entity.headStatus"
                     },
                     {
                       "emit": {
-                        "success": "LifecycleStepped",
-                        "failure": "ScanFailed"
+                        "failure": "ScanFailed",
+                        "success": "LifecycleStepped"
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "ScanRecordsLoaded",
+                "from": "idle",
+                "guard": [
+                  "and",
+                  "@config.enabled",
+                  [
+                    ">",
+                    [
+                      "array/len",
+                      "@payload.data"
+                    ],
+                    0.0
+                  ]
+                ],
+                "to": "scanning"
               },
               {
-                "from": "idle",
-                "to": "idle",
                 "event": "ScanRecordsLoaded",
+                "from": "idle",
                 "guard": [
                   "=",
                   [
@@ -258,17 +320,15 @@
                     "@payload.data"
                   ],
                   0.0
-                ]
+                ],
+                "to": "idle"
               },
               {
+                "event": "ScanFailed",
                 "from": "idle",
-                "to": "idle",
-                "event": "ScanFailed"
+                "to": "idle"
               },
               {
-                "from": "scanning",
-                "to": "scanning",
-                "event": "LifecycleStepped",
                 "effects": [
                   [
                     "fetch",
@@ -309,20 +369,12 @@
                       ]
                     }
                   ]
-                ]
+                ],
+                "event": "LifecycleStepped",
+                "from": "scanning",
+                "to": "scanning"
               },
               {
-                "from": "scanning",
-                "to": "scanning",
-                "event": "ScanRecordsLoaded",
-                "guard": [
-                  ">",
-                  [
-                    "array/len",
-                    "@payload.data"
-                  ],
-                  0.0
-                ],
                 "effects": [
                   [
                     "set",
@@ -354,8 +406,8 @@
                     "update",
                     "@config.targetEntity",
                     {
-                      "status": "@entity.headStatus",
-                      "id": "@entity.headId"
+                      "id": "@entity.headId",
+                      "status": "@entity.headStatus"
                     },
                     {
                       "emit": {
@@ -364,12 +416,22 @@
                       }
                     }
                   ]
-                ]
+                ],
+                "event": "ScanRecordsLoaded",
+                "from": "scanning",
+                "guard": [
+                  ">",
+                  [
+                    "array/len",
+                    "@payload.data"
+                  ],
+                  0.0
+                ],
+                "to": "scanning"
               },
               {
-                "from": "scanning",
-                "to": "idle",
                 "event": "ScanRecordsLoaded",
+                "from": "scanning",
                 "guard": [
                   "=",
                   [
@@ -377,24 +439,27 @@
                     "@payload.data"
                   ],
                   0.0
-                ]
+                ],
+                "to": "idle"
               },
               {
+                "event": "ScanFailed",
                 "from": "scanning",
-                "to": "idle",
-                "event": "ScanFailed"
+                "to": "idle"
               }
             ]
           },
           "ticks": [
             {
-              "name": "scanCycle",
-              "interval": 3600000.0,
               "effects": [
                 [
                   "fetch",
                   "@config.targetEntity",
                   {
+                    "emit": {
+                      "failure": "ScanFailed",
+                      "success": "ScanRecordsLoaded"
+                    },
                     "filter": [
                       "and",
                       [
@@ -423,82 +488,17 @@
                           ]
                         ]
                       ]
-                    ],
-                    "emit": {
-                      "success": "ScanRecordsLoaded",
-                      "failure": "ScanFailed"
-                    }
+                    ]
                   }
                 ]
-              ]
-            }
-          ],
-          "config": {
-            "fromStatus": {
-              "type": "string",
-              "default": "",
-              "label": "From status",
-              "description": "Only records currently in this status are eligible to transition.",
-              "tier": "infra"
-            },
-            "dateField": {
-              "type": "string",
-              "default": "ranAt",
-              "label": "Age date field",
-              "description": "Numeric (ms-epoch) entity field measured against the age threshold (e.g. 'createdAt').",
-              "tier": "internal"
-            },
-            "ageDays": {
-              "type": "number",
-              "default": 30.0,
-              "label": "Age threshold (days)",
-              "description": "Records older than this many days transition fromStatus → toStatus.",
-              "tier": "infra"
-            },
-            "enabled": {
-              "type": "boolean",
-              "default": false,
-              "label": "Auto-archive old records",
-              "description": "Automatically change the status of records once they age past a threshold. Off by default.",
-              "synonyms": "enable, turn on, enforce, require, activate, apply, switch on, retention, ttl, expire, archive after, sunset, lifecycle, age out, time-based status, scheduled transitions, expire old records, auto-archive",
-              "tier": "infra"
-            },
-            "targetEntity": {
-              "type": "string",
-              "default": "LifecycleRunLog",
-              "label": "Target entity",
-              "description": "Entity name to scan and transition (e.g. 'Task'). Defaults to the atom's own log so the standalone validates; rebind per composition.",
-              "tier": "internal"
-            },
-            "dryRun": {
-              "type": "boolean",
-              "default": false,
-              "label": "Dry-run mode",
-              "description": "When true, surfaces the knobs but the scan does not persist transitions.",
-              "tier": "infra"
-            },
-            "toStatus": {
-              "type": "string",
-              "default": "",
-              "label": "To status",
-              "description": "Status applied to a record once it ages past the threshold (e.g. 'archived').",
-              "tier": "infra"
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "LifecycleSchedulerPage",
-          "path": "/lifecycle/scheduler",
-          "traits": [
-            {
-              "ref": "LifecycleScheduler"
+              ],
+              "interval": 3600000.0,
+              "name": "scanCycle"
             }
           ]
         }
       ]
     }
-  ]
+  ],
+  "version": "1.1.0"
 }

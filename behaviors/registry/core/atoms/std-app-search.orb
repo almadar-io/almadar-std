@@ -1,101 +1,202 @@
 {
-  "name": "std-app-search",
-  "version": "1.0.0",
   "description": "std-app-search — reusable global search: wraps a host content view and, on a SEARCH trigger, fetches the linked entity filtered by @config.searchField and renders the matching results, then CLEAR_SEARCH returns to the host view. Rebind to any entity; point @config.idleContent at the normal view and wire a trigger (e.g. AppLayout SEARCH) into SEARCH.",
+  "name": "std-app-search",
   "orbitals": [
     {
-      "name": "AppSearchOrbital",
       "entity": {
-        "name": "AppSearchTarget",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "name",
-            "type": "string",
             "description": "The primary human-readable label matched by search.",
-            "synonyms": "title, label, productName"
+            "name": "name",
+            "synonyms": "title, label, productName",
+            "type": "string"
           },
           {
-            "name": "searchTerm",
-            "type": "string",
             "default": "",
-            "intrinsic": true,
             "description": "The current search query the user submitted.",
-            "synonyms": "query, term, q"
+            "intrinsic": true,
+            "name": "searchTerm",
+            "synonyms": "query, term, q",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "AppSearchTarget",
+        "persistence": "runtime"
       },
+      "name": "AppSearchOrbital",
+      "pages": [
+        {
+          "name": "AppSearchPage",
+          "path": "/app-search",
+          "traits": [
+            {
+              "ref": "AppSearch"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "AppSearch",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": [
-              "searchTerm"
-            ]
-          },
           "category": "interaction",
-          "linkedEntity": "AppSearchTarget",
+          "config": {
+            "idleContent": {
+              "description": "The normal content view (e.g. the data ledger/browse trait) shown when no search is active.",
+              "label": "Idle content",
+              "tier": "presentation",
+              "type": "trait"
+            },
+            "resultActions": {
+              "default": [],
+              "description": "Optional per-row actions on a result (e.g. open).",
+              "items": {
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Result row actions",
+              "tier": "presentation",
+              "type": "[AppSearchFieldSpec]"
+            },
+            "resultFields": {
+              "default": [
+                {
+                  "label": "Name",
+                  "name": "name",
+                  "variant": "h4"
+                }
+              ],
+              "description": "Columns shown in the search-results grid; maps entity fields to display cells.",
+              "items": {
+                "properties": {
+                  "format": {
+                    "name": "format",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "icon": {
+                    "name": "icon",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Result columns",
+              "tier": "presentation",
+              "type": "[AppSearchFieldSpec]"
+            },
+            "resultsTitle": {
+              "default": "Search results",
+              "description": "Heading shown above the search-results grid.",
+              "label": "Results title",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "searchField": {
+              "default": "name",
+              "description": "Entity field matched against the query (case-insensitive substring).",
+              "label": "Search field",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "AppSearchLoaded",
               "description": "Filtered search results loaded",
-              "scope": "internal",
+              "event": "AppSearchLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[AppSearchTarget]"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AppSearchFailed",
               "description": "Search fetch failed",
-              "scope": "internal",
+              "event": "AppSearchFailed",
               "payloadSchema": [
                 {
                   "name": "error",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             }
           ],
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              },
-              {
-                "name": "searching"
-              },
-              {
-                "name": "results"
-              }
+          "entityContract": {
+            "provides": [
+              "searchTerm"
             ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AppSearchTarget",
+          "name": "AppSearch",
+          "scope": "collection",
+          "stateMachine": {
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "A search query was submitted (e.g. from the AppLayout top-bar search).",
                 "key": "APP_SEARCH",
                 "name": "App Search",
-                "description": "A search query was submitted (e.g. from the AppLayout top-bar search).",
-                "synonyms": "query, find, lookup",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "value",
                     "type": "string"
                   }
-                ]
+                ],
+                "synonyms": "query, find, lookup",
+                "tier": "essential"
               },
               {
                 "key": "AppSearchLoaded",
@@ -122,11 +223,20 @@
                 "name": "Clear Search"
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "searching"
+              },
+              {
+                "name": "results"
+              }
+            ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -140,17 +250,17 @@
                       "children": [
                         "@config.idleContent"
                       ],
+                      "direction": "vertical",
                       "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "searching",
-                "event": "APP_SEARCH",
                 "effects": [
                   [
                     "set",
@@ -161,67 +271,10 @@
                     "fetch",
                     "AppSearchTarget",
                     {
-                      "filter": [
-                        "or",
-                        [
-                          "=",
-                          "@payload.value",
-                          ""
-                        ],
-                        [
-                          "str/includes",
-                          [
-                            "object/get",
-                            "@entity",
-                            "@config.searchField"
-                          ],
-                          "@payload.value"
-                        ]
-                      ],
                       "emit": {
                         "failure": "AppSearchFailed",
                         "success": "AppSearchLoaded"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "align": "center",
-                      "className": "py-12",
-                      "gap": "md",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "type": "typography",
-                          "content": "Searching…",
-                          "variant": "caption",
-                          "color": "muted"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "searching",
-                "to": "searching",
-                "event": "APP_SEARCH",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.searchTerm",
-                    "@payload.value"
-                  ],
-                  [
-                    "fetch",
-                    "AppSearchTarget",
-                    {
+                      },
                       "filter": [
                         "or",
                         [
@@ -238,21 +291,13 @@
                           ],
                           "@payload.value"
                         ]
-                      ],
-                      "emit": {
-                        "success": "AppSearchLoaded",
-                        "failure": "AppSearchFailed"
-                      }
+                      ]
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md",
                       "align": "center",
                       "children": [
                         {
@@ -260,102 +305,167 @@
                         },
                         {
                           "color": "muted",
-                          "variant": "caption",
+                          "content": "Searching…",
                           "type": "typography",
-                          "content": "Searching…"
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "APP_SEARCH",
+                "from": "idle",
+                "to": "searching"
               },
               {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.searchTerm",
+                    "@payload.value"
+                  ],
+                  [
+                    "fetch",
+                    "AppSearchTarget",
+                    {
+                      "emit": {
+                        "failure": "AppSearchFailed",
+                        "success": "AppSearchLoaded"
+                      },
+                      "filter": [
+                        "or",
+                        [
+                          "=",
+                          "@payload.value",
+                          ""
+                        ],
+                        [
+                          "str/includes",
+                          [
+                            "object/get",
+                            "@entity",
+                            "@config.searchField"
+                          ],
+                          "@payload.value"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Searching…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "APP_SEARCH",
                 "from": "searching",
-                "to": "results",
-                "event": "AppSearchLoaded",
+                "to": "searching"
+              },
+              {
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
-                      "type": "stack",
-                      "className": "max-w-6xl mx-auto w-full p-4",
                       "children": [
                         {
-                          "type": "stack",
-                          "gap": "sm",
-                          "justify": "between",
-                          "direction": "horizontal",
                           "align": "center",
                           "children": [
                             {
-                              "type": "icon",
-                              "name": "search"
+                              "name": "search",
+                              "type": "icon"
                             },
                             {
                               "content": "@config.resultsTitle",
-                              "variant": "h2",
-                              "type": "typography"
+                              "type": "typography",
+                              "variant": "h2"
                             },
                             {
                               "action": "CLEAR_SEARCH",
-                              "type": "button",
-                              "variant": "ghost",
                               "icon": "x",
-                              "label": "Clear search"
+                              "label": "Clear search",
+                              "type": "button",
+                              "variant": "ghost"
                             }
-                          ]
+                          ],
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Matching “@entity.searchTerm”",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
                           "fields": "@config.resultFields",
                           "itemActions": "@config.resultActions",
-                          "type": "data-grid",
-                          "entity": "@payload.data"
+                          "type": "data-grid"
                         }
-                      ]
+                      ],
+                      "className": "max-w-6xl mx-auto w-full p-4",
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AppSearchLoaded",
+                "from": "searching",
+                "to": "results"
               },
               {
-                "from": "searching",
-                "to": "idle",
-                "event": "AppSearchFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "type": "stack",
                       "children": [
                         {
-                          "variant": "error",
+                          "message": "@payload.error",
                           "type": "alert",
-                          "message": "@payload.error"
+                          "variant": "error"
                         },
                         "@config.idleContent"
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AppSearchFailed",
+                "from": "searching",
+                "to": "idle"
               },
               {
-                "from": "results",
-                "to": "searching",
-                "event": "APP_SEARCH",
                 "effects": [
                   [
                     "set",
@@ -366,6 +476,10 @@
                     "fetch",
                     "AppSearchTarget",
                     {
+                      "emit": {
+                        "failure": "AppSearchFailed",
+                        "success": "AppSearchLoaded"
+                      },
                       "filter": [
                         "or",
                         [
@@ -382,19 +496,13 @@
                           ],
                           "@payload.value"
                         ]
-                      ],
-                      "emit": {
-                        "failure": "AppSearchFailed",
-                        "success": "AppSearchLoaded"
-                      }
+                      ]
                     }
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
-                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
@@ -402,21 +510,23 @@
                         },
                         {
                           "color": "muted",
+                          "content": "Searching…",
                           "type": "typography",
-                          "variant": "caption",
-                          "content": "Searching…"
+                          "variant": "caption"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "APP_SEARCH",
+                "from": "results",
+                "to": "searching"
               },
               {
-                "from": "results",
-                "to": "idle",
-                "event": "CLEAR_SEARCH",
                 "effects": [
                   [
                     "set",
@@ -427,134 +537,24 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
                       "children": [
                         "@config.idleContent"
                       ],
+                      "direction": "vertical",
+                      "gap": "md",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "CLEAR_SEARCH",
+                "from": "results",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "resultFields": {
-              "type": "[AppSearchFieldSpec]",
-              "default": [
-                {
-                  "variant": "h4",
-                  "name": "name",
-                  "label": "Name"
-                }
-              ],
-              "label": "Result columns",
-              "description": "Columns shown in the search-results grid; maps entity fields to display cells.",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "idleContent": {
-              "type": "trait",
-              "label": "Idle content",
-              "description": "The normal content view (e.g. the data ledger/browse trait) shown when no search is active.",
-              "tier": "presentation"
-            },
-            "resultActions": {
-              "type": "[AppSearchFieldSpec]",
-              "default": [],
-              "label": "Result row actions",
-              "description": "Optional per-row actions on a result (e.g. open).",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "label": {
-                    "name": "label",
-                    "type": "string",
-                    "required": false
-                  },
-                  "variant": {
-                    "name": "variant",
-                    "type": "string",
-                    "required": false
-                  },
-                  "icon": {
-                    "name": "icon",
-                    "type": "string",
-                    "required": false
-                  },
-                  "format": {
-                    "name": "format",
-                    "type": "string",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  }
-                }
-              }
-            },
-            "resultsTitle": {
-              "type": "string",
-              "default": "Search results",
-              "label": "Results title",
-              "description": "Heading shown above the search-results grid.",
-              "tier": "presentation"
-            },
-            "searchField": {
-              "type": "string",
-              "default": "name",
-              "label": "Search field",
-              "description": "Entity field matched against the query (case-insensitive substring).",
-              "tier": "presentation"
-            }
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "AppSearchPage",
-          "path": "/app-search",
-          "traits": [
-            {
-              "ref": "AppSearch"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

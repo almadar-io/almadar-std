@@ -1,145 +1,82 @@
 {
-  "name": "std-calendar-week-timeline",
-  "version": "1.2.0",
   "description": "Week-timeline calendar — events grouped by weekday in a 7-column timeline. The visible window normalizes to the payload's actual date range, so events stack into whichever day-of-week they fall on. Same CalendarEventCalendar trait, same state machine as std-calendar — only bodyContent differs. For weekly schedule views (fitness class week, healthcare appointment week).",
+  "name": "std-calendar-week-timeline",
   "orbitals": [
     {
-      "name": "WeekTimelineCalendarOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-calendar",
-          "as": "Calendar"
-        }
-      ],
       "entity": {
-        "name": "WeekTimelineEvent",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "title",
-            "type": "string",
             "required": true,
+            "type": "string"
+          },
+          {
             "description": "A user-friendly identifier for the event.",
-            "synonyms": "title, label, eventName, name"
+            "name": "title",
+            "required": true,
+            "synonyms": "title, label, eventName, name",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A textual explanation of the event.",
-            "synonyms": "details, notes, explanation, summary"
+            "name": "description",
+            "synonyms": "details, notes, explanation, summary",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Indicates the current operational state of the event.",
+            "name": "status",
+            "synonyms": "state, condition, flag",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Indicates the current operational state of the event.",
-            "synonyms": "state, condition, flag"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "date",
-            "type": "datetime",
             "default": "",
-            "intrinsic": true
+            "intrinsic": true,
+            "name": "date",
+            "type": "datetime"
           },
           {
-            "name": "startTime",
-            "type": "string",
             "default": "",
             "description": "The time of day the event occurs.",
-            "synonyms": "hour, start time, scheduled time, time, start"
+            "name": "startTime",
+            "synonyms": "hour, start time, scheduled time, time, start",
+            "type": "string"
           },
           {
-            "name": "duration",
-            "type": "number",
             "default": 60.0,
             "description": "The length of time for the event, typically in minutes.",
-            "synonyms": "length, time, span"
+            "name": "duration",
+            "synonyms": "length, time, span",
+            "type": "number"
           },
           {
-            "name": "weekday",
-            "type": "string",
             "default": "",
             "description": "The day of the week this event occurs on.",
-            "synonyms": "day, dayOfWeek"
+            "name": "weekday",
+            "synonyms": "day, dayOfWeek",
+            "type": "string"
           },
           {
-            "name": "selectedRange",
-            "type": "string",
             "default": "week",
-            "intrinsic": true
+            "intrinsic": true,
+            "name": "selectedRange",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "WeekTimelineEvent",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "ref": "Calendar.traits.CalendarEventCalendar",
-          "name": "WeekTimelineCalendar",
-          "linkedEntity": "WeekTimelineEvent",
-          "config": {
-            "bodyContent": {
-              "children": [
-                {
-                  "type": "stack",
-                  "justify": "between",
-                  "align": "center",
-                  "gap": "md",
-                  "direction": "horizontal",
-                  "children": [
-                    {
-                      "align": "center",
-                      "direction": "horizontal",
-                      "gap": "sm",
-                      "type": "stack",
-                      "children": [
-                        {
-                          "name": "calendar",
-                          "type": "icon"
-                        },
-                        {
-                          "content": "Week",
-                          "variant": "h2",
-                          "type": "typography"
-                        }
-                      ]
-                    },
-                    {
-                      "onSelect": "SELECT_DAY",
-                      "selected": "@entity.selectedRange",
-                      "type": "date-range-selector"
-                    }
-                  ]
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "calendar-grid",
-                  "className": "w-full",
-                  "events": "@payload.data",
-                  "dayWindow": 7.0
-                }
-              ],
-              "gap": "md",
-              "direction": "vertical",
-              "type": "stack"
-            }
-          }
-        }
-      ],
+      "name": "WeekTimelineCalendarOrbital",
       "pages": [
         {
           "name": "WeekTimelineCalendarPage",
@@ -150,7 +87,70 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "bodyContent": {
+              "children": [
+                {
+                  "align": "center",
+                  "children": [
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "name": "calendar",
+                          "type": "icon"
+                        },
+                        {
+                          "content": "Week",
+                          "type": "typography",
+                          "variant": "h2"
+                        }
+                      ],
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
+                    },
+                    {
+                      "onSelect": "SELECT_DAY",
+                      "selected": "@entity.selectedRange",
+                      "type": "date-range-selector"
+                    }
+                  ],
+                  "direction": "horizontal",
+                  "gap": "md",
+                  "justify": "between",
+                  "type": "stack"
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "className": "w-full",
+                  "dayWindow": 7.0,
+                  "events": "@payload.data",
+                  "type": "calendar-grid"
+                }
+              ],
+              "direction": "vertical",
+              "gap": "md",
+              "type": "stack"
+            }
+          },
+          "linkedEntity": "WeekTimelineEvent",
+          "name": "WeekTimelineCalendar",
+          "ref": "Calendar.traits.CalendarEventCalendar"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Calendar",
+          "from": "std/behaviors/std-calendar"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.2.0"
 }

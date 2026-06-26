@@ -1,234 +1,49 @@
 {
-  "name": "std-browse-command-palette",
-  "version": "1.0.1",
   "description": "Command-palette browse — VS Code/Linear/Raycast floating overlay with search input header, tight result list, and kbd hint chips.",
+  "name": "std-browse-command-palette",
   "orbitals": [
     {
-      "name": "CommandPaletteBrowseOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-browse",
-          "as": "Browse"
-        }
-      ],
       "entity": {
-        "name": "CommandPaletteItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "name",
-            "type": "string",
             "required": true,
+            "type": "string"
+          },
+          {
             "description": "The item's identifier or display text.",
-            "synonyms": "title, label, identifier"
+            "name": "name",
+            "required": true,
+            "synonyms": "title, label, identifier",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A brief explanation of the item's content or function.",
-            "synonyms": "text, details, explanation, notes"
+            "name": "description",
+            "synonyms": "text, details, explanation, notes",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Indicates the current operational state of the item.",
+            "name": "status",
+            "synonyms": "state, condition, enabled",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Indicates the current operational state of the item.",
-            "synonyms": "state, condition, enabled"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           }
-        ]
+        ],
+        "name": "CommandPaletteItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "ref": "Browse.traits.BrowseItemBrowse",
-          "name": "CommandPaletteBrowse",
-          "linkedEntity": "CommandPaletteItem",
-          "config": {
-            "bodyContent": {
-              "className": "pt-card-md px-card-md w-full",
-              "gap": "lg",
-              "align": "center",
-              "direction": "vertical",
-              "type": "stack",
-              "children": [
-                {
-                  "look": "elevated",
-                  "type": "card",
-                  "children": [
-                    {
-                      "type": "stack",
-                      "children": [
-                        {
-                          "className": "px-card-md py-3",
-                          "align": "center",
-                          "children": [
-                            {
-                              "name": "search",
-                              "type": "icon",
-                              "className": "text-muted-foreground"
-                            },
-                            {
-                              "placeholder": "@config.searchPlaceholder",
-                              "action": "REFETCH_QUERY",
-                              "type": "input",
-                              "inputType": "search",
-                              "className": "flex-1"
-                            },
-                            {
-                              "variant": "neutral",
-                              "size": "sm",
-                              "type": "badge",
-                              "label": "ESC"
-                            }
-                          ],
-                          "gap": "sm",
-                          "direction": "horizontal",
-                          "type": "stack"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "type": "data-list",
-                          "gap": "none",
-                          "entity": "@payload.data",
-                          "fields": [],
-                          "renderItem": [
-                            "fn",
-                            "item",
-                            {
-                              "direction": "horizontal",
-                              "children": [
-                                {
-                                  "name": "file",
-                                  "type": "icon"
-                                },
-                                {
-                                  "children": [
-                                    {
-                                      "type": "typography",
-                                      "className": "truncate",
-                                      "variant": "body",
-                                      "weight": "medium",
-                                      "content": "@config.titleBinding"
-                                    },
-                                    {
-                                      "className": "truncate",
-                                      "content": "@config.descriptionBinding",
-                                      "color": "muted",
-                                      "type": "typography",
-                                      "variant": "caption"
-                                    }
-                                  ],
-                                  "gap": "none",
-                                  "className": "flex-1 min-w-0",
-                                  "type": "stack",
-                                  "direction": "vertical"
-                                },
-                                {
-                                  "size": "sm",
-                                  "variant": "neutral",
-                                  "label": "@config.badgeBinding",
-                                  "type": "badge"
-                                },
-                                {
-                                  "type": "badge",
-                                  "variant": "neutral",
-                                  "label": "↵",
-                                  "size": "sm"
-                                }
-                              ],
-                              "type": "stack",
-                              "align": "center",
-                              "className": "px-3 py-2 rounded-sm cursor-pointer hover:bg-muted/50 transition-colors",
-                              "gap": "sm"
-                            }
-                          ],
-                          "className": "max-h-96 overflow-y-auto p-1"
-                        },
-                        {
-                          "type": "divider"
-                        },
-                        {
-                          "align": "center",
-                          "type": "stack",
-                          "gap": "md",
-                          "direction": "horizontal",
-                          "children": [
-                            {
-                              "variant": "neutral",
-                              "size": "sm",
-                              "label": "↑↓",
-                              "type": "badge"
-                            },
-                            {
-                              "color": "muted",
-                              "type": "typography",
-                              "content": "Navigate",
-                              "variant": "caption"
-                            },
-                            {
-                              "size": "sm",
-                              "label": "↵",
-                              "type": "badge",
-                              "variant": "neutral"
-                            },
-                            {
-                              "color": "muted",
-                              "content": "Select",
-                              "variant": "caption",
-                              "type": "typography"
-                            },
-                            {
-                              "gap": "sm",
-                              "align": "center",
-                              "children": [
-                                {
-                                  "type": "badge",
-                                  "label": "⌘K",
-                                  "variant": "neutral",
-                                  "size": "sm"
-                                },
-                                {
-                                  "type": "typography",
-                                  "color": "muted",
-                                  "variant": "caption",
-                                  "content": "Toggle"
-                                }
-                              ],
-                              "type": "stack",
-                              "className": "ml-auto",
-                              "direction": "horizontal"
-                            }
-                          ],
-                          "className": "px-card-md py-2 bg-[var(--color-surface-muted)]"
-                        }
-                      ],
-                      "gap": "none",
-                      "direction": "vertical"
-                    }
-                  ],
-                  "className": "w-full max-w-2xl",
-                  "padding": "md"
-                }
-              ]
-            }
-          }
-        }
-      ],
+      "name": "CommandPaletteBrowseOrbital",
       "pages": [
         {
           "name": "CommandPalettePage",
@@ -239,7 +54,192 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "bodyContent": {
+              "align": "center",
+              "children": [
+                {
+                  "children": [
+                    {
+                      "children": [
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "className": "text-muted-foreground",
+                              "name": "search",
+                              "type": "icon"
+                            },
+                            {
+                              "action": "REFETCH_QUERY",
+                              "className": "flex-1",
+                              "inputType": "search",
+                              "placeholder": "@config.searchPlaceholder",
+                              "type": "input"
+                            },
+                            {
+                              "label": "ESC",
+                              "size": "sm",
+                              "type": "badge",
+                              "variant": "neutral"
+                            }
+                          ],
+                          "className": "px-card-md py-3",
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "className": "max-h-96 overflow-y-auto p-1",
+                          "entity": "@payload.data",
+                          "fields": [],
+                          "gap": "none",
+                          "renderItem": [
+                            "fn",
+                            "item",
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "name": "file",
+                                  "type": "icon"
+                                },
+                                {
+                                  "children": [
+                                    {
+                                      "className": "truncate",
+                                      "content": "@config.titleBinding",
+                                      "type": "typography",
+                                      "variant": "body",
+                                      "weight": "medium"
+                                    },
+                                    {
+                                      "className": "truncate",
+                                      "color": "muted",
+                                      "content": "@config.descriptionBinding",
+                                      "type": "typography",
+                                      "variant": "caption"
+                                    }
+                                  ],
+                                  "className": "flex-1 min-w-0",
+                                  "direction": "vertical",
+                                  "gap": "none",
+                                  "type": "stack"
+                                },
+                                {
+                                  "label": "@config.badgeBinding",
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "neutral"
+                                },
+                                {
+                                  "label": "↵",
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "neutral"
+                                }
+                              ],
+                              "className": "px-3 py-2 rounded-sm cursor-pointer hover:bg-muted/50 transition-colors",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "type": "data-list"
+                        },
+                        {
+                          "type": "divider"
+                        },
+                        {
+                          "align": "center",
+                          "children": [
+                            {
+                              "label": "↑↓",
+                              "size": "sm",
+                              "type": "badge",
+                              "variant": "neutral"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "Navigate",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "label": "↵",
+                              "size": "sm",
+                              "type": "badge",
+                              "variant": "neutral"
+                            },
+                            {
+                              "color": "muted",
+                              "content": "Select",
+                              "type": "typography",
+                              "variant": "caption"
+                            },
+                            {
+                              "align": "center",
+                              "children": [
+                                {
+                                  "label": "⌘K",
+                                  "size": "sm",
+                                  "type": "badge",
+                                  "variant": "neutral"
+                                },
+                                {
+                                  "color": "muted",
+                                  "content": "Toggle",
+                                  "type": "typography",
+                                  "variant": "caption"
+                                }
+                              ],
+                              "className": "ml-auto",
+                              "direction": "horizontal",
+                              "gap": "sm",
+                              "type": "stack"
+                            }
+                          ],
+                          "className": "px-card-md py-2 bg-[var(--color-surface-muted)]",
+                          "direction": "horizontal",
+                          "gap": "md",
+                          "type": "stack"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "none",
+                      "type": "stack"
+                    }
+                  ],
+                  "className": "w-full max-w-2xl",
+                  "look": "elevated",
+                  "padding": "md",
+                  "type": "card"
+                }
+              ],
+              "className": "pt-card-md px-card-md w-full",
+              "direction": "vertical",
+              "gap": "lg",
+              "type": "stack"
+            }
+          },
+          "linkedEntity": "CommandPaletteItem",
+          "name": "CommandPaletteBrowse",
+          "ref": "Browse.traits.BrowseItemBrowse"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Browse",
+          "from": "std/behaviors/std-browse"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.1"
 }

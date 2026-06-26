@@ -1,94 +1,130 @@
 {
-  "name": "std-tag-taxonomy",
-  "version": "1.1.0",
   "description": "std-tag-taxonomy — hierarchical category tag tree (parent/child). TagBrowse fetches Tag rows on INIT, renders the active level via data-grid, and on SELECT_TAG drills into a tag's children by binding @entity.id to the chosen parent.",
+  "name": "std-tag-taxonomy",
   "orbitals": [
     {
-      "name": "TagTaxonomyOrbital",
       "entity": {
-        "name": "Tag",
         "collection": "tags",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "name",
-            "type": "string",
             "required": true,
+            "type": "string"
+          },
+          {
             "description": "The descriptive label for this item.",
-            "synonyms": "label, title, description"
+            "name": "name",
+            "required": true,
+            "synonyms": "label, title, description",
+            "type": "string"
           },
           {
-            "name": "parentId",
-            "type": "string",
             "description": "Reference to the parent tag in the hierarchy.",
-            "synonyms": "parent, superior, ancestor"
+            "name": "parentId",
+            "synonyms": "parent, superior, ancestor",
+            "type": "string"
           },
           {
-            "name": "slug",
-            "type": "string",
             "description": "A unique, URL-friendly identifier.",
-            "synonyms": "identifier, key, code"
+            "name": "slug",
+            "synonyms": "identifier, key, code",
+            "type": "string"
           },
           {
-            "name": "color",
-            "type": "string",
             "description": "A visual identifier, often used for categorization.",
-            "synonyms": "hue, shade, tint, category color"
+            "name": "color",
+            "synonyms": "hue, shade, tint, category color",
+            "type": "string"
           },
           {
-            "name": "count",
-            "type": "number",
             "default": 0.0,
             "description": "The number of items associated with this entry.",
-            "synonyms": "quantity, total, size, amount"
+            "name": "count",
+            "synonyms": "quantity, total, size, amount",
+            "type": "number"
           },
           {
             "name": "createdAt",
             "type": "string"
           }
-        ]
+        ],
+        "name": "Tag",
+        "persistence": "persistent"
       },
+      "name": "TagTaxonomyOrbital",
+      "pages": [
+        {
+          "name": "TagBrowsePage",
+          "path": "/tags/browse",
+          "traits": [
+            {
+              "ref": "TagBrowse"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "TagBrowse",
           "category": "interaction",
-          "linkedEntity": "Tag",
+          "config": {
+            "allowEdit": {
+              "default": false,
+              "description": "Show inline controls to create or rename tags",
+              "label": "Allow editing",
+              "tier": "domain",
+              "type": "boolean"
+            },
+            "tableLook": {
+              "default": "dense",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "label": "Table look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            },
+            "title": {
+              "default": "Categories",
+              "description": "Heading shown above the tag tree",
+              "label": "Section title",
+              "tier": "presentation",
+              "type": "string"
+            }
+          },
           "emits": [
             {
-              "event": "SELECT_TAG",
               "description": "Signals a tag has been chosen for navigation.",
-              "synonyms": "choose, pick, activate, navigate",
-              "tier": "essential",
+              "event": "SELECT_TAG",
               "payloadSchema": [
                 {
                   "name": "tagId",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "choose, pick, activate, navigate",
+              "tier": "essential"
             },
             {
-              "event": "TagLoaded",
               "description": "Signals that the tag data has been successfully retrieved.",
-              "synonyms": "loaded, fetched, received, ready",
-              "tier": "essential",
+              "event": "TagLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[Tag]"
                 }
-              ]
+              ],
+              "synonyms": "loaded, fetched, received, ready",
+              "tier": "essential"
             },
             {
-              "event": "TagLoadFailed",
               "description": "Indicates failure to load tag data.",
-              "synonyms": "error, failed, problem, issue",
-              "tier": "internal",
+              "event": "TagLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -98,27 +134,96 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "error, failed, problem, issue",
+              "tier": "internal"
             },
             {
-              "event": "TagSelected",
               "description": "Signals a tag has been chosen for further exploration.",
-              "synonyms": "chosen, picked, activated, highlighted",
-              "tier": "essential",
+              "event": "TagSelected",
               "payloadSchema": [
                 {
                   "name": "tagId",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 }
-              ]
+              ],
+              "synonyms": "chosen, picked, activated, highlighted",
+              "tier": "essential"
             }
           ],
+          "linkedEntity": "Tag",
+          "name": "TagBrowse",
+          "scope": "collection",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Signals that the tag data has been successfully retrieved.",
+                "key": "TagLoaded",
+                "name": "Tag loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[Tag]"
+                  }
+                ],
+                "synonyms": "loaded, fetched, received, ready",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates failure to load tag data.",
+                "key": "TagLoadFailed",
+                "name": "Tag load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failed, problem, issue",
+                "tier": "internal"
+              },
+              {
+                "description": "Signals a tag has been chosen for navigation.",
+                "key": "SELECT_TAG",
+                "name": "Select Tag",
+                "payloadSchema": [
+                  {
+                    "name": "tagId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "choose, pick, activate, navigate",
+                "tier": "essential"
+              },
+              {
+                "description": "Signals a tag has been chosen for further exploration.",
+                "key": "TagSelected",
+                "name": "Tag selected",
+                "payloadSchema": [
+                  {
+                    "name": "tagId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "chosen, picked, activated, highlighted",
+                "tier": "essential"
+              }
+            ],
             "states": [
               {
-                "name": "loading",
-                "isInitial": true
+                "isInitial": true,
+                "name": "loading"
               },
               {
                 "name": "browsing"
@@ -130,75 +235,8 @@
                 "name": "error"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "TagLoaded",
-                "name": "Tag loaded",
-                "description": "Signals that the tag data has been successfully retrieved.",
-                "synonyms": "loaded, fetched, received, ready",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[Tag]"
-                  }
-                ]
-              },
-              {
-                "key": "TagLoadFailed",
-                "name": "Tag load failed",
-                "description": "Indicates failure to load tag data.",
-                "synonyms": "error, failed, problem, issue",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SELECT_TAG",
-                "name": "Select Tag",
-                "description": "Signals a tag has been chosen for navigation.",
-                "synonyms": "choose, pick, activate, navigate",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "tagId",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "TagSelected",
-                "name": "Tag selected",
-                "description": "Signals a tag has been chosen for further exploration.",
-                "synonyms": "chosen, picked, activated, highlighted",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "tagId",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              }
-            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -214,237 +252,58 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
+                          "color": "muted",
                           "content": "Loading categories…",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption"
                         }
                       ],
-                      "align": "center",
-                      "direction": "vertical",
-                      "className": "py-12"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "browsing",
-                "event": "TagLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "type": "typography",
-                          "variant": "h3",
-                          "content": "@config.title"
-                        },
-                        {
-                          "fields": [],
-                          "gap": "sm",
-                          "minCardWidth": 180.0,
-                          "entity": "@payload.data",
-                          "type": "data-grid",
-                          "renderItem": [
-                            "fn",
-                            "tag",
-                            {
-                              "type": "card",
-                              "children": [
-                                {
-                                  "direction": "vertical",
-                                  "type": "stack",
-                                  "gap": "xs",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "justify": "between",
-                                      "align": "center",
-                                      "children": [
-                                        {
-                                          "direction": "horizontal",
-                                          "gap": "sm",
-                                          "type": "stack",
-                                          "children": [
-                                            {
-                                              "type": "icon",
-                                              "size": "sm",
-                                              "name": "tag"
-                                            },
-                                            {
-                                              "content": "@tag.name",
-                                              "type": "typography",
-                                              "weight": "medium",
-                                              "className": "truncate",
-                                              "variant": "body"
-                                            }
-                                          ],
-                                          "align": "center",
-                                          "className": "min-w-0"
-                                        },
-                                        {
-                                          "label": "@tag.count",
-                                          "size": "sm",
-                                          "type": "badge",
-                                          "variant": "neutral"
-                                        }
-                                      ],
-                                      "gap": "sm"
-                                    },
-                                    {
-                                      "action": "SELECT_TAG",
-                                      "className": "w-full justify-center",
-                                      "label": "Open",
-                                      "type": "button",
-                                      "icon": "chevron-right",
-                                      "actionPayload": {
-                                        "tagId": "@tag.id"
-                                      },
-                                      "size": "sm",
-                                      "variant": "ghost"
-                                    }
-                                  ]
-                                }
-                              ],
-                              "look": "flat-bordered",
-                              "padding": "sm",
-                              "className": "cursor-pointer hover:shadow-md transition-shadow"
-                            }
-                          ]
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "loading",
-                "to": "error",
-                "event": "TagLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "alert",
-                      "variant": "error",
-                      "message": "@payload.error"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "editing",
-                "event": "SELECT_TAG",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.tagId"
-                  ],
-                  [
-                    "emit",
-                    "TagSelected",
-                    {
-                      "tagId": "@payload.tagId"
-                    }
-                  ],
-                  [
-                    "fetch",
-                    "Tag",
-                    {
-                      "emit": {
-                        "success": "TagLoaded",
-                        "failure": "TagLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
                       "className": "py-12",
-                      "type": "stack",
                       "direction": "vertical",
                       "gap": "md",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "variant": "caption",
-                          "content": "Loading children…",
-                          "color": "muted",
-                          "type": "typography"
-                        }
-                      ],
-                      "align": "center"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "browsing",
-                "to": "browsing",
-                "event": "TagLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "direction": "vertical",
-                      "type": "stack",
                       "children": [
                         {
-                          "type": "typography",
                           "content": "@config.title",
+                          "type": "typography",
                           "variant": "h3"
                         },
                         {
-                          "minCardWidth": 180.0,
                           "entity": "@payload.data",
                           "fields": [],
                           "gap": "sm",
+                          "minCardWidth": 180.0,
                           "renderItem": [
                             "fn",
                             "tag",
                             {
-                              "className": "cursor-pointer hover:shadow-md transition-shadow",
-                              "padding": "sm",
-                              "type": "card",
                               "children": [
                                 {
-                                  "direction": "vertical",
                                   "children": [
                                     {
-                                      "direction": "horizontal",
-                                      "type": "stack",
-                                      "gap": "sm",
-                                      "justify": "between",
                                       "align": "center",
                                       "children": [
                                         {
-                                          "className": "min-w-0",
                                           "align": "center",
-                                          "type": "stack",
-                                          "direction": "horizontal",
-                                          "gap": "sm",
                                           "children": [
                                             {
                                               "name": "tag",
@@ -453,186 +312,16 @@
                                             },
                                             {
                                               "className": "truncate",
-                                              "variant": "body",
-                                              "weight": "medium",
                                               "content": "@tag.name",
-                                              "type": "typography"
-                                            }
-                                          ]
-                                        },
-                                        {
-                                          "size": "sm",
-                                          "label": "@tag.count",
-                                          "variant": "neutral",
-                                          "type": "badge"
-                                        }
-                                      ]
-                                    },
-                                    {
-                                      "variant": "ghost",
-                                      "icon": "chevron-right",
-                                      "className": "w-full justify-center",
-                                      "actionPayload": {
-                                        "tagId": "@tag.id"
-                                      },
-                                      "label": "Open",
-                                      "size": "sm",
-                                      "type": "button",
-                                      "action": "SELECT_TAG"
-                                    }
-                                  ],
-                                  "type": "stack",
-                                  "gap": "xs"
-                                }
-                              ],
-                              "look": "flat-bordered"
-                            }
-                          ],
-                          "type": "data-grid"
-                        }
-                      ]
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "browsing",
-                "to": "error",
-                "event": "TagLoadFailed",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "message": "@payload.error",
-                      "variant": "error",
-                      "type": "alert"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "loading",
-                "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "Tag",
-                    {
-                      "emit": {
-                        "success": "TagLoaded",
-                        "failure": "TagLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "align": "center",
-                      "className": "py-12",
-                      "children": [
-                        {
-                          "type": "spinner"
-                        },
-                        {
-                          "type": "typography",
-                          "variant": "caption",
-                          "content": "Loading categories…",
-                          "color": "muted"
-                        }
-                      ],
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "md"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "editing",
-                "event": "SELECT_TAG",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.tagId"
-                  ],
-                  [
-                    "emit",
-                    "TagSelected",
-                    {
-                      "tagId": "@payload.tagId"
-                    }
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "editing",
-                "event": "TagSelected",
-                "effects": [
-                  [
-                    "set",
-                    "@entity.id",
-                    "@payload.tagId"
-                  ]
-                ]
-              },
-              {
-                "from": "editing",
-                "to": "browsing",
-                "event": "TagLoaded",
-                "effects": [
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "children": [
-                        {
-                          "variant": "h3",
-                          "type": "typography",
-                          "content": "@config.title"
-                        },
-                        {
-                          "type": "data-grid",
-                          "entity": "@payload.data",
-                          "gap": "sm",
-                          "renderItem": [
-                            "fn",
-                            "tag",
-                            {
-                              "children": [
-                                {
-                                  "gap": "xs",
-                                  "direction": "vertical",
-                                  "children": [
-                                    {
-                                      "type": "stack",
-                                      "direction": "horizontal",
-                                      "children": [
-                                        {
-                                          "children": [
-                                            {
-                                              "type": "icon",
-                                              "name": "tag",
-                                              "size": "sm"
-                                            },
-                                            {
                                               "type": "typography",
                                               "variant": "body",
-                                              "content": "@tag.name",
-                                              "className": "truncate",
                                               "weight": "medium"
                                             }
                                           ],
-                                          "gap": "sm",
-                                          "type": "stack",
-                                          "align": "center",
                                           "className": "min-w-0",
-                                          "direction": "horizontal"
+                                          "direction": "horizontal",
+                                          "gap": "sm",
+                                          "type": "stack"
                                         },
                                         {
                                           "label": "@tag.count",
@@ -641,23 +330,26 @@
                                           "variant": "neutral"
                                         }
                                       ],
+                                      "direction": "horizontal",
                                       "gap": "sm",
-                                      "align": "center",
-                                      "justify": "between"
+                                      "justify": "between",
+                                      "type": "stack"
                                     },
                                     {
-                                      "icon": "chevron-right",
-                                      "size": "sm",
-                                      "type": "button",
                                       "action": "SELECT_TAG",
-                                      "className": "w-full justify-center",
-                                      "variant": "ghost",
-                                      "label": "Open",
                                       "actionPayload": {
                                         "tagId": "@tag.id"
-                                      }
+                                      },
+                                      "className": "w-full justify-center",
+                                      "icon": "chevron-right",
+                                      "label": "Open",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": "ghost"
                                     }
                                   ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
                                   "type": "stack"
                                 }
                               ],
@@ -667,8 +359,7 @@
                               "type": "card"
                             }
                           ],
-                          "minCardWidth": 180.0,
-                          "fields": []
+                          "type": "data-grid"
                         }
                       ],
                       "direction": "vertical",
@@ -676,12 +367,12 @@
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "TagLoaded",
+                "from": "loading",
+                "to": "browsing"
               },
               {
-                "from": "editing",
-                "to": "error",
-                "event": "TagLoadFailed",
                 "effects": [
                   [
                     "render-ui",
@@ -692,12 +383,176 @@
                       "variant": "error"
                     }
                   ]
-                ]
+                ],
+                "event": "TagLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.tagId"
+                  ],
+                  [
+                    "emit",
+                    "TagSelected",
+                    {
+                      "tagId": "@payload.tagId"
+                    }
+                  ],
+                  [
+                    "fetch",
+                    "Tag",
+                    {
+                      "emit": {
+                        "failure": "TagLoadFailed",
+                        "success": "TagLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading children…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "SELECT_TAG",
+                "from": "browsing",
+                "to": "editing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "@config.title",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "entity": "@payload.data",
+                          "fields": [],
+                          "gap": "sm",
+                          "minCardWidth": 180.0,
+                          "renderItem": [
+                            "fn",
+                            "tag",
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "align": "center",
+                                          "children": [
+                                            {
+                                              "name": "tag",
+                                              "size": "sm",
+                                              "type": "icon"
+                                            },
+                                            {
+                                              "className": "truncate",
+                                              "content": "@tag.name",
+                                              "type": "typography",
+                                              "variant": "body",
+                                              "weight": "medium"
+                                            }
+                                          ],
+                                          "className": "min-w-0",
+                                          "direction": "horizontal",
+                                          "gap": "sm",
+                                          "type": "stack"
+                                        },
+                                        {
+                                          "label": "@tag.count",
+                                          "size": "sm",
+                                          "type": "badge",
+                                          "variant": "neutral"
+                                        }
+                                      ],
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "justify": "between",
+                                      "type": "stack"
+                                    },
+                                    {
+                                      "action": "SELECT_TAG",
+                                      "actionPayload": {
+                                        "tagId": "@tag.id"
+                                      },
+                                      "className": "w-full justify-center",
+                                      "icon": "chevron-right",
+                                      "label": "Open",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "cursor-pointer hover:shadow-md transition-shadow",
+                              "look": "flat-bordered",
+                              "padding": "sm",
+                              "type": "card"
+                            }
+                          ],
+                          "type": "data-grid"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "TagLoaded",
+                "from": "browsing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "TagLoadFailed",
+                "from": "browsing",
+                "to": "error"
+              },
+              {
                 "effects": [
                   [
                     "fetch",
@@ -713,72 +568,217 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "className": "py-12",
                       "align": "center",
-                      "type": "stack",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "content": "Loading categories…",
-                          "variant": "caption",
                           "color": "muted",
-                          "type": "typography"
+                          "content": "Loading categories…",
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "direction": "vertical"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "editing",
+                "to": "loading"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.tagId"
+                  ],
+                  [
+                    "emit",
+                    "TagSelected",
+                    {
+                      "tagId": "@payload.tagId"
+                    }
+                  ]
+                ],
+                "event": "SELECT_TAG",
+                "from": "editing",
+                "to": "editing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.id",
+                    "@payload.tagId"
+                  ]
+                ],
+                "event": "TagSelected",
+                "from": "editing",
+                "to": "editing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "@config.title",
+                          "type": "typography",
+                          "variant": "h3"
+                        },
+                        {
+                          "entity": "@payload.data",
+                          "fields": [],
+                          "gap": "sm",
+                          "minCardWidth": 180.0,
+                          "renderItem": [
+                            "fn",
+                            "tag",
+                            {
+                              "children": [
+                                {
+                                  "children": [
+                                    {
+                                      "align": "center",
+                                      "children": [
+                                        {
+                                          "align": "center",
+                                          "children": [
+                                            {
+                                              "name": "tag",
+                                              "size": "sm",
+                                              "type": "icon"
+                                            },
+                                            {
+                                              "className": "truncate",
+                                              "content": "@tag.name",
+                                              "type": "typography",
+                                              "variant": "body",
+                                              "weight": "medium"
+                                            }
+                                          ],
+                                          "className": "min-w-0",
+                                          "direction": "horizontal",
+                                          "gap": "sm",
+                                          "type": "stack"
+                                        },
+                                        {
+                                          "label": "@tag.count",
+                                          "size": "sm",
+                                          "type": "badge",
+                                          "variant": "neutral"
+                                        }
+                                      ],
+                                      "direction": "horizontal",
+                                      "gap": "sm",
+                                      "justify": "between",
+                                      "type": "stack"
+                                    },
+                                    {
+                                      "action": "SELECT_TAG",
+                                      "actionPayload": {
+                                        "tagId": "@tag.id"
+                                      },
+                                      "className": "w-full justify-center",
+                                      "icon": "chevron-right",
+                                      "label": "Open",
+                                      "size": "sm",
+                                      "type": "button",
+                                      "variant": "ghost"
+                                    }
+                                  ],
+                                  "direction": "vertical",
+                                  "gap": "xs",
+                                  "type": "stack"
+                                }
+                              ],
+                              "className": "cursor-pointer hover:shadow-md transition-shadow",
+                              "look": "flat-bordered",
+                              "padding": "sm",
+                              "type": "card"
+                            }
+                          ],
+                          "type": "data-grid"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "TagLoaded",
+                "from": "editing",
+                "to": "browsing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "message": "@payload.error",
+                      "type": "alert",
+                      "variant": "error"
+                    }
+                  ]
+                ],
+                "event": "TagLoadFailed",
+                "from": "editing",
+                "to": "error"
+              },
+              {
+                "effects": [
+                  [
+                    "fetch",
+                    "Tag",
+                    {
+                      "emit": {
+                        "failure": "TagLoadFailed",
+                        "success": "TagLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "align": "center",
+                      "children": [
+                        {
+                          "type": "spinner"
+                        },
+                        {
+                          "color": "muted",
+                          "content": "Loading categories…",
+                          "type": "typography",
+                          "variant": "caption"
+                        }
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "config": {
-            "allowEdit": {
-              "type": "boolean",
-              "default": false,
-              "label": "Allow editing",
-              "description": "Show inline controls to create or rename tags",
-              "tier": "domain"
-            },
-            "title": {
-              "type": "string",
-              "default": "Categories",
-              "label": "Section title",
-              "description": "Heading shown above the tag tree",
-              "tier": "presentation"
-            },
-            "tableLook": {
-              "type": "string",
-              "default": "dense",
-              "label": "Table look",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            }
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "TagBrowsePage",
-          "path": "/tags/browse",
-          "traits": [
-            {
-              "ref": "TagBrowse"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.1.0"
 }

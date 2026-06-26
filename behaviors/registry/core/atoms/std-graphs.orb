@@ -1,73 +1,307 @@
 {
-  "name": "std-graphs",
-  "version": "2.0.0",
   "description": "std-graphs — embeddable chart atom. ITEMS_LOADED groups @payload.data by @config.categoryField (or @config.timeField when timeAxis=true) and aggregates per bucket. Multi-series rendering via @config.series (preformatted ChartSeries shape). Histograms via chartType=histogram pass pre-binned @payload.data through unchanged. Stacked / 100% stacked bars via @config.stack. Post-process sort + limit. Clicking a data point emits UI:@config.drillEvent with { label, value, seriesLabel? }. Drop into a dashboard alongside std-stats / std-browse.",
+  "name": "std-graphs",
   "orbitals": [
     {
-      "name": "GraphItemOrbital",
       "entity": {
-        "name": "GraphItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "chartData",
-            "type": "array",
             "default": [],
+            "description": "The data points used to render the chart.",
             "items": {
-              "type": "object",
               "properties": {
                 "label": {
                   "name": "label",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 "value": {
                   "name": "value",
-                  "type": "number",
-                  "required": true
+                  "required": true,
+                  "type": "number"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "The data points used to render the chart.",
-            "synonyms": "data, values, points"
+            "name": "chartData",
+            "synonyms": "data, values, points",
+            "type": "array"
           }
-        ]
+        ],
+        "name": "GraphItem",
+        "persistence": "runtime"
       },
+      "name": "GraphItemOrbital",
+      "pages": [
+        {
+          "name": "GraphItemGraphPage",
+          "path": "/graphitems",
+          "traits": [
+            {
+              "ref": "GraphItemGraph"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "GraphItemGraph",
-          "entityRebindable": true,
+          "category": "interaction",
+          "config": {
+            "aggregation": {
+              "default": "count",
+              "description": "How values within a bucket combine into one number",
+              "label": "Aggregation",
+              "synonyms": "user phrases: 'count' / 'how many' -> count; 'total' / 'sum of' -> sum; 'average' / 'mean' -> avg; 'minimum' / 'lowest' -> min; 'maximum' / 'highest' -> max",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "count",
+                "sum",
+                "avg",
+                "min",
+                "max"
+              ]
+            },
+            "categoryField": {
+              "default": "status",
+              "description": "Entity field whose values become the chart's category buckets. Set this when the user voices 'group by X' / 'categorize by X' / 'bucket by X' / 'split by X' / 'break down by X' for any non-time field X (for time-units, set period + timeAxis=true instead).",
+              "label": "Group / categorize / bucket / split by field",
+              "synonyms": "regroup / rebucket / categorize / breakdown by / split by / segment by. user phrases: 'group by status' -> categoryField=status; 'group by region' / 'by region' -> categoryField=region; 'group by category' / 'by category' -> categoryField=category; 'group by product' / 'by product' -> categoryField=product; 'group by month' / 'by month' -> categoryField=month (when explicitly requested as a category, not a time bucket); 'split by X' / 'break down by X' / 'segment by X' / 'bucket by X' -> categoryField=X",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "chartType": {
+              "default": "bar",
+              "description": "Visual format for the rendered chart",
+              "label": "Chart type",
+              "synonyms": "bar = vertical bars, line = connected line, pie = pie chart, donut = pie with hole, area = filled area chart, histogram = frequency distribution, scatter = XY scatter. user phrases: 'switch to donut' / 'make it a donut' / 'as a donut chart' -> donut; 'use a pie chart' -> pie; 'show as line' / 'line chart' -> line; 'as bars' / 'bar chart' -> bar",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "bar",
+                "line",
+                "pie",
+                "area",
+                "donut",
+                "histogram",
+                "scatter"
+              ]
+            },
+            "drillEvent": {
+              "default": "",
+              "description": "Event emitted when a user clicks a chart point",
+              "label": "Drill event",
+              "synonyms": "click-through navigation event. user phrases: 'on click navigate to X' / 'drill into X' / 'when clicked open X' -> X event name",
+              "tier": "internal",
+              "type": "string"
+            },
+            "height": {
+              "default": 280.0,
+              "description": "Pixel height of the rendered chart",
+              "label": "Chart height",
+              "synonyms": "vertical size in pixels. user phrases: 'taller' / 'make it taller' / 'increase height' / 'bigger vertically' -> larger number (e.g. 300, 400); 'shorter' / 'smaller' -> smaller; 'set height to 300' / '300px tall' -> 300",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "limit": {
+              "default": 0.0,
+              "description": "Keep only the first N points after sorting (0 = all)",
+              "label": "Top N",
+              "synonyms": "user phrases: 'top 5' -> 5; 'top 10' -> 10; 'first 3' -> 3; 'all' / 'no limit' -> 0; 'show all' -> 0",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "period": {
+              "default": "month",
+              "description": "Group by month, quarter, week, day, or year — the calendar bucket the chart groups data into. Set ALONGSIDE timeAxis=true whenever the user says 'group by <time-unit>' or 'by <time-unit>' or 'rebucket to <time-unit>' or 'instead of <other-time-unit>'.",
+              "label": "Group by month / quarter / week / day / year",
+              "synonyms": "regroup / rebucket / change bucket / group differently. user phrases: 'group by month' / 'by month' / 'monthly' / 'monthly buckets' / 'switch to monthly' / 'instead of quarter' -> month; 'group by quarter' / 'by quarter' / 'quarterly' -> quarter; 'group by week' / 'by week' / 'weekly' / 'weekly buckets' -> week; 'group by day' / 'by day' / 'daily' / 'daily buckets' -> day; 'group by year' / 'by year' / 'yearly' / 'annually' -> year. Whenever the user voices 'group by <time-unit>' BOTH period AND timeAxis=true should be set.",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "day",
+                "week",
+                "month",
+                "quarter",
+                "year"
+              ]
+            },
+            "series": {
+              "default": [],
+              "description": "Pre-formatted multi-series spec for stacked or layered charts",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "dashed": {
+                    "name": "dashed",
+                    "required": false,
+                    "type": "boolean"
+                  },
+                  "data": {
+                    "items": {
+                      "properties": {
+                        "label": {
+                          "name": "label",
+                          "required": true,
+                          "type": "string"
+                        },
+                        "value": {
+                          "name": "value",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "data",
+                    "required": false,
+                    "type": "array"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Series",
+              "synonyms": "multiple lines / bars per category. user phrases: 'compare X and Y' -> add two series entries",
+              "tier": "presentation",
+              "type": "[SeriesSpec]"
+            },
+            "showLegend": {
+              "default": true,
+              "description": "Display the series legend",
+              "label": "Show legend",
+              "synonyms": "true shows the color key. user phrases: 'show legend' / 'show the legend' / 'show key' / 'with legend' / 'with a legend' -> true; 'hide legend' / 'no legend' / 'without legend' / 'remove legend' -> false",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showValues": {
+              "default": false,
+              "description": "Render the numeric value on top of each data point",
+              "label": "Show values",
+              "synonyms": "user phrases: 'show values' / 'show numbers on bars' / 'with data labels' / 'label the bars' -> true; 'hide values' / 'no labels' -> false",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "sortDir": {
+              "default": "desc",
+              "description": "Ascending or descending order for the sort field",
+              "label": "Sort direction",
+              "synonyms": "asc = ascending = lowest-to-highest = low-to-high = smallest-first. desc = descending = highest-to-lowest = high-to-low = largest-first. user phrases: 'highest to lowest' / 'largest first' / 'descending' -> desc; 'lowest to highest' / 'smallest first' / 'ascending' -> asc",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "sortField": {
+              "default": "none",
+              "description": "Order points by value, label, or leave unsorted",
+              "label": "Sort by",
+              "synonyms": "user phrases: 'sort by value' / 'order by amount' -> value; 'sort alphabetically' / 'sort by name' -> label; 'no sort' / 'leave order' -> none",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "value",
+                "label",
+                "none"
+              ]
+            },
+            "stack": {
+              "default": "none",
+              "description": "Stack bars, normalize to 100%, or render side-by-side",
+              "label": "Stacking",
+              "synonyms": "user phrases: 'side by side' / 'grouped' -> none; 'stacked' / 'stack the bars' -> stack; 'percent stacked' / '100% stacked' / 'normalized' -> normalize",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "none",
+                "stack",
+                "normalize"
+              ]
+            },
+            "subtitle": {
+              "default": "Counts per category",
+              "description": "Secondary line below the title",
+              "label": "Subtitle",
+              "synonyms": "secondary header below the title. user phrases: 'with subtitle X' / 'set subtitle to X' -> X",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "timeAxis": {
+              "default": false,
+              "description": "Group by timeField bucketed by period instead of categoryField",
+              "label": "Time axis",
+              "synonyms": "true means group by date / month / time. user phrases: 'group by month / week / year / date' -> set timeAxis=true; 'group by status / category' -> timeAxis=false",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "timeField": {
+              "default": "date",
+              "description": "Entity field used as the time axis when timeAxis is on",
+              "label": "Date field",
+              "synonyms": "the date / timestamp / created-at column. set when timeAxis=true",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "title": {
+              "default": "Distribution",
+              "description": "Heading shown above the chart",
+              "label": "Title",
+              "synonyms": "the chart's header text. user phrases: 'rename to X' / 'title it X' / 'change the title to X' / 'call it X' -> X",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "valueField": {
+              "default": "",
+              "description": "Numeric field aggregated per bucket (blank = row count)",
+              "label": "Value field",
+              "synonyms": "the numeric column to aggregate. empty string counts rows. user phrases: 'sum revenue' -> valueField=revenue + aggregation=sum",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "viewPattern": {
+              "default": "chart",
+              "description": "UI pattern used to draw the chart",
+              "label": "Render pattern",
+              "synonyms": "internal pattern selector. user prompts rarely target this directly — pattern selection is upstream",
+              "tier": "internal",
+              "type": "pattern"
+            }
+          },
           "entityContract": {
-            "requires": [],
             "provides": [
               "chartData"
-            ]
-          },
-          "category": "interaction",
-          "linkedEntity": "GraphItem",
-          "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              }
             ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "GraphItem",
+          "name": "GraphItemGraph",
+          "scope": "instance",
+          "stateMachine": {
             "events": [
               {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
+                "description": "Data has been retrieved and processed for display.",
                 "key": "ITEMS_LOADED",
                 "name": "Items Loaded",
-                "description": "Data has been retrieved and processed for display.",
-                "synonyms": "data ready, update, refresh, loaded",
-                "tier": "essential",
                 "payloadSchema": [
                   {
                     "name": "data",
@@ -77,30 +311,35 @@
                     "name": "totalCount",
                     "type": "number"
                   }
-                ]
+                ],
+                "synonyms": "data ready, update, refresh, loaded",
+                "tier": "essential"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
               }
             ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "set",
                     "@entity.chartData",
                     [
                       {
-                        "value": 6.0,
-                        "label": "Active"
+                        "label": "Active",
+                        "value": 6.0
                       },
                       {
                         "label": "Pending",
                         "value": 3.0
                       },
                       {
-                        "value": 1.0,
-                        "label": "Inactive"
+                        "label": "Inactive",
+                        "value": 1.0
                       }
                     ]
                   ],
@@ -108,26 +347,26 @@
                     "render-ui",
                     "main",
                     {
-                      "title": "@config.title",
-                      "showLegend": "@config.showLegend",
-                      "type": "@config.viewPattern",
-                      "showValues": "@config.showValues",
-                      "series": "@config.series",
-                      "data": "@entity.chartData",
-                      "timeAxis": "@config.timeAxis",
-                      "stack": "@config.stack",
-                      "drillEvent": "@config.drillEvent",
                       "chartType": "@config.chartType",
+                      "data": "@entity.chartData",
+                      "drillEvent": "@config.drillEvent",
                       "height": "@config.height",
-                      "subtitle": "@config.subtitle"
+                      "series": "@config.series",
+                      "showLegend": "@config.showLegend",
+                      "showValues": "@config.showValues",
+                      "stack": "@config.stack",
+                      "subtitle": "@config.subtitle",
+                      "timeAxis": "@config.timeAxis",
+                      "title": "@config.title",
+                      "type": "@config.viewPattern"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
               },
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "ITEMS_LOADED",
                 "effects": [
                   [
                     "set",
@@ -305,269 +544,30 @@
                     "render-ui",
                     "main",
                     {
-                      "series": "@config.series",
                       "chartType": "@config.chartType",
+                      "data": "@entity.chartData",
+                      "drillEvent": "@config.drillEvent",
+                      "height": "@config.height",
+                      "series": "@config.series",
+                      "showLegend": "@config.showLegend",
                       "showValues": "@config.showValues",
+                      "stack": "@config.stack",
                       "subtitle": "@config.subtitle",
                       "timeAxis": "@config.timeAxis",
-                      "height": "@config.height",
-                      "drillEvent": "@config.drillEvent",
-                      "data": "@entity.chartData",
                       "title": "@config.title",
-                      "type": "@config.viewPattern",
-                      "stack": "@config.stack",
-                      "showLegend": "@config.showLegend"
+                      "type": "@config.viewPattern"
                     }
                   ]
-                ]
+                ],
+                "event": "ITEMS_LOADED",
+                "from": "idle",
+                "to": "idle"
               }
             ]
-          },
-          "config": {
-            "showValues": {
-              "type": "boolean",
-              "default": false,
-              "label": "Show values",
-              "description": "Render the numeric value on top of each data point",
-              "synonyms": "user phrases: 'show values' / 'show numbers on bars' / 'with data labels' / 'label the bars' -> true; 'hide values' / 'no labels' -> false",
-              "tier": "presentation"
-            },
-            "timeAxis": {
-              "type": "boolean",
-              "default": false,
-              "label": "Time axis",
-              "description": "Group by timeField bucketed by period instead of categoryField",
-              "synonyms": "true means group by date / month / time. user phrases: 'group by month / week / year / date' -> set timeAxis=true; 'group by status / category' -> timeAxis=false",
-              "tier": "presentation"
-            },
-            "timeField": {
-              "type": "string",
-              "default": "date",
-              "label": "Date field",
-              "description": "Entity field used as the time axis when timeAxis is on",
-              "synonyms": "the date / timestamp / created-at column. set when timeAxis=true",
-              "tier": "presentation"
-            },
-            "chartType": {
-              "type": "string",
-              "default": "bar",
-              "label": "Chart type",
-              "description": "Visual format for the rendered chart",
-              "synonyms": "bar = vertical bars, line = connected line, pie = pie chart, donut = pie with hole, area = filled area chart, histogram = frequency distribution, scatter = XY scatter. user phrases: 'switch to donut' / 'make it a donut' / 'as a donut chart' -> donut; 'use a pie chart' -> pie; 'show as line' / 'line chart' -> line; 'as bars' / 'bar chart' -> bar",
-              "tier": "presentation",
-              "values": [
-                "bar",
-                "line",
-                "pie",
-                "area",
-                "donut",
-                "histogram",
-                "scatter"
-              ]
-            },
-            "series": {
-              "type": "[SeriesSpec]",
-              "default": [],
-              "label": "Series",
-              "description": "Pre-formatted multi-series spec for stacked or layered charts",
-              "synonyms": "multiple lines / bars per category. user phrases: 'compare X and Y' -> add two series entries",
-              "tier": "presentation",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "data": {
-                    "name": "data",
-                    "type": "array",
-                    "required": false,
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "label": {
-                          "name": "label",
-                          "type": "string",
-                          "required": true
-                        },
-                        "value": {
-                          "name": "value",
-                          "type": "number",
-                          "required": true
-                        }
-                      }
-                    }
-                  },
-                  "dashed": {
-                    "name": "dashed",
-                    "type": "boolean",
-                    "required": false
-                  },
-                  "name": {
-                    "name": "name",
-                    "type": "string",
-                    "required": true
-                  },
-                  "color": {
-                    "name": "color",
-                    "type": "string",
-                    "required": false
-                  }
-                }
-              }
-            },
-            "drillEvent": {
-              "type": "string",
-              "default": "",
-              "label": "Drill event",
-              "description": "Event emitted when a user clicks a chart point",
-              "synonyms": "click-through navigation event. user phrases: 'on click navigate to X' / 'drill into X' / 'when clicked open X' -> X event name",
-              "tier": "internal"
-            },
-            "limit": {
-              "type": "number",
-              "default": 0.0,
-              "label": "Top N",
-              "description": "Keep only the first N points after sorting (0 = all)",
-              "synonyms": "user phrases: 'top 5' -> 5; 'top 10' -> 10; 'first 3' -> 3; 'all' / 'no limit' -> 0; 'show all' -> 0",
-              "tier": "presentation"
-            },
-            "period": {
-              "type": "string",
-              "default": "month",
-              "label": "Group by month / quarter / week / day / year",
-              "description": "Group by month, quarter, week, day, or year — the calendar bucket the chart groups data into. Set ALONGSIDE timeAxis=true whenever the user says 'group by <time-unit>' or 'by <time-unit>' or 'rebucket to <time-unit>' or 'instead of <other-time-unit>'.",
-              "synonyms": "regroup / rebucket / change bucket / group differently. user phrases: 'group by month' / 'by month' / 'monthly' / 'monthly buckets' / 'switch to monthly' / 'instead of quarter' -> month; 'group by quarter' / 'by quarter' / 'quarterly' -> quarter; 'group by week' / 'by week' / 'weekly' / 'weekly buckets' -> week; 'group by day' / 'by day' / 'daily' / 'daily buckets' -> day; 'group by year' / 'by year' / 'yearly' / 'annually' -> year. Whenever the user voices 'group by <time-unit>' BOTH period AND timeAxis=true should be set.",
-              "tier": "presentation",
-              "values": [
-                "day",
-                "week",
-                "month",
-                "quarter",
-                "year"
-              ]
-            },
-            "stack": {
-              "type": "string",
-              "default": "none",
-              "label": "Stacking",
-              "description": "Stack bars, normalize to 100%, or render side-by-side",
-              "synonyms": "user phrases: 'side by side' / 'grouped' -> none; 'stacked' / 'stack the bars' -> stack; 'percent stacked' / '100% stacked' / 'normalized' -> normalize",
-              "tier": "presentation",
-              "values": [
-                "none",
-                "stack",
-                "normalize"
-              ]
-            },
-            "valueField": {
-              "type": "string",
-              "default": "",
-              "label": "Value field",
-              "description": "Numeric field aggregated per bucket (blank = row count)",
-              "synonyms": "the numeric column to aggregate. empty string counts rows. user phrases: 'sum revenue' -> valueField=revenue + aggregation=sum",
-              "tier": "presentation"
-            },
-            "height": {
-              "type": "number",
-              "default": 280.0,
-              "label": "Chart height",
-              "description": "Pixel height of the rendered chart",
-              "synonyms": "vertical size in pixels. user phrases: 'taller' / 'make it taller' / 'increase height' / 'bigger vertically' -> larger number (e.g. 300, 400); 'shorter' / 'smaller' -> smaller; 'set height to 300' / '300px tall' -> 300",
-              "tier": "presentation"
-            },
-            "viewPattern": {
-              "type": "pattern",
-              "default": "chart",
-              "label": "Render pattern",
-              "description": "UI pattern used to draw the chart",
-              "synonyms": "internal pattern selector. user prompts rarely target this directly — pattern selection is upstream",
-              "tier": "internal"
-            },
-            "sortDir": {
-              "type": "string",
-              "default": "desc",
-              "label": "Sort direction",
-              "description": "Ascending or descending order for the sort field",
-              "synonyms": "asc = ascending = lowest-to-highest = low-to-high = smallest-first. desc = descending = highest-to-lowest = high-to-low = largest-first. user phrases: 'highest to lowest' / 'largest first' / 'descending' -> desc; 'lowest to highest' / 'smallest first' / 'ascending' -> asc",
-              "tier": "presentation",
-              "values": [
-                "asc",
-                "desc"
-              ]
-            },
-            "subtitle": {
-              "type": "string",
-              "default": "Counts per category",
-              "label": "Subtitle",
-              "description": "Secondary line below the title",
-              "synonyms": "secondary header below the title. user phrases: 'with subtitle X' / 'set subtitle to X' -> X",
-              "tier": "presentation"
-            },
-            "title": {
-              "type": "string",
-              "default": "Distribution",
-              "label": "Title",
-              "description": "Heading shown above the chart",
-              "synonyms": "the chart's header text. user phrases: 'rename to X' / 'title it X' / 'change the title to X' / 'call it X' -> X",
-              "tier": "presentation"
-            },
-            "categoryField": {
-              "type": "string",
-              "default": "status",
-              "label": "Group / categorize / bucket / split by field",
-              "description": "Entity field whose values become the chart's category buckets. Set this when the user voices 'group by X' / 'categorize by X' / 'bucket by X' / 'split by X' / 'break down by X' for any non-time field X (for time-units, set period + timeAxis=true instead).",
-              "synonyms": "regroup / rebucket / categorize / breakdown by / split by / segment by. user phrases: 'group by status' -> categoryField=status; 'group by region' / 'by region' -> categoryField=region; 'group by category' / 'by category' -> categoryField=category; 'group by product' / 'by product' -> categoryField=product; 'group by month' / 'by month' -> categoryField=month (when explicitly requested as a category, not a time bucket); 'split by X' / 'break down by X' / 'segment by X' / 'bucket by X' -> categoryField=X",
-              "tier": "presentation"
-            },
-            "aggregation": {
-              "type": "string",
-              "default": "count",
-              "label": "Aggregation",
-              "description": "How values within a bucket combine into one number",
-              "synonyms": "user phrases: 'count' / 'how many' -> count; 'total' / 'sum of' -> sum; 'average' / 'mean' -> avg; 'minimum' / 'lowest' -> min; 'maximum' / 'highest' -> max",
-              "tier": "presentation",
-              "values": [
-                "count",
-                "sum",
-                "avg",
-                "min",
-                "max"
-              ]
-            },
-            "showLegend": {
-              "type": "boolean",
-              "default": true,
-              "label": "Show legend",
-              "description": "Display the series legend",
-              "synonyms": "true shows the color key. user phrases: 'show legend' / 'show the legend' / 'show key' / 'with legend' / 'with a legend' -> true; 'hide legend' / 'no legend' / 'without legend' / 'remove legend' -> false",
-              "tier": "presentation"
-            },
-            "sortField": {
-              "type": "string",
-              "default": "none",
-              "label": "Sort by",
-              "description": "Order points by value, label, or leave unsorted",
-              "synonyms": "user phrases: 'sort by value' / 'order by amount' -> value; 'sort alphabetically' / 'sort by name' -> label; 'no sort' / 'leave order' -> none",
-              "tier": "presentation",
-              "values": [
-                "value",
-                "label",
-                "none"
-              ]
-            }
-          },
-          "scope": "instance"
-        }
-      ],
-      "pages": [
-        {
-          "name": "GraphItemGraphPage",
-          "path": "/graphitems",
-          "traits": [
-            {
-              "ref": "GraphItemGraph"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "2.0.0"
 }

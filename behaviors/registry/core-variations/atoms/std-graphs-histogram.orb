@@ -1,59 +1,42 @@
 {
-  "name": "std-graphs-histogram",
-  "version": "1.0.0",
   "description": "Histogram view. Embeds std-graphs with the histogram chartType — pre-binned bars passed through unchanged from @payload.data (the std-graphs atom skips its categorical bucketing for this type). Best for distributions of a continuous variable.",
+  "name": "std-graphs-histogram",
   "orbitals": [
     {
-      "name": "HistogramGraphItemOrbital",
-      "uses": [
-        {
-          "from": "std/behaviors/std-graphs",
-          "as": "Graph"
-        }
-      ],
       "entity": {
-        "name": "HistogramGraphItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "chartData",
-            "type": "array",
             "default": [],
+            "description": "Numerical data points for visualization.",
             "items": {
-              "type": "object",
               "properties": {
                 "label": {
                   "name": "label",
-                  "type": "string",
-                  "required": true
+                  "required": true,
+                  "type": "string"
                 },
                 "value": {
                   "name": "value",
-                  "type": "number",
-                  "required": true
+                  "required": true,
+                  "type": "number"
                 }
-              }
+              },
+              "type": "object"
             },
-            "description": "Numerical data points for visualization.",
-            "synonyms": "data, values, measurements"
+            "name": "chartData",
+            "synonyms": "data, values, measurements",
+            "type": "array"
           }
-        ]
+        ],
+        "name": "HistogramGraphItem",
+        "persistence": "runtime"
       },
-      "traits": [
-        {
-          "ref": "Graph.traits.GraphItemGraph",
-          "name": "HistogramGraphItemGraph",
-          "linkedEntity": "HistogramGraphItem",
-          "config": {
-            "chartType": "histogram"
-          }
-        }
-      ],
+      "name": "HistogramGraphItemOrbital",
       "pages": [
         {
           "name": "HistogramGraphPage",
@@ -64,7 +47,24 @@
             }
           ]
         }
+      ],
+      "traits": [
+        {
+          "config": {
+            "chartType": "histogram"
+          },
+          "linkedEntity": "HistogramGraphItem",
+          "name": "HistogramGraphItemGraph",
+          "ref": "Graph.traits.GraphItemGraph"
+        }
+      ],
+      "uses": [
+        {
+          "as": "Graph",
+          "from": "std/behaviors/std-graphs"
+        }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }
