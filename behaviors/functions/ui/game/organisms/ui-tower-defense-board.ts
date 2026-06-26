@@ -76,7 +76,7 @@ export interface StdUiTowerDefenseBoardMoveHeroPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiTowerDefenseBoardConfig {
-  /** Default: `{"baseUrl":"https://almadar-kflow-assets.web.app/shared/","features":{"tower":"terrain/Isometric/woodenCrates_N.png"},"terrains":{"grass":"terrain/Isometric/dirtTiles_N.png","ground":"terrain/Isometric/dirtTiles_N.png","path":"terrain/Isometric/dirtTiles_N.png","stone":"terrain/Isometric/stoneTile_N.png","wall":"terrain/Isometric/dirtTiles_N.png"},"units":{"creep":"sprite-sheets/forger-sprite-sheet-se.png","hero":"sprite-sheets/shadow-legion-sprite-sheet-sw.png"}}` */
+  /** Default: `{"baseUrl":"https://almadar-kflow-assets.web.app/shared/","features":{"tower":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/features/tower.png"},"terrains":{"grass":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/grass.png","ground":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png","path":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png","stone":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/stone.png","wall":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png"},"units":{"creep":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/creep.png","hero":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/hero.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
@@ -109,7 +109,7 @@ export interface StdUiTowerDefenseBoardConfig {
   path?: EntityRow[];
   /** Default: `0.25` */
   scale?: number;
-  /** Default: `[{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png","x":0,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png","x":1,"y":0},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png","x":2,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png","x":3,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png","x":4,"y":0},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png","x":0,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png","x":1,"y":1},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png","x":2,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png","x":3,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png","x":4,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png","x":0,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png","x":1,"y":2},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png","x":2,"y":2},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png","x":3,"y":2},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png","x":4,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png","x":0,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png","x":1,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png","x":2,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png","x":3,"y":3},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png","x":4,"y":3},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png","x":0,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png","x":1,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png","x":2,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png","x":3,"y":4},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png","x":4,"y":4}]` */
+  /** Default: `[{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png","x":0,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png","x":1,"y":0},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png","x":2,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png","x":3,"y":0},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png","x":4,"y":0},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png","x":0,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png","x":1,"y":1},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png","x":2,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png","x":3,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png","x":4,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png","x":0,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png","x":1,"y":2},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png","x":2,"y":2},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png","x":3,"y":2},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png","x":4,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png","x":0,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png","x":1,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png","x":2,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png","x":3,"y":3},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png","x":4,"y":3},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png","x":0,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png","x":1,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png","x":2,"y":4},{"passable":false,"terrain":"wall","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png","x":3,"y":4},{"passable":false,"terrain":"path","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png","x":4,"y":4}]` */
   tiles?: EntityRow[];
   /** Default: `1` */
   towerCooldown?: number;
@@ -408,18 +408,18 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
             'default': {
               'baseUrl': 'https://almadar-kflow-assets.web.app/shared/',
               'features': {
-                'tower': 'terrain/Isometric/woodenCrates_N.png',
+                'tower': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/features/tower.png',
               },
               'terrains': {
-                'grass': 'terrain/Isometric/dirtTiles_N.png',
-                'ground': 'terrain/Isometric/dirtTiles_N.png',
-                'path': 'terrain/Isometric/dirtTiles_N.png',
-                'stone': 'terrain/Isometric/stoneTile_N.png',
-                'wall': 'terrain/Isometric/dirtTiles_N.png',
+                'grass': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/grass.png',
+                'ground': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png',
+                'path': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png',
+                'stone': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/stone.png',
+                'wall': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png',
               },
               'units': {
-                'creep': 'sprite-sheets/forger-sprite-sheet-se.png',
-                'hero': 'sprite-sheets/shadow-legion-sprite-sheet-sw.png',
+                'creep': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/creep.png',
+                'hero': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/hero.png',
               },
             },
             'description': 'Base-url + terrain/unit/structure sprite maps; towers render as the structure asset.',
@@ -829,175 +829,175 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
               {
                 'passable': false,
                 'terrain': 'wall',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png',
                 'x': 0,
                 'y': 0,
               },
               {
                 'passable': false,
                 'terrain': 'wall',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png',
                 'x': 1,
                 'y': 0,
               },
               {
                 'passable': false,
                 'terrain': 'path',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png',
                 'x': 2,
                 'y': 0,
               },
               {
                 'passable': false,
                 'terrain': 'wall',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png',
                 'x': 3,
                 'y': 0,
               },
               {
                 'passable': false,
                 'terrain': 'wall',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png',
                 'x': 4,
                 'y': 0,
               },
               {
                 'passable': true,
                 'terrain': 'ground',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png',
                 'x': 0,
                 'y': 1,
               },
               {
                 'passable': true,
                 'terrain': 'ground',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png',
                 'x': 1,
                 'y': 1,
               },
               {
                 'passable': false,
                 'terrain': 'path',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png',
                 'x': 2,
                 'y': 1,
               },
               {
                 'passable': true,
                 'terrain': 'ground',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png',
                 'x': 3,
                 'y': 1,
               },
               {
                 'passable': true,
                 'terrain': 'ground',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png',
                 'x': 4,
                 'y': 1,
               },
               {
                 'passable': true,
                 'terrain': 'ground',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png',
                 'x': 0,
                 'y': 2,
               },
               {
                 'passable': true,
                 'terrain': 'ground',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png',
                 'x': 1,
                 'y': 2,
               },
               {
                 'passable': false,
                 'terrain': 'path',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png',
                 'x': 2,
                 'y': 2,
               },
               {
                 'passable': false,
                 'terrain': 'path',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png',
                 'x': 3,
                 'y': 2,
               },
               {
                 'passable': false,
                 'terrain': 'path',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png',
                 'x': 4,
                 'y': 2,
               },
               {
                 'passable': true,
                 'terrain': 'ground',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png',
                 'x': 0,
                 'y': 3,
               },
               {
                 'passable': true,
                 'terrain': 'ground',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png',
                 'x': 1,
                 'y': 3,
               },
               {
                 'passable': true,
                 'terrain': 'ground',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png',
                 'x': 2,
                 'y': 3,
               },
               {
                 'passable': true,
                 'terrain': 'ground',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/dirt_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png',
                 'x': 3,
                 'y': 3,
               },
               {
                 'passable': false,
                 'terrain': 'path',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png',
                 'x': 4,
                 'y': 3,
               },
               {
                 'passable': false,
                 'terrain': 'wall',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png',
                 'x': 0,
                 'y': 4,
               },
               {
                 'passable': false,
                 'terrain': 'wall',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png',
                 'x': 1,
                 'y': 4,
               },
               {
                 'passable': false,
                 'terrain': 'wall',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png',
                 'x': 2,
                 'y': 4,
               },
               {
                 'passable': false,
                 'terrain': 'wall',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/stoneWall_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png',
                 'x': 3,
                 'y': 4,
               },
               {
                 'passable': false,
                 'terrain': 'path',
-                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/terrain/Isometric/planks_E.png',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png',
                 'x': 4,
                 'y': 4,
               },

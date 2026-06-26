@@ -1,0 +1,249 @@
+[
+  {
+    "organism": "ui-subagent-trace-panel",
+    "orbital": "SubagentTracePanelOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/core/organisms/ui-subagent-trace-panel.ts",
+    "entities": [
+      {
+        "name": "SubagentTracePanelItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "SubagentTracePanelRender",
+        "emittedEvents": [
+          "CLOSE",
+          "OPEN"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "CLOSE",
+            "direction": "emit",
+            "description": "Optional dismiss handler.",
+            "tier": "essential"
+          },
+          {
+            "name": "OPEN",
+            "direction": "emit",
+            "description": "Open the Subagent-trace-panel.",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "activeFilters",
+            "type": "json",
+            "default": {},
+            "label": "Active Filters",
+            "description": "Active filters",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "coordinatorActivities",
+            "type": "[json]",
+            "default": [],
+            "label": "Coordinator Activities",
+            "description": "Full coordinator activities (tool calls, results, messages, errors).",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "coordinatorMessages",
+            "type": "[json]",
+            "default": [],
+            "label": "Coordinator Messages",
+            "description": "Canonical Coordinator conversation — same shape live and on reload. When present, takes precedence over `coordinatorActivities` for the Coordinator section.",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "disclosureLevel",
+            "type": "number",
+            "default": 1,
+            "label": "Disclosure Level",
+            "description": "Drives density: 1-2 → compact, 3-4 → full activity embed (when mode='overlay').",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "SubagentTracePanelError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "focusedOrbital",
+            "type": "string",
+            "default": "Focused Orbital",
+            "label": "Focused Orbital",
+            "description": "Current canvas focus orbital — only used by overlay mode. Tab mode ignores this.",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "mode",
+            "type": "string",
+            "default": "overlay",
+            "label": "Mode",
+            "description": "Rendering mode. - `'overlay'` (default): floating side panel positioned absolutely over the canvas. Density follows `disclosureLevel` (compact L1/L2, rich L3+). The `open` flag actually hides the panel when false. - `'tab'`: full-width content for a dedicated 'trace' supplemental tab. Always renders rich (regardless of disclosure level), always visible (the `open` flag is ignored), and includes an empty state when no subagents are present so users see the surface even before generation starts.",
+            "tier": "presentation",
+            "enumValues": [
+              "overlay",
+              "tab"
+            ]
+          },
+          {
+            "key": "open",
+            "type": "boolean",
+            "default": false,
+            "label": "Open",
+            "description": "Whether the panel is visible. Typically auto-opens during generation in overlay mode.",
+            "tier": "presentation"
+          },
+          {
+            "key": "pageProp",
+            "type": "number",
+            "default": 0,
+            "label": "Page",
+            "description": "Current page number",
+            "synonyms": "page",
+            "tier": "presentation"
+          },
+          {
+            "key": "pageSize",
+            "type": "number",
+            "default": 0,
+            "label": "Page Size",
+            "description": "Number of items per page",
+            "tier": "presentation"
+          },
+          {
+            "key": "searchValue",
+            "type": "string",
+            "default": "Search Value",
+            "label": "Search Value",
+            "description": "Current search query value",
+            "tier": "presentation"
+          },
+          {
+            "key": "selectedIds",
+            "type": "[string]",
+            "default": [],
+            "label": "Selected Ids",
+            "description": "Currently selected item IDs",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "sortBy",
+            "type": "string",
+            "default": "Sort By",
+            "label": "Sort By",
+            "description": "Current sort field",
+            "tier": "presentation"
+          },
+          {
+            "key": "sortDirection",
+            "type": "string",
+            "default": "asc",
+            "label": "Sort Direction",
+            "description": "Current sort direction",
+            "tier": "presentation",
+            "enumValues": [
+              "asc",
+              "desc"
+            ]
+          },
+          {
+            "key": "subagents",
+            "type": "[json]",
+            "default": [],
+            "label": "Subagents",
+            "description": "All known subagents from the runner.",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "totalCount",
+            "type": "number",
+            "default": 0,
+            "label": "Total Count",
+            "description": "Total number of items",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "SubagentTracePanelPage",
+        "defaultPath": "/subagent-trace-panel",
+        "primaryEntity": "SubagentTracePanelItem"
+      }
+    ],
+    "emittedEvents": [
+      "CLOSE",
+      "OPEN"
+    ],
+    "listenedEvents": []
+  }
+]

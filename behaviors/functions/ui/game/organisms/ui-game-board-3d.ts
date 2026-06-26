@@ -101,22 +101,22 @@ export interface StdUiGameBoard3dPlayAgainPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameBoard3dConfig {
-  /** Default: `{"effects":{"death":"effects/explosions/pixel/pixelExplosion07.png","heal":"effects/particles/magic_02.png","hit":"effects/particles/spark_06.png","magic":"effects/particles/magic_02.png","melee":"effects/particles/slash_03.png","ranged":"effects/particles/spark_06.png"},"features":{"gold_mine":"3d/dungeon/floor/template-floor-detail-a.glb","portal":"3d/dungeon/gates/gate-door.glb"},"terrains":{"castle":"isometric-dungeon/Isometric/stoneTile_E.png","dirt":"isometric-dungeon/Isometric/dirtTiles_E.png","forest":"isometric-dungeon/Isometric/planks_E.png","grass":"isometric-dungeon/Isometric/dirt_E.png","stone":"isometric-dungeon/Isometric/stoneInset_E.png"},"units":{"guardian":"units/guardian.png","scout":"units/scout.png","warrior":"units/warrior.png","worker":"units/worker.png"}}` */
+  /** Default: `{"effects":{"death":"effects/fx-explosion/kenney-vendored/explosion/pixel/pixelExplosion07.png","heal":"effects/fx-particle/kenney-vendored/particle/magic_02.png","hit":"effects/fx-particle/kenney-vendored/particle/spark_06.png","magic":"effects/fx-particle/kenney-vendored/particle/magic_02.png","melee":"effects/fx-particle/kenney-vendored/particle/slash_03.png","ranged":"effects/fx-particle/kenney-vendored/particle/spark_06.png"},"features":{"gold_mine":"3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","portal":"3d/tiles-iso-medieval/trait-wars/environments/dungeon/gates/gate-door.glb"},"terrains":{"castle":"terrains/tiles-iso-medieval/kenney-vendored/iso/medieval/stoneTile_E.png","dirt":"terrains/tiles-iso-medieval/kenney-vendored/iso/medieval/dirtTiles_E.png","forest":"terrains/tiles-iso-medieval/kenney-vendored/iso/medieval/planks_E.png","grass":"terrains/tiles-iso-medieval/kenney-vendored/iso/medieval/dirt_E.png","stone":"terrains/tiles-iso-medieval/kenney-vendored/iso/medieval/stoneInset_E.png"},"units":{"guardian":"units/chars-roguelike/trait-wars/domain/guardian.png","scout":"units/domain/scout.png","warrior":"units/domain/warrior.png","worker":"units/chars-roguelike/trait-wars/domain/worker.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":0}]` */
+  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":0}]` */
   features?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `0.45` */
   scale?: number;
-  /** Default: `[{"id":"t00","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":0},{"id":"t10","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":1,"y":0},{"id":"t20","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":2,"y":0},{"id":"t30","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":3,"y":0},{"id":"t40","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":0},{"id":"t01","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":1},{"id":"t11","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","passable":true,"terrain":"dirt","x":1,"y":1},{"id":"t21","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":2,"y":1},{"id":"t31","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":3,"y":1},{"id":"t41","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":1},{"id":"t02","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":2},{"id":"t12","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":1,"y":2},{"id":"t22","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","passable":true,"terrain":"dirt","x":2,"y":2},{"id":"t32","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":3,"y":2},{"id":"t42","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":2},{"id":"t03","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":3},{"id":"t13","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":1,"y":3},{"id":"t23","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":2,"y":3},{"id":"t33","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb","passable":true,"terrain":"dirt","x":3,"y":3},{"id":"t43","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":3},{"id":"t04","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":4},{"id":"t14","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":1,"y":4},{"id":"t24","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":2,"y":4},{"id":"t34","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":3,"y":4},{"id":"t44","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":4}]` */
+  /** Default: `[{"id":"t00","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":0},{"id":"t10","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":1,"y":0},{"id":"t20","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":2,"y":0},{"id":"t30","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":3,"y":0},{"id":"t40","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":0},{"id":"t01","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":1},{"id":"t11","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail.glb","passable":true,"terrain":"dirt","x":1,"y":1},{"id":"t21","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":2,"y":1},{"id":"t31","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":3,"y":1},{"id":"t41","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":1},{"id":"t02","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":2},{"id":"t12","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":1,"y":2},{"id":"t22","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail.glb","passable":true,"terrain":"dirt","x":2,"y":2},{"id":"t32","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":3,"y":2},{"id":"t42","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":2},{"id":"t03","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":3},{"id":"t13","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":1,"y":3},{"id":"t23","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb","passable":true,"terrain":"grass","x":2,"y":3},{"id":"t33","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail.glb","passable":true,"terrain":"dirt","x":3,"y":3},{"id":"t43","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":3},{"id":"t04","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":0,"y":4},{"id":"t14","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":1,"y":4},{"id":"t24","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":2,"y":4},{"id":"t34","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":3,"y":4},{"id":"t44","modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb","passable":false,"terrain":"stone","x":4,"y":4}]` */
   tiles?: EntityRow[];
   /** Default: `1` */
   unitScale?: number;
-  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb","name":"Worker","position":{"x":1,"y":1},"team":"player","unitType":"worker"},{"health":10,"id":"u2","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/valence.glb","name":"Warrior","position":{"x":1,"y":3},"team":"player","unitType":"warrior"},{"health":8,"id":"e1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb","name":"Guardian","position":{"x":3,"y":3},"team":"enemy","unitType":"guardian"},{"health":6,"id":"e2","maxHealth":8,"modelUrl":"https://almadar-kflow-assets.web.app/shared/models/characters/tunnel_creeper.glb","name":"Scout","position":{"x":3,"y":1},"team":"enemy","unitType":"scout"}]` */
+  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/chars-toon/trait-wars/characters/pit_slave.glb","name":"Worker","position":{"x":1,"y":1},"team":"player","unitType":"worker"},{"health":10,"id":"u2","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/chars-toon/trait-wars/characters/valence.glb","name":"Warrior","position":{"x":1,"y":3},"team":"player","unitType":"warrior"},{"health":8,"id":"e1","maxHealth":10,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/chars-toon/trait-wars/characters/shadow_legionnaire.glb","name":"Guardian","position":{"x":3,"y":3},"team":"enemy","unitType":"guardian"},{"health":6,"id":"e2","maxHealth":8,"modelUrl":"https://almadar-kflow-assets.web.app/shared/3d/chars-toon/trait-wars/characters/tunnel_creeper.glb","name":"Scout","position":{"x":3,"y":1},"team":"enemy","unitType":"scout"}]` */
   units?: EntityRow[];
 }
 
@@ -450,29 +450,29 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
           'assetManifest': {
             'default': {
               'effects': {
-                'death': 'effects/explosions/pixel/pixelExplosion07.png',
-                'heal': 'effects/particles/magic_02.png',
-                'hit': 'effects/particles/spark_06.png',
-                'magic': 'effects/particles/magic_02.png',
-                'melee': 'effects/particles/slash_03.png',
-                'ranged': 'effects/particles/spark_06.png',
+                'death': 'effects/fx-explosion/kenney-vendored/explosion/pixel/pixelExplosion07.png',
+                'heal': 'effects/fx-particle/kenney-vendored/particle/magic_02.png',
+                'hit': 'effects/fx-particle/kenney-vendored/particle/spark_06.png',
+                'magic': 'effects/fx-particle/kenney-vendored/particle/magic_02.png',
+                'melee': 'effects/fx-particle/kenney-vendored/particle/slash_03.png',
+                'ranged': 'effects/fx-particle/kenney-vendored/particle/spark_06.png',
               },
               'features': {
-                'gold_mine': '3d/dungeon/floor/template-floor-detail-a.glb',
-                'portal': '3d/dungeon/gates/gate-door.glb',
+                'gold_mine': '3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
+                'portal': '3d/tiles-iso-medieval/trait-wars/environments/dungeon/gates/gate-door.glb',
               },
               'terrains': {
-                'castle': 'isometric-dungeon/Isometric/stoneTile_E.png',
-                'dirt': 'isometric-dungeon/Isometric/dirtTiles_E.png',
-                'forest': 'isometric-dungeon/Isometric/planks_E.png',
-                'grass': 'isometric-dungeon/Isometric/dirt_E.png',
-                'stone': 'isometric-dungeon/Isometric/stoneInset_E.png',
+                'castle': 'terrains/tiles-iso-medieval/kenney-vendored/iso/medieval/stoneTile_E.png',
+                'dirt': 'terrains/tiles-iso-medieval/kenney-vendored/iso/medieval/dirtTiles_E.png',
+                'forest': 'terrains/tiles-iso-medieval/kenney-vendored/iso/medieval/planks_E.png',
+                'grass': 'terrains/tiles-iso-medieval/kenney-vendored/iso/medieval/dirt_E.png',
+                'stone': 'terrains/tiles-iso-medieval/kenney-vendored/iso/medieval/stoneInset_E.png',
               },
               'units': {
-                'guardian': 'units/guardian.png',
-                'scout': 'units/scout.png',
-                'warrior': 'units/warrior.png',
-                'worker': 'units/worker.png',
+                'guardian': 'units/chars-roguelike/trait-wars/domain/guardian.png',
+                'scout': 'units/domain/scout.png',
+                'warrior': 'units/domain/warrior.png',
+                'worker': 'units/chars-roguelike/trait-wars/domain/worker.png',
               },
             },
             'description': 'Asset manifest for terrain/unit/feature/effect sprites.',
@@ -557,14 +557,14 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
           'features': {
             'default': [
               {
-                'assetUrl': 'https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb',
+                'assetUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/medieval/props/barrels.glb',
                 'id': 'f1',
                 'type': 'gold_mine',
                 'x': 2,
                 'y': 2,
               },
               {
-                'assetUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb',
+                'assetUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/gates/gate-door.glb',
                 'id': 'f2',
                 'type': 'portal',
                 'x': 3,
@@ -644,7 +644,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
             'default': [
               {
                 'id': 't00',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 0,
@@ -652,7 +652,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't10',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 1,
@@ -660,7 +660,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't20',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 2,
@@ -668,7 +668,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't30',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 3,
@@ -676,7 +676,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't40',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 4,
@@ -684,7 +684,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't01',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 0,
@@ -692,7 +692,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't11',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail.glb',
                 'passable': true,
                 'terrain': 'dirt',
                 'x': 1,
@@ -700,7 +700,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't21',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb',
                 'passable': true,
                 'terrain': 'grass',
                 'x': 2,
@@ -708,7 +708,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't31',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb',
                 'passable': true,
                 'terrain': 'grass',
                 'x': 3,
@@ -716,7 +716,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't41',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 4,
@@ -724,7 +724,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't02',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 0,
@@ -732,7 +732,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't12',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb',
                 'passable': true,
                 'terrain': 'grass',
                 'x': 1,
@@ -740,7 +740,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't22',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail.glb',
                 'passable': true,
                 'terrain': 'dirt',
                 'x': 2,
@@ -748,7 +748,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't32',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb',
                 'passable': true,
                 'terrain': 'grass',
                 'x': 3,
@@ -756,7 +756,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't42',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 4,
@@ -764,7 +764,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't03',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 0,
@@ -772,7 +772,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't13',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb',
                 'passable': true,
                 'terrain': 'grass',
                 'x': 1,
@@ -780,7 +780,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't23',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor.glb',
                 'passable': true,
                 'terrain': 'grass',
                 'x': 2,
@@ -788,7 +788,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't33',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail.glb',
                 'passable': true,
                 'terrain': 'dirt',
                 'x': 3,
@@ -796,7 +796,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't43',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 4,
@@ -804,7 +804,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't04',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 0,
@@ -812,7 +812,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't14',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 1,
@@ -820,7 +820,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't24',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 2,
@@ -828,7 +828,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't34',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 3,
@@ -836,7 +836,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
               {
                 'id': 't44',
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/tiles-iso-medieval/trait-wars/environments/dungeon/floor/template-floor-detail-a.glb',
                 'passable': false,
                 'terrain': 'stone',
                 'x': 4,
@@ -926,7 +926,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 'health': 10,
                 'id': 'u1',
                 'maxHealth': 10,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/chars-toon/trait-wars/characters/pit_slave.glb',
                 'name': 'Worker',
                 'position': {
                   'x': 1,
@@ -939,7 +939,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 'health': 10,
                 'id': 'u2',
                 'maxHealth': 10,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/valence.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/chars-toon/trait-wars/characters/valence.glb',
                 'name': 'Warrior',
                 'position': {
                   'x': 1,
@@ -952,7 +952,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 'health': 8,
                 'id': 'e1',
                 'maxHealth': 10,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/chars-toon/trait-wars/characters/shadow_legionnaire.glb',
                 'name': 'Guardian',
                 'position': {
                   'x': 3,
@@ -965,7 +965,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                 'health': 6,
                 'id': 'e2',
                 'maxHealth': 8,
-                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/models/characters/tunnel_creeper.glb',
+                'modelUrl': 'https://almadar-kflow-assets.web.app/shared/3d/chars-toon/trait-wars/characters/tunnel_creeper.glb',
                 'name': 'Scout',
                 'position': {
                   'x': 3,

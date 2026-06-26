@@ -43,7 +43,7 @@ export interface StdUiBookCoverPageConfig {
   author?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"` */
   coverImageUrl?: unknown;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
@@ -140,7 +140,7 @@ export function stdUiBookCoverPageBookCoverPageOrbital(params: StdUiBookCoverPag
             'type': 'string',
           },
           'coverImageUrl': {
-            'default': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
+            'default': 'https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png',
             'description': 'coverImageUrl prop',
             'label': 'Cover Image Url',
             'tier': 'presentation',

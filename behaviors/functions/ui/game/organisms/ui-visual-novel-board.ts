@@ -60,7 +60,7 @@ export interface StdUiVisualNovelBoardRestartPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiVisualNovelBoardConfig {
-  /** Default: `{"backgrounds":{"chamber":"scenes/vn-villain-closeup.png","core":"scenes/vn-foundry-forge.png","corridor":"scenes/vn-corridor-sentinel.png","forge":"scenes/vn-foundry-golem.png"},"baseUrl":"https://almadar-kflow-assets.web.app/shared/","portraits":{"emissary":"portraits/vn-lyra.png","guide":"portraits/vn-amir.png","rival":"portraits/vn-dr-aris.png"}}` */
+  /** Default: `{"backgrounds":{"chamber":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/chamber.png","core":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/core.png","corridor":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png","forge":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/forge.png"},"baseUrl":"https://almadar-kflow-assets.web.app/shared/","portraits":{"emissary":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/emissary.png","guide":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png","rival":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/rival.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
@@ -211,16 +211,16 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
           'assetManifest': {
             'default': {
               'backgrounds': {
-                'chamber': 'scenes/vn-villain-closeup.png',
-                'core': 'scenes/vn-foundry-forge.png',
-                'corridor': 'scenes/vn-corridor-sentinel.png',
-                'forge': 'scenes/vn-foundry-golem.png',
+                'chamber': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/chamber.png',
+                'core': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/core.png',
+                'corridor': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png',
+                'forge': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/forge.png',
               },
               'baseUrl': 'https://almadar-kflow-assets.web.app/shared/',
               'portraits': {
-                'emissary': 'portraits/vn-lyra.png',
-                'guide': 'portraits/vn-amir.png',
-                'rival': 'portraits/vn-dr-aris.png',
+                'emissary': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/emissary.png',
+                'guide': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png',
+                'rival': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/rival.png',
               },
             },
             'description': 'Base-url + scene-background and character-portrait sprite maps keyed by node backgroundKey/portraitKey.',

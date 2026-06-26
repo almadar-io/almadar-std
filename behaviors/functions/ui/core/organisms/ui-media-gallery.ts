@@ -66,7 +66,7 @@ export interface StdUiMediaGalleryConfig {
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `[{"alt":"Alt","caption":"Caption","fileSize":"File Size","id":"Id","mediaType":"image","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","thumbnail":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},{"alt":"Alt 2","caption":"Caption 2","fileSize":"File Size 2","id":"Id 2","mediaType":"video","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","thumbnail":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}]` */
+  /** Default: `[{"alt":"Alt","caption":"Caption","fileSize":"File Size","id":"Id","mediaType":"image","src":"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png","thumbnail":"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"},{"alt":"Alt 2","caption":"Caption 2","fileSize":"File Size 2","id":"Id 2","mediaType":"video","src":"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png","thumbnail":"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"}]` */
   items?: EntityRow[];
   /** Default: `0` */
   pageProp?: number;
@@ -288,8 +288,8 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                 'fileSize': 'File Size',
                 'id': 'Id',
                 'mediaType': 'image',
-                'src': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
-                'thumbnail': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
+                'src': 'https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png',
+                'thumbnail': 'https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png',
               },
               {
                 'alt': 'Alt 2',
@@ -297,8 +297,8 @@ export function stdUiMediaGalleryMediaGalleryOrbital(params: StdUiMediaGalleryMe
                 'fileSize': 'File Size 2',
                 'id': 'Id 2',
                 'mediaType': 'video',
-                'src': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
-                'thumbnail': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
+                'src': 'https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png',
+                'thumbnail': 'https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png',
               },
             ],
             'description': 'Media items',

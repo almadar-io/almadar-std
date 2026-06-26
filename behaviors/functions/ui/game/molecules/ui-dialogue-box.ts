@@ -60,7 +60,7 @@ export interface StdUiDialogueBoxAdvancePayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiDialogueBoxConfig {
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"` */
   backgroundImage?: unknown;
   /** Default: `""` */
   className?: string;
@@ -68,7 +68,7 @@ export interface StdUiDialogueBoxConfig {
   dialogue?: EntityRow;
   /** Default: `1` */
   portraitScale?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"` */
   portraitUrl?: unknown;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';

@@ -85,7 +85,7 @@ export interface StdUiDashboardLayoutConfig {
   sidebarFooter?: unknown;
   /** Default: `[]` */
   topBarActions?: EntityRow[];
-  /** Default: `{"avatar":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","email":"Email","name":"Name"}` */
+  /** Default: `{"avatar":"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png","email":"Email","name":"Name"}` */
   user?: EntityRow;
 }
 

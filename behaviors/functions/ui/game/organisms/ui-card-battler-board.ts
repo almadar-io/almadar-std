@@ -67,7 +67,7 @@ export interface StdUiCardBattlerBoardPlayAgainPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCardBattlerBoardConfig {
-  /** Default: `{"baseUrl":"https://almadar-kflow-assets.web.app/shared/","cards":{"bear":"cards/bear.png","elephant":"cards/elephant.png","frog":"cards/frog.png","gorilla":"cards/gorilla.png","monkey":"cards/monkey.png","owl":"cards/owl.png","panda":"cards/panda.png","parrot":"cards/parrot.png","penguin":"cards/penguin.png","rhino":"cards/rhino.png","snake":"cards/snake.png","whale":"cards/whale.png"}}` */
+  /** Default: `{"baseUrl":"https://almadar-kflow-assets.web.app/shared/","cards":{"bear":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/bear.png","elephant":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/elephant.png","frog":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/frog.png","gorilla":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/gorilla.png","monkey":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/monkey.png","owl":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/owl.png","panda":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/panda.png","parrot":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/parrot.png","penguin":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/penguin.png","rhino":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/rhino.png","snake":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/snake.png","whale":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/whale.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
@@ -306,18 +306,18 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
             'default': {
               'baseUrl': 'https://almadar-kflow-assets.web.app/shared/',
               'cards': {
-                'bear': 'cards/bear.png',
-                'elephant': 'cards/elephant.png',
-                'frog': 'cards/frog.png',
-                'gorilla': 'cards/gorilla.png',
-                'monkey': 'cards/monkey.png',
-                'owl': 'cards/owl.png',
-                'panda': 'cards/panda.png',
-                'parrot': 'cards/parrot.png',
-                'penguin': 'cards/penguin.png',
-                'rhino': 'cards/rhino.png',
-                'snake': 'cards/snake.png',
-                'whale': 'cards/whale.png',
+                'bear': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/bear.png',
+                'elephant': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/elephant.png',
+                'frog': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/frog.png',
+                'gorilla': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/gorilla.png',
+                'monkey': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/monkey.png',
+                'owl': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/owl.png',
+                'panda': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/panda.png',
+                'parrot': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/parrot.png',
+                'penguin': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/penguin.png',
+                'rhino': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/rhino.png',
+                'snake': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/snake.png',
+                'whale': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/whale.png',
               },
             },
             'description': 'Base-url + per-iconKey card-art sprite map for the hand and battlefield.',

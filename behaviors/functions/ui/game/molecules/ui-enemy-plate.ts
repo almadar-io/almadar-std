@@ -39,7 +39,7 @@ export type StdUiEnemyPlateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiEnemyPlateConfig {
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"` */
   assetUrl?: unknown;
   /** Default: `""` */
   className?: string;

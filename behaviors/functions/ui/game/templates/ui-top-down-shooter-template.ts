@@ -39,7 +39,7 @@ export type StdUiTopDownShooterTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTopDownShooterTemplateConfig {
-  /** Default: `{"background":"scenes/world/streets.png","baseUrl":"https://almadar-kflow-assets.web.app/shared/","features":{"pickup":"platformer/items/platformPack_item001.png","projectile":"platformer/items/platformPack_item001.png"},"units":{"enemy":"platformer/characters/platformChar_jump.png","player":"platformer/characters/platformChar_idle.png"}}` */
+  /** Default: `{"background":"backgrounds/bg-parallax/trait-wars/scenes/world/streets.png","baseUrl":"https://almadar-kflow-assets.web.app/shared/","features":{"pickup":"features/props-items/kenney-vendored/items/platformPack_item001.png","projectile":"features/props-items/kenney-vendored/items/platformPack_item001.png"},"units":{"enemy":"units/chars-toon/kenney-vendored/toon/platformChar_jump.png","player":"units/chars-toon/kenney-vendored/toon/platformChar_idle.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;

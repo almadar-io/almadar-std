@@ -66,7 +66,7 @@ export interface StdUiLightboxConfig {
   closeAction?: string;
   /** Default: `0` */
   currentIndex?: number;
-  /** Default: `[{"alt":"Alt","caption":"Caption","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},{"alt":"Alt 2","caption":"Caption 2","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}]` */
+  /** Default: `[{"alt":"Alt","caption":"Caption","src":"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"},{"alt":"Alt 2","caption":"Caption 2","src":"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"}]` */
   images?: EntityRow[];
   /** Default: `false` */
   isOpen?: boolean;
