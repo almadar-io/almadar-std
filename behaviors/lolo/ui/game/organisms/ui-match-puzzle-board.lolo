@@ -1,5 +1,5 @@
 app ui-match-puzzle-board "1.0.0"
-"MatchPuzzleBoard — UI factory (1:1 with the @almadar/ui match-puzzle-board pattern)."
+"MatchPuzzleBoard — match-3 puzzle composed via game-shell with score/moves HUD and spark effects."
 orbital MatchPuzzleBoardOrbital {
   type MatchPuzzleBoardError = {
     message : string!
@@ -20,6 +20,8 @@ orbital MatchPuzzleBoardOrbital {
     tileType : string
     elevation : number
     modelUrl : asset
+    animation : string
+    frame : number
   }
   type MatchPuzzleBoardUnitsItem = {
     id : string!
@@ -40,6 +42,14 @@ orbital MatchPuzzleBoardOrbital {
     traits : [MatchPuzzleBoardUnitsItemTraitsItem]
     previousPosition : MatchPuzzleBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type MatchPuzzleEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type MatchPuzzleBoardUnitsItemPosition = {
     x : number!
@@ -66,39 +76,60 @@ orbital MatchPuzzleBoardOrbital {
     color : string
     elevation : number
   }
+  type MatchPuzzleBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
 
   entity MatchPuzzleBoardItem [runtime] {
     id : string!
+    score : number = 0
+    moves : number = 20
+    effects : [MatchPuzzleEffectItem] = []
   }
 
   trait MatchPuzzleBoardRender -> @rebindable MatchPuzzleBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state playing {
+      INIT -> playing
+        (set @entity.score 0)
+        (set @entity.moves 20)
+        (set @entity.effects [])
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: match-puzzle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Moves", value: @entity.moves } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @config.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing when (> @entity.moves 0)
+        (set @entity.moves (- @entity.moves 1))
+        (set @entity.score (+ @entity.score 10))
+        (if (> (array/len (object/get @config.assetManifest effects)) 0) (set @entity.effects (array/append @entity.effects { key: "spark", x: ?x, y: ?y, ttl: 4 })) null)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Moves", value: @entity.moves } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @config.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Moves", value: @entity.moves } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @config.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Moves", value: @entity.moves } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @config.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
         })
     }
 
@@ -107,12 +138,12 @@ orbital MatchPuzzleBoardOrbital {
         x : number!
         y : number!
       }
-        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @description "Emits UI:{tileClickEvent} with { x, y } on tile click"
         @tier "essential"
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
         @tier "essential"
     }
 
@@ -162,7 +193,7 @@ orbital MatchPuzzleBoardOrbital {
         @label "Selected Ids"
         @description "Currently selected item IDs"
         @tier "presentation"
-      tiles : [MatchPuzzleBoardTilesItem] = [{ x: 0, y: 0, terrain: "gem_red",    passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png" }, { x: 1, y: 0, terrain: "gem_blue",   passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png" }, { x: 2, y: 0, terrain: "gem_green",  passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png" }, { x: 3, y: 0, terrain: "gem_yellow", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png" }, { x: 4, y: 0, terrain: "gem_purple", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png" }, { x: 0, y: 1, terrain: "gem_blue",   passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png" }, { x: 1, y: 1, terrain: "gem_green",  passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png" }, { x: 2, y: 1, terrain: "gem_yellow", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png" }, { x: 3, y: 1, terrain: "gem_purple", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png" }, { x: 4, y: 1, terrain: "gem_red",    passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png" }, { x: 0, y: 2, terrain: "gem_green",  passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png" }, { x: 1, y: 2, terrain: "gem_yellow", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png" }, { x: 2, y: 2, terrain: "gem_red",    passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png" }, { x: 3, y: 2, terrain: "gem_blue",   passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png" }, { x: 4, y: 2, terrain: "gem_green",  passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png" }, { x: 0, y: 3, terrain: "gem_purple", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png" }, { x: 1, y: 3, terrain: "gem_red",    passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png" }, { x: 2, y: 3, terrain: "gem_blue",   passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png" }, { x: 3, y: 3, terrain: "gem_green",  passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png" }, { x: 4, y: 3, terrain: "gem_yellow", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png" }, { x: 0, y: 4, terrain: "gem_purple", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png" }, { x: 1, y: 4, terrain: "gem_purple", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png" }, { x: 2, y: 4, terrain: "gem_yellow", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png" }, { x: 3, y: 4, terrain: "gem_red",    passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png" }, { x: 4, y: 4, terrain: "gem_blue",   passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png" }]
+      tiles : [MatchPuzzleBoardTilesItem] = [{ x: 0, y: 0, terrain: "gem_red",    passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",    animation: "idle", frame: 0 }, { x: 1, y: 0, terrain: "gem_blue",   passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",   animation: "idle", frame: 0 }, { x: 2, y: 0, terrain: "gem_green",  passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",  animation: "idle", frame: 0 }, { x: 3, y: 0, terrain: "gem_yellow", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png", animation: "idle", frame: 0 }, { x: 4, y: 0, terrain: "gem_purple", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png", animation: "idle", frame: 0 }, { x: 0, y: 1, terrain: "gem_blue",   passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",   animation: "idle", frame: 0 }, { x: 1, y: 1, terrain: "gem_green",  passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",  animation: "idle", frame: 0 }, { x: 2, y: 1, terrain: "gem_yellow", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png", animation: "idle", frame: 0 }, { x: 3, y: 1, terrain: "gem_purple", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png", animation: "idle", frame: 0 }, { x: 4, y: 1, terrain: "gem_red",    passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",    animation: "idle", frame: 0 }, { x: 0, y: 2, terrain: "gem_green",  passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",  animation: "idle", frame: 0 }, { x: 1, y: 2, terrain: "gem_yellow", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png", animation: "idle", frame: 0 }, { x: 2, y: 2, terrain: "gem_red",    passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",    animation: "idle", frame: 0 }, { x: 3, y: 2, terrain: "gem_blue",   passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",   animation: "idle", frame: 0 }, { x: 4, y: 2, terrain: "gem_green",  passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",  animation: "idle", frame: 0 }, { x: 0, y: 3, terrain: "gem_purple", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png", animation: "idle", frame: 0 }, { x: 1, y: 3, terrain: "gem_red",    passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",    animation: "idle", frame: 0 }, { x: 2, y: 3, terrain: "gem_blue",   passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",   animation: "idle", frame: 0 }, { x: 3, y: 3, terrain: "gem_green",  passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",  animation: "idle", frame: 0 }, { x: 4, y: 3, terrain: "gem_yellow", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png", animation: "idle", frame: 0 }, { x: 0, y: 4, terrain: "gem_purple", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png", animation: "idle", frame: 0 }, { x: 1, y: 4, terrain: "gem_purple", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png", animation: "idle", frame: 0 }, { x: 2, y: 4, terrain: "gem_yellow", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png", animation: "idle", frame: 0 }, { x: 3, y: 4, terrain: "gem_red",    passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",    animation: "idle", frame: 0 }, { x: 4, y: 4, terrain: "gem_blue",   passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",   animation: "idle", frame: 0 }]
         @label "Tiles"
         @description "Grid tiles for the match puzzle board"
         @tier "presentation"
@@ -174,9 +205,9 @@ orbital MatchPuzzleBoardOrbital {
         @label "Features"
         @description "Gem/tile features on the board"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : MatchPuzzleBoardAssetManifest = { terrains: { gem_red: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png", gem_blue: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png", gem_green: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png", gem_yellow: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png", gem_purple: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png" }, units: {}, features: { powerup: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/powerup.png", blocker: "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/blocker.png" }, effects: {} }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
+        @description "Asset sprite manifest — terrains/units/features/effects maps"
         @tier "presentation"
       assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
         @label "Asset Base Url"
@@ -185,14 +216,6 @@ orbital MatchPuzzleBoardOrbital {
       scale : number = 0.45
         @label "Scale"
         @description "Render scale"
-        @tier "presentation"
-      showMinimap : boolean = false
-        @label "Show Minimap"
-        @description "Show minimap overlay"
-        @tier "presentation"
-      enableCamera : boolean = false
-        @label "Enable Camera"
-        @description "Enable camera pan/zoom controls"
         @tier "presentation"
     }
   }

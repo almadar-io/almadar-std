@@ -1,5 +1,5 @@
 app ui-boardgame-board "1.0.0"
-"BoardgameBoard — UI factory (1:1 with the @almadar/ui boardgame-board pattern)."
+"BoardgameBoard — game-shell composition with HUD, isometric-canvas, and animTick."
 orbital BoardgameBoardOrbital {
   type BoardgameBoardError = {
     message : string!
@@ -21,37 +21,28 @@ orbital BoardgameBoardOrbital {
     elevation : number
     modelUrl : asset
   }
-  type BoardgameBoardUnitsItem = {
+  type BoardgameBoardPiecesItem = {
     id : string!
-    position : BoardgameBoardUnitsItemPosition
+    position : BoardgameBoardPiecesItemPosition
     x : number
     y : number
-    z : number
     sprite : asset
     spriteSheet : asset
-    modelUrl : asset
     unitType : string
-    heroId : string
     name : string
     team : "player" | "enemy" | "neutral"
-    faction : "player" | "enemy" | "neutral"
     health : number
     maxHealth : number
-    traits : [BoardgameBoardUnitsItemTraitsItem]
-    previousPosition : BoardgameBoardUnitsItemPreviousPosition
-    elevation : number
+    animation : string
+    frame : number
   }
-  type BoardgameBoardUnitsItemPosition = {
+  type BoardgameBoardEffectItem = {
+    key : string!
     x : number!
     y : number!
+    ttl : number!
   }
-  type BoardgameBoardUnitsItemTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type BoardgameBoardUnitsItemPreviousPosition = {
+  type BoardgameBoardPiecesItemPosition = {
     x : number!
     y : number!
   }
@@ -66,39 +57,104 @@ orbital BoardgameBoardOrbital {
     color : string
     elevation : number
   }
+  type BoardgameBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
 
   entity BoardgameBoardItem [runtime] {
     id : string!
+    pieces : [BoardgameBoardPiecesItem]
+    selectedPieceId : string
+    turn : number = 0
+    currentPlayer : string = "player"
+    phase : string = "observation"
+    effects : [BoardgameBoardEffectItem] = []
+    gridWidth : number = 4
+    gridHeight : number = 4
+    movementRange : number = 2
   }
 
   trait BoardgameBoardRender -> @rebindable BoardgameBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state playing {
+      INIT -> playing
+        (set @entity.pieces @config.pieces)
+        (set @entity.selectedPieceId "")
+        (set @entity.turn 0)
+        (set @entity.currentPlayer "player")
+        (set @entity.phase "observation")
+        (set @entity.effects [])
+        (set @entity.gridWidth 4)
+        (set @entity.gridHeight 4)
+        (set @entity.movementRange 2)
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: boardgame-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Player", value: @entity.currentPlayer } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.pieces, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing when (== @entity.selectedPieceId ?unitId)
+        (set @entity.selectedPieceId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Player", value: @entity.currentPlayer } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.pieces, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.pieces (fn u (== @u.id ?unitId))) team) @entity.currentPlayer)
+        (set @entity.selectedPieceId ?unitId)
+        (set @entity.phase "movement")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Player", value: @entity.currentPlayer } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.pieces, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedPieceId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.pieces (fn u (== @u.id @entity.selectedPieceId))) position) { x: ?x, y: ?y }) @entity.movementRange) (== (array/len (array/filter @entity.pieces (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
+        (set @entity.pieces (array/map @entity.pieces (fn u (if (== @u.id @entity.selectedPieceId) (object/merge @u { position: { x: ?x, y: ?y }, animation: "walk" }) @u))))
+        (set @entity.selectedPieceId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Player", value: @entity.currentPlayer } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.pieces, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      END_TURN -> playing
+        (set @entity.turn (+ @entity.turn 1))
+        (set @entity.selectedPieceId "")
+        (set @entity.currentPlayer (if (== @entity.currentPlayer "player") "enemy" "player"))
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Player", value: @entity.currentPlayer } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.pieces, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedPieceId "")
+        (set @entity.selectedPieceId "")
+        (set @entity.phase "observation")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Player", value: @entity.currentPlayer } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.pieces, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.pieces (array/map @entity.pieces (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Player", value: @entity.currentPlayer } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.pieces, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
         })
     }
 
@@ -112,7 +168,17 @@ orbital BoardgameBoardOrbital {
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+      END_TURN -> external {
+        id : string
+      }
+        @description "Emits UI:{endTurnEvent} with {} on end turn"
+        @tier "essential"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel"
         @tier "essential"
     }
 
@@ -166,21 +232,17 @@ orbital BoardgameBoardOrbital {
         @label "Tiles"
         @description "Board squares (flat top-down grid tiles)"
         @tier "presentation"
-      units : [BoardgameBoardUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "token", name: "Token A", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png" }, { id: "u2", position: { x: 2, y: 2 }, unitType: "token", name: "Token B", team: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png" }]
-        @label "Units"
-        @description "Tokens/units on the board"
+      pieces : [BoardgameBoardPiecesItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "token", name: "Token A", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png", animation: "idle", frame: 0 }, { id: "u2", position: { x: 2, y: 2 }, unitType: "token", name: "Token B", team: enemy, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png", animation: "idle", frame: 0 }]
+        @label "Pieces"
+        @description "Tokens/pieces on the board"
         @tier "presentation"
       features : [BoardgameBoardFeaturesItem] = [{ id: "f1", x: 0, y: 0, type: "marker", sprite: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/features/marker.png" }]
         @label "Features"
         @description "Features (markers, structures, etc.) on the board"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : BoardgameBoardAssetManifest = { terrains: { light: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png", dark: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png" }, units: { token: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png", token_enemy: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png" }, features: { marker: "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/features/marker.png" }, effects: {} }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
-        @tier "presentation"
-      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
-        @label "Asset Base Url"
-        @description "Base URL prepended to asset paths"
+        @description "Asset sprite manifest"
         @tier "presentation"
       scale : number = 0.45
         @label "Scale"

@@ -1,5 +1,5 @@
 {
-  "description": "BoardgameBoard — UI factory (1:1 with the @almadar/ui boardgame-board pattern).",
+  "description": "BoardgameBoard — game-shell composition with HUD, isometric-canvas, and animTick.",
   "name": "ui-boardgame-board",
   "orbitals": [
     {
@@ -9,6 +9,161 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "spriteSheet": {
+                  "name": "spriteSheet",
+                  "required": false,
+                  "type": "string"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "pieces",
+            "type": "array"
+          },
+          {
+            "name": "selectedPieceId",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "turn",
+            "type": "number"
+          },
+          {
+            "default": "player",
+            "name": "currentPlayer",
+            "type": "string"
+          },
+          {
+            "default": "observation",
+            "name": "phase",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
+          },
+          {
+            "default": 4.0,
+            "name": "gridWidth",
+            "type": "number"
+          },
+          {
+            "default": 4.0,
+            "name": "gridHeight",
+            "type": "number"
+          },
+          {
+            "default": 2.0,
+            "name": "movementRange",
+            "type": "number"
           }
         ],
         "name": "BoardgameBoardItem",
@@ -37,19 +192,64 @@
               "tier": "presentation",
               "type": "json"
             },
-            "assetBaseUrl": {
-              "default": "https://almadar-kflow-assets.web.app/shared/",
-              "description": "Base URL prepended to asset paths",
-              "label": "Asset Base Url",
-              "tier": "presentation",
-              "type": "asset"
-            },
             "assetManifest": {
-              "default": "",
-              "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
+              "default": {
+                "effects": {},
+                "features": {
+                  "marker": "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/features/marker.png"
+                },
+                "terrains": {
+                  "dark": "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png",
+                  "light": "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png"
+                },
+                "units": {
+                  "token": "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png",
+                  "token_enemy": "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png"
+                }
+              },
+              "description": "Asset sprite manifest",
               "label": "Asset Manifest",
+              "properties": {
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
+                },
+                "features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "terrains": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "terrains",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
               "tier": "presentation",
-              "type": "string"
+              "type": "BoardgameBoardAssetManifest"
             },
             "className": {
               "default": "",
@@ -179,6 +379,131 @@
               "label": "Page Size",
               "tier": "presentation",
               "type": "number"
+            },
+            "pieces": {
+              "default": [
+                {
+                  "animation": "idle",
+                  "frame": 0.0,
+                  "health": 10.0,
+                  "id": "u1",
+                  "maxHealth": 10.0,
+                  "name": "Token A",
+                  "position": {
+                    "x": 1.0,
+                    "y": 1.0
+                  },
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png",
+                  "team": "player",
+                  "unitType": "token"
+                },
+                {
+                  "animation": "idle",
+                  "frame": 0.0,
+                  "health": 10.0,
+                  "id": "u2",
+                  "maxHealth": 10.0,
+                  "name": "Token B",
+                  "position": {
+                    "x": 2.0,
+                    "y": 2.0
+                  },
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png",
+                  "team": "enemy",
+                  "unitType": "token"
+                }
+              ],
+              "description": "Tokens/pieces on the board",
+              "items": {
+                "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "health": {
+                    "name": "health",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "maxHealth": {
+                    "name": "maxHealth",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "name": {
+                    "name": "name",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "position": {
+                    "name": "position",
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "required": false,
+                    "type": "object"
+                  },
+                  "sprite": {
+                    "name": "sprite",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "spriteSheet": {
+                    "name": "spriteSheet",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "team": {
+                    "name": "team",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "player",
+                      "enemy",
+                      "neutral"
+                    ]
+                  },
+                  "unitType": {
+                    "name": "unitType",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": false,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Pieces",
+              "tier": "presentation",
+              "type": "[BoardgameBoardPiecesItem]"
             },
             "scale": {
               "default": 0.45,
@@ -420,197 +745,6 @@
               "label": "Total Count",
               "tier": "presentation",
               "type": "number"
-            },
-            "units": {
-              "default": [
-                {
-                  "health": 10.0,
-                  "id": "u1",
-                  "maxHealth": 10.0,
-                  "name": "Token A",
-                  "position": {
-                    "x": 1.0,
-                    "y": 1.0
-                  },
-                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png",
-                  "team": "player",
-                  "unitType": "token"
-                },
-                {
-                  "health": 10.0,
-                  "id": "u2",
-                  "maxHealth": 10.0,
-                  "name": "Token B",
-                  "position": {
-                    "x": 2.0,
-                    "y": 2.0
-                  },
-                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png",
-                  "team": "enemy",
-                  "unitType": "token"
-                }
-              ],
-              "description": "Tokens/units on the board",
-              "items": {
-                "properties": {
-                  "elevation": {
-                    "name": "elevation",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "faction": {
-                    "name": "faction",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "player",
-                      "enemy",
-                      "neutral"
-                    ]
-                  },
-                  "health": {
-                    "name": "health",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "heroId": {
-                    "name": "heroId",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "id": {
-                    "name": "id",
-                    "required": true,
-                    "type": "string"
-                  },
-                  "maxHealth": {
-                    "name": "maxHealth",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "modelUrl": {
-                    "name": "modelUrl",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "name": {
-                    "name": "name",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "position": {
-                    "name": "position",
-                    "properties": {
-                      "x": {
-                        "name": "x",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "y": {
-                        "name": "y",
-                        "required": true,
-                        "type": "number"
-                      }
-                    },
-                    "required": false,
-                    "type": "object"
-                  },
-                  "previousPosition": {
-                    "name": "previousPosition",
-                    "properties": {
-                      "x": {
-                        "name": "x",
-                        "required": true,
-                        "type": "number"
-                      },
-                      "y": {
-                        "name": "y",
-                        "required": true,
-                        "type": "number"
-                      }
-                    },
-                    "required": false,
-                    "type": "object"
-                  },
-                  "sprite": {
-                    "name": "sprite",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "spriteSheet": {
-                    "name": "spriteSheet",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "team": {
-                    "name": "team",
-                    "required": false,
-                    "type": "string",
-                    "values": [
-                      "player",
-                      "enemy",
-                      "neutral"
-                    ]
-                  },
-                  "traits": {
-                    "items": {
-                      "properties": {
-                        "cooldown": {
-                          "name": "cooldown",
-                          "required": true,
-                          "type": "number"
-                        },
-                        "currentState": {
-                          "name": "currentState",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "name": {
-                          "name": "name",
-                          "required": true,
-                          "type": "string"
-                        },
-                        "states": {
-                          "items": {
-                            "type": "string"
-                          },
-                          "name": "states",
-                          "required": true,
-                          "type": "array"
-                        }
-                      },
-                      "type": "object"
-                    },
-                    "name": "traits",
-                    "required": false,
-                    "type": "array"
-                  },
-                  "unitType": {
-                    "name": "unitType",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "x": {
-                    "name": "x",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "y": {
-                    "name": "y",
-                    "required": false,
-                    "type": "number"
-                  },
-                  "z": {
-                    "name": "z",
-                    "required": false,
-                    "type": "number"
-                  }
-                },
-                "type": "object"
-              },
-              "label": "Units",
-              "tier": "presentation",
-              "type": "[BoardgameBoardUnitsItem]"
             }
           },
           "emits": [
@@ -633,7 +767,7 @@
               "tier": "essential"
             },
             {
-              "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+              "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
               "event": "UNIT_CLICK",
               "payloadSchema": [
                 {
@@ -644,10 +778,44 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{endTurnEvent} with {} on end turn",
+              "event": "END_TURN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{cancelEvent} with {} on cancel",
+              "event": "CANCEL",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "currentPlayer",
+              "effects",
+              "gridHeight",
+              "gridWidth",
+              "movementRange",
+              "phase",
+              "pieces",
+              "selectedPieceId",
+              "turn"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -659,6 +827,19 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
               },
               {
                 "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
@@ -679,13 +860,24 @@
                 "tier": "essential"
               },
               {
-                "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
-                "key": "UNIT_CLICK",
-                "name": "Unit Click",
+                "description": "Emits UI:{endTurnEvent} with {} on end turn",
+                "key": "END_TURN",
+                "name": "End Turn",
                 "payloadSchema": [
                   {
-                    "name": "unitId",
-                    "required": true,
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{cancelEvent} with {} on cancel",
+                "key": "CANCEL",
+                "name": "Cancel",
+                "payloadSchema": [
+                  {
+                    "name": "id",
                     "type": "string"
                   }
                 ],
@@ -695,47 +887,643 @@
             "states": [
               {
                 "isInitial": true,
-                "name": "idle"
+                "name": "playing"
               }
             ],
             "transitions": [
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.pieces",
+                    "@config.pieces"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedPieceId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.turn",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.currentPlayer",
+                    "player"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "observation"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.gridWidth",
+                    4.0
+                  ],
+                  [
+                    "set",
+                    "@entity.gridHeight",
+                    4.0
+                  ],
+                  [
+                    "set",
+                    "@entity.movementRange",
+                    2.0
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "activeFilters": "@config.activeFilters",
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "enableCamera": "@config.enableCamera",
-                      "error": "@config.error",
-                      "features": "@config.features",
-                      "isLoading": "@config.isLoading",
-                      "page": "@config.pageProp",
-                      "pageSize": "@config.pageSize",
-                      "scale": "@config.scale",
-                      "searchValue": "@config.searchValue",
-                      "selectedIds": "@config.selectedIds",
-                      "showMinimap": "@config.showMinimap",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "totalCount": "@config.totalCount",
-                      "type": "boardgame-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@config.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.pieces"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Player",
+                            "value": "@entity.currentPlayer"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedPieceId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "observation"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.pieces"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Player",
+                            "value": "@entity.currentPlayer"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.selectedPieceId",
+                  "@payload.unitId"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedPieceId",
+                    "@payload.unitId"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "movement"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.pieces"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Player",
+                            "value": "@entity.currentPlayer"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  [
+                    "object/get",
+                    [
+                      "array/find",
+                      "@entity.pieces",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "==",
+                          "@u.id",
+                          "@payload.unitId"
+                        ]
+                      ]
+                    ],
+                    "team"
+                  ],
+                  "@entity.currentPlayer"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.pieces",
+                    [
+                      "array/map",
+                      "@entity.pieces",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@entity.selectedPieceId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "walk",
+                              "position": {
+                                "x": "@payload.x",
+                                "y": "@payload.y"
+                              }
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedPieceId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "observation"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.pieces"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Player",
+                            "value": "@entity.currentPlayer"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "playing",
+                "guard": [
+                  "and",
+                  [
+                    "!=",
+                    "@entity.selectedPieceId",
+                    ""
+                  ],
+                  [
+                    "and",
+                    [
+                      "grid/in-bounds",
+                      {
+                        "x": "@payload.x",
+                        "y": "@payload.y"
+                      },
+                      "@entity.gridWidth",
+                      "@entity.gridHeight"
+                    ],
+                    [
+                      "and",
+                      [
+                        "<=",
+                        [
+                          "grid/manhattan-distance",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.pieces",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@entity.selectedPieceId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          {
+                            "x": "@payload.x",
+                            "y": "@payload.y"
+                          }
+                        ],
+                        "@entity.movementRange"
+                      ],
+                      [
+                        "==",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@entity.pieces",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    "x"
+                                  ],
+                                  "@payload.x"
+                                ],
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@u",
+                                      "position"
+                                    ],
+                                    "y"
+                                  ],
+                                  "@payload.y"
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.turn",
+                    [
+                      "+",
+                      "@entity.turn",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedPieceId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.currentPlayer",
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@entity.currentPlayer",
+                        "player"
+                      ],
+                      "enemy",
+                      "player"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "observation"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.pieces"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Player",
+                            "value": "@entity.currentPlayer"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "END_TURN",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedPieceId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "observation"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.pieces"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Player",
+                            "value": "@entity.currentPlayer"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "CANCEL",
+                "from": "playing",
+                "guard": [
+                  "!=",
+                  "@entity.selectedPieceId",
+                  ""
+                ],
+                "to": "playing"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.pieces",
+                  [
+                    "array/map",
+                    "@entity.pieces",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "@u",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": false,
+                        "tileLayout": "flat",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.pieces"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Turn",
+                          "value": "@entity.turn"
+                        },
+                        {
+                          "label": "Player",
+                          "value": "@entity.currentPlayer"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            }
+          ]
         }
       ]
     }

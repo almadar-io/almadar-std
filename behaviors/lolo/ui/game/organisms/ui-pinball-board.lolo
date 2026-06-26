@@ -1,5 +1,5 @@
 app ui-pinball-board "1.0.0"
-"PinballBoard — UI factory (1:1 with the @almadar/ui pinball-board pattern)."
+"PinballBoard — game-shell composition with HUD (Score + Balls) and spark effects on bumper hit."
 orbital PinballBoardOrbital {
   type PinballBoardError = {
     message : string!
@@ -40,6 +40,14 @@ orbital PinballBoardOrbital {
     traits : [PinballBoardUnitsItemTraitsItem]
     previousPosition : PinballBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type PinballBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type PinballBoardUnitsItemPosition = {
     x : number!
@@ -66,39 +74,98 @@ orbital PinballBoardOrbital {
     color : string
     elevation : number
   }
+  type PinballBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
 
   entity PinballBoardItem [runtime] {
     id : string!
+    units : [PinballBoardUnitsItem]
+    score : number = 0
+    balls : number = 3
+    effects : [PinballBoardEffectItem] = []
   }
 
   trait PinballBoardRender -> @rebindable PinballBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.score 0)
+        (set @entity.balls 3)
+        (set @entity.effects [])
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: pinball-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Balls", value: @entity.balls } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Balls", value: @entity.balls } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Balls", value: @entity.balls } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      BUMPER_HIT -> playing
+        (set @entity.score (+ @entity.score 100))
+        (set @entity.effects (array/append @entity.effects { key: "spark", x: ?x, y: ?y, ttl: 4 }))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Balls", value: @entity.balls } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      BALL_LOST -> playing when (> @entity.balls 0)
+        (set @entity.balls (- @entity.balls 1))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Balls", value: @entity.balls } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      BALL_LOST -> gameover when (== @entity.balls 0)
+        (set @entity.balls 0)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Balls", value: @entity.balls } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> playing
+        (set @entity.units @config.units)
+        (set @entity.score 0)
+        (set @entity.balls 3)
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Balls", value: @entity.balls } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Balls", value: @entity.balls } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
         })
     }
 
@@ -107,12 +174,29 @@ orbital PinballBoardOrbital {
         x : number!
         y : number!
       }
-        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @description "Emits UI:{tileClickEvent} with { x, y } on tile click"
         @tier "essential"
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+      BUMPER_HIT -> external {
+        bumperId : string!
+        x : number!
+        y : number!
+      }
+        @description "Emits when the ball strikes a bumper"
+        @tier "essential"
+      BALL_LOST -> external {
+        id : string
+      }
+        @description "Emits when a ball drains"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} on reset"
         @tier "essential"
     }
 
@@ -166,7 +250,7 @@ orbital PinballBoardOrbital {
         @label "Tiles"
         @description "Playfield tiles"
         @tier "presentation"
-      units : [PinballBoardUnitsItem] = [{ id: "ball1", position: { x: 2, y: 5 }, unitType: "ball", name: "Ball", team: player, health: 1, maxHealth: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/units/ball.png" }]
+      units : [PinballBoardUnitsItem] = [{ id: "ball1", position: { x: 2, y: 5 }, unitType: "ball", name: "Ball", team: player, health: 1, maxHealth: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/units/ball.png", animation: "idle", frame: 0 }]
         @label "Units"
         @description "Ball units on the board"
         @tier "presentation"
@@ -174,7 +258,7 @@ orbital PinballBoardOrbital {
         @label "Features"
         @description "Features (bumpers, paddles, etc.) on the board"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : PinballBoardAssetManifest = { terrains: { wall: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png", playfield: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png" }, units: { ball: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/units/ball.png" }, features: { bumper: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png", paddle: "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png" }, effects: {} }
         @label "Asset Manifest"
         @description "Asset sprite manifest"
         @tier "presentation"

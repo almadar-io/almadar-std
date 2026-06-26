@@ -1,5 +1,5 @@
 {
-  "description": "SportsBoard — UI factory (1:1 with the @almadar/ui sports-board pattern).",
+  "description": "SportsBoard — game-shell composition with sprite animation and score HUD.",
   "name": "ui-sports-board",
   "orbitals": [
     {
@@ -9,6 +9,226 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "faction": {
+                  "name": "faction",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "heroId": {
+                  "name": "heroId",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "previousPosition": {
+                  "name": "previousPosition",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "spriteSheet": {
+                  "name": "spriteSheet",
+                  "required": false,
+                  "type": "string"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "traits": {
+                  "items": {
+                    "properties": {
+                      "cooldown": {
+                        "name": "cooldown",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "currentState": {
+                        "name": "currentState",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "states": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "states",
+                        "required": true,
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "traits",
+                  "required": false,
+                  "type": "array"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "homeScore",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "awayScore",
+            "type": "number"
+          },
+          {
+            "default": "kickoff",
+            "name": "phase",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "SportsBoardItem",
@@ -45,11 +265,63 @@
               "type": "asset"
             },
             "assetManifest": {
-              "default": "",
-              "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
+              "default": {
+                "effects": {},
+                "features": {
+                  "ball": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/ball_soccer.png",
+                  "goal": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                },
+                "terrains": {
+                  "court": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
+                "units": {
+                  "characterBlue": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png",
+                  "characterGreen": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png"
+                }
+              },
+              "description": "Asset sprite manifest",
               "label": "Asset Manifest",
+              "properties": {
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
+                },
+                "features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "terrains": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "terrains",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
               "tier": "presentation",
-              "type": "string"
+              "type": "SportsBoardAssetManifest"
             },
             "className": {
               "default": "",
@@ -57,13 +329,6 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
-            },
-            "enableCamera": {
-              "default": true,
-              "description": "Enable camera pan/zoom controls",
-              "label": "Enable Camera",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "error": {
               "description": "Error state (UiError)",
@@ -245,13 +510,6 @@
               "label": "Selected Ids",
               "tier": "presentation",
               "type": "[string]"
-            },
-            "showMinimap": {
-              "default": false,
-              "description": "Show minimap overlay",
-              "label": "Show Minimap",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "sortBy": {
               "default": "Sort By",
@@ -634,6 +892,8 @@
             "units": {
               "default": [
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "g1",
                   "maxHealth": 10.0,
@@ -647,6 +907,8 @@
                   "unitType": "player"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "g2",
                   "maxHealth": 10.0,
@@ -660,6 +922,8 @@
                   "unitType": "player"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "g3",
                   "maxHealth": 10.0,
@@ -673,6 +937,8 @@
                   "unitType": "player"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "g4",
                   "maxHealth": 10.0,
@@ -686,6 +952,8 @@
                   "unitType": "player"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "b1",
                   "maxHealth": 10.0,
@@ -699,6 +967,8 @@
                   "unitType": "player"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "b2",
                   "maxHealth": 10.0,
@@ -712,6 +982,8 @@
                   "unitType": "player"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "b3",
                   "maxHealth": 10.0,
@@ -725,6 +997,8 @@
                   "unitType": "player"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "b4",
                   "maxHealth": 10.0,
@@ -741,6 +1015,11 @@
               "description": "Player units on the board",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "elevation": {
                     "name": "elevation",
                     "required": false,
@@ -755,6 +1034,11 @@
                       "enemy",
                       "neutral"
                     ]
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
                   },
                   "health": {
                     "name": "health",
@@ -903,7 +1187,7 @@
           },
           "emits": [
             {
-              "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+              "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
               "event": "TILE_CLICK",
               "payloadSchema": [
                 {
@@ -921,7 +1205,7 @@
               "tier": "essential"
             },
             {
-              "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+              "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
               "event": "UNIT_CLICK",
               "payloadSchema": [
                 {
@@ -932,10 +1216,42 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "Fired when a goal is scored; team is 'player' or 'enemy'",
+              "event": "GOAL",
+              "payloadSchema": [
+                {
+                  "name": "team",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Resets the match to initial state",
+              "event": "RESET",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "awayScore",
+              "effects",
+              "homeScore",
+              "phase",
+              "selectedUnitId",
+              "units"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -949,7 +1265,20 @@
                 "name": "Initialize"
               },
               {
-                "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+                "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
                 "key": "TILE_CLICK",
                 "name": "Tile Click",
                 "payloadSchema": [
@@ -967,13 +1296,25 @@
                 "tier": "essential"
               },
               {
-                "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
-                "key": "UNIT_CLICK",
-                "name": "Unit Click",
+                "description": "Fired when a goal is scored; team is 'player' or 'enemy'",
+                "key": "GOAL",
+                "name": "Goal",
                 "payloadSchema": [
                   {
-                    "name": "unitId",
+                    "name": "team",
                     "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Resets the match to initial state",
+                "key": "RESET",
+                "name": "Reset",
+                "payloadSchema": [
+                  {
+                    "name": "id",
                     "type": "string"
                   }
                 ],
@@ -983,47 +1324,540 @@
             "states": [
               {
                 "isInitial": true,
-                "name": "idle"
+                "name": "playing"
               }
             ],
             "transitions": [
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.homeScore",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.awayScore",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "kickoff"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "activeFilters": "@config.activeFilters",
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "enableCamera": "@config.enableCamera",
-                      "error": "@config.error",
-                      "features": "@config.features",
-                      "isLoading": "@config.isLoading",
-                      "page": "@config.pageProp",
-                      "pageSize": "@config.pageSize",
-                      "scale": "@config.scale",
-                      "searchValue": "@config.searchValue",
-                      "selectedIds": "@config.selectedIds",
-                      "showMinimap": "@config.showMinimap",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "totalCount": "@config.totalCount",
-                      "type": "sports-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@config.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Home",
+                            "value": "@entity.homeScore"
+                          },
+                          {
+                            "label": "Away",
+                            "value": "@entity.awayScore"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "kickoff"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Home",
+                            "value": "@entity.homeScore"
+                          },
+                          {
+                            "label": "Away",
+                            "value": "@entity.awayScore"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.selectedUnitId",
+                  "@payload.unitId"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    "@payload.unitId"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "selected"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Home",
+                            "value": "@entity.homeScore"
+                          },
+                          {
+                            "label": "Away",
+                            "value": "@entity.awayScore"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@entity.selectedUnitId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "walk",
+                              "position": {
+                                "x": "@payload.x",
+                                "y": "@payload.y"
+                              }
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "kickoff"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Home",
+                            "value": "@entity.homeScore"
+                          },
+                          {
+                            "label": "Away",
+                            "value": "@entity.awayScore"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "playing",
+                "guard": [
+                  "!=",
+                  "@entity.selectedUnitId",
+                  ""
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.homeScore",
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@payload.team",
+                        "player"
+                      ],
+                      [
+                        "+",
+                        "@entity.homeScore",
+                        1.0
+                      ],
+                      "@entity.homeScore"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.awayScore",
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@payload.team",
+                        "enemy"
+                      ],
+                      [
+                        "+",
+                        "@entity.awayScore",
+                        1.0
+                      ],
+                      "@entity.awayScore"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "kickoff"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Home",
+                            "value": "@entity.homeScore"
+                          },
+                          {
+                            "label": "Away",
+                            "value": "@entity.awayScore"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "GOAL",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.homeScore",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.awayScore",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "kickoff"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Home",
+                            "value": "@entity.homeScore"
+                          },
+                          {
+                            "label": "Away",
+                            "value": "@entity.awayScore"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "RESET",
+                "from": "playing",
+                "to": "playing"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "@u",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": false,
+                        "tileLayout": "flat",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Home",
+                          "value": "@entity.homeScore"
+                        },
+                        {
+                          "label": "Away",
+                          "value": "@entity.awayScore"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            }
+          ]
         }
       ]
     }
