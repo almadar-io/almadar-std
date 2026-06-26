@@ -39,7 +39,7 @@ export type StdUiStatusEffectEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatusEffectConfig {
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/effects/fx-particle/kenney-vendored/particle/flame_01.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/magic_02.png"` */
   assetUrl?: unknown;
   /** Default: `""` */
   className?: string;

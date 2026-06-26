@@ -155,7 +155,7 @@ export function stdUiTeamOrganismTeamOrganismOrbital(params: StdUiTeamOrganismTe
             'type': 'string',
           },
           {
-            'default': 'https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png',
+            'default': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png',
             'name': 'avatar',
             'type': 'string',
           },

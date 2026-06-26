@@ -41,7 +41,7 @@ export type StdUiScoreDisplayEventKey = 'INIT';
 export interface StdUiScoreDisplayConfig {
   /** Default: `true` */
   animated?: boolean;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png"` */
   assetUrl?: unknown;
   /** Default: `""` */
   className?: string;

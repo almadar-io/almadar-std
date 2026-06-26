@@ -73,7 +73,7 @@ export interface StdUiSpriteConfig {
   rotation?: number;
   /** Default: `1` */
   scale?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/terrains/tiles-iso-medieval/kenney-vendored/iso/blocks/Spritesheet/allTiles_sheet.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/terrain/stone.png"` */
   spritesheet?: unknown;
   /** Default: `0` */
   x?: number;
