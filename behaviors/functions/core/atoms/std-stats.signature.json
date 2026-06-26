@@ -42,31 +42,31 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
+              "entity": "@entity.cards",
+              "fields": [],
               "renderItem": [
                 "fn",
                 "card",
                 {
-                  "trend": "@card.trend",
-                  "sparklineData": "@card.sparklineData",
-                  "prefix": "@card.prefix",
-                  "icon": "@card.icon",
-                  "look": "@config.statLook",
-                  "target": "@card.target",
-                  "trendPolarity": "@card.trendPolarity",
-                  "value": "@card.value",
-                  "format": "@card.format",
-                  "variant": "@card.variant",
-                  "label": "@card.label",
-                  "trendFormat": "@card.trendFormat",
                   "clickEvent": "@card.clickEvent",
+                  "format": "@card.format",
+                  "icon": "@card.icon",
+                  "label": "@card.label",
+                  "look": "@config.statLook",
+                  "max": "@card.max",
+                  "prefix": "@card.prefix",
+                  "sparklineData": "@card.sparklineData",
                   "suffix": "@card.suffix",
+                  "target": "@card.target",
+                  "trend": "@card.trend",
+                  "trendFormat": "@card.trendFormat",
+                  "trendPolarity": "@card.trendPolarity",
                   "type": "stat-display",
-                  "max": "@card.max"
+                  "value": "@card.value",
+                  "variant": "@card.variant"
                 }
               ],
-              "type": "@config.viewPattern",
-              "entity": "@entity.cards",
-              "fields": []
+              "type": "@config.viewPattern"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after metrics aggregate. Default is the canonical data-grid call mapping @entity.cards through stat-display. Layer 3 variants override this with their own tree (hero numbers, sparkline rows, tile splashes) to deliver entirely different KPI UX while inheriting the same trait, state machine, aggregation pipeline, and listens.",
@@ -77,26 +77,26 @@
             "type": "[MetricSpec]",
             "default": [
               {
-                "format": "number",
-                "label": "Total Items",
                 "aggregation": "count",
+                "format": "number",
                 "icon": "list",
+                "label": "Total Items",
                 "variant": "primary"
               },
               {
-                "label": "Active",
-                "icon": "check-circle",
-                "variant": "success",
+                "aggregation": "count",
                 "format": "number",
-                "aggregation": "count"
+                "icon": "check-circle",
+                "label": "Active",
+                "variant": "success"
               },
               {
-                "format": "number",
                 "aggregation": "avg",
+                "field": "value",
+                "format": "number",
                 "icon": "trending-up",
                 "label": "Avg Value",
-                "variant": "info",
-                "field": "value"
+                "variant": "info"
               }
             ],
             "label": "Metrics",
@@ -105,11 +105,6 @@
             "tier": "presentation",
             "items": {
               "properties": {
-                "field": {
-                  "name": "field",
-                  "required": false,
-                  "type": "string"
-                },
                 "aggregation": {
                   "name": "aggregation",
                   "required": false,
@@ -123,18 +118,13 @@
                     "variance"
                   ]
                 },
-                "value": {
-                  "name": "value",
+                "clickEvent": {
+                  "name": "clickEvent",
                   "required": false,
-                  "type": "number"
+                  "type": "string"
                 },
-                "target": {
-                  "name": "target",
-                  "required": false,
-                  "type": "number"
-                },
-                "icon": {
-                  "name": "icon",
+                "field": {
+                  "name": "field",
                   "required": false,
                   "type": "string"
                 },
@@ -148,6 +138,49 @@
                     "percent"
                   ]
                 },
+                "icon": {
+                  "name": "icon",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "max": {
+                  "name": "max",
+                  "required": false,
+                  "type": "number"
+                },
+                "prefix": {
+                  "name": "prefix",
+                  "required": false,
+                  "type": "string"
+                },
+                "sparklineData": {
+                  "name": "sparklineData",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "suffix": {
+                  "name": "suffix",
+                  "required": false,
+                  "type": "string"
+                },
+                "target": {
+                  "name": "target",
+                  "required": false,
+                  "type": "number"
+                },
+                "trend": {
+                  "name": "trend",
+                  "required": false,
+                  "type": "number"
+                },
                 "trendFormat": {
                   "name": "trendFormat",
                   "required": false,
@@ -156,16 +189,6 @@
                     "absolute",
                     "percent"
                   ]
-                },
-                "label": {
-                  "name": "label",
-                  "required": true,
-                  "type": "string"
-                },
-                "suffix": {
-                  "name": "suffix",
-                  "required": false,
-                  "type": "string"
                 },
                 "trendPolarity": {
                   "name": "trendPolarity",
@@ -176,26 +199,8 @@
                     "lower-is-better"
                   ]
                 },
-                "clickEvent": {
-                  "name": "clickEvent",
-                  "required": false,
-                  "type": "string"
-                },
-                "trend": {
-                  "name": "trend",
-                  "required": false,
-                  "type": "number"
-                },
-                "sparklineData": {
-                  "name": "sparklineData",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "type": "number"
-                  }
-                },
-                "max": {
-                  "name": "max",
+                "value": {
+                  "name": "value",
                   "required": false,
                   "type": "number"
                 },
@@ -211,11 +216,6 @@
                     "error",
                     "info"
                   ]
-                },
-                "prefix": {
-                  "name": "prefix",
-                  "required": false,
-                  "type": "string"
                 }
               },
               "type": "object"

@@ -67,12 +67,12 @@ export interface StdUiPageHeaderConfig {
   /** Default: `false` */
   showBack?: boolean;
   status?: EntityRow;
-  /** Default: `{}` */
-  subtitle?: unknown;
+  /** Default: `"Subtitle"` */
+  subtitle?: string;
   /** Default: `[{"count":1,"label":"Label","value":"Value"},{"count":2,"label":"Label 2","value":"Value 2"}]` */
   tabs?: EntityRow[];
-  /** Default: `{}` */
-  title?: unknown;
+  /** Default: `"Title"` */
+  title?: string;
 }
 
 /**

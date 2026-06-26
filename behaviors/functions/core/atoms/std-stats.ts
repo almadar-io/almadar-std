@@ -39,16 +39,16 @@ export type StdStatsEventKey = 'INIT' | 'ITEMS_LOADED';
  * without modifying its state-machine topology.
  */
 export interface StdStatsConfig {
-  /** Default: `[{"format":"number","label":"Total Items","aggregation":"count","icon":"list","variant":"primary"},{"label":"Active","icon":"check-circle","variant":"success","format":"number","aggregation":"count"},{"format":"number","aggregation":"avg","icon":"trending-up","label":"Avg Value","variant":"info","field":"value"}]` */
+  /** Default: `{"entity":"@entity.cards","fields":[],"renderItem":["fn","card",{"clickEvent":"@card.clickEvent","format":"@card.format","icon":"@card.icon","label":"@card.label","look":"@config.statLook","max":"@card.max","prefix":"@card.prefix","sparklineData":"@card.sparklineData","suffix":"@card.suffix","target":"@card.target","trend":"@card.trend","trendFormat":"@card.trendFormat","trendPolarity":"@card.trendPolarity","type":"stat-display","value":"@card.value","variant":"@card.variant"}],"type":"@config.viewPattern"}` */
+  bodyContent?: unknown;
+  /** Default: `[{"aggregation":"count","format":"number","icon":"list","label":"Total Items","variant":"primary"},{"aggregation":"count","format":"number","icon":"check-circle","label":"Active","variant":"success"},{"aggregation":"avg","field":"value","format":"number","icon":"trending-up","label":"Avg Value","variant":"info"}]` */
   metrics?: EntityRow[];
   /** Default: `"elevated"` */
   statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
-  /** Default: `{"renderItem":["fn","card",{"trend":"@card.trend","sparklineData":"@card.sparklineData","prefix":"@card.prefix","icon":"@card.icon","look":"@config.statLook","target":"@card.target","trendPolarity":"@card.trendPolarity","value":"@card.value","format":"@card.format","variant":"@card.variant","label":"@card.label","trendFormat":"@card.trendFormat","clickEvent":"@card.clickEvent","suffix":"@card.suffix","type":"stat-display","max":"@card.max"}],"type":"@config.viewPattern","entity":"@entity.cards","fields":[]}` */
-  bodyContent?: unknown;
-  /** Default: `"data-grid"` */
-  viewPattern?: unknown;
   /** Default: `"Summary"` */
   title?: string;
+  /** Default: `"data-grid"` */
+  viewPattern?: unknown;
 }
 
 /**

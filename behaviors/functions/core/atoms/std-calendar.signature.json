@@ -114,35 +114,34 @@
             "key": "bodyContent",
             "type": "render-ui",
             "default": {
-              "type": "stack",
               "children": [
                 {
                   "align": "center",
-                  "direction": "horizontal",
                   "children": [
                     {
-                      "direction": "horizontal",
+                      "align": "center",
                       "children": [
                         {
                           "name": "calendar",
                           "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "content": "CalendarEvents Calendar",
+                          "type": "typography",
                           "variant": "h2"
                         }
                       ],
-                      "align": "center",
-                      "type": "stack",
-                      "gap": "sm"
+                      "direction": "horizontal",
+                      "gap": "sm",
+                      "type": "stack"
                     },
                     {
                       "onSelect": "SELECT_DAY",
-                      "type": "date-range-selector",
-                      "selected": "@entity.selectedRange"
+                      "selected": "@entity.selectedRange",
+                      "type": "date-range-selector"
                     }
                   ],
+                  "direction": "horizontal",
                   "gap": "md",
                   "justify": "between",
                   "type": "stack"
@@ -157,49 +156,50 @@
                   "type": "divider"
                 },
                 {
+                  "content": "Upcoming Events",
                   "type": "typography",
-                  "variant": "h4",
-                  "content": "Upcoming Events"
+                  "variant": "h4"
                 },
                 {
-                  "look": "@config.tableLook",
-                  "itemActions": [
-                    {
-                      "label": "View",
-                      "event": "SELECT_DAY",
-                      "icon": "eye"
-                    }
-                  ],
-                  "type": "data-list",
+                  "entity": "@payload.data",
                   "fields": [
                     {
-                      "variant": "h4",
-                      "name": "name",
+                      "icon": "calendar",
                       "label": "Event",
-                      "icon": "calendar"
+                      "name": "name",
+                      "variant": "h4"
                     },
                     {
+                      "label": "Time",
                       "name": "time",
-                      "variant": "badge",
-                      "label": "Time"
+                      "variant": "badge"
                     },
                     {
                       "format": "date",
-                      "variant": "caption",
+                      "label": "Date",
                       "name": "date",
-                      "label": "Date"
+                      "variant": "caption"
                     },
                     {
-                      "variant": "badge",
+                      "label": "Status",
                       "name": "status",
-                      "label": "Status"
+                      "variant": "badge"
                     }
                   ],
-                  "entity": "@payload.data"
+                  "itemActions": [
+                    {
+                      "event": "SELECT_DAY",
+                      "icon": "eye",
+                      "label": "View"
+                    }
+                  ],
+                  "look": "@config.tableLook",
+                  "type": "data-list"
                 }
               ],
+              "direction": "vertical",
               "gap": "lg",
-              "direction": "vertical"
+              "type": "stack"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered after events load. Default is the month-grid + upcoming-events list. Layer 3 variants override this with their own tree (agenda list, week timeline, etc.) to deliver entirely different calendar UX while inheriting the same trait, state machine, emits, and listens.",

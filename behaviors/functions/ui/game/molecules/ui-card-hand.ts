@@ -47,7 +47,7 @@ export interface StdUiCardHandCardClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCardHandConfig {
-  /** Default: `[{"attack":1,"cost":1,"defense":1,"disabled":false,"iconUrl":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/bear.png","id":"Id","title":"Bear"},{"attack":2,"cost":2,"defense":2,"disabled":true,"iconUrl":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/owl.png","id":"Id 2","title":"Owl"}]` */
+  /** Default: `[{"attack":1,"cost":1,"defense":1,"disabled":false,"iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","title":"Title"},{"attack":2,"cost":2,"defense":2,"disabled":true,"iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id 2","title":"Title 2"}]` */
   cards?: EntityRow[];
   /** Default: `""` */
   className?: string;

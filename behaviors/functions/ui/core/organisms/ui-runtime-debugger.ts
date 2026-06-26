@@ -49,8 +49,6 @@ export interface StdUiRuntimeDebuggerConfig {
   mode?: 'floating' | 'inline' | 'verify';
   /** Default: `"bottom-right"` */
   position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  /** Default: `{}` */
-  schema?: unknown;
 }
 
 /**
@@ -171,13 +169,6 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
               'top-left',
             ],
           },
-          'schema': {
-            'default': {},
-            'description': 'Raw schema for EventDispatcherTab payload extraction',
-            'label': 'Schema',
-            'tier': 'presentation',
-            'type': 'json',
-          },
         },
         'entityContract': {
           'provides': [],
@@ -212,7 +203,6 @@ export function stdUiRuntimeDebuggerRuntimeDebuggerOrbital(params: StdUiRuntimeD
                     'defaultTab': '@config.defaultTab',
                     'mode': '@config.mode',
                     'position': '@config.position',
-                    'schema': '@config.schema',
                     'type': 'runtime-debugger',
                   },
                 ],

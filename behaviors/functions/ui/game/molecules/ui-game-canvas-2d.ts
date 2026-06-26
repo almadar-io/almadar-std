@@ -48,7 +48,7 @@ export interface StdUiGameCanvas2dTickPayload {
 export interface StdUiGameCanvas2dConfig {
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
   assetBaseUrl?: unknown;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/units/guardian.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
   backgroundImage?: unknown;
   /** Default: `""` */
   className?: string;

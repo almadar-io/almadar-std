@@ -50,8 +50,8 @@ export interface StdAuditCaptureAuditRecordedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdAuditCaptureConfig {
-  /** Default: `2555` */
-  retentionDays?: number;
+  /** Default: `false` */
+  captureBeforeAfter?: boolean;
   /** Default: `""` */
   captureEntity?: string;
   /** Default: `[]` */
@@ -60,8 +60,8 @@ export interface StdAuditCaptureConfig {
   enabled?: boolean;
   /** Default: `[]` */
   excludeFields?: string[];
-  /** Default: `false` */
-  captureBeforeAfter?: boolean;
+  /** Default: `2555` */
+  retentionDays?: number;
 }
 
 /**

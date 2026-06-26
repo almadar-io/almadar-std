@@ -100,44 +100,44 @@ export interface StdThreadThreadPostCreateFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdThreadConfig {
-  /** Default: `"@entity.focusedRow.fromAddress"` */
-  detailFromBinding?: string;
-  /** Default: `"@entity.focusedRow.content"` */
-  detailContentBinding?: string;
-  /** Default: `""` */
-  threadRootId?: string;
-  /** Default: `"@reply.fromAddress"` */
-  replyFromBinding?: string;
-  /** Default: `"@item.subject"` */
-  emailSubjectBinding?: string;
-  /** Default: `"@reply.createdAt"` */
-  replyDateBinding?: string;
+  /** Default: `{"children":[{"entity":"@payload.data","fields":[{"label":"Author","name":"authorName","variant":"h4"},{"label":"","name":"content","variant":"body"},{"label":"Votes","name":"voteCount","variant":"caption"}],"gap":"sm","itemActions":[{"event":"REPLY","icon":"message-square","label":"Reply"}],"look":"@config.tableLook","type":"data-list","variant":"card"}],"direction":"vertical","gap":"md","type":"stack"}` */
+  bodyContent?: unknown;
   /** Default: `"@entity.focusedRow.authorName"` */
   detailAuthorBinding?: string;
+  /** Default: `"@entity.focusedRow.content"` */
+  detailContentBinding?: string;
   /** Default: `"@entity.focusedRow.createdAt"` */
   detailDateBinding?: string;
-  /** Default: `"@entity.focusedRow.toAddress"` */
-  detailToBinding?: string;
-  /** Default: `"@reply.authorName"` */
-  replyAuthorBinding?: string;
-  /** Default: `"@item.authorName"` */
-  emailAuthorBinding?: string;
-  /** Default: `{"children":[{"entity":"@payload.data","itemActions":[{"event":"REPLY","icon":"message-square","label":"Reply"}],"gap":"sm","look":"@config.tableLook","variant":"card","type":"data-list","fields":[{"label":"Author","variant":"h4","name":"authorName"},{"name":"content","variant":"body","label":""},{"label":"Votes","name":"voteCount","variant":"caption"}]}],"type":"stack","direction":"vertical","gap":"md"}` */
-  bodyContent?: unknown;
-  /** Default: `"Conversation"` */
-  recipientName?: string;
-  /** Default: `"@reply.content"` */
-  replyContentBinding?: string;
-  /** Default: `"@item.preview"` */
-  emailPreviewBinding?: string;
-  /** Default: `false` */
-  flat?: boolean;
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"@entity.focusedRow.fromAddress"` */
+  detailFromBinding?: string;
   /** Default: `"@entity.focusedRow.subject"` */
   detailSubjectBinding?: string;
+  /** Default: `"@entity.focusedRow.toAddress"` */
+  detailToBinding?: string;
+  /** Default: `"@item.authorName"` */
+  emailAuthorBinding?: string;
+  /** Default: `"@item.preview"` */
+  emailPreviewBinding?: string;
+  /** Default: `"@item.subject"` */
+  emailSubjectBinding?: string;
+  /** Default: `false` */
+  flat?: boolean;
+  /** Default: `"Conversation"` */
+  recipientName?: string;
+  /** Default: `"@reply.authorName"` */
+  replyAuthorBinding?: string;
+  /** Default: `"@reply.content"` */
+  replyContentBinding?: string;
+  /** Default: `"@reply.createdAt"` */
+  replyDateBinding?: string;
+  /** Default: `"@reply.fromAddress"` */
+  replyFromBinding?: string;
   /** Default: `"Discussion"` */
   sectionTitle?: string;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `""` */
+  threadRootId?: string;
 }
 
 /**

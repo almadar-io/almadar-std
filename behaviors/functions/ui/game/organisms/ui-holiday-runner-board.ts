@@ -30,21 +30,21 @@ const ALIAS = 'UiHolidayRunnerBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiHolidayRunnerBoardEventKey = 'DRAW' | 'INIT' | 'TICK';
+export type StdUiHolidayRunnerBoardEventKey = 'INIT' | 'TILE_CLICK' | 'UNIT_CLICK';
 
 /**
- * Payload shape for the `TICK` event.
+ * Payload shape for the `TILE_CLICK` event.
  */
-export interface StdUiHolidayRunnerBoardTickPayload {
-  dt: number;
-  frame: number;
+export interface StdUiHolidayRunnerBoardTileClickPayload {
+  x: number;
+  y: number;
 }
 
 /**
- * Payload shape for the `DRAW` event.
+ * Payload shape for the `UNIT_CLICK` event.
  */
-export interface StdUiHolidayRunnerBoardDrawPayload {
-  frame: number;
+export interface StdUiHolidayRunnerBoardUnitClickPayload {
+  unitId: string;
 }
 
 /**
@@ -58,29 +58,23 @@ export interface StdUiHolidayRunnerBoardConfig {
   assetBaseUrl?: unknown;
   /** Default: `""` */
   assetManifest?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/backgrounds/winter.png"` */
-  backgroundImage?: unknown;
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
+  /** Default: `true` */
   enableCamera?: boolean;
   error?: EntityRow;
-  /** Default: `60` */
-  fps?: number;
-  /** Default: `400` */
-  height?: number;
+  /** Default: `[{"color":"#c0392b","id":"obs1","sprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/features/obstacle.png","type":"obstacle","x":4,"y":2},{"color":"#c0392b","id":"obs2","sprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/features/obstacle.png","type":"obstacle","x":6,"y":2}]` */
+  features?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
-  /** Default: `1` */
+  /** Default: `0.45` */
   scale?: number;
   /** Default: `false` */
   showMinimap?: boolean;
-  /** Default: `[{"passable":true,"terrain":"ground","x":0,"y":0},{"passable":true,"terrain":"ground","x":1,"y":0},{"passable":true,"terrain":"platform","x":2,"y":0},{"passable":true,"terrain":"ground","x":3,"y":0},{"passable":true,"terrain":"ground","x":4,"y":0}]` */
+  /** Default: `[{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":0,"y":0},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":1,"y":0},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":2,"y":0},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":3,"y":0},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":4,"y":0},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":5,"y":0},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":6,"y":0},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":7,"y":0},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":0,"y":1},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":1,"y":1},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":2,"y":1},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":3,"y":1},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":4,"y":1},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":5,"y":1},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":6,"y":1},{"passable":false,"terrain":"sky","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png","x":7,"y":1},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":0,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":1,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":2,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":3,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":4,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":5,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":6,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":7,"y":2},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":0,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":1,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":2,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":3,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":4,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":5,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":6,"y":3},{"passable":true,"terrain":"ground","terrainSprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png","x":7,"y":3}]` */
   tiles?: EntityRow[];
-  /** Default: `[{"health":3,"id":"runner1","maxHealth":3,"name":"Holiday Runner","sprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/units/runner.png","team":"player","unitType":"runner","x":1,"y":0}]` */
+  /** Default: `[{"health":3,"id":"runner1","maxHealth":3,"name":"Holiday Runner","position":{"x":1,"y":2},"sprite":"https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/units/runner.png","team":"player","unitType":"runner"}]` */
   units?: EntityRow[];
-  /** Default: `800` */
-  width?: number;
 }
 
 /**
@@ -164,17 +158,10 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
           },
           'assetManifest': {
             'default': '',
-            'description': 'Asset sprite manifest',
+            'description': 'Asset sprite manifest (same shape as IsometricCanvas.assetManifest)',
             'label': 'Asset Manifest',
             'tier': 'presentation',
             'type': 'string',
-          },
-          'backgroundImage': {
-            'default': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/backgrounds/winter.png',
-            'description': 'Background image URL for the runner level',
-            'label': 'Background Image',
-            'tier': 'presentation',
-            'type': 'asset',
           },
           'className': {
             'default': '',
@@ -184,7 +171,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
             'type': 'string',
           },
           'enableCamera': {
-            'default': false,
+            'default': true,
             'description': 'Enable camera pan/zoom controls',
             'label': 'Enable Camera',
             'tier': 'presentation',
@@ -218,19 +205,64 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
             'tier': 'presentation',
             'type': 'HolidayRunnerBoardError',
           },
-          'fps': {
-            'default': 60,
-            'description': 'Target frames per second',
-            'label': 'FPS',
+          'features': {
+            'default': [
+              {
+                'color': '#c0392b',
+                'id': 'obs1',
+                'sprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/features/obstacle.png',
+                'type': 'obstacle',
+                'x': 4,
+                'y': 2,
+              },
+              {
+                'color': '#c0392b',
+                'id': 'obs2',
+                'sprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/features/obstacle.png',
+                'type': 'obstacle',
+                'x': 6,
+                'y': 2,
+              },
+            ],
+            'description': 'Obstacle features on the ground row',
+            'items': {
+              'properties': {
+                'color': {
+                  'name': 'color',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
+                  'required': false,
+                  'type': 'string',
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'required': false,
+                  'type': 'string',
+                },
+                'type': {
+                  'name': 'type',
+                  'required': true,
+                  'type': 'string',
+                },
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'label': 'Features',
             'tier': 'presentation',
-            'type': 'number',
-          },
-          'height': {
-            'default': 400,
-            'description': 'Canvas height in pixels',
-            'label': 'Height',
-            'tier': 'presentation',
-            'type': 'number',
+            'type': '[HolidayRunnerBoardFeaturesItem]',
           },
           'isLoading': {
             'default': false,
@@ -240,7 +272,7 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
             'type': 'boolean',
           },
           'scale': {
-            'default': 1,
+            'default': 0.45,
             'description': 'Render scale',
             'label': 'Scale',
             'tier': 'presentation',
@@ -256,43 +288,247 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
           'tiles': {
             'default': [
               {
-                'passable': true,
-                'terrain': 'ground',
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
                 'x': 0,
                 'y': 0,
               },
               {
-                'passable': true,
-                'terrain': 'ground',
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
                 'x': 1,
                 'y': 0,
               },
               {
-                'passable': true,
-                'terrain': 'platform',
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
                 'x': 2,
                 'y': 0,
               },
               {
-                'passable': true,
-                'terrain': 'ground',
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
                 'x': 3,
                 'y': 0,
               },
               {
-                'passable': true,
-                'terrain': 'ground',
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
                 'x': 4,
                 'y': 0,
               },
+              {
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
+                'x': 5,
+                'y': 0,
+              },
+              {
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
+                'x': 6,
+                'y': 0,
+              },
+              {
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
+                'x': 7,
+                'y': 0,
+              },
+              {
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
+                'x': 0,
+                'y': 1,
+              },
+              {
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
+                'x': 1,
+                'y': 1,
+              },
+              {
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
+                'x': 2,
+                'y': 1,
+              },
+              {
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
+                'x': 3,
+                'y': 1,
+              },
+              {
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
+                'x': 4,
+                'y': 1,
+              },
+              {
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
+                'x': 5,
+                'y': 1,
+              },
+              {
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
+                'x': 6,
+                'y': 1,
+              },
+              {
+                'passable': false,
+                'terrain': 'sky',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png',
+                'x': 7,
+                'y': 1,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 0,
+                'y': 2,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 1,
+                'y': 2,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 2,
+                'y': 2,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 3,
+                'y': 2,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 4,
+                'y': 2,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 5,
+                'y': 2,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 6,
+                'y': 2,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 7,
+                'y': 2,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 0,
+                'y': 3,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 1,
+                'y': 3,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 2,
+                'y': 3,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 3,
+                'y': 3,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 4,
+                'y': 3,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 5,
+                'y': 3,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 6,
+                'y': 3,
+              },
+              {
+                'passable': true,
+                'terrain': 'ground',
+                'terrainSprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png',
+                'x': 7,
+                'y': 3,
+              },
             ],
-            'description': 'Flat side-scroll level tiles (ground, platform, gap)',
+            'description': 'Side-scroll strip: rows 0–1 sky, rows 2–3 snow ground',
             'items': {
               'properties': {
+                'elevation': {
+                  'name': 'elevation',
+                  'required': false,
+                  'type': 'number',
+                },
                 'id': {
                   'name': 'id',
                   'required': false,
                   'type': 'string',
+                },
+                'movementCost': {
+                  'name': 'movementCost',
+                  'required': false,
+                  'type': 'number',
                 },
                 'passable': {
                   'name': 'passable',
@@ -301,6 +537,16 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                 },
                 'terrain': {
                   'name': 'terrain',
+                  'required': false,
+                  'type': 'string',
+                },
+                'terrainSprite': {
+                  'name': 'terrainSprite',
+                  'required': false,
+                  'type': 'string',
+                },
+                'tileType': {
+                  'name': 'tileType',
                   'required': false,
                   'type': 'string',
                 },
@@ -333,14 +579,16 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                 'id': 'runner1',
                 'maxHealth': 3,
                 'name': 'Holiday Runner',
+                'position': {
+                  'x': 1,
+                  'y': 2,
+                },
                 'sprite': 'https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/units/runner.png',
                 'team': 'player',
                 'unitType': 'runner',
-                'x': 1,
-                'y': 0,
               },
             ],
-            'description': 'Units on the board',
+            'description': 'Runner unit standing on the ground row',
             'items': {
               'properties': {
                 'health': {
@@ -362,6 +610,23 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                   'name': 'name',
                   'required': false,
                   'type': 'string',
+                },
+                'position': {
+                  'name': 'position',
+                  'properties': {
+                    'x': {
+                      'name': 'x',
+                      'required': true,
+                      'type': 'number',
+                    },
+                    'y': {
+                      'name': 'y',
+                      'required': true,
+                      'type': 'number',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
                 },
                 'sprite': {
                   'name': 'sprite',
@@ -400,26 +665,19 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
             'tier': 'presentation',
             'type': '[HolidayRunnerBoardUnitsItem]',
           },
-          'width': {
-            'default': 800,
-            'description': 'Canvas width in pixels',
-            'label': 'Width',
-            'tier': 'presentation',
-            'type': 'number',
-          },
         },
         'emits': [
           {
-            'description': 'Declarative event: emits UI:{tickEvent} with { dt, frame } each tick',
-            'event': 'TICK',
+            'description': 'Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click',
+            'event': 'TILE_CLICK',
             'payloadSchema': [
               {
-                'name': 'dt',
+                'name': 'x',
                 'required': true,
                 'type': 'number',
               },
               {
-                'name': 'frame',
+                'name': 'y',
                 'required': true,
                 'type': 'number',
               },
@@ -428,13 +686,13 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
             'tier': 'essential',
           },
           {
-            'description': 'Declarative event: emits UI:{drawEvent} with { frame } each draw frame',
-            'event': 'DRAW',
+            'description': 'Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click',
+            'event': 'UNIT_CLICK',
             'payloadSchema': [
               {
-                'name': 'frame',
+                'name': 'unitId',
                 'required': true,
-                'type': 'number',
+                'type': 'string',
               },
             ],
             'scope': 'external',
@@ -456,17 +714,17 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
               'name': 'Initialize',
             },
             {
-              'description': 'Declarative event: emits UI:{tickEvent} with { dt, frame } each tick',
-              'key': 'TICK',
-              'name': 'Tick',
+              'description': 'Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click',
+              'key': 'TILE_CLICK',
+              'name': 'Tile Click',
               'payloadSchema': [
                 {
-                  'name': 'dt',
+                  'name': 'x',
                   'required': true,
                   'type': 'number',
                 },
                 {
-                  'name': 'frame',
+                  'name': 'y',
                   'required': true,
                   'type': 'number',
                 },
@@ -474,14 +732,14 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
               'tier': 'essential',
             },
             {
-              'description': 'Declarative event: emits UI:{drawEvent} with { frame } each draw frame',
-              'key': 'DRAW',
-              'name': 'Draw',
+              'description': 'Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click',
+              'key': 'UNIT_CLICK',
+              'name': 'Unit Click',
               'payloadSchema': [
                 {
-                  'name': 'frame',
+                  'name': 'unitId',
                   'required': true,
-                  'type': 'number',
+                  'type': 'string',
                 },
               ],
               'tier': 'essential',
@@ -502,21 +760,18 @@ export function stdUiHolidayRunnerBoardHolidayRunnerBoardOrbital(params: StdUiHo
                   {
                     'assetBaseUrl': '@config.assetBaseUrl',
                     'assetManifest': '@config.assetManifest',
-                    'backgroundImage': '@config.backgroundImage',
                     'className': '@config.className',
-                    'drawEvent': 'DRAW',
                     'enableCamera': '@config.enableCamera',
                     'error': '@config.error',
-                    'fps': '@config.fps',
-                    'height': '@config.height',
+                    'features': '@config.features',
                     'isLoading': '@config.isLoading',
                     'scale': '@config.scale',
                     'showMinimap': '@config.showMinimap',
-                    'tickEvent': 'TICK',
+                    'tileClickEvent': 'TILE_CLICK',
                     'tiles': '@config.tiles',
                     'type': 'holiday-runner-board',
+                    'unitClickEvent': 'UNIT_CLICK',
                     'units': '@config.units',
-                    'width': '@config.width',
                   },
                 ],
               ],

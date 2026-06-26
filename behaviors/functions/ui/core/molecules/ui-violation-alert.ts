@@ -59,6 +59,8 @@ export interface StdUiViolationAlertConfig {
   compact?: boolean;
   /** Default: `false` */
   dismissible?: boolean;
+  /** Default: `"Message"` */
+  message?: string;
   /** Default: `"warning"` */
   severity?: 'warning' | 'error';
   /** Default: `{"actionType":"measure","adminAction":"Admin Action","article":"Article","fieldId":"Field Id","id":"Id","law":"Law","message":"Message","penaltyAction":"Penalty Action","tabId":"Tab Id"}` */

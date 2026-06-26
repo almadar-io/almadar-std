@@ -61,8 +61,6 @@ export interface StdUiDetailPanelConfig {
   /** Default: `[{"header":"Header","key":"Key","label":"Label","name":"Name"},{"header":"Header 2","key":"Key 2","label":"Label 2","name":"Name 2"}]` */
   fields?: EntityRow[];
   footer?: unknown;
-  /** Default: `{}` */
-  initialData?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"Mode"` */
@@ -344,13 +342,6 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
             'label': 'Footer',
             'tier': 'presentation',
             'type': 'node',
-          },
-          'initialData': {
-            'default': {},
-            'description': 'Initial data for edit mode (passed by compiler)',
-            'label': 'Initial Data',
-            'tier': 'presentation',
-            'type': 'json',
           },
           'isLoading': {
             'default': false,
@@ -652,7 +643,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'fieldNames': '@config.fieldNames',
                     'fields': '@config.fields',
                     'footer': '@config.footer',
-                    'initialData': '@config.initialData',
+                    'initialData': '@entity',
                     'isLoading': '@config.isLoading',
                     'mode': '@config.mode',
                     'page': '@config.pageProp',
@@ -694,7 +685,7 @@ export function stdUiDetailPanelDetailPanelOrbital(params: StdUiDetailPanelDetai
                     'fieldNames': '@config.fieldNames',
                     'fields': '@config.fields',
                     'footer': '@config.footer',
-                    'initialData': '@config.initialData',
+                    'initialData': '@payload.data',
                     'isLoading': '@config.isLoading',
                     'mode': '@config.mode',
                     'page': '@config.pageProp',

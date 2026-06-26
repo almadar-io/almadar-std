@@ -53,6 +53,8 @@ export interface StdUiSpriteActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSpriteConfig {
+  /** Default: `"idle"` */
+  animState?: 'idle' | 'walk' | 'attack' | 'hit' | 'death';
   /** Default: `""` */
   className?: string;
   /** Default: `16` */
@@ -65,6 +67,8 @@ export interface StdUiSpriteConfig {
   frame?: number;
   /** Default: `64` */
   frameHeight?: number;
+  /** Default: `0` */
+  frameRate?: number;
   /** Default: `64` */
   frameWidth?: number;
   /** Default: `1` */
@@ -73,7 +77,7 @@ export interface StdUiSpriteConfig {
   rotation?: number;
   /** Default: `1` */
   scale?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/terrain/stone.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Spritesheet/allTiles_sheet.png"` */
   spritesheet?: unknown;
   /** Default: `0` */
   x?: number;

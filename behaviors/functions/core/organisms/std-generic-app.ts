@@ -31,8 +31,8 @@ const ALIAS = 'GenericApp';
  * without modifying its state-machine topology.
  */
 export interface StdGenericAppConfig {
-  notifications?: TraitConfig;
   navItems?: TraitConfig;
+  notifications?: TraitConfig;
 }
 
 /**
@@ -89,28 +89,28 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
     name: 'ContactOrbital',
     uses: [
       {
-        'from': 'std/behaviors/std-app-layout',
         'as': 'AppShell',
+        'from': 'std/behaviors/std-app-layout',
       },
       {
-        'from': 'std/behaviors/std-modal',
         'as': 'Modal',
+        'from': 'std/behaviors/std-modal',
       },
       {
-        'from': 'std/behaviors/std-confirmation',
         'as': 'Confirmation',
+        'from': 'std/behaviors/std-confirmation',
       },
       {
-        'from': 'std/behaviors/std-search',
         'as': 'Search',
+        'from': 'std/behaviors/std-search',
       },
       {
-        'from': 'std/behaviors/std-filter',
         'as': 'Filter',
+        'from': 'std/behaviors/std-filter',
       },
       {
-        'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+        'from': 'std/behaviors/std-browse',
       },
     ],
     entity: {
@@ -121,57 +121,57 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
           {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
             'description': 'The identifier or label for the contact.',
+            'name': 'name',
+            'required': true,
             'synonyms': 'label, identifier, designation',
+            'type': 'string',
           },
           {
-            'name': 'email',
-            'type': 'string',
             'default': '',
             'description': 'The electronic mail address for contact.',
+            'name': 'email',
             'synonyms': 'email address, mail, contact email',
+            'type': 'string',
           },
           {
-            'name': 'phone',
-            'type': 'string',
             'default': '',
             'description': 'The phone number associated with the entity.',
+            'name': 'phone',
             'synonyms': 'telephone, number, contact number',
+            'type': 'string',
           },
           {
-            'name': 'company',
-            'type': 'string',
             'default': '',
             'description': 'The organization or business associated with the contact.',
+            'name': 'company',
             'synonyms': 'organization, employer, business',
+            'type': 'string',
           },
           {
-            'name': 'role',
-            'type': 'string',
             'default': '',
             'description': 'The function or position of this entity within a relationship.',
+            'name': 'role',
             'synonyms': 'function, position, relationship, type',
+            'type': 'string',
           },
           {
-            'name': 'notes',
-            'type': 'string',
             'default': '',
             'description': 'Free-form text providing additional information.',
+            'name': 'notes',
             'synonyms': 'comments, remarks, details, information',
+            'type': 'string',
           },
           {
-            'name': 'pendingId',
-            'type': 'string',
             'default': '',
             'description': 'A unique identifier awaiting confirmation or processing.',
+            'name': 'pendingId',
             'synonyms': 'tempId, provisionalId, draftId',
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -182,24 +182,19 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
     } as Entity,
     traits: [
       makeTraitRef({
-        'ref': 'AppShell.traits.AppLayout',
-        'name': 'ContactAppLayout',
         'config': {
           'appName': 'App',
-          'notificationClickEvent': 'CONTACT_NOTIFICATIONS_OPEN',
           'contentTrait': '@trait.ContactCatalog',
-          'searchEvent': 'CONTACT_SEARCH',
-          'notifications': [],
           'navItems': [
             {
-              'label': 'Contacts',
               'href': '/contacts',
               'icon': 'users',
+              'label': 'Contacts',
             },
             {
-              'label': 'Items',
               'href': '/items',
               'icon': 'package',
+              'label': 'Items',
             },
             {
               'href': '/activities',
@@ -207,19 +202,19 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
               'label': 'Activities',
             },
             {
-              'label': 'Tasks',
               'href': '/tasks',
               'icon': 'check-square',
+              'label': 'Tasks',
             },
             {
-              'label': 'Calendar',
               'href': '/calendar',
               'icon': 'calendar',
+              'label': 'Calendar',
             },
             {
-              'label': 'Dashboard',
               'href': '/widgets',
               'icon': 'layout-dashboard',
+              'label': 'Dashboard',
             },
             {
               'href': '/feed',
@@ -227,340 +222,339 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
               'label': 'Feed',
             },
             {
+              'href': '/notes',
               'icon': 'file-text',
               'label': 'Notes',
-              'href': '/notes',
             },
           ],
+          'notificationClickEvent': 'CONTACT_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'searchEvent': 'CONTACT_SEARCH',
         },
         'events': {
-          'SEARCH': 'CONTACT_SEARCH',
           'NOTIFY_CLICK': 'CONTACT_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CONTACT_SEARCH',
         },
+        'name': 'ContactAppLayout',
+        'ref': 'AppShell.traits.AppLayout',
       }),
       rebindInlineTraitEntity({
-        'name': 'ContactCatalog',
         'category': 'interaction',
         'emits': [
           {
-            'event': 'CREATE',
             'description': 'Signals the creation of a new record.',
-            'synonyms': 'new, add, initialize, generate',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'CREATE',
             'payloadSchema': [
               {
                 'name': 'source',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'new, add, initialize, generate',
+            'tier': 'essential',
           },
         ],
         'listens': [
           {
             'event': 'CONTACT_SEARCH',
-            'triggers': 'CONTACT_SEARCH',
             'source': {
               'kind': 'trait',
               'trait': 'ContactAppLayout',
             },
+            'triggers': 'CONTACT_SEARCH',
           },
           {
             'event': 'CONTACT_NOTIFICATIONS_OPEN',
-            'triggers': 'CONTACT_NOTIFICATIONS_OPEN',
             'source': {
               'kind': 'trait',
               'trait': 'ContactAppLayout',
             },
+            'triggers': 'CONTACT_NOTIFICATIONS_OPEN',
           },
         ],
+        'name': 'ContactCatalog',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'composing',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Triggers a search for contacts.',
               'key': 'CONTACT_SEARCH',
               'name': 'Contact Search',
-              'description': 'Triggers a search for contacts.',
-              'synonyms': 'find, query, lookup, search',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'find, query, lookup, search',
+              'tier': 'essential',
             },
             {
+              'description': 'Indicates new contact notifications are available.',
               'key': 'CONTACT_NOTIFICATIONS_OPEN',
               'name': 'Contact Notifications Open',
-              'description': 'Indicates new contact notifications are available.',
-              'synonyms': 'alerts, updates, reminders, news',
-              'tier': 'customization',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'alerts, updates, reminders, news',
+              'tier': 'customization',
             },
             {
+              'description': 'Signals the creation of a new record.',
               'key': 'CREATE',
               'name': 'Create',
-              'description': 'Signals the creation of a new record.',
-              'synonyms': 'new, add, initialize, generate',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'source',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'new, add, initialize, generate',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'composing',
             },
           ],
           'transitions': [
             {
-              'from': 'composing',
-              'to': 'composing',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'children': [
                       {
                         'align': 'center',
                         'children': [
                           {
-                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'users',
                                 'type': 'icon',
                               },
                               {
-                                'variant': 'h2',
-                                'type': 'typography',
                                 'content': 'Contacts',
+                                'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
-                            'gap': 'sm',
                             'direction': 'horizontal',
-                            'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
-                            'variant': 'primary',
-                            'label': 'New Contact',
                             'action': 'CREATE',
                             'icon': 'plus',
+                            'label': 'New Contact',
                             'type': 'button',
+                            'variant': 'primary',
                           },
                         ],
                         'direction': 'horizontal',
-                        'type': 'stack',
                         'gap': 'md',
                         'justify': 'between',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'direction': 'horizontal',
+                        'align': 'center',
                         'children': [
                           '@trait.ContactSearch',
                           '@trait.ContactFilter',
                         ],
+                        'direction': 'horizontal',
                         'gap': 'md',
                         'type': 'stack',
-                        'align': 'center',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.ContactBrowseList',
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
-            },
-            {
+              'event': 'INIT',
               'from': 'composing',
               'to': 'composing',
+            },
+            {
               'event': 'CONTACT_SEARCH',
-            },
-            {
               'from': 'composing',
               'to': 'composing',
-              'event': 'CONTACT_NOTIFICATIONS_OPEN',
+            },
+            {
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'gap': 'md',
-                    'direction': 'vertical',
                     'align': 'center',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
-                        'label': 'Back',
-                        'variant': 'ghost',
-                        'type': 'button',
                         'action': 'INIT',
+                        'label': 'Back',
+                        'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
                     'className': 'py-8',
+                    'direction': 'vertical',
+                    'gap': 'md',
                     'type': 'stack',
                   },
                 ],
               ],
+              'event': 'CONTACT_NOTIFICATIONS_OPEN',
+              'from': 'composing',
+              'to': 'composing',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'Contact', canonicalName) as never,
       makeTraitRef({
-        'ref': 'Search.traits.SearchResultSearch',
-        'name': 'ContactSearch',
         'config': {
-          'placeholder': 'Search contacts…',
           'event': 'CONTACT_SEARCH',
+          'placeholder': 'Search contacts…',
         },
+        'name': 'ContactSearch',
+        'ref': 'Search.traits.SearchResultSearch',
       }),
       makeTraitRef({
-        'ref': 'Filter.traits.FilterTargetFilter',
-        'name': 'ContactFilter',
         'config': {
           'event': 'CONTACT_FILTER',
           'filters': [
             {
-              'options': [],
               'field': 'company',
               'filterType': 'select',
               'label': 'Company',
+              'options': [],
             },
           ],
         },
+        'name': 'ContactFilter',
+        'ref': 'Filter.traits.FilterTargetFilter',
       }),
       makeTraitRef({
-        'ref': 'Browse.traits.BrowseItemBrowse',
-        'name': 'ContactBrowseList',
-        'linkedEntity': canonicalName,
         'config': {
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'event': 'VIEW',
-              'label': 'View',
-            },
-            {
-              'label': 'Edit',
-              'event': 'EDIT',
-              'variant': 'ghost',
-            },
-            {
-              'variant': 'danger',
-              'label': 'Delete',
-              'event': 'DELETE',
-            },
-          ],
+          'cols': 1,
           'fields': [
             {
-              'variant': 'h3',
               'icon': 'user',
               'name': 'name',
+              'variant': 'h3',
             },
             {
-              'variant': 'body',
               'name': 'email',
+              'variant': 'body',
             },
             {
               'name': 'phone',
               'variant': 'caption',
             },
             {
-              'variant': 'badge',
               'name': 'company',
+              'variant': 'badge',
             },
             {
-              'variant': 'caption',
               'name': 'role',
+              'variant': 'caption',
             },
           ],
           'gap': 'sm',
-          'cols': 1,
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
+            },
+          ],
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'SEARCH',
-            'triggers': 'REFETCH_QUERY',
             'source': {
               'kind': 'trait',
               'trait': 'ContactSearch',
             },
+            'triggers': 'REFETCH_QUERY',
           },
           {
             'event': 'FILTER',
-            'triggers': 'REFETCH_FILTER',
             'source': {
               'kind': 'trait',
               'trait': 'ContactFilter',
             },
+            'triggers': 'REFETCH_FILTER',
           },
           {
             'event': 'CONTACT_CREATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'ContactPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'CONTACT_UPDATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'ContactPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'CONTACT_DELETED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'ContactPersistor',
             },
+            'triggers': 'INIT',
           },
         ],
+        'name': 'ContactBrowseList',
+        'ref': 'Browse.traits.BrowseItemBrowse',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'ContactCreate',
-        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
-          'title': 'New Contact',
-          'mode': 'create',
           'fields': [
             'name',
             'email',
@@ -569,29 +563,29 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
             'role',
             'notes',
           ],
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'New Contact',
         },
         'events': {
           'OPEN': 'CREATE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'CREATE',
-            'triggers': 'CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'ContactCatalog',
             },
+            'triggers': 'CREATE',
           },
         ],
+        'name': 'ContactCreate',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'ContactEdit',
-        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Edit Contact',
-          'icon': 'edit',
-          'mode': 'edit',
           'fields': [
             'name',
             'email',
@@ -600,25 +594,28 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
             'role',
             'notes',
           ],
+          'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Contact',
         },
         'events': {
           'OPEN': 'EDIT',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'EDIT',
-            'triggers': 'EDIT',
             'source': {
               'kind': 'trait',
               'trait': 'ContactBrowseList',
             },
+            'triggers': 'EDIT',
           },
         ],
+        'name': 'ContactEdit',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'ContactView',
-        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'name',
@@ -628,223 +625,224 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
             'role',
             'notes',
           ],
-          'title': 'View Contact',
           'icon': 'eye',
           'mode': 'edit',
+          'title': 'View Contact',
         },
         'events': {
           'OPEN': 'VIEW',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'VIEW',
-            'triggers': 'VIEW',
             'source': {
               'kind': 'trait',
               'trait': 'ContactBrowseList',
             },
+            'triggers': 'VIEW',
           },
         ],
+        'name': 'ContactView',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-        'name': 'ContactDelete',
-        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
-          'title': 'Delete Contact',
           'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+          'title': 'Delete Contact',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'DELETE',
-            'triggers': 'DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'ContactBrowseList',
             },
+            'triggers': 'DELETE',
           },
         ],
+        'name': 'ContactDelete',
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
       }),
       rebindInlineTraitEntity({
-        'name': 'ContactPersistor',
         'category': 'lifecycle',
-        'linkedEntity': 'Contact',
         'emits': [
           {
-            'event': 'CONTACT_CREATED',
             'description': 'Signals the creation of a new contact record.',
+            'event': 'CONTACT_CREATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
             'synonyms': 'new contact, add contact, contact added',
             'tier': 'essential',
-            'scope': 'external',
+          },
+          {
+            'description': 'Signals that a contact\'s details have been modified.',
+            'event': 'CONTACT_UPDATED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-          },
-          {
-            'event': 'CONTACT_UPDATED',
-            'description': 'Signals that a contact\'s details have been modified.',
+            'scope': 'external',
             'synonyms': 'modified, changed, refreshed',
             'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
           },
           {
-            'event': 'CONTACT_DELETED',
             'description': 'Signals a contact record has been removed.',
-            'synonyms': 'removed, purged, archived',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'CONTACT_DELETED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'removed, purged, archived',
+            'tier': 'essential',
           },
         ],
+        'linkedEntity': 'Contact',
         'listens': [
           {
             'event': 'SAVE',
-            'triggers': 'DO_CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'ContactCreate',
             },
+            'triggers': 'DO_CREATE',
           },
           {
             'event': 'SAVE',
-            'triggers': 'DO_UPDATE',
             'source': {
               'kind': 'trait',
               'trait': 'ContactEdit',
             },
+            'triggers': 'DO_UPDATE',
           },
           {
             'event': 'CONFIRM_DELETE',
-            'triggers': 'DO_DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'ContactDelete',
             },
+            'triggers': 'DO_DELETE',
           },
         ],
+        'name': 'ContactPersistor',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Initiates the creation of a new record.',
               'key': 'DO_CREATE',
               'name': 'Do Create',
-              'description': 'Initiates the creation of a new record.',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
               'synonyms': 'new, add, generate, initiate',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                  'required': true,
-                },
-              ],
             },
             {
+              'description': 'Indicates data has been modified and needs to be refreshed.',
               'key': 'DO_UPDATE',
               'name': 'Do Update',
-              'description': 'Indicates data has been modified and needs to be refreshed.',
-              'synonyms': 'refresh, reload, update, sync',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
                   'required': true,
+                  'type': 'object',
                 },
               ],
+              'synonyms': 'refresh, reload, update, sync',
+              'tier': 'essential',
             },
             {
+              'description': 'Initiates the removal of a record.',
               'key': 'DO_DELETE',
               'name': 'Do Delete',
-              'description': 'Initiates the removal of a record.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'remove, discard, purge',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals the creation of a new contact record.',
               'key': 'CONTACT_CREATED',
               'name': 'Contact Created',
-              'description': 'Signals the creation of a new contact record.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'new contact, add contact, contact added',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals that a contact\'s details have been modified.',
               'key': 'CONTACT_UPDATED',
               'name': 'Contact Updated',
-              'description': 'Signals that a contact\'s details have been modified.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'modified, changed, refreshed',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals a contact record has been removed.',
               'key': 'CONTACT_DELETED',
               'name': 'Contact Deleted',
-              'description': 'Signals a contact record has been removed.',
-              'synonyms': 'removed, purged, archived',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'removed, purged, archived',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
-              'event': 'INIT',
             },
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'DO_CREATE',
               'effects': [
                 [
                   'persist',
@@ -858,11 +856,11 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_CREATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_UPDATE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -876,11 +874,11 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_UPDATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_DELETE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -894,10 +892,12 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                   },
                 ],
               ],
+              'event': 'DO_DELETE',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'Contact', canonicalName) as never,
     ],
     pages: [
@@ -1074,44 +1074,44 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
     name: 'ItemOrbital',
     uses: [
       {
-        'from': 'std/behaviors/std-app-layout',
         'as': 'AppShell',
+        'from': 'std/behaviors/std-app-layout',
       },
       {
-        'from': 'std/behaviors/std-modal',
         'as': 'Modal',
+        'from': 'std/behaviors/std-modal',
       },
       {
-        'from': 'std/behaviors/std-confirmation',
         'as': 'Confirmation',
+        'from': 'std/behaviors/std-confirmation',
       },
       {
-        'from': 'std/behaviors/std-search',
         'as': 'Search',
+        'from': 'std/behaviors/std-search',
       },
       {
-        'from': 'std/behaviors/std-filter',
         'as': 'Filter',
+        'from': 'std/behaviors/std-filter',
       },
       {
-        'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+        'from': 'std/behaviors/std-browse',
       },
       {
-        'from': 'std/behaviors/std-approval-gate',
         'as': 'Approval',
+        'from': 'std/behaviors/std-approval-gate',
       },
       {
-        'from': 'std/behaviors/std-data-erasure',
         'as': 'Erasure',
+        'from': 'std/behaviors/std-data-erasure',
       },
       {
-        'from': 'std/behaviors/std-mod-queue',
         'as': 'ModQueue',
+        'from': 'std/behaviors/std-mod-queue',
       },
       {
-        'from': 'std/behaviors/std-audit-capture',
         'as': 'Audit',
+        'from': 'std/behaviors/std-audit-capture',
       },
     ],
     entity: {
@@ -1122,69 +1122,69 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
           {
-            'name': 'name',
-            'type': 'string',
-            'required': true,
             'description': 'The identifier or label for the contact.',
+            'name': 'name',
+            'required': true,
             'synonyms': 'label, identifier, designation',
+            'type': 'string',
           },
           {
-            'name': 'description',
-            'type': 'string',
             'default': '',
             'description': 'A textual explanation or summary of the item.',
+            'name': 'description',
             'synonyms': 'summary, details, explanation, about',
+            'type': 'string',
           },
           {
-            'name': 'sku',
-            'type': 'string',
             'default': '',
             'description': 'Unique identifier for a product or item.',
+            'name': 'sku',
             'synonyms': 'product code, item number, part number',
+            'type': 'string',
           },
           {
-            'name': 'price',
-            'type': 'number',
             'default': 0,
             'description': 'The monetary cost associated with the item.',
+            'name': 'price',
             'synonyms': 'cost, amount, value, rate',
+            'type': 'number',
           },
           {
-            'name': 'quantity',
-            'type': 'number',
             'default': 0,
             'description': 'The number of items or units.',
+            'name': 'quantity',
             'synonyms': 'count, amount, number, size',
+            'type': 'number',
           },
           {
-            'name': 'category',
-            'type': 'string',
             'default': '',
             'description': 'Classification or type of the item.',
+            'name': 'category',
             'synonyms': 'type, kind, classification',
+            'type': 'string',
           },
           {
-            'name': 'pendingId',
-            'type': 'string',
             'default': '',
             'description': 'A unique identifier awaiting final assignment or processing.',
+            'name': 'pendingId',
             'synonyms': 'tempId, provisionalId, draftId',
+            'type': 'string',
           },
           {
-            'name': 'status',
-            'type': 'string',
             'default': 'active',
+            'description': 'Approval/workflow state of the item.',
+            'name': 'status',
+            'synonyms': 'state, stage, condition, review status',
+            'type': 'string',
             'values': [
               'active',
               'pending',
               'approved',
             ],
-            'description': 'Approval/workflow state of the item.',
-            'synonyms': 'state, stage, condition, review status',
           },
         ];
         const extras = params.fields ?? [];
@@ -1195,163 +1195,161 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
     } as Entity,
     traits: [
       makeTraitRef({
-        'ref': 'AppShell.traits.AppLayout',
-        'name': 'ItemAppLayout',
         'config': {
-          'searchEvent': 'ITEM_SEARCH',
+          'appName': 'App',
+          'contentTrait': '@trait.ItemCatalog',
           'navItems': [
             {
+              'href': '/contacts',
               'icon': 'users',
               'label': 'Contacts',
-              'href': '/contacts',
             },
             {
-              'label': 'Items',
               'href': '/items',
               'icon': 'package',
+              'label': 'Items',
             },
             {
+              'href': '/activities',
               'icon': 'activity',
               'label': 'Activities',
-              'href': '/activities',
             },
             {
-              'icon': 'check-square',
               'href': '/tasks',
+              'icon': 'check-square',
               'label': 'Tasks',
             },
             {
+              'href': '/calendar',
               'icon': 'calendar',
               'label': 'Calendar',
-              'href': '/calendar',
             },
             {
-              'label': 'Dashboard',
               'href': '/widgets',
               'icon': 'layout-dashboard',
+              'label': 'Dashboard',
             },
             {
-              'icon': 'rss',
               'href': '/feed',
+              'icon': 'rss',
               'label': 'Feed',
             },
             {
-              'icon': 'file-text',
               'href': '/notes',
+              'icon': 'file-text',
               'label': 'Notes',
             },
           ],
+          'notificationClickEvent': 'ITEM_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'searchEvent': 'ITEM_SEARCH',
           'topBarActions': [
             {
               'event': 'OPEN_APPROVALS',
-              'label': 'Approvals',
               'icon': 'shield-check',
+              'label': 'Approvals',
               'variant': 'default',
             },
           ],
-          'notificationClickEvent': 'ITEM_NOTIFICATIONS_OPEN',
-          'appName': 'App',
-          'notifications': [],
-          'contentTrait': '@trait.ItemCatalog',
         },
         'events': {
           'NOTIFY_CLICK': 'ITEM_NOTIFICATIONS_OPEN',
           'SEARCH': 'ITEM_SEARCH',
         },
+        'name': 'ItemAppLayout',
+        'ref': 'AppShell.traits.AppLayout',
       }),
       rebindInlineTraitEntity({
-        'name': 'ItemCatalog',
         'category': 'interaction',
         'emits': [
           {
-            'event': 'CREATE',
             'description': 'Signals the creation of a new record.',
-            'synonyms': 'new, add, generate, initialize',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'CREATE',
             'payloadSchema': [
               {
                 'name': 'source',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'new, add, generate, initialize',
+            'tier': 'essential',
           },
         ],
         'listens': [
           {
             'event': 'ITEM_SEARCH',
-            'triggers': 'ITEM_SEARCH',
             'source': {
               'kind': 'trait',
               'trait': 'ItemAppLayout',
             },
+            'triggers': 'ITEM_SEARCH',
           },
           {
             'event': 'ITEM_NOTIFICATIONS_OPEN',
-            'triggers': 'ITEM_NOTIFICATIONS_OPEN',
             'source': {
               'kind': 'trait',
               'trait': 'ItemAppLayout',
             },
+            'triggers': 'ITEM_NOTIFICATIONS_OPEN',
           },
         ],
+        'name': 'ItemCatalog',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'composing',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'A search query for items has been submitted.',
               'key': 'ITEM_SEARCH',
               'name': 'Item Search',
-              'description': 'A search query for items has been submitted.',
-              'synonyms': 'query, find, lookup, browse',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'query, find, lookup, browse',
+              'tier': 'essential',
             },
             {
+              'description': 'Indicates new notifications are available for items.',
               'key': 'ITEM_NOTIFICATIONS_OPEN',
               'name': 'Item Notifications Open',
-              'description': 'Indicates new notifications are available for items.',
-              'synonyms': 'alerts, notification, updates, new',
-              'tier': 'customization',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'alerts, notification, updates, new',
+              'tier': 'customization',
             },
             {
+              'description': 'Signals the creation of a new record.',
               'key': 'CREATE',
               'name': 'Create',
-              'description': 'Signals the creation of a new record.',
-              'synonyms': 'new, add, generate, initialize',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'source',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'new, add, generate, initialize',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'composing',
             },
           ],
           'transitions': [
             {
-              'from': 'composing',
-              'to': 'composing',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
@@ -1359,13 +1357,9 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                   {
                     'children': [
                       {
-                        'gap': 'md',
-                        'justify': 'between',
                         'align': 'center',
                         'children': [
                           {
-                            'direction': 'horizontal',
-                            'gap': 'sm',
                             'align': 'center',
                             'children': [
                               {
@@ -1373,65 +1367,65 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                                 'type': 'icon',
                               },
                               {
+                                'content': 'Items',
                                 'type': 'typography',
                                 'variant': 'h2',
-                                'content': 'Items',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
                             'type': 'stack',
                           },
                           {
-                            'type': 'button',
-                            'variant': 'primary',
+                            'action': 'CREATE',
                             'icon': 'plus',
                             'label': 'New Item',
-                            'action': 'CREATE',
+                            'type': 'button',
+                            'variant': 'primary',
                           },
                         ],
-                        'type': 'stack',
                         'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       {
-                        'type': 'stack',
-                        'gap': 'md',
                         'align': 'center',
                         'children': [
                           '@trait.ItemSearch',
                           '@trait.ItemFilter',
                         ],
                         'direction': 'horizontal',
+                        'gap': 'md',
+                        'type': 'stack',
                       },
                       '@trait.ItemBrowseList',
                     ],
-                    'type': 'stack',
                     'direction': 'vertical',
                     'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
-            },
-            {
+              'event': 'INIT',
               'from': 'composing',
               'to': 'composing',
+            },
+            {
               'event': 'ITEM_SEARCH',
-            },
-            {
               'from': 'composing',
               'to': 'composing',
-              'event': 'ITEM_NOTIFICATIONS_OPEN',
+            },
+            {
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
                     'align': 'center',
-                    'className': 'py-8',
-                    'direction': 'vertical',
-                    'gap': 'md',
                     'children': [
                       {
                         'name': 'bell',
@@ -1445,29 +1439,33 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                       {
                         'action': 'INIT',
                         'label': 'Back',
-                        'variant': 'ghost',
                         'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
+                    'className': 'py-8',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
+              'event': 'ITEM_NOTIFICATIONS_OPEN',
+              'from': 'composing',
+              'to': 'composing',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'Item', canonicalName) as never,
       makeTraitRef({
-        'ref': 'Search.traits.SearchResultSearch',
-        'name': 'ItemSearch',
         'config': {
-          'placeholder': 'Search items…',
           'event': 'ITEM_SEARCH',
+          'placeholder': 'Search items…',
         },
+        'name': 'ItemSearch',
+        'ref': 'Search.traits.SearchResultSearch',
       }),
       makeTraitRef({
-        'ref': 'Filter.traits.FilterTargetFilter',
-        'name': 'ItemFilter',
         'config': {
           'event': 'ITEM_FILTER',
           'filters': [
@@ -1479,18 +1477,17 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             },
           ],
         },
+        'name': 'ItemFilter',
+        'ref': 'Filter.traits.FilterTargetFilter',
       }),
       makeTraitRef({
-        'ref': 'Browse.traits.BrowseItemBrowse',
-        'name': 'ItemBrowseList',
-        'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
+          'cols': 2,
           'fields': [
             {
+              'icon': 'package',
               'name': 'name',
               'variant': 'h3',
-              'icon': 'package',
             },
             {
               'name': 'description',
@@ -1501,93 +1498,90 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
               'variant': 'caption',
             },
             {
-              'variant': 'badge',
               'format': 'currency',
               'name': 'price',
+              'variant': 'badge',
             },
             {
-              'variant': 'badge',
               'name': 'quantity',
+              'variant': 'badge',
             },
             {
               'name': 'category',
               'variant': 'caption',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
           ],
+          'gap': 'sm',
           'itemActions': [
             {
-              'variant': 'ghost',
               'event': 'VIEW',
               'label': 'View',
+              'variant': 'ghost',
             },
             {
               'event': 'EDIT',
-              'variant': 'ghost',
               'label': 'Edit',
+              'variant': 'ghost',
             },
             {
-              'variant': 'danger',
-              'label': 'Delete',
               'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
             },
           ],
-          'cols': 2,
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'SEARCH',
-            'triggers': 'REFETCH_QUERY',
             'source': {
               'kind': 'trait',
               'trait': 'ItemSearch',
             },
+            'triggers': 'REFETCH_QUERY',
           },
           {
             'event': 'FILTER',
-            'triggers': 'REFETCH_FILTER',
             'source': {
               'kind': 'trait',
               'trait': 'ItemFilter',
             },
+            'triggers': 'REFETCH_FILTER',
           },
           {
             'event': 'ITEM_CREATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'ItemPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'ITEM_UPDATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'ItemPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'ITEM_DELETED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'ItemPersistor',
             },
+            'triggers': 'INIT',
           },
         ],
+        'name': 'ItemBrowseList',
+        'ref': 'Browse.traits.BrowseItemBrowse',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'ItemCreate',
-        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
-          'icon': 'plus-circle',
-          'title': 'New Item',
           'fields': [
             'name',
             'description',
@@ -1596,28 +1590,29 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             'quantity',
             'category',
           ],
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'New Item',
         },
         'events': {
           'OPEN': 'CREATE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'CREATE',
-            'triggers': 'CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'ItemCatalog',
             },
+            'triggers': 'CREATE',
           },
         ],
+        'name': 'ItemCreate',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'ItemEdit',
-        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'title': 'Edit Item',
           'fields': [
             'name',
             'description',
@@ -1627,25 +1622,27 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             'category',
           ],
           'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Item',
         },
         'events': {
           'OPEN': 'EDIT',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'EDIT',
-            'triggers': 'EDIT',
             'source': {
               'kind': 'trait',
               'trait': 'ItemBrowseList',
             },
+            'triggers': 'EDIT',
           },
         ],
+        'name': 'ItemEdit',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'ItemView',
-        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'name',
@@ -1655,187 +1652,193 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             'quantity',
             'category',
           ],
-          'title': 'View Item',
           'icon': 'eye',
           'mode': 'edit',
+          'title': 'View Item',
         },
         'events': {
           'OPEN': 'VIEW',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'VIEW',
-            'triggers': 'VIEW',
             'source': {
               'kind': 'trait',
               'trait': 'ItemBrowseList',
             },
+            'triggers': 'VIEW',
           },
         ],
+        'name': 'ItemView',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-        'name': 'ItemDelete',
-        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'alert-triangle',
-          'title': 'Delete Item',
           'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
+          'icon': 'alert-triangle',
+          'title': 'Delete Item',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'DELETE',
-            'triggers': 'DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'ItemBrowseList',
             },
+            'triggers': 'DELETE',
           },
         ],
+        'name': 'ItemDelete',
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
       }),
       rebindInlineTraitEntity({
-        'name': 'ItemPersistor',
         'category': 'lifecycle',
-        'linkedEntity': 'Item',
+        'config': {
+          'requireApproval': {
+            'default': false,
+            'description': 'When on, a new item is held as a pending approval request until an approver grants it; only then is the item created. Off by default.',
+            'label': 'Require approval before new items go live',
+            'synonyms': 'gate, sign-off, review before create, approval required, hold for review',
+            'tier': 'policy',
+            'type': 'boolean',
+          },
+        },
         'emits': [
           {
-            'event': 'ITEM_CREATED',
             'description': 'Signals a new item has been created.',
+            'event': 'ITEM_CREATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
             'synonyms': 'added, new, added, instantiate',
             'tier': 'essential',
-            'scope': 'external',
+          },
+          {
+            'description': 'Signals that an item\'s data has been modified and persisted.',
+            'event': 'ITEM_UPDATED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-          },
-          {
-            'event': 'ITEM_UPDATED',
-            'description': 'Signals that an item\'s data has been modified and persisted.',
+            'scope': 'external',
             'synonyms': 'modified, changed, refreshed, updated',
             'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
           },
           {
-            'event': 'ITEM_DELETED',
             'description': 'Signals that an item has been removed.',
-            'synonyms': 'removed, purged, discarded',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'ITEM_DELETED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'removed, purged, discarded',
+            'tier': 'essential',
           },
         ],
+        'linkedEntity': 'Item',
         'listens': [
           {
             'event': 'SAVE',
-            'triggers': 'DO_CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'ItemCreate',
             },
+            'triggers': 'DO_CREATE',
           },
           {
             'event': 'SAVE',
-            'triggers': 'DO_UPDATE',
             'source': {
               'kind': 'trait',
               'trait': 'ItemEdit',
             },
+            'triggers': 'DO_UPDATE',
           },
           {
             'event': 'CONFIRM_DELETE',
-            'triggers': 'DO_DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'ItemDelete',
             },
+            'triggers': 'DO_DELETE',
           },
           {
             'event': 'ApprovalGranted',
-            'triggers': 'GRANTED',
             'source': {
               'kind': 'trait',
               'trait': 'ItemApproval',
             },
+            'triggers': 'GRANTED',
           },
         ],
+        'name': 'ItemPersistor',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Initiates the creation of a new record.',
               'key': 'DO_CREATE',
               'name': 'Do Create',
-              'description': 'Initiates the creation of a new record.',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
               'synonyms': 'new, add, generate, initialize',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                  'required': true,
-                },
-              ],
             },
             {
+              'description': 'Signals that data has been modified and should be refreshed.',
               'key': 'DO_UPDATE',
               'name': 'Do Update',
-              'description': 'Signals that data has been modified and should be refreshed.',
-              'synonyms': 'refresh, changed, modified, updated',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
                   'required': true,
+                  'type': 'object',
                 },
               ],
+              'synonyms': 'refresh, changed, modified, updated',
+              'tier': 'essential',
             },
             {
+              'description': 'Initiates the removal of a record.',
               'key': 'DO_DELETE',
               'name': 'Do Delete',
-              'description': 'Initiates the removal of a record.',
-              'synonyms': 'remove, discard, erase',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'remove, discard, erase',
+              'tier': 'essential',
             },
             {
+              'description': 'An approver granted a held item request; replay the create from the carried payload.',
               'key': 'GRANTED',
               'name': 'Granted',
-              'description': 'An approver granted a held item request; replay the create from the carried payload.',
-              'synonyms': 'approved, granted, authorized',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'requestId',
@@ -1846,61 +1849,62 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                   'type': 'object',
                 },
               ],
+              'synonyms': 'approved, granted, authorized',
+              'tier': 'essential',
             },
             {
+              'description': 'Signals a new item has been created.',
               'key': 'ITEM_CREATED',
               'name': 'Item Created',
-              'description': 'Signals a new item has been created.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'added, new, added, instantiate',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals that an item\'s data has been modified and persisted.',
               'key': 'ITEM_UPDATED',
               'name': 'Item Updated',
-              'description': 'Signals that an item\'s data has been modified and persisted.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'modified, changed, refreshed, updated',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals that an item has been removed.',
               'key': 'ITEM_DELETED',
               'name': 'Item Deleted',
-              'description': 'Signals that an item has been removed.',
-              'synonyms': 'removed, purged, discarded',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'removed, purged, discarded',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
-              'event': 'INIT',
             },
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'DO_CREATE',
-              'guard': [
-                'not',
-                '@config.requireApproval',
-              ],
               'effects': [
                 [
                   'persist',
@@ -1914,29 +1918,33 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                   },
                 ],
               ],
+              'event': 'DO_CREATE',
+              'from': 'idle',
+              'guard': [
+                'not',
+                '@config.requireApproval',
+              ],
+              'to': 'idle',
             },
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'DO_CREATE',
-              'guard': '@config.requireApproval',
               'effects': [
                 [
                   'persist',
                   'create',
                   'ApprovalRequest',
                   {
-                    'status': 'pending',
                     'gatedEvent': 'ITEM_CREATE',
                     'payload': '@payload.data',
+                    'status': 'pending',
                   },
                 ],
               ],
+              'event': 'DO_CREATE',
+              'from': 'idle',
+              'guard': '@config.requireApproval',
+              'to': 'idle',
             },
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'DO_UPDATE',
               'effects': [
                 [
                   'persist',
@@ -1950,11 +1958,11 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_UPDATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_DELETE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -1968,11 +1976,11 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_DELETE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'GRANTED',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -1986,64 +1994,56 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                   },
                 ],
               ],
+              'event': 'GRANTED',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'config': {
-          'requireApproval': {
-            'type': 'boolean',
-            'default': false,
-            'label': 'Require approval before new items go live',
-            'description': 'When on, a new item is held as a pending approval request until an approver grants it; only then is the item created. Off by default.',
-            'synonyms': 'gate, sign-off, review before create, approval required, hold for review',
-            'tier': 'policy',
-          },
-        },
-        'scope': 'instance',
       } as never, 'Item', canonicalName) as never,
       makeTraitRef({
-        'ref': 'Approval.traits.ApprovalGateReview',
-        'name': 'ItemApproval',
         'config': {
           'enabled': true,
         },
         'events': {
           'OPEN': 'OPEN_APPROVALS',
         },
+        'name': 'ItemApproval',
+        'ref': 'Approval.traits.ApprovalGateReview',
       }),
       makeTraitRef({
-        'ref': 'Erasure.traits.ErasureWorkflow',
-        'name': 'ItemErasure',
         'config': {
+          'enabled': false,
           'targetEntity': 'Item',
-          'enabled': false,
         },
+        'name': 'ItemErasure',
+        'ref': 'Erasure.traits.ErasureWorkflow',
       }),
       makeTraitRef({
-        'ref': 'ModQueue.traits.ModQueueItemReview',
+        'config': {
+          'enabled': false,
+        },
         'name': 'ItemModeration',
-        'config': {
-          'enabled': false,
-        },
+        'ref': 'ModQueue.traits.ModQueueItemReview',
       }),
       makeTraitRef({
-        'ref': 'Audit.traits.AuditCaptureListener',
-        'name': 'ItemAudit',
         'config': {
-          'captureEntity': 'Item',
           'captureBeforeAfter': true,
+          'captureEntity': 'Item',
           'enabled': true,
         },
         'listens': [
           {
             'event': 'ITEM_UPDATED',
-            'triggers': 'EntityMutated',
             'source': {
               'kind': 'trait',
               'trait': 'ItemPersistor',
             },
+            'triggers': 'EntityMutated',
           },
         ],
+        'name': 'ItemAudit',
+        'ref': 'Audit.traits.AuditCaptureListener',
       }),
     ],
     pages: [
@@ -2230,20 +2230,20 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
     name: 'ActivityOrbital',
     uses: [
       {
-        'from': 'std/behaviors/std-app-layout',
         'as': 'AppShell',
+        'from': 'std/behaviors/std-app-layout',
       },
       {
-        'from': 'std/behaviors/std-modal',
         'as': 'Modal',
+        'from': 'std/behaviors/std-modal',
       },
       {
-        'from': 'std/behaviors/std-confirmation',
         'as': 'Confirmation',
+        'from': 'std/behaviors/std-confirmation',
       },
       {
-        'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+        'from': 'std/behaviors/std-browse',
       },
     ],
     entity: {
@@ -2254,50 +2254,50 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
           {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
             'description': 'The descriptive name or heading for the item.',
+            'name': 'title',
+            'required': true,
             'synonyms': 'label, heading, name',
+            'type': 'string',
           },
           {
-            'name': 'type',
-            'type': 'string',
             'default': '',
             'description': 'Specifies the kind or category of the item.',
+            'name': 'type',
             'synonyms': 'kind, category, class, itemType',
+            'type': 'string',
           },
           {
-            'name': 'actor',
-            'type': 'string',
             'default': '',
             'description': 'The individual or system performing an action.',
+            'name': 'actor',
             'synonyms': 'performer, agent, initiator, user',
+            'type': 'string',
           },
           {
-            'name': 'timestamp',
-            'type': 'string',
             'default': '',
             'description': 'Date and time of the record\'s creation or last modification.',
+            'name': 'timestamp',
             'synonyms': 'date, time, created, modified, last updated',
+            'type': 'string',
           },
           {
-            'name': 'status',
-            'type': 'string',
             'default': '',
             'description': 'Current state or condition of the item.',
+            'name': 'status',
             'synonyms': 'state, condition, progress',
+            'type': 'string',
           },
           {
-            'name': 'notes',
-            'type': 'string',
             'default': '',
             'description': 'Free-form text containing additional information.',
+            'name': 'notes',
             'synonyms': 'comments, remarks, details, text',
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -2308,14 +2308,9 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
     } as Entity,
     traits: [
       makeTraitRef({
-        'ref': 'AppShell.traits.AppLayout',
-        'name': 'ActivityAppLayout',
         'config': {
-          'notifications': [],
           'appName': 'App',
           'contentTrait': '@trait.ActivityCatalog',
-          'notificationClickEvent': 'ACTIVITY_NOTIFICATIONS_OPEN',
-          'searchEvent': 'ACTIVITY_SEARCH',
           'navItems': [
             {
               'href': '/contacts',
@@ -2323,14 +2318,14 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
               'label': 'Contacts',
             },
             {
-              'label': 'Items',
               'href': '/items',
               'icon': 'package',
+              'label': 'Items',
             },
             {
+              'href': '/activities',
               'icon': 'activity',
               'label': 'Activities',
-              'href': '/activities',
             },
             {
               'href': '/tasks',
@@ -2338,8 +2333,8 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
               'label': 'Tasks',
             },
             {
-              'icon': 'calendar',
               'href': '/calendar',
+              'icon': 'calendar',
               'label': 'Calendar',
             },
             {
@@ -2354,189 +2349,173 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
             },
             {
               'href': '/notes',
-              'label': 'Notes',
               'icon': 'file-text',
+              'label': 'Notes',
             },
           ],
+          'notificationClickEvent': 'ACTIVITY_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'searchEvent': 'ACTIVITY_SEARCH',
         },
         'events': {
           'NOTIFY_CLICK': 'ACTIVITY_NOTIFICATIONS_OPEN',
           'SEARCH': 'ACTIVITY_SEARCH',
         },
+        'name': 'ActivityAppLayout',
+        'ref': 'AppShell.traits.AppLayout',
       }),
       rebindInlineTraitEntity({
-        'name': 'ActivityCatalog',
         'category': 'interaction',
         'listens': [
           {
             'event': 'ACTIVITY_SEARCH',
-            'triggers': 'ACTIVITY_SEARCH',
             'source': {
               'kind': 'trait',
               'trait': 'ActivityAppLayout',
             },
+            'triggers': 'ACTIVITY_SEARCH',
           },
           {
             'event': 'ACTIVITY_NOTIFICATIONS_OPEN',
-            'triggers': 'ACTIVITY_NOTIFICATIONS_OPEN',
             'source': {
               'kind': 'trait',
               'trait': 'ActivityAppLayout',
             },
+            'triggers': 'ACTIVITY_NOTIFICATIONS_OPEN',
           },
         ],
+        'name': 'ActivityCatalog',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'composing',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Triggers a search operation for activity records.',
               'key': 'ACTIVITY_SEARCH',
               'name': 'Activity Search',
-              'description': 'Triggers a search operation for activity records.',
-              'synonyms': 'find, query, lookup, browse',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'find, query, lookup, browse',
+              'tier': 'essential',
             },
             {
+              'description': 'Indicates new activity notifications are available.',
               'key': 'ACTIVITY_NOTIFICATIONS_OPEN',
               'name': 'Activity Notifications Open',
-              'description': 'Indicates new activity notifications are available.',
-              'synonyms': 'notify, alert, update, new',
-              'tier': 'customization',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'notify, alert, update, new',
+              'tier': 'customization',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'composing',
             },
           ],
           'transitions': [
             {
-              'from': 'composing',
-              'to': 'composing',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
+                        'align': 'center',
                         'children': [
                           {
                             'name': 'activity',
                             'type': 'icon',
                           },
                           {
-                            'variant': 'h2',
-                            'type': 'typography',
                             'content': 'Activities',
+                            'type': 'typography',
+                            'variant': 'h2',
                           },
                         ],
-                        'align': 'center',
                         'direction': 'horizontal',
-                        'type': 'stack',
                         'gap': 'sm',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
                       },
                       '@trait.ActivityBrowseList',
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
-            },
-            {
+              'event': 'INIT',
               'from': 'composing',
               'to': 'composing',
+            },
+            {
               'event': 'ACTIVITY_SEARCH',
-            },
-            {
               'from': 'composing',
               'to': 'composing',
-              'event': 'ACTIVITY_NOTIFICATIONS_OPEN',
+            },
+            {
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
                     'align': 'center',
-                    'gap': 'md',
-                    'type': 'stack',
-                    'className': 'py-8',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
                         'action': 'INIT',
                         'label': 'Back',
-                        'variant': 'ghost',
                         'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
+                    'className': 'py-8',
                     'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
+              'event': 'ACTIVITY_NOTIFICATIONS_OPEN',
+              'from': 'composing',
+              'to': 'composing',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'Activity', canonicalName) as never,
       makeTraitRef({
-        'ref': 'Browse.traits.BrowseItemBrowse',
-        'name': 'ActivityBrowseList',
-        'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'label': 'View',
-              'event': 'VIEW',
-            },
-            {
-              'label': 'Edit',
-              'variant': 'ghost',
-              'event': 'EDIT',
-            },
-            {
-              'variant': 'danger',
-              'event': 'DELETE',
-              'label': 'Delete',
-            },
-          ],
           'cols': 1,
           'fields': [
             {
-              'variant': 'h4',
               'icon': 'activity',
               'name': 'title',
+              'variant': 'h4',
             },
             {
               'name': 'type',
@@ -2547,47 +2526,65 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
               'variant': 'caption',
             },
             {
-              'variant': 'caption',
-              'name': 'timestamp',
               'format': 'date',
+              'name': 'timestamp',
+              'variant': 'caption',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
+            },
+          ],
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
             },
           ],
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'ACTIVITY_CREATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'ActivityPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'ACTIVITY_UPDATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'ActivityPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'ACTIVITY_DELETED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'ActivityPersistor',
             },
+            'triggers': 'INIT',
           },
         ],
+        'name': 'ActivityBrowseList',
+        'ref': 'Browse.traits.BrowseItemBrowse',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'ActivityView',
-        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'title',
@@ -2597,30 +2594,29 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
             'status',
             'notes',
           ],
-          'title': 'View Activity',
           'icon': 'eye',
           'mode': 'edit',
+          'title': 'View Activity',
         },
         'events': {
           'OPEN': 'VIEW',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'VIEW',
-            'triggers': 'VIEW',
             'source': {
               'kind': 'trait',
               'trait': 'ActivityBrowseList',
             },
+            'triggers': 'VIEW',
           },
         ],
+        'name': 'ActivityView',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'ActivityEdit',
-        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
           'fields': [
             'title',
             'type',
@@ -2629,200 +2625,202 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
             'status',
             'notes',
           ],
-          'title': 'Edit Activity',
           'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Activity',
         },
         'events': {
           'OPEN': 'EDIT',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'EDIT',
-            'triggers': 'EDIT',
             'source': {
               'kind': 'trait',
               'trait': 'ActivityBrowseList',
             },
+            'triggers': 'EDIT',
           },
         ],
+        'name': 'ActivityEdit',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-        'name': 'ActivityDelete',
-        'linkedEntity': canonicalName,
         'config': {
+          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
           'title': 'Delete Activity',
-          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'DELETE',
-            'triggers': 'DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'ActivityBrowseList',
             },
+            'triggers': 'DELETE',
           },
         ],
+        'name': 'ActivityDelete',
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
       }),
       rebindInlineTraitEntity({
-        'name': 'ActivityPersistor',
         'category': 'lifecycle',
-        'linkedEntity': 'Activity',
         'emits': [
           {
-            'event': 'ACTIVITY_CREATED',
             'description': 'Signals a new activity has been created.',
+            'event': 'ACTIVITY_CREATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
             'synonyms': 'new, added, generated',
             'tier': 'essential',
-            'scope': 'external',
+          },
+          {
+            'description': 'Signals that an activity has been modified and saved.',
+            'event': 'ACTIVITY_UPDATED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-          },
-          {
-            'event': 'ACTIVITY_UPDATED',
-            'description': 'Signals that an activity has been modified and saved.',
+            'scope': 'external',
             'synonyms': 'modified, changed, updated, refreshed',
             'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
           },
           {
-            'event': 'ACTIVITY_DELETED',
             'description': 'Signals that an activity record has been removed.',
-            'synonyms': 'removed, purged, discarded',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'ACTIVITY_DELETED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'removed, purged, discarded',
+            'tier': 'essential',
           },
         ],
+        'linkedEntity': 'Activity',
         'listens': [
           {
             'event': 'SAVE',
-            'triggers': 'DO_UPDATE',
             'source': {
               'kind': 'trait',
               'trait': 'ActivityEdit',
             },
+            'triggers': 'DO_UPDATE',
           },
           {
             'event': 'CONFIRM_DELETE',
-            'triggers': 'DO_DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'ActivityDelete',
             },
+            'triggers': 'DO_DELETE',
           },
         ],
+        'name': 'ActivityPersistor',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Indicates data has been modified and should be synchronized.',
               'key': 'DO_UPDATE',
               'name': 'Do Update',
-              'description': 'Indicates data has been modified and should be synchronized.',
-              'synonyms': 'refresh, sync, change, modify',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
                   'required': true,
+                  'type': 'object',
                 },
               ],
+              'synonyms': 'refresh, sync, change, modify',
+              'tier': 'essential',
             },
             {
+              'description': 'Initiates the removal of a record.',
               'key': 'DO_DELETE',
               'name': 'Do Delete',
-              'description': 'Initiates the removal of a record.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'remove, discard, erase',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals a new activity has been created.',
               'key': 'ACTIVITY_CREATED',
               'name': 'Activity Created',
-              'description': 'Signals a new activity has been created.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'new, added, generated',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals that an activity has been modified and saved.',
               'key': 'ACTIVITY_UPDATED',
               'name': 'Activity Updated',
-              'description': 'Signals that an activity has been modified and saved.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'modified, changed, updated, refreshed',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals that an activity record has been removed.',
               'key': 'ACTIVITY_DELETED',
               'name': 'Activity Deleted',
-              'description': 'Signals that an activity record has been removed.',
-              'synonyms': 'removed, purged, discarded',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'removed, purged, discarded',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
-              'event': 'INIT',
             },
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'DO_UPDATE',
               'effects': [
                 [
                   'persist',
@@ -2836,11 +2834,11 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_UPDATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_DELETE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -2854,10 +2852,12 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                   },
                 ],
               ],
+              'event': 'DO_DELETE',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'Activity', canonicalName) as never,
     ],
     pages: [
@@ -3022,24 +3022,24 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
     name: 'TaskOrbital',
     uses: [
       {
-        'from': 'std/behaviors/std-app-layout',
         'as': 'AppShell',
+        'from': 'std/behaviors/std-app-layout',
       },
       {
-        'from': 'std/behaviors/std-modal',
         'as': 'Modal',
+        'from': 'std/behaviors/std-modal',
       },
       {
-        'from': 'std/behaviors/std-confirmation',
         'as': 'Confirmation',
+        'from': 'std/behaviors/std-confirmation',
       },
       {
-        'from': 'std/behaviors/std-selection',
         'as': 'Selection',
+        'from': 'std/behaviors/std-selection',
       },
       {
-        'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+        'from': 'std/behaviors/std-browse',
       },
     ],
     entity: {
@@ -3050,67 +3050,67 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
           {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
             'description': 'A short, user-facing name for the item.',
+            'name': 'title',
+            'required': true,
             'synonyms': 'label, heading, subject',
+            'type': 'string',
           },
           {
-            'name': 'description',
-            'type': 'string',
             'default': '',
             'description': 'A textual explanation or summary of the item.',
+            'name': 'description',
             'synonyms': 'summary, details, explanation, about',
+            'type': 'string',
           },
           {
-            'name': 'assignee',
-            'type': 'string',
             'default': '',
             'description': 'The person or system responsible for a task or item.',
+            'name': 'assignee',
             'synonyms': 'owner, responsible, assignedTo',
+            'type': 'string',
           },
           {
-            'name': 'dueDate',
-            'type': 'string',
             'default': '',
             'description': 'The date and time when something is expected to be completed.',
+            'name': 'dueDate',
             'synonyms': 'deadline, completionDate, targetDate',
+            'type': 'string',
           },
           {
-            'name': 'priority',
-            'type': 'string',
             'default': 'medium',
+            'description': 'Indicates the level of importance or urgency.',
+            'name': 'priority',
+            'synonyms': 'level, importance, urgency',
+            'type': 'string',
             'values': [
               'low',
               'medium',
               'high',
             ],
-            'description': 'Indicates the level of importance or urgency.',
-            'synonyms': 'level, importance, urgency',
           },
           {
-            'name': 'status',
-            'type': 'string',
             'default': 'todo',
+            'description': 'Current progress or state of the item.',
+            'name': 'status',
+            'synonyms': 'state, progress, stage',
+            'type': 'string',
             'values': [
               'todo',
               'doing',
               'done',
             ],
-            'description': 'Current progress or state of the item.',
-            'synonyms': 'state, progress, stage',
           },
           {
-            'name': 'pendingId',
-            'type': 'string',
             'default': '',
             'description': 'A unique identifier awaiting final assignment or processing.',
+            'name': 'pendingId',
             'synonyms': 'tempId, provisionalId, draftId',
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -3121,11 +3121,9 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
     } as Entity,
     traits: [
       makeTraitRef({
-        'ref': 'AppShell.traits.AppLayout',
-        'name': 'TaskAppLayout',
         'config': {
+          'appName': 'App',
           'contentTrait': '@trait.TaskCatalog',
-          'notificationClickEvent': 'TASK_NOTIFICATIONS_OPEN',
           'navItems': [
             {
               'href': '/contacts',
@@ -3133,9 +3131,9 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
               'label': 'Contacts',
             },
             {
+              'href': '/items',
               'icon': 'package',
               'label': 'Items',
-              'href': '/items',
             },
             {
               'href': '/activities',
@@ -3143,13 +3141,13 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
               'label': 'Activities',
             },
             {
-              'label': 'Tasks',
               'href': '/tasks',
               'icon': 'check-square',
+              'label': 'Tasks',
             },
             {
-              'icon': 'calendar',
               'href': '/calendar',
+              'icon': 'calendar',
               'label': 'Calendar',
             },
             {
@@ -3163,152 +3161,151 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
               'label': 'Feed',
             },
             {
+              'href': '/notes',
               'icon': 'file-text',
               'label': 'Notes',
-              'href': '/notes',
             },
           ],
-          'searchEvent': 'TASK_SEARCH',
-          'appName': 'App',
+          'notificationClickEvent': 'TASK_NOTIFICATIONS_OPEN',
           'notifications': [],
+          'searchEvent': 'TASK_SEARCH',
         },
         'events': {
           'NOTIFY_CLICK': 'TASK_NOTIFICATIONS_OPEN',
           'SEARCH': 'TASK_SEARCH',
         },
+        'name': 'TaskAppLayout',
+        'ref': 'AppShell.traits.AppLayout',
       }),
       rebindInlineTraitEntity({
-        'name': 'TaskCatalog',
         'category': 'interaction',
         'emits': [
           {
-            'event': 'CREATE',
             'description': 'Indicates a new record has been created.',
-            'synonyms': 'new, add, generate, instantiate',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'CREATE',
             'payloadSchema': [
               {
                 'name': 'source',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'new, add, generate, instantiate',
+            'tier': 'essential',
           },
         ],
         'listens': [
           {
             'event': 'TASK_SEARCH',
-            'triggers': 'TASK_SEARCH',
             'source': {
               'kind': 'trait',
               'trait': 'TaskAppLayout',
             },
+            'triggers': 'TASK_SEARCH',
           },
           {
             'event': 'TASK_NOTIFICATIONS_OPEN',
-            'triggers': 'TASK_NOTIFICATIONS_OPEN',
             'source': {
               'kind': 'trait',
               'trait': 'TaskAppLayout',
             },
+            'triggers': 'TASK_NOTIFICATIONS_OPEN',
           },
         ],
+        'name': 'TaskCatalog',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'composing',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Triggers a search operation for tasks.',
               'key': 'TASK_SEARCH',
               'name': 'Task Search',
-              'description': 'Triggers a search operation for tasks.',
-              'synonyms': 'find, query, lookup, search',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'find, query, lookup, search',
+              'tier': 'essential',
             },
             {
+              'description': 'Indicates new task notifications are available.',
               'key': 'TASK_NOTIFICATIONS_OPEN',
               'name': 'Task Notifications Open',
-              'description': 'Indicates new task notifications are available.',
-              'synonyms': 'alert, notify, update, reminder',
-              'tier': 'customization',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'alert, notify, update, reminder',
+              'tier': 'customization',
             },
             {
+              'description': 'Indicates a new record has been created.',
               'key': 'CREATE',
               'name': 'Create',
-              'description': 'Indicates a new record has been created.',
-              'synonyms': 'new, add, generate, instantiate',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'source',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'new, add, generate, instantiate',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'composing',
             },
           ],
           'transitions': [
             {
-              'from': 'composing',
-              'to': 'composing',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'children': [
                       {
-                        'type': 'stack',
+                        'align': 'center',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
-                                'type': 'icon',
                                 'name': 'check-square',
+                                'type': 'icon',
                               },
                               {
                                 'content': 'Tasks',
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
                             'direction': 'horizontal',
-                            'align': 'center',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
-                            'label': 'New Task',
-                            'variant': 'primary',
                             'action': 'CREATE',
                             'icon': 'plus',
+                            'label': 'New Task',
                             'type': 'button',
+                            'variant': 'primary',
                           },
                         ],
-                        'gap': 'md',
-                        'align': 'center',
                         'direction': 'horizontal',
+                        'gap': 'md',
                         'justify': 'between',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -3319,110 +3316,93 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                       },
                       '@trait.TaskBrowseList',
                     ],
-                    'type': 'stack',
+                    'direction': 'vertical',
                     'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
-            },
-            {
+              'event': 'INIT',
               'from': 'composing',
               'to': 'composing',
+            },
+            {
               'event': 'TASK_SEARCH',
-            },
-            {
               'from': 'composing',
               'to': 'composing',
-              'event': 'TASK_NOTIFICATIONS_OPEN',
+            },
+            {
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
+                    'align': 'center',
                     'children': [
                       {
                         'name': 'bell',
                         'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
                         'action': 'INIT',
                         'label': 'Back',
-                        'variant': 'ghost',
                         'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
-                    'gap': 'md',
                     'className': 'py-8',
-                    'align': 'center',
+                    'direction': 'vertical',
+                    'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
+              'event': 'TASK_NOTIFICATIONS_OPEN',
+              'from': 'composing',
+              'to': 'composing',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'Task', canonicalName) as never,
       makeTraitRef({
-        'ref': 'Selection.traits.SelectableItemSelection',
-        'name': 'TaskSelection',
         'config': {
+          'event': 'TASK_STATUS_SELECT',
           'options': [
             {
               'label': 'To Do',
               'value': 'todo',
             },
             {
-              'value': 'doing',
               'label': 'Doing',
+              'value': 'doing',
             },
             {
-              'value': 'done',
               'label': 'Done',
+              'value': 'done',
             },
           ],
-          'event': 'TASK_STATUS_SELECT',
           'title': 'Filter by status',
         },
+        'name': 'TaskSelection',
+        'ref': 'Selection.traits.SelectableItemSelection',
       }),
       makeTraitRef({
-        'ref': 'Browse.traits.BrowseItemBrowse',
-        'name': 'TaskBrowseList',
-        'linkedEntity': canonicalName,
         'config': {
-          'gap': 'sm',
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'event': 'VIEW',
-              'label': 'View',
-            },
-            {
-              'event': 'EDIT',
-              'label': 'Edit',
-              'variant': 'ghost',
-            },
-            {
-              'event': 'DELETE',
-              'label': 'Delete',
-              'variant': 'danger',
-            },
-          ],
+          'cols': 1,
           'fields': [
             {
               'icon': 'check-square',
-              'variant': 'h4',
               'name': 'title',
+              'variant': 'h4',
             },
             {
-              'variant': 'body',
               'name': 'description',
+              'variant': 'body',
             },
             {
               'name': 'assignee',
@@ -3438,43 +3418,60 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
               'variant': 'badge',
             },
             {
-              'variant': 'badge',
               'name': 'status',
+              'variant': 'badge',
             },
           ],
-          'cols': 1,
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
+            },
+          ],
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'TASK_CREATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'TaskPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'TASK_UPDATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'TaskPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'TASK_DELETED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'TaskPersistor',
             },
+            'triggers': 'INIT',
           },
         ],
+        'name': 'TaskBrowseList',
+        'ref': 'Browse.traits.BrowseItemBrowse',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'TaskCreate',
-        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'title',
@@ -3485,27 +3482,27 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
             'status',
           ],
           'icon': 'plus-circle',
-          'title': 'New Task',
           'mode': 'create',
+          'title': 'New Task',
         },
         'events': {
           'OPEN': 'CREATE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'CREATE',
-            'triggers': 'CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'TaskCatalog',
             },
+            'triggers': 'CREATE',
           },
         ],
+        'name': 'TaskCreate',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'TaskEdit',
-        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'title',
@@ -3516,27 +3513,27 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
             'status',
           ],
           'icon': 'edit',
-          'title': 'Edit Task',
           'mode': 'edit',
+          'title': 'Edit Task',
         },
         'events': {
           'OPEN': 'EDIT',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'EDIT',
-            'triggers': 'EDIT',
             'source': {
               'kind': 'trait',
               'trait': 'TaskBrowseList',
             },
+            'triggers': 'EDIT',
           },
         ],
+        'name': 'TaskEdit',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'TaskView',
-        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'title',
@@ -3546,223 +3543,224 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
             'priority',
             'status',
           ],
-          'title': 'View Task',
           'icon': 'eye',
           'mode': 'edit',
+          'title': 'View Task',
         },
         'events': {
           'OPEN': 'VIEW',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'VIEW',
-            'triggers': 'VIEW',
             'source': {
               'kind': 'trait',
               'trait': 'TaskBrowseList',
             },
+            'triggers': 'VIEW',
           },
         ],
+        'name': 'TaskView',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-        'name': 'TaskDelete',
-        'linkedEntity': canonicalName,
         'config': {
           'alertMessage': 'This action cannot be undone.',
-          'title': 'Delete Task',
           'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'title': 'Delete Task',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'DELETE',
-            'triggers': 'DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'TaskBrowseList',
             },
+            'triggers': 'DELETE',
           },
         ],
+        'name': 'TaskDelete',
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
       }),
       rebindInlineTraitEntity({
-        'name': 'TaskPersistor',
         'category': 'lifecycle',
-        'linkedEntity': 'Task',
         'emits': [
           {
-            'event': 'TASK_CREATED',
             'description': 'A new task has been created.',
+            'event': 'TASK_CREATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
             'synonyms': 'new task, task added, task initiation',
             'tier': 'essential',
-            'scope': 'external',
+          },
+          {
+            'description': 'Signals a task has been modified.',
+            'event': 'TASK_UPDATED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-          },
-          {
-            'event': 'TASK_UPDATED',
-            'description': 'Signals a task has been modified.',
+            'scope': 'external',
             'synonyms': 'modified, changed, altered',
             'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
           },
           {
-            'event': 'TASK_DELETED',
             'description': 'Signals that a task has been removed.',
-            'synonyms': 'removed, purged, archived',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'TASK_DELETED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'removed, purged, archived',
+            'tier': 'essential',
           },
         ],
+        'linkedEntity': 'Task',
         'listens': [
           {
             'event': 'SAVE',
-            'triggers': 'DO_CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'TaskCreate',
             },
+            'triggers': 'DO_CREATE',
           },
           {
             'event': 'SAVE',
-            'triggers': 'DO_UPDATE',
             'source': {
               'kind': 'trait',
               'trait': 'TaskEdit',
             },
+            'triggers': 'DO_UPDATE',
           },
           {
             'event': 'CONFIRM_DELETE',
-            'triggers': 'DO_DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'TaskDelete',
             },
+            'triggers': 'DO_DELETE',
           },
         ],
+        'name': 'TaskPersistor',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Initiates the creation of a new record.',
               'key': 'DO_CREATE',
               'name': 'Do Create',
-              'description': 'Initiates the creation of a new record.',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
               'synonyms': 'new, add, generate, initiate',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                  'required': true,
-                },
-              ],
             },
             {
+              'description': 'Indicates data has been modified and should be refreshed.',
               'key': 'DO_UPDATE',
               'name': 'Do Update',
-              'description': 'Indicates data has been modified and should be refreshed.',
-              'synonyms': 'refresh, reload, update, sync',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
                   'required': true,
+                  'type': 'object',
                 },
               ],
+              'synonyms': 'refresh, reload, update, sync',
+              'tier': 'essential',
             },
             {
+              'description': 'Initiates the removal of a record.',
               'key': 'DO_DELETE',
               'name': 'Do Delete',
-              'description': 'Initiates the removal of a record.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'remove, discard, erase',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'A new task has been created.',
               'key': 'TASK_CREATED',
               'name': 'Task Created',
-              'description': 'A new task has been created.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'new task, task added, task initiation',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals a task has been modified.',
               'key': 'TASK_UPDATED',
               'name': 'Task Updated',
-              'description': 'Signals a task has been modified.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'modified, changed, altered',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals that a task has been removed.',
               'key': 'TASK_DELETED',
               'name': 'Task Deleted',
-              'description': 'Signals that a task has been removed.',
-              'synonyms': 'removed, purged, archived',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'removed, purged, archived',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
-              'event': 'INIT',
             },
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'DO_CREATE',
               'effects': [
                 [
                   'persist',
@@ -3776,11 +3774,11 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_CREATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_UPDATE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -3794,11 +3792,11 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_UPDATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_DELETE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -3812,10 +3810,12 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                   },
                 ],
               ],
+              'event': 'DO_DELETE',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'Task', canonicalName) as never,
     ],
     pages: [
@@ -3988,24 +3988,24 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
     name: 'CalendarOrbital',
     uses: [
       {
-        'from': 'std/behaviors/std-app-layout',
         'as': 'AppShell',
+        'from': 'std/behaviors/std-app-layout',
       },
       {
-        'from': 'std/behaviors/std-modal',
         'as': 'Modal',
+        'from': 'std/behaviors/std-modal',
       },
       {
-        'from': 'std/behaviors/std-confirmation',
         'as': 'Confirmation',
+        'from': 'std/behaviors/std-confirmation',
       },
       {
-        'from': 'std/behaviors/std-calendar',
         'as': 'Calendar',
+        'from': 'std/behaviors/std-calendar',
       },
       {
-        'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+        'from': 'std/behaviors/std-browse',
       },
     ],
     entity: {
@@ -4016,57 +4016,57 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
           {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
             'description': 'The descriptive name or heading for the item.',
-            'synonyms': 'label, heading, name',
-          },
-          {
-            'name': 'startTime',
-            'type': 'string',
+            'name': 'title',
             'required': true,
-            'description': 'The date and time when an event or activity begins.',
-            'synonyms': 'start, beginTime, eventStart',
+            'synonyms': 'label, heading, name',
+            'type': 'string',
           },
           {
-            'name': 'endTime',
+            'description': 'The date and time when an event or activity begins.',
+            'name': 'startTime',
+            'required': true,
+            'synonyms': 'start, beginTime, eventStart',
             'type': 'string',
+          },
+          {
             'default': '',
             'description': 'The date and time when an event concludes.',
+            'name': 'endTime',
             'synonyms': 'end date, finish time, completion time',
+            'type': 'string',
           },
           {
-            'name': 'location',
-            'type': 'string',
             'default': '',
             'description': 'Physical or digital address of the contact.',
+            'name': 'location',
             'synonyms': 'address, place, whereabouts',
+            'type': 'string',
           },
           {
-            'name': 'attendees',
-            'type': 'string',
             'default': '',
             'description': 'List of individuals participating in an event or interaction.',
+            'name': 'attendees',
             'synonyms': 'participants, guests, members',
+            'type': 'string',
           },
           {
-            'name': 'description',
-            'type': 'string',
             'default': '',
             'description': 'A textual explanation or summary of the item.',
+            'name': 'description',
             'synonyms': 'summary, details, explanation, about',
+            'type': 'string',
           },
           {
-            'name': 'pendingId',
-            'type': 'string',
             'default': '',
             'description': 'A unique identifier awaiting confirmation or processing.',
+            'name': 'pendingId',
             'synonyms': 'tempId, provisionalId, draftId',
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -4077,12 +4077,9 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
     } as Entity,
     traits: [
       makeTraitRef({
-        'ref': 'AppShell.traits.AppLayout',
-        'name': 'CalendarAppLayout',
         'config': {
-          'searchEvent': 'CAL_SEARCH',
-          'contentTrait': '@trait.CalendarCatalog',
           'appName': 'App',
+          'contentTrait': '@trait.CalendarCatalog',
           'navItems': [
             {
               'href': '/contacts',
@@ -4090,159 +4087,154 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
               'label': 'Contacts',
             },
             {
-              'icon': 'package',
               'href': '/items',
+              'icon': 'package',
               'label': 'Items',
             },
             {
-              'label': 'Activities',
               'href': '/activities',
               'icon': 'activity',
+              'label': 'Activities',
             },
             {
+              'href': '/tasks',
               'icon': 'check-square',
               'label': 'Tasks',
-              'href': '/tasks',
             },
             {
+              'href': '/calendar',
               'icon': 'calendar',
               'label': 'Calendar',
-              'href': '/calendar',
             },
             {
               'href': '/widgets',
-              'label': 'Dashboard',
               'icon': 'layout-dashboard',
+              'label': 'Dashboard',
             },
             {
-              'icon': 'rss',
               'href': '/feed',
+              'icon': 'rss',
               'label': 'Feed',
             },
             {
-              'label': 'Notes',
               'href': '/notes',
               'icon': 'file-text',
+              'label': 'Notes',
             },
           ],
-          'notifications': [],
           'notificationClickEvent': 'CAL_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'searchEvent': 'CAL_SEARCH',
         },
         'events': {
-          'SEARCH': 'CAL_SEARCH',
           'NOTIFY_CLICK': 'CAL_NOTIFICATIONS_OPEN',
+          'SEARCH': 'CAL_SEARCH',
         },
+        'name': 'CalendarAppLayout',
+        'ref': 'AppShell.traits.AppLayout',
       }),
       rebindInlineTraitEntity({
-        'name': 'CalendarCatalog',
         'category': 'interaction',
         'emits': [
           {
-            'event': 'CREATE',
             'description': 'Signals a new record has been created.',
-            'synonyms': 'new, add, initialize, generate',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'CREATE',
             'payloadSchema': [
               {
                 'name': 'source',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'new, add, initialize, generate',
+            'tier': 'essential',
           },
         ],
         'listens': [
           {
             'event': 'CAL_SEARCH',
-            'triggers': 'CAL_SEARCH',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarAppLayout',
             },
+            'triggers': 'CAL_SEARCH',
           },
           {
             'event': 'CAL_NOTIFICATIONS_OPEN',
-            'triggers': 'CAL_NOTIFICATIONS_OPEN',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarAppLayout',
             },
+            'triggers': 'CAL_NOTIFICATIONS_OPEN',
           },
         ],
+        'name': 'CalendarCatalog',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'composing',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Triggers a search operation for calendar entries.',
               'key': 'CAL_SEARCH',
               'name': 'Cal Search',
-              'description': 'Triggers a search operation for calendar entries.',
-              'synonyms': 'find, query, lookup, browse',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'find, query, lookup, browse',
+              'tier': 'essential',
             },
             {
+              'description': 'Indicates new calendar notifications are available.',
               'key': 'CAL_NOTIFICATIONS_OPEN',
               'name': 'Cal Notifications Open',
-              'description': 'Indicates new calendar notifications are available.',
-              'synonyms': 'alert, notify, reminder',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'alert, notify, reminder',
+              'tier': 'essential',
             },
             {
+              'description': 'Signals a new record has been created.',
               'key': 'CREATE',
               'name': 'Create',
-              'description': 'Signals a new record has been created.',
-              'synonyms': 'new, add, initialize, generate',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'source',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'new, add, initialize, generate',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'composing',
             },
           ],
           'transitions': [
             {
-              'from': 'composing',
-              'to': 'composing',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'gap': 'lg',
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'children': [
                       {
                         'align': 'center',
                         'children': [
                           {
-                            'gap': 'sm',
-                            'direction': 'horizontal',
                             'align': 'center',
-                            'type': 'stack',
                             'children': [
                               {
                                 'name': 'calendar',
@@ -4250,21 +4242,24 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                               },
                               {
                                 'content': 'Calendar',
-                                'variant': 'h2',
                                 'type': 'typography',
+                                'variant': 'h2',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
-                            'label': 'New Event',
+                            'action': 'CREATE',
                             'icon': 'plus',
+                            'label': 'New Event',
                             'type': 'button',
                             'variant': 'primary',
-                            'action': 'CREATE',
                           },
                         ],
-                        'gap': 'md',
                         'direction': 'horizontal',
+                        'gap': 'md',
                         'justify': 'between',
                         'type': 'stack',
                       },
@@ -4277,104 +4272,90 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                       },
                       '@trait.CalendarBrowseList',
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
-            },
-            {
+              'event': 'INIT',
               'from': 'composing',
               'to': 'composing',
+            },
+            {
               'event': 'CAL_SEARCH',
-            },
-            {
               'from': 'composing',
               'to': 'composing',
-              'event': 'CAL_NOTIFICATIONS_OPEN',
+            },
+            {
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
+                    'align': 'center',
+                    'children': [
+                      {
+                        'name': 'bell',
+                        'type': 'icon',
+                      },
+                      {
+                        'content': 'No notifications',
+                        'type': 'typography',
+                        'variant': 'h3',
+                      },
+                      {
+                        'action': 'INIT',
+                        'label': 'Back',
+                        'type': 'button',
+                        'variant': 'ghost',
+                      },
+                    ],
                     'className': 'py-8',
                     'direction': 'vertical',
                     'gap': 'md',
                     'type': 'stack',
-                    'children': [
-                      {
-                        'type': 'icon',
-                        'name': 'bell',
-                      },
-                      {
-                        'content': 'No notifications',
-                        'variant': 'h3',
-                        'type': 'typography',
-                      },
-                      {
-                        'type': 'button',
-                        'variant': 'ghost',
-                        'action': 'INIT',
-                        'label': 'Back',
-                      },
-                    ],
-                    'align': 'center',
                   },
                 ],
               ],
+              'event': 'CAL_NOTIFICATIONS_OPEN',
+              'from': 'composing',
+              'to': 'composing',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'ScheduledEvent', canonicalName) as never,
       makeTraitRef({
-        'ref': 'Calendar.traits.CalendarEventCalendar',
-        'name': 'CalendarView',
         'config': {
-          'title': 'Schedule',
           'dateField': 'startTime',
           'labelField': 'title',
+          'title': 'Schedule',
         },
         'listens': [
           {
             'event': 'BrowseItemLoaded',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarBrowseList',
             },
+            'triggers': 'INIT',
           },
         ],
+        'name': 'CalendarView',
+        'ref': 'Calendar.traits.CalendarEventCalendar',
       }),
       makeTraitRef({
-        'ref': 'Browse.traits.BrowseItemBrowse',
-        'name': 'CalendarBrowseList',
-        'linkedEntity': canonicalName,
         'config': {
-          'itemActions': [
-            {
-              'label': 'View',
-              'event': 'VIEW',
-              'variant': 'ghost',
-            },
-            {
-              'label': 'Edit',
-              'variant': 'ghost',
-              'event': 'EDIT',
-            },
-            {
-              'label': 'Delete',
-              'variant': 'danger',
-              'event': 'DELETE',
-            },
-          ],
+          'cols': 1,
           'fields': [
             {
-              'variant': 'h4',
-              'name': 'title',
               'icon': 'calendar',
+              'name': 'title',
+              'variant': 'h4',
             },
             {
-              'name': 'startTime',
               'format': 'date',
+              'name': 'startTime',
               'variant': 'caption',
             },
             {
@@ -4392,42 +4373,56 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
             },
           ],
           'gap': 'sm',
-          'cols': 1,
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
+            },
+          ],
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'CAL_CREATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'CAL_UPDATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'CAL_DELETED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarPersistor',
             },
+            'triggers': 'INIT',
           },
         ],
+        'name': 'CalendarBrowseList',
+        'ref': 'Browse.traits.BrowseItemBrowse',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'CalendarCreate',
-        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'create',
-          'title': 'New Event',
           'fields': [
             'title',
             'startTime',
@@ -4437,29 +4432,28 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
             'description',
           ],
           'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'New Event',
         },
         'events': {
           'OPEN': 'CREATE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'CREATE',
-            'triggers': 'CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarCatalog',
             },
+            'triggers': 'CREATE',
           },
         ],
+        'name': 'CalendarCreate',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'CalendarEdit',
-        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
-          'title': 'Edit Event',
-          'mode': 'edit',
           'fields': [
             'title',
             'startTime',
@@ -4468,220 +4462,224 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
             'attendees',
             'description',
           ],
+          'icon': 'edit',
+          'mode': 'edit',
+          'title': 'Edit Event',
         },
         'events': {
           'OPEN': 'EDIT',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'EDIT',
-            'triggers': 'EDIT',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarBrowseList',
             },
+            'triggers': 'EDIT',
           },
         ],
+        'name': 'CalendarEdit',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-        'name': 'CalendarDelete',
-        'linkedEntity': canonicalName,
         'config': {
+          'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
           'title': 'Delete Event',
-          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
           'CONFIRM': 'CONFIRM_DELETE',
           'REQUEST': 'DELETE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'DELETE',
-            'triggers': 'DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarBrowseList',
             },
+            'triggers': 'DELETE',
           },
         ],
+        'name': 'CalendarDelete',
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
       }),
       rebindInlineTraitEntity({
-        'name': 'CalendarPersistor',
         'category': 'lifecycle',
-        'linkedEntity': 'CalendarEvent',
         'emits': [
           {
-            'event': 'CAL_CREATED',
             'description': 'A new calendar entry has been created.',
+            'event': 'CAL_CREATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
             'synonyms': 'new, added, scheduled',
             'tier': 'essential',
-            'scope': 'external',
+          },
+          {
+            'description': 'Signals a change or update to calendar data.',
+            'event': 'CAL_UPDATED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-          },
-          {
-            'event': 'CAL_UPDATED',
-            'description': 'Signals a change or update to calendar data.',
+            'scope': 'external',
             'synonyms': 'modified, changed, refreshed',
             'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
           },
           {
-            'event': 'CAL_DELETED',
             'description': 'Signals that a calendar item has been removed.',
-            'synonyms': 'removed, purged, discarded',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'CAL_DELETED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'removed, purged, discarded',
+            'tier': 'essential',
           },
         ],
+        'linkedEntity': 'CalendarEvent',
         'listens': [
           {
             'event': 'SAVE',
-            'triggers': 'DO_CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarCreate',
             },
+            'triggers': 'DO_CREATE',
           },
           {
             'event': 'SAVE',
-            'triggers': 'DO_UPDATE',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarEdit',
             },
+            'triggers': 'DO_UPDATE',
           },
           {
             'event': 'CONFIRM_DELETE',
-            'triggers': 'DO_DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'CalendarDelete',
             },
+            'triggers': 'DO_DELETE',
           },
         ],
+        'name': 'CalendarPersistor',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Initiates the creation of a new record.',
               'key': 'DO_CREATE',
               'name': 'Do Create',
-              'description': 'Initiates the creation of a new record.',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
               'synonyms': 'new, add, generate, initiate',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                  'required': true,
-                },
-              ],
             },
             {
+              'description': 'Indicates a record has been modified and changes are pending.',
               'key': 'DO_UPDATE',
               'name': 'Do Update',
-              'description': 'Indicates a record has been modified and changes are pending.',
-              'synonyms': 'modified, changed, altered, updated',
-              'tier': 'customization',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
                   'required': true,
+                  'type': 'object',
                 },
               ],
+              'synonyms': 'modified, changed, altered, updated',
+              'tier': 'customization',
             },
             {
+              'description': 'Initiates the removal of a record.',
               'key': 'DO_DELETE',
               'name': 'Do Delete',
-              'description': 'Initiates the removal of a record.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'remove, discard, purge',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'A new calendar entry has been created.',
               'key': 'CAL_CREATED',
               'name': 'Cal Created',
-              'description': 'A new calendar entry has been created.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'new, added, scheduled',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals a change or update to calendar data.',
               'key': 'CAL_UPDATED',
               'name': 'Cal Updated',
-              'description': 'Signals a change or update to calendar data.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'modified, changed, refreshed',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals that a calendar item has been removed.',
               'key': 'CAL_DELETED',
               'name': 'Cal Deleted',
-              'description': 'Signals that a calendar item has been removed.',
-              'synonyms': 'removed, purged, discarded',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'removed, purged, discarded',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
-              'event': 'INIT',
             },
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'DO_CREATE',
               'effects': [
                 [
                   'persist',
@@ -4695,11 +4693,11 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_CREATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_UPDATE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -4713,11 +4711,11 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_UPDATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_DELETE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -4731,10 +4729,12 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                   },
                 ],
               ],
+              'event': 'DO_DELETE',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'ScheduledEvent', canonicalName) as never,
     ],
     pages: [
@@ -4903,28 +4903,28 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
     name: 'WidgetOrbital',
     uses: [
       {
-        'from': 'std/behaviors/std-app-layout',
         'as': 'AppShell',
+        'from': 'std/behaviors/std-app-layout',
       },
       {
-        'from': 'std/behaviors/std-modal',
         'as': 'Modal',
+        'from': 'std/behaviors/std-modal',
       },
       {
-        'from': 'std/behaviors/std-confirmation',
         'as': 'Confirmation',
+        'from': 'std/behaviors/std-confirmation',
       },
       {
-        'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+        'from': 'std/behaviors/std-browse',
       },
       {
-        'from': 'std/behaviors/std-stats',
         'as': 'Stats',
+        'from': 'std/behaviors/std-stats',
       },
       {
-        'from': 'std/behaviors/std-graphs',
         'as': 'Graphs',
+        'from': 'std/behaviors/std-graphs',
       },
     ],
     entity: {
@@ -4935,50 +4935,50 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
           {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
             'description': 'The descriptive name or heading for the item.',
+            'name': 'title',
+            'required': true,
             'synonyms': 'label, heading, name',
+            'type': 'string',
           },
           {
-            'name': 'type',
-            'type': 'string',
             'default': 'metric',
             'description': 'Specifies the kind or category of the data.',
+            'name': 'type',
             'synonyms': 'kind, category, class, record type',
+            'type': 'string',
           },
           {
-            'name': 'dataSource',
-            'type': 'string',
             'default': '',
             'description': 'The origin or system providing the data.',
+            'name': 'dataSource',
             'synonyms': 'source, origin, provider',
+            'type': 'string',
           },
           {
-            'name': 'value',
-            'type': 'number',
             'default': 0,
             'description': 'Numerical data representing a specific value.',
+            'name': 'value',
             'synonyms': 'amount, quantity, count, score',
+            'type': 'number',
           },
           {
-            'name': 'label',
-            'type': 'string',
             'default': '',
             'description': 'A short, user-facing text identifying the item.',
+            'name': 'label',
             'synonyms': 'title, heading, display name',
+            'type': 'string',
           },
           {
-            'name': 'refreshInterval',
-            'type': 'number',
             'default': 0,
             'description': 'Time between data updates, typically in seconds.',
+            'name': 'refreshInterval',
             'synonyms': 'interval, update frequency, refresh rate',
+            'type': 'number',
           },
         ];
         const extras = params.fields ?? [];
@@ -4989,9 +4989,9 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
     } as Entity,
     traits: [
       makeTraitRef({
-        'ref': 'AppShell.traits.AppLayout',
-        'name': 'WidgetAppLayout',
         'config': {
+          'appName': 'App',
+          'contentTrait': '@trait.WidgetCatalog',
           'navItems': [
             {
               'href': '/contacts',
@@ -4999,28 +4999,28 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
               'label': 'Contacts',
             },
             {
-              'icon': 'package',
               'href': '/items',
+              'icon': 'package',
               'label': 'Items',
             },
             {
-              'label': 'Activities',
               'href': '/activities',
               'icon': 'activity',
+              'label': 'Activities',
             },
             {
               'href': '/tasks',
-              'label': 'Tasks',
               'icon': 'check-square',
+              'label': 'Tasks',
             },
             {
-              'label': 'Calendar',
-              'icon': 'calendar',
               'href': '/calendar',
+              'icon': 'calendar',
+              'label': 'Calendar',
             },
             {
-              'icon': 'layout-dashboard',
               'href': '/widgets',
+              'icon': 'layout-dashboard',
               'label': 'Dashboard',
             },
             {
@@ -5029,112 +5029,107 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
               'label': 'Feed',
             },
             {
-              'label': 'Notes',
               'href': '/notes',
               'icon': 'file-text',
+              'label': 'Notes',
             },
           ],
-          'searchEvent': 'WIDGET_SEARCH',
           'notificationClickEvent': 'WIDGET_NOTIFICATIONS_OPEN',
           'notifications': [],
-          'contentTrait': '@trait.WidgetCatalog',
-          'appName': 'App',
+          'searchEvent': 'WIDGET_SEARCH',
         },
         'events': {
           'NOTIFY_CLICK': 'WIDGET_NOTIFICATIONS_OPEN',
           'SEARCH': 'WIDGET_SEARCH',
         },
+        'name': 'WidgetAppLayout',
+        'ref': 'AppShell.traits.AppLayout',
       }),
       rebindInlineTraitEntity({
-        'name': 'WidgetCatalog',
         'category': 'interaction',
         'listens': [
           {
             'event': 'WIDGET_SEARCH',
-            'triggers': 'WIDGET_SEARCH',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetAppLayout',
             },
+            'triggers': 'WIDGET_SEARCH',
           },
           {
             'event': 'WIDGET_NOTIFICATIONS_OPEN',
-            'triggers': 'WIDGET_NOTIFICATIONS_OPEN',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetAppLayout',
             },
+            'triggers': 'WIDGET_NOTIFICATIONS_OPEN',
           },
         ],
+        'name': 'WidgetCatalog',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'composing',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Triggers a search for widgets based on a query.',
               'key': 'WIDGET_SEARCH',
               'name': 'Widget Search',
-              'description': 'Triggers a search for widgets based on a query.',
-              'synonyms': 'find, query, lookup, browse',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'find, query, lookup, browse',
+              'tier': 'essential',
             },
             {
+              'description': 'Indicates new notifications are available for widgets.',
               'key': 'WIDGET_NOTIFICATIONS_OPEN',
               'name': 'Widget Notifications Open',
-              'description': 'Indicates new notifications are available for widgets.',
-              'synonyms': 'notify, alert, update, message',
-              'tier': 'customization',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'notify, alert, update, message',
+              'tier': 'customization',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'composing',
             },
           ],
           'transitions': [
             {
-              'from': 'composing',
-              'to': 'composing',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
-                    'direction': 'vertical',
-                    'gap': 'lg',
                     'children': [
                       {
+                        'align': 'center',
                         'children': [
                           {
                             'name': 'layout-dashboard',
                             'type': 'icon',
                           },
                           {
-                            'type': 'typography',
                             'content': 'Dashboard',
+                            'type': 'typography',
                             'variant': 'h2',
                           },
                         ],
                         'direction': 'horizontal',
-                        'type': 'stack',
                         'gap': 'sm',
-                        'align': 'center',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -5146,73 +5141,76 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                       },
                       '@trait.WidgetBrowseList',
                     ],
+                    'direction': 'vertical',
+                    'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
-            },
-            {
+              'event': 'INIT',
               'from': 'composing',
               'to': 'composing',
+            },
+            {
               'event': 'WIDGET_SEARCH',
-            },
-            {
               'from': 'composing',
               'to': 'composing',
-              'event': 'WIDGET_NOTIFICATIONS_OPEN',
+            },
+            {
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
-                    'direction': 'vertical',
-                    'type': 'stack',
                     'align': 'center',
                     'children': [
                       {
-                        'type': 'icon',
                         'name': 'bell',
+                        'type': 'icon',
                       },
                       {
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
-                        'variant': 'ghost',
-                        'type': 'button',
-                        'label': 'Back',
                         'action': 'INIT',
+                        'label': 'Back',
+                        'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
+                    'className': 'py-8',
+                    'direction': 'vertical',
                     'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
+              'event': 'WIDGET_NOTIFICATIONS_OPEN',
+              'from': 'composing',
+              'to': 'composing',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'Widget', canonicalName) as never,
       makeTraitRef({
-        'ref': 'Stats.traits.StatsItemStats',
-        'name': 'WidgetStats',
         'config': {
           'metrics': [
             {
-              'variant': 'primary',
               'aggregation': 'count',
               'format': 'number',
               'icon': 'layout-dashboard',
               'label': 'Widgets',
+              'variant': 'primary',
             },
             {
-              'icon': 'trending-up',
+              'aggregation': 'sum',
               'field': 'value',
               'format': 'number',
-              'aggregation': 'sum',
-              'variant': 'success',
+              'icon': 'trending-up',
               'label': 'Total Value',
+              'variant': 'success',
             },
           ],
           'title': 'Key Metrics',
@@ -5220,47 +5218,47 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
         'listens': [
           {
             'event': 'BrowseItemLoaded',
-            'triggers': 'ITEMS_LOADED',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetBrowseList',
             },
+            'triggers': 'ITEMS_LOADED',
           },
         ],
+        'name': 'WidgetStats',
+        'ref': 'Stats.traits.StatsItemStats',
       }),
       makeTraitRef({
-        'ref': 'Graphs.traits.GraphItemGraph',
-        'name': 'WidgetGraphs',
         'config': {
-          'subtitle': 'Distribution',
-          'categoryField': 'type',
           'aggregation': 'count',
+          'categoryField': 'type',
           'chartType': 'pie',
           'height': 240,
           'showLegend': true,
+          'subtitle': 'Distribution',
           'title': 'Widgets by type',
         },
         'listens': [
           {
             'event': 'BrowseItemLoaded',
-            'triggers': 'ITEMS_LOADED',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetBrowseList',
             },
+            'triggers': 'ITEMS_LOADED',
           },
         ],
+        'name': 'WidgetGraphs',
+        'ref': 'Graphs.traits.GraphItemGraph',
       }),
       makeTraitRef({
-        'ref': 'Browse.traits.BrowseItemBrowse',
-        'name': 'WidgetBrowseList',
-        'linkedEntity': canonicalName,
         'config': {
+          'cols': 2,
           'fields': [
             {
+              'icon': 'layout-dashboard',
               'name': 'title',
               'variant': 'h4',
-              'icon': 'layout-dashboard',
             },
             {
               'name': 'type',
@@ -5271,69 +5269,66 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
               'variant': 'caption',
             },
             {
+              'format': 'number',
               'name': 'value',
               'variant': 'badge',
-              'format': 'number',
             },
             {
-              'variant': 'caption',
               'name': 'dataSource',
+              'variant': 'caption',
             },
           ],
+          'gap': 'sm',
           'itemActions': [
             {
+              'event': 'VIEW',
               'label': 'View',
               'variant': 'ghost',
-              'event': 'VIEW',
             },
             {
+              'event': 'EDIT',
               'label': 'Edit',
               'variant': 'ghost',
-              'event': 'EDIT',
             },
             {
-              'label': 'Delete',
               'event': 'DELETE',
+              'label': 'Delete',
               'variant': 'danger',
             },
           ],
-          'cols': 2,
-          'gap': 'sm',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'WIDGET_CREATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'WIDGET_UPDATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'WIDGET_DELETED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetPersistor',
             },
+            'triggers': 'INIT',
           },
         ],
+        'name': 'WidgetBrowseList',
+        'ref': 'Browse.traits.BrowseItemBrowse',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'WidgetView',
-        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'eye',
-          'title': 'View Widget',
           'fields': [
             'title',
             'type',
@@ -5342,26 +5337,28 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
             'dataSource',
             'refreshInterval',
           ],
+          'icon': 'eye',
           'mode': 'edit',
+          'title': 'View Widget',
         },
         'events': {
           'OPEN': 'VIEW',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'VIEW',
-            'triggers': 'VIEW',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetBrowseList',
             },
+            'triggers': 'VIEW',
           },
         ],
+        'name': 'WidgetView',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'WidgetEdit',
-        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'title',
@@ -5372,200 +5369,201 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
             'refreshInterval',
           ],
           'icon': 'edit',
-          'title': 'Edit Widget',
           'mode': 'edit',
+          'title': 'Edit Widget',
         },
         'events': {
           'OPEN': 'EDIT',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'EDIT',
-            'triggers': 'EDIT',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetBrowseList',
             },
+            'triggers': 'EDIT',
           },
         ],
+        'name': 'WidgetEdit',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-        'name': 'WidgetDelete',
-        'linkedEntity': canonicalName,
         'config': {
-          'title': 'Delete Widget',
           'alertMessage': 'This action cannot be undone.',
           'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
+          'title': 'Delete Widget',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'DELETE',
-            'triggers': 'DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetBrowseList',
             },
+            'triggers': 'DELETE',
           },
         ],
+        'name': 'WidgetDelete',
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
       }),
       rebindInlineTraitEntity({
-        'name': 'WidgetPersistor',
         'category': 'lifecycle',
-        'linkedEntity': 'Widget',
         'emits': [
           {
-            'event': 'WIDGET_CREATED',
             'description': 'A new widget has been generated or added.',
+            'event': 'WIDGET_CREATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
             'synonyms': 'new, added, generated, created',
             'tier': 'essential',
-            'scope': 'external',
+          },
+          {
+            'description': 'Signals a widget\'s data or appearance has been modified.',
+            'event': 'WIDGET_UPDATED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-          },
-          {
-            'event': 'WIDGET_UPDATED',
-            'description': 'Signals a widget\'s data or appearance has been modified.',
+            'scope': 'external',
             'synonyms': 'refresh, change, update',
             'tier': 'customization',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
           },
           {
-            'event': 'WIDGET_DELETED',
             'description': 'Signals a widget has been removed.',
-            'synonyms': 'removed, discarded, purged',
-            'tier': 'customization',
-            'scope': 'external',
+            'event': 'WIDGET_DELETED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'removed, discarded, purged',
+            'tier': 'customization',
           },
         ],
+        'linkedEntity': 'Widget',
         'listens': [
           {
             'event': 'SAVE',
-            'triggers': 'DO_UPDATE',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetEdit',
             },
+            'triggers': 'DO_UPDATE',
           },
           {
             'event': 'CONFIRM_DELETE',
-            'triggers': 'DO_DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'WidgetDelete',
             },
+            'triggers': 'DO_DELETE',
           },
         ],
+        'name': 'WidgetPersistor',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Indicates data has been modified and needs to be refreshed.',
               'key': 'DO_UPDATE',
               'name': 'Do Update',
-              'description': 'Indicates data has been modified and needs to be refreshed.',
-              'synonyms': 'refresh, reload, update, sync',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
                   'required': true,
+                  'type': 'object',
                 },
               ],
+              'synonyms': 'refresh, reload, update, sync',
+              'tier': 'essential',
             },
             {
+              'description': 'Initiates the removal of a record.',
               'key': 'DO_DELETE',
               'name': 'Do Delete',
-              'description': 'Initiates the removal of a record.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'remove, discard, erase',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'A new widget has been generated or added.',
               'key': 'WIDGET_CREATED',
               'name': 'Widget Created',
-              'description': 'A new widget has been generated or added.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'new, added, generated, created',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals a widget\'s data or appearance has been modified.',
               'key': 'WIDGET_UPDATED',
               'name': 'Widget Updated',
-              'description': 'Signals a widget\'s data or appearance has been modified.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'refresh, change, update',
               'tier': 'customization',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals a widget has been removed.',
               'key': 'WIDGET_DELETED',
               'name': 'Widget Deleted',
-              'description': 'Signals a widget has been removed.',
-              'synonyms': 'removed, discarded, purged',
-              'tier': 'customization',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'removed, discarded, purged',
+              'tier': 'customization',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
-              'event': 'INIT',
             },
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'DO_UPDATE',
               'effects': [
                 [
                   'persist',
@@ -5579,11 +5577,11 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_UPDATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_DELETE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -5597,10 +5595,12 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                   },
                 ],
               ],
+              'event': 'DO_DELETE',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'Widget', canonicalName) as never,
     ],
     pages: [
@@ -5773,24 +5773,24 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
     name: 'FeedOrbital',
     uses: [
       {
-        'from': 'std/behaviors/std-app-layout',
         'as': 'AppShell',
+        'from': 'std/behaviors/std-app-layout',
       },
       {
-        'from': 'std/behaviors/std-modal',
         'as': 'Modal',
+        'from': 'std/behaviors/std-modal',
       },
       {
-        'from': 'std/behaviors/std-confirmation',
         'as': 'Confirmation',
+        'from': 'std/behaviors/std-confirmation',
       },
       {
-        'from': 'std/behaviors/std-pagination',
         'as': 'Pagination',
+        'from': 'std/behaviors/std-pagination',
       },
       {
-        'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+        'from': 'std/behaviors/std-browse',
       },
     ],
     entity: {
@@ -5801,50 +5801,50 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
           {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
             'description': 'The descriptive name or heading for the item.',
+            'name': 'title',
+            'required': true,
             'synonyms': 'label, heading, name',
+            'type': 'string',
           },
           {
-            'name': 'body',
-            'type': 'string',
             'default': '',
             'description': 'The main content or text of a message or note.',
+            'name': 'body',
             'synonyms': 'content, text, message, details',
+            'type': 'string',
           },
           {
-            'name': 'author',
-            'type': 'string',
             'default': '',
             'description': 'The individual or system creating the content.',
+            'name': 'author',
             'synonyms': 'creator, originator, contributor',
+            'type': 'string',
           },
           {
-            'name': 'postedAt',
-            'type': 'string',
             'default': '',
             'description': 'The date and time when the item was originally published.',
+            'name': 'postedAt',
             'synonyms': 'published date, creation date, posted date',
+            'type': 'string',
           },
           {
-            'name': 'tags',
-            'type': 'string',
             'default': '',
             'description': 'Keywords or labels associated with the entity.',
+            'name': 'tags',
             'synonyms': 'keywords, labels, categories, tags',
+            'type': 'string',
           },
           {
-            'name': 'pendingId',
-            'type': 'string',
             'default': '',
             'description': 'A unique identifier awaiting final assignment or processing.',
+            'name': 'pendingId',
             'synonyms': 'tempId, provisionalId, draftId',
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -5855,12 +5855,8 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
     } as Entity,
     traits: [
       makeTraitRef({
-        'ref': 'AppShell.traits.AppLayout',
-        'name': 'FeedAppLayout',
         'config': {
-          'notifications': [],
-          'notificationClickEvent': 'FEED_NOTIFICATIONS_OPEN',
-          'searchEvent': 'FEED_SEARCH',
+          'appName': 'App',
           'contentTrait': '@trait.FeedCatalog',
           'navItems': [
             {
@@ -5869,14 +5865,14 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
               'label': 'Contacts',
             },
             {
+              'href': '/items',
               'icon': 'package',
               'label': 'Items',
-              'href': '/items',
             },
             {
-              'label': 'Activities',
               'href': '/activities',
               'icon': 'activity',
+              'label': 'Activities',
             },
             {
               'href': '/tasks',
@@ -5889,8 +5885,8 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
               'label': 'Calendar',
             },
             {
-              'icon': 'layout-dashboard',
               'href': '/widgets',
+              'icon': 'layout-dashboard',
               'label': 'Dashboard',
             },
             {
@@ -5899,111 +5895,113 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
               'label': 'Feed',
             },
             {
-              'icon': 'file-text',
               'href': '/notes',
+              'icon': 'file-text',
               'label': 'Notes',
             },
           ],
-          'appName': 'App',
+          'notificationClickEvent': 'FEED_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'searchEvent': 'FEED_SEARCH',
         },
         'events': {
-          'SEARCH': 'FEED_SEARCH',
           'NOTIFY_CLICK': 'FEED_NOTIFICATIONS_OPEN',
+          'SEARCH': 'FEED_SEARCH',
         },
+        'name': 'FeedAppLayout',
+        'ref': 'AppShell.traits.AppLayout',
       }),
       rebindInlineTraitEntity({
-        'name': 'FeedCatalog',
         'category': 'interaction',
         'emits': [
           {
-            'event': 'CREATE',
             'description': 'Signals the creation of a new record.',
-            'synonyms': 'new, add, generate, initialize',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'CREATE',
             'payloadSchema': [
               {
                 'name': 'source',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'new, add, generate, initialize',
+            'tier': 'essential',
           },
         ],
         'listens': [
           {
             'event': 'FEED_SEARCH',
-            'triggers': 'FEED_SEARCH',
             'source': {
               'kind': 'trait',
               'trait': 'FeedAppLayout',
             },
+            'triggers': 'FEED_SEARCH',
           },
           {
             'event': 'FEED_NOTIFICATIONS_OPEN',
-            'triggers': 'FEED_NOTIFICATIONS_OPEN',
             'source': {
               'kind': 'trait',
               'trait': 'FeedAppLayout',
             },
+            'triggers': 'FEED_NOTIFICATIONS_OPEN',
           },
         ],
+        'name': 'FeedCatalog',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'composing',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Triggers a search operation within a feed.',
               'key': 'FEED_SEARCH',
               'name': 'Feed Search',
-              'description': 'Triggers a search operation within a feed.',
-              'synonyms': 'query, find, lookup',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'query, find, lookup',
+              'tier': 'essential',
             },
             {
+              'description': 'Indicates new feed notifications are available.',
               'key': 'FEED_NOTIFICATIONS_OPEN',
               'name': 'Feed Notifications Open',
-              'description': 'Indicates new feed notifications are available.',
-              'synonyms': 'notify, alert, update, message',
-              'tier': 'customization',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'notify, alert, update, message',
+              'tier': 'customization',
             },
             {
+              'description': 'Signals the creation of a new record.',
               'key': 'CREATE',
               'name': 'Create',
-              'description': 'Signals the creation of a new record.',
-              'synonyms': 'new, add, generate, initialize',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'source',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'new, add, generate, initialize',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'composing',
             },
           ],
           'transitions': [
             {
-              'from': 'composing',
-              'to': 'composing',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
@@ -6011,37 +6009,37 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                   {
                     'children': [
                       {
-                        'justify': 'between',
-                        'gap': 'md',
+                        'align': 'center',
                         'children': [
                           {
-                            'type': 'stack',
+                            'align': 'center',
                             'children': [
                               {
                                 'name': 'rss',
                                 'type': 'icon',
                               },
                               {
-                                'type': 'typography',
                                 'content': 'Feed',
+                                'type': 'typography',
                                 'variant': 'h2',
                               },
                             ],
-                            'align': 'center',
                             'direction': 'horizontal',
                             'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
-                            'label': 'New Post',
                             'action': 'CREATE',
-                            'type': 'button',
                             'icon': 'plus',
+                            'label': 'New Post',
+                            'type': 'button',
                             'variant': 'primary',
                           },
                         ],
-                        'type': 'stack',
-                        'align': 'center',
                         'direction': 'horizontal',
+                        'gap': 'md',
+                        'justify': 'between',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -6050,97 +6048,78 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                       '@trait.FeedPagination',
                     ],
                     'direction': 'vertical',
-                    'type': 'stack',
                     'gap': 'lg',
+                    'type': 'stack',
                   },
                 ],
               ],
-            },
-            {
+              'event': 'INIT',
               'from': 'composing',
               'to': 'composing',
+            },
+            {
               'event': 'FEED_SEARCH',
-            },
-            {
               'from': 'composing',
               'to': 'composing',
-              'event': 'FEED_NOTIFICATIONS_OPEN',
+            },
+            {
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'type': 'stack',
+                    'align': 'center',
                     'children': [
                       {
                         'name': 'bell',
                         'type': 'icon',
                       },
                       {
-                        'variant': 'h3',
                         'content': 'No notifications',
                         'type': 'typography',
+                        'variant': 'h3',
                       },
                       {
                         'action': 'INIT',
                         'label': 'Back',
-                        'variant': 'ghost',
                         'type': 'button',
+                        'variant': 'ghost',
                       },
                     ],
                     'className': 'py-8',
                     'direction': 'vertical',
-                    'align': 'center',
                     'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
+              'event': 'FEED_NOTIFICATIONS_OPEN',
+              'from': 'composing',
+              'to': 'composing',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'FeedPost', canonicalName) as never,
       makeTraitRef({
-        'ref': 'Pagination.traits.PagedItemPagination',
-        'name': 'FeedPagination',
         'config': {
           'pageSize': 10,
         },
         'listens': [
           {
             'event': 'BrowseItemLoaded',
-            'triggers': 'ITEMS_LOADED',
             'source': {
               'kind': 'trait',
               'trait': 'FeedBrowseList',
             },
+            'triggers': 'ITEMS_LOADED',
           },
         ],
+        'name': 'FeedPagination',
+        'ref': 'Pagination.traits.PagedItemPagination',
       }),
       makeTraitRef({
-        'ref': 'Browse.traits.BrowseItemBrowse',
-        'name': 'FeedBrowseList',
-        'linkedEntity': canonicalName,
         'config': {
           'cols': 1,
-          'gap': 'sm',
-          'itemActions': [
-            {
-              'variant': 'ghost',
-              'event': 'VIEW',
-              'label': 'View',
-            },
-            {
-              'variant': 'ghost',
-              'label': 'Edit',
-              'event': 'EDIT',
-            },
-            {
-              'label': 'Delete',
-              'variant': 'danger',
-              'event': 'DELETE',
-            },
-          ],
           'fields': [
             {
               'icon': 'rss',
@@ -6148,55 +6127,73 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
               'variant': 'h3',
             },
             {
-              'variant': 'body',
               'name': 'body',
+              'variant': 'body',
             },
             {
               'name': 'author',
               'variant': 'caption',
             },
             {
-              'variant': 'caption',
               'format': 'date',
               'name': 'postedAt',
+              'variant': 'caption',
             },
             {
               'name': 'tags',
               'variant': 'badge',
             },
           ],
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
+            },
+          ],
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'FEED_CREATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'FeedPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'FEED_UPDATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'FeedPersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'FEED_DELETED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'FeedPersistor',
             },
+            'triggers': 'INIT',
           },
         ],
+        'name': 'FeedBrowseList',
+        'ref': 'Browse.traits.BrowseItemBrowse',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'FeedCreate',
-        'linkedEntity': canonicalName,
         'config': {
           'fields': [
             'title',
@@ -6206,30 +6203,28 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
             'tags',
           ],
           'icon': 'plus-circle',
-          'title': 'New Post',
           'mode': 'create',
+          'title': 'New Post',
         },
         'events': {
           'OPEN': 'CREATE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'CREATE',
-            'triggers': 'CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'FeedCatalog',
             },
+            'triggers': 'CREATE',
           },
         ],
+        'name': 'FeedCreate',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'FeedEdit',
-        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
-          'title': 'Edit Post',
           'fields': [
             'title',
             'body',
@@ -6237,221 +6232,224 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
             'postedAt',
             'tags',
           ],
+          'icon': 'edit',
           'mode': 'edit',
+          'title': 'Edit Post',
         },
         'events': {
           'OPEN': 'EDIT',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'EDIT',
-            'triggers': 'EDIT',
             'source': {
               'kind': 'trait',
               'trait': 'FeedBrowseList',
             },
+            'triggers': 'EDIT',
           },
         ],
+        'name': 'FeedEdit',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-        'name': 'FeedDelete',
-        'linkedEntity': canonicalName,
         'config': {
+          'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
           'title': 'Delete Post',
-          'confirmLabel': 'Delete',
-          'alertMessage': 'This action cannot be undone.',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'DELETE',
-            'triggers': 'DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'FeedBrowseList',
             },
+            'triggers': 'DELETE',
           },
         ],
+        'name': 'FeedDelete',
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
       }),
       rebindInlineTraitEntity({
-        'name': 'FeedPersistor',
         'category': 'lifecycle',
-        'linkedEntity': 'FeedPost',
         'emits': [
           {
-            'event': 'FEED_CREATED',
             'description': 'A new feed item has been created.',
+            'event': 'FEED_CREATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
             'synonyms': 'posted, published, added',
             'tier': 'essential',
-            'scope': 'external',
+          },
+          {
+            'description': 'Signals that the feed data has been refreshed or modified.',
+            'event': 'FEED_UPDATED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-          },
-          {
-            'event': 'FEED_UPDATED',
-            'description': 'Signals that the feed data has been refreshed or modified.',
+            'scope': 'external',
             'synonyms': 'refresh, update, new, changed',
             'tier': 'customization',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
           },
           {
-            'event': 'FEED_DELETED',
             'description': 'Signals a feed item has been removed.',
-            'synonyms': 'removed, purged, archived',
-            'tier': 'customization',
-            'scope': 'external',
+            'event': 'FEED_DELETED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'removed, purged, archived',
+            'tier': 'customization',
           },
         ],
+        'linkedEntity': 'FeedPost',
         'listens': [
           {
             'event': 'SAVE',
-            'triggers': 'DO_CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'FeedCreate',
             },
+            'triggers': 'DO_CREATE',
           },
           {
             'event': 'SAVE',
-            'triggers': 'DO_UPDATE',
             'source': {
               'kind': 'trait',
               'trait': 'FeedEdit',
             },
+            'triggers': 'DO_UPDATE',
           },
           {
             'event': 'CONFIRM_DELETE',
-            'triggers': 'DO_DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'FeedDelete',
             },
+            'triggers': 'DO_DELETE',
           },
         ],
+        'name': 'FeedPersistor',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Initiates the creation of a new record.',
               'key': 'DO_CREATE',
               'name': 'Do Create',
-              'description': 'Initiates the creation of a new record.',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
               'synonyms': 'new, add, generate, initialize',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                  'required': true,
-                },
-              ],
             },
             {
+              'description': 'Indicates data has been modified and requires synchronization.',
               'key': 'DO_UPDATE',
               'name': 'Do Update',
-              'description': 'Indicates data has been modified and requires synchronization.',
-              'synonyms': 'refresh, sync, changed, modified',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
                   'required': true,
+                  'type': 'object',
                 },
               ],
+              'synonyms': 'refresh, sync, changed, modified',
+              'tier': 'essential',
             },
             {
+              'description': 'Initiates the removal of a record.',
               'key': 'DO_DELETE',
               'name': 'Do Delete',
-              'description': 'Initiates the removal of a record.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'remove, discard, erase',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'A new feed item has been created.',
               'key': 'FEED_CREATED',
               'name': 'Feed Created',
-              'description': 'A new feed item has been created.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'posted, published, added',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals that the feed data has been refreshed or modified.',
               'key': 'FEED_UPDATED',
               'name': 'Feed Updated',
-              'description': 'Signals that the feed data has been refreshed or modified.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'refresh, update, new, changed',
               'tier': 'customization',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals a feed item has been removed.',
               'key': 'FEED_DELETED',
               'name': 'Feed Deleted',
-              'description': 'Signals a feed item has been removed.',
-              'synonyms': 'removed, purged, archived',
-              'tier': 'customization',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'removed, purged, archived',
+              'tier': 'customization',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
-              'event': 'INIT',
             },
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'DO_CREATE',
               'effects': [
                 [
                   'persist',
@@ -6465,11 +6463,11 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_CREATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_UPDATE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -6483,11 +6481,11 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_UPDATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_DELETE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -6501,10 +6499,12 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                   },
                 ],
               ],
+              'event': 'DO_DELETE',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'FeedPost', canonicalName) as never,
     ],
     pages: [
@@ -6673,24 +6673,24 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
     name: 'NoteOrbital',
     uses: [
       {
-        'from': 'std/behaviors/std-app-layout',
         'as': 'AppShell',
+        'from': 'std/behaviors/std-app-layout',
       },
       {
-        'from': 'std/behaviors/std-modal',
         'as': 'Modal',
+        'from': 'std/behaviors/std-modal',
       },
       {
-        'from': 'std/behaviors/std-confirmation',
         'as': 'Confirmation',
+        'from': 'std/behaviors/std-confirmation',
       },
       {
-        'from': 'std/behaviors/std-search',
         'as': 'Search',
+        'from': 'std/behaviors/std-search',
       },
       {
-        'from': 'std/behaviors/std-browse',
         'as': 'Browse',
+        'from': 'std/behaviors/std-browse',
       },
     ],
     entity: {
@@ -6701,46 +6701,46 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
         const canonical: EntityField[] = [
           {
             'name': 'id',
-            'type': 'string',
             'required': true,
+            'type': 'string',
           },
           {
-            'name': 'title',
-            'type': 'string',
-            'required': true,
             'description': 'The descriptive name or heading for the item.',
+            'name': 'title',
+            'required': true,
             'synonyms': 'label, heading, name',
+            'type': 'string',
           },
           {
-            'name': 'body',
-            'type': 'string',
             'default': '',
             'description': 'The main content or text of a message or note.',
+            'name': 'body',
             'synonyms': 'content, text, message, details',
+            'type': 'string',
           },
           {
-            'name': 'tags',
-            'type': 'string',
             'default': '',
             'description': 'Keywords or labels associated with the entity.',
+            'name': 'tags',
             'synonyms': 'keywords, labels, categories, markers',
+            'type': 'string',
           },
           {
+            'default': '',
             'name': 'createdAt',
             'type': 'string',
-            'default': '',
           },
           {
+            'default': '',
             'name': 'updatedAt',
             'type': 'string',
-            'default': '',
           },
           {
-            'name': 'pendingId',
-            'type': 'string',
             'default': '',
             'description': 'A unique identifier awaiting final assignment or processing.',
+            'name': 'pendingId',
             'synonyms': 'tempId, provisionalId, draftId',
+            'type': 'string',
           },
         ];
         const extras = params.fields ?? [];
@@ -6751,29 +6751,24 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
     } as Entity,
     traits: [
       makeTraitRef({
-        'ref': 'AppShell.traits.AppLayout',
-        'name': 'NoteAppLayout',
         'config': {
-          'searchEvent': 'NOTE_SEARCH',
-          'contentTrait': '@trait.NoteCatalog',
           'appName': 'App',
-          'notifications': [],
-          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
+          'contentTrait': '@trait.NoteCatalog',
           'navItems': [
             {
+              'href': '/contacts',
               'icon': 'users',
               'label': 'Contacts',
-              'href': '/contacts',
             },
             {
-              'icon': 'package',
               'href': '/items',
+              'icon': 'package',
               'label': 'Items',
             },
             {
+              'href': '/activities',
               'icon': 'activity',
               'label': 'Activities',
-              'href': '/activities',
             },
             {
               'href': '/tasks',
@@ -6781,164 +6776,166 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
               'label': 'Tasks',
             },
             {
+              'href': '/calendar',
               'icon': 'calendar',
               'label': 'Calendar',
-              'href': '/calendar',
             },
             {
-              'label': 'Dashboard',
               'href': '/widgets',
               'icon': 'layout-dashboard',
+              'label': 'Dashboard',
             },
             {
+              'href': '/feed',
               'icon': 'rss',
               'label': 'Feed',
-              'href': '/feed',
             },
             {
-              'label': 'Notes',
               'href': '/notes',
               'icon': 'file-text',
+              'label': 'Notes',
             },
           ],
+          'notificationClickEvent': 'NOTE_NOTIFICATIONS_OPEN',
+          'notifications': [],
+          'searchEvent': 'NOTE_SEARCH',
         },
         'events': {
-          'SEARCH': 'NOTE_SEARCH',
           'NOTIFY_CLICK': 'NOTE_NOTIFICATIONS_OPEN',
+          'SEARCH': 'NOTE_SEARCH',
         },
+        'name': 'NoteAppLayout',
+        'ref': 'AppShell.traits.AppLayout',
       }),
       rebindInlineTraitEntity({
-        'name': 'NoteCatalog',
         'category': 'interaction',
         'emits': [
           {
-            'event': 'CREATE',
             'description': 'Signals the creation of a new record.',
-            'synonyms': 'new, add, generate, initialize',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'CREATE',
             'payloadSchema': [
               {
                 'name': 'source',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'new, add, generate, initialize',
+            'tier': 'essential',
           },
         ],
         'listens': [
           {
             'event': 'NOTE_SEARCH',
-            'triggers': 'NOTE_SEARCH',
             'source': {
               'kind': 'trait',
               'trait': 'NoteAppLayout',
             },
+            'triggers': 'NOTE_SEARCH',
           },
           {
             'event': 'NOTE_NOTIFICATIONS_OPEN',
-            'triggers': 'NOTE_NOTIFICATIONS_OPEN',
             'source': {
               'kind': 'trait',
               'trait': 'NoteAppLayout',
             },
+            'triggers': 'NOTE_NOTIFICATIONS_OPEN',
           },
         ],
+        'name': 'NoteCatalog',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'composing',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Triggers a search operation for notes.',
               'key': 'NOTE_SEARCH',
               'name': 'Note Search',
-              'description': 'Triggers a search operation for notes.',
-              'synonyms': 'find, query, lookup',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'value',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'find, query, lookup',
+              'tier': 'essential',
             },
             {
+              'description': 'Indicates new notifications are available for notes.',
               'key': 'NOTE_NOTIFICATIONS_OPEN',
               'name': 'Note Notifications Open',
-              'description': 'Indicates new notifications are available for notes.',
-              'synonyms': 'new, alert, update, notify',
-              'tier': 'customization',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'new, alert, update, notify',
+              'tier': 'customization',
             },
             {
+              'description': 'Signals the creation of a new record.',
               'key': 'CREATE',
               'name': 'Create',
-              'description': 'Signals the creation of a new record.',
-              'synonyms': 'new, add, generate, initialize',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'source',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'new, add, generate, initialize',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'composing',
             },
           ],
           'transitions': [
             {
-              'from': 'composing',
-              'to': 'composing',
-              'event': 'INIT',
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'direction': 'vertical',
                     'children': [
                       {
                         'align': 'center',
-                        'type': 'stack',
-                        'direction': 'horizontal',
-                        'gap': 'md',
                         'children': [
                           {
-                            'gap': 'sm',
                             'align': 'center',
-                            'type': 'stack',
-                            'direction': 'horizontal',
                             'children': [
                               {
                                 'name': 'file-text',
                                 'type': 'icon',
                               },
                               {
+                                'content': 'Notes',
                                 'type': 'typography',
                                 'variant': 'h2',
-                                'content': 'Notes',
                               },
                             ],
+                            'direction': 'horizontal',
+                            'gap': 'sm',
+                            'type': 'stack',
                           },
                           {
-                            'variant': 'primary',
-                            'label': 'New Note',
-                            'icon': 'plus',
                             'action': 'CREATE',
+                            'icon': 'plus',
+                            'label': 'New Note',
                             'type': 'button',
+                            'variant': 'primary',
                           },
                         ],
+                        'direction': 'horizontal',
+                        'gap': 'md',
                         'justify': 'between',
+                        'type': 'stack',
                       },
                       {
                         'type': 'divider',
@@ -6949,28 +6946,27 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                       },
                       '@trait.NoteBrowseList',
                     ],
+                    'direction': 'vertical',
                     'gap': 'lg',
                     'type': 'stack',
                   },
                 ],
               ],
-            },
-            {
+              'event': 'INIT',
               'from': 'composing',
               'to': 'composing',
+            },
+            {
               'event': 'NOTE_SEARCH',
-            },
-            {
               'from': 'composing',
               'to': 'composing',
-              'event': 'NOTE_NOTIFICATIONS_OPEN',
+            },
+            {
               'effects': [
                 [
                   'render-ui',
                   'main',
                   {
-                    'className': 'py-8',
-                    'type': 'stack',
                     'align': 'center',
                     'children': [
                       {
@@ -6978,8 +6974,8 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                         'type': 'icon',
                       },
                       {
-                        'type': 'typography',
                         'content': 'No notifications',
+                        'type': 'typography',
                         'variant': 'h3',
                       },
                       {
@@ -6989,48 +6985,31 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                         'variant': 'ghost',
                       },
                     ],
+                    'className': 'py-8',
                     'direction': 'vertical',
                     'gap': 'md',
+                    'type': 'stack',
                   },
                 ],
               ],
+              'event': 'NOTE_NOTIFICATIONS_OPEN',
+              'from': 'composing',
+              'to': 'composing',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'Note', canonicalName) as never,
       makeTraitRef({
-        'ref': 'Search.traits.SearchResultSearch',
-        'name': 'NoteSearch',
         'config': {
-          'placeholder': 'Search notes…',
           'event': 'NOTE_SEARCH',
+          'placeholder': 'Search notes…',
         },
+        'name': 'NoteSearch',
+        'ref': 'Search.traits.SearchResultSearch',
       }),
       makeTraitRef({
-        'ref': 'Browse.traits.BrowseItemBrowse',
-        'name': 'NoteBrowseList',
-        'linkedEntity': canonicalName,
         'config': {
-          'itemActions': [
-            {
-              'event': 'VIEW',
-              'label': 'View',
-              'variant': 'ghost',
-            },
-            {
-              'label': 'Edit',
-              'variant': 'ghost',
-              'event': 'EDIT',
-            },
-            {
-              'label': 'Delete',
-              'variant': 'danger',
-              'event': 'DELETE',
-            },
-          ],
           'cols': 1,
-          'gap': 'sm',
           'fields': [
             {
               'icon': 'file-text',
@@ -7042,59 +7021,74 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
               'variant': 'body',
             },
             {
-              'variant': 'badge',
               'name': 'tags',
+              'variant': 'badge',
             },
             {
               'format': 'date',
-              'variant': 'caption',
               'name': 'updatedAt',
+              'variant': 'caption',
+            },
+          ],
+          'gap': 'sm',
+          'itemActions': [
+            {
+              'event': 'VIEW',
+              'label': 'View',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'EDIT',
+              'label': 'Edit',
+              'variant': 'ghost',
+            },
+            {
+              'event': 'DELETE',
+              'label': 'Delete',
+              'variant': 'danger',
             },
           ],
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'SEARCH',
-            'triggers': 'REFETCH_QUERY',
             'source': {
               'kind': 'trait',
               'trait': 'NoteSearch',
             },
+            'triggers': 'REFETCH_QUERY',
           },
           {
             'event': 'NOTE_CREATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'NotePersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'NOTE_UPDATED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'NotePersistor',
             },
+            'triggers': 'INIT',
           },
           {
             'event': 'NOTE_DELETED',
-            'triggers': 'INIT',
             'source': {
               'kind': 'trait',
               'trait': 'NotePersistor',
             },
+            'triggers': 'INIT',
           },
         ],
+        'name': 'NoteBrowseList',
+        'ref': 'Browse.traits.BrowseItemBrowse',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'NoteCreate',
-        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'plus-circle',
-          'title': 'New Note',
-          'mode': 'create',
           'fields': [
             'title',
             'body',
@@ -7102,27 +7096,29 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             'createdAt',
             'updatedAt',
           ],
+          'icon': 'plus-circle',
+          'mode': 'create',
+          'title': 'New Note',
         },
         'events': {
           'OPEN': 'CREATE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'CREATE',
-            'triggers': 'CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'NoteCatalog',
             },
+            'triggers': 'CREATE',
           },
         ],
+        'name': 'NoteCreate',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'NoteEdit',
-        'linkedEntity': canonicalName,
         'config': {
-          'icon': 'edit',
           'fields': [
             'title',
             'body',
@@ -7130,31 +7126,29 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             'createdAt',
             'updatedAt',
           ],
-          'title': 'Edit Note',
+          'icon': 'edit',
           'mode': 'edit',
+          'title': 'Edit Note',
         },
         'events': {
           'OPEN': 'EDIT',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'EDIT',
-            'triggers': 'EDIT',
             'source': {
               'kind': 'trait',
               'trait': 'NoteBrowseList',
             },
+            'triggers': 'EDIT',
           },
         ],
+        'name': 'NoteEdit',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Modal.traits.ModalRecordModal',
-        'name': 'NoteView',
-        'linkedEntity': canonicalName,
         'config': {
-          'mode': 'edit',
-          'icon': 'eye',
-          'title': 'View Note',
           'fields': [
             'title',
             'body',
@@ -7162,220 +7156,224 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             'createdAt',
             'updatedAt',
           ],
+          'icon': 'eye',
+          'mode': 'edit',
+          'title': 'View Note',
         },
         'events': {
           'OPEN': 'VIEW',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'VIEW',
-            'triggers': 'VIEW',
             'source': {
               'kind': 'trait',
               'trait': 'NoteBrowseList',
             },
+            'triggers': 'VIEW',
           },
         ],
+        'name': 'NoteView',
+        'ref': 'Modal.traits.ModalRecordModal',
       }),
       makeTraitRef({
-        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
-        'name': 'NoteDelete',
-        'linkedEntity': canonicalName,
         'config': {
           'alertMessage': 'This action cannot be undone.',
+          'confirmLabel': 'Delete',
           'icon': 'alert-triangle',
           'title': 'Delete Note',
-          'confirmLabel': 'Delete',
         },
         'events': {
-          'REQUEST': 'DELETE',
           'CONFIRM': 'CONFIRM_DELETE',
+          'REQUEST': 'DELETE',
         },
+        'linkedEntity': canonicalName,
         'listens': [
           {
             'event': 'DELETE',
-            'triggers': 'DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'NoteBrowseList',
             },
+            'triggers': 'DELETE',
           },
         ],
+        'name': 'NoteDelete',
+        'ref': 'Confirmation.traits.ConfirmActionConfirmation',
       }),
       rebindInlineTraitEntity({
-        'name': 'NotePersistor',
         'category': 'lifecycle',
-        'linkedEntity': 'Note',
         'emits': [
           {
-            'event': 'NOTE_CREATED',
             'description': 'A new note has been created.',
+            'event': 'NOTE_CREATED',
+            'payloadSchema': [
+              {
+                'name': 'id',
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
             'synonyms': 'new, added, recorded',
             'tier': 'essential',
-            'scope': 'external',
+          },
+          {
+            'description': 'Signals that a note has been modified and saved.',
+            'event': 'NOTE_UPDATED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
-          },
-          {
-            'event': 'NOTE_UPDATED',
-            'description': 'Signals that a note has been modified and saved.',
+            'scope': 'external',
             'synonyms': 'modified, changed, updated',
             'tier': 'essential',
-            'scope': 'external',
-            'payloadSchema': [
-              {
-                'name': 'id',
-                'type': 'string',
-              },
-            ],
           },
           {
-            'event': 'NOTE_DELETED',
             'description': 'Signals a note has been removed.',
-            'synonyms': 'removed, purged, discarded',
-            'tier': 'essential',
-            'scope': 'external',
+            'event': 'NOTE_DELETED',
             'payloadSchema': [
               {
                 'name': 'id',
                 'type': 'string',
               },
             ],
+            'scope': 'external',
+            'synonyms': 'removed, purged, discarded',
+            'tier': 'essential',
           },
         ],
+        'linkedEntity': 'Note',
         'listens': [
           {
             'event': 'SAVE',
-            'triggers': 'DO_CREATE',
             'source': {
               'kind': 'trait',
               'trait': 'NoteCreate',
             },
+            'triggers': 'DO_CREATE',
           },
           {
             'event': 'SAVE',
-            'triggers': 'DO_UPDATE',
             'source': {
               'kind': 'trait',
               'trait': 'NoteEdit',
             },
+            'triggers': 'DO_UPDATE',
           },
           {
             'event': 'CONFIRM_DELETE',
-            'triggers': 'DO_DELETE',
             'source': {
               'kind': 'trait',
               'trait': 'NoteDelete',
             },
+            'triggers': 'DO_DELETE',
           },
         ],
+        'name': 'NotePersistor',
+        'scope': 'instance',
         'stateMachine': {
-          'states': [
-            {
-              'name': 'idle',
-              'isInitial': true,
-            },
-          ],
           'events': [
             {
               'key': 'INIT',
               'name': 'Initialize',
             },
             {
+              'description': 'Initiates the creation of a new record.',
               'key': 'DO_CREATE',
               'name': 'Do Create',
-              'description': 'Initiates the creation of a new record.',
+              'payloadSchema': [
+                {
+                  'name': 'data',
+                  'required': true,
+                  'type': 'object',
+                },
+              ],
               'synonyms': 'new, add, generate, initiate',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'data',
-                  'type': 'object',
-                  'required': true,
-                },
-              ],
             },
             {
+              'description': 'Indicates a record has been modified and changes are pending.',
               'key': 'DO_UPDATE',
               'name': 'Do Update',
-              'description': 'Indicates a record has been modified and changes are pending.',
-              'synonyms': 'modified, changed, altered, updated',
-              'tier': 'customization',
               'payloadSchema': [
                 {
                   'name': 'data',
-                  'type': 'object',
                   'required': true,
+                  'type': 'object',
                 },
               ],
+              'synonyms': 'modified, changed, altered, updated',
+              'tier': 'customization',
             },
             {
+              'description': 'Initiates the removal of a record.',
               'key': 'DO_DELETE',
               'name': 'Do Delete',
-              'description': 'Initiates the removal of a record.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'remove, discard, erase',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'A new note has been created.',
               'key': 'NOTE_CREATED',
               'name': 'Note Created',
-              'description': 'A new note has been created.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'new, added, recorded',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals that a note has been modified and saved.',
               'key': 'NOTE_UPDATED',
               'name': 'Note Updated',
-              'description': 'Signals that a note has been modified and saved.',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
               'synonyms': 'modified, changed, updated',
               'tier': 'essential',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
-              ],
             },
             {
+              'description': 'Signals a note has been removed.',
               'key': 'NOTE_DELETED',
               'name': 'Note Deleted',
-              'description': 'Signals a note has been removed.',
-              'synonyms': 'removed, purged, discarded',
-              'tier': 'essential',
               'payloadSchema': [
                 {
                   'name': 'id',
                   'type': 'string',
                 },
               ],
+              'synonyms': 'removed, purged, discarded',
+              'tier': 'essential',
+            },
+          ],
+          'states': [
+            {
+              'isInitial': true,
+              'name': 'idle',
             },
           ],
           'transitions': [
             {
+              'event': 'INIT',
               'from': 'idle',
               'to': 'idle',
-              'event': 'INIT',
             },
             {
-              'from': 'idle',
-              'to': 'idle',
-              'event': 'DO_CREATE',
               'effects': [
                 [
                   'persist',
@@ -7389,11 +7387,11 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_CREATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_UPDATE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -7407,11 +7405,11 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                   },
                 ],
               ],
-            },
-            {
+              'event': 'DO_UPDATE',
               'from': 'idle',
               'to': 'idle',
-              'event': 'DO_DELETE',
+            },
+            {
               'effects': [
                 [
                   'persist',
@@ -7425,10 +7423,12 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                   },
                 ],
               ],
+              'event': 'DO_DELETE',
+              'from': 'idle',
+              'to': 'idle',
             },
           ],
         },
-        'scope': 'instance',
       } as never, 'Note', canonicalName) as never,
     ],
     pages: [
