@@ -1,80 +1,96 @@
 {
-  "name": "std-selection",
-  "version": "1.0.0",
   "description": "std-selection as a Function",
+  "name": "std-selection",
   "orbitals": [
     {
-      "name": "SelectableItemOrbital",
       "entity": {
-        "name": "SelectableItem",
-        "persistence": "runtime",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
-          },
-          {
-            "name": "name",
-            "type": "string",
             "required": true,
+            "type": "string"
+          },
+          {
             "description": "The item's display text or identifier.",
-            "synonyms": "label, title, identifier"
+            "name": "name",
+            "required": true,
+            "synonyms": "label, title, identifier",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A textual explanation of the item.",
-            "synonyms": "details, explanation, notes"
+            "name": "description",
+            "synonyms": "details, explanation, notes",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Indicates the current operational state of the item.",
+            "name": "status",
+            "synonyms": "state, condition, flag",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Indicates the current operational state of the item.",
-            "synonyms": "state, condition, flag"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           }
-        ]
+        ],
+        "name": "SelectableItem",
+        "persistence": "runtime"
       },
+      "name": "SelectableItemOrbital",
+      "pages": [
+        {
+          "name": "SelectableItemSelectionPage",
+          "path": "/selectableitems/selection",
+          "traits": [
+            {
+              "ref": "SelectableItemSelection"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "SelectableItemSelection",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "SelectableItem",
+          "config": {
+            "tableLook": {
+              "default": "dense",
+              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
+              "label": "Table look",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "dense",
+                "spacious",
+                "striped",
+                "borderless",
+                "card-rows"
+              ]
+            }
+          },
           "emits": [
             {
-              "event": "SelectableItemLoaded",
               "description": "Indicates a selectable item has been successfully loaded.",
-              "synonyms": "loaded, initialized, ready",
-              "tier": "essential",
-              "scope": "internal",
+              "event": "SelectableItemLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[SelectableItem]"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "loaded, initialized, ready",
+              "tier": "essential"
             },
             {
-              "event": "SelectableItemLoadFailed",
               "description": "Indicates a selectable item failed to load.",
-              "synonyms": "error, failure, problem, unsuccessful",
-              "tier": "internal",
-              "scope": "internal",
+              "event": "SelectableItemLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -84,14 +100,93 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal",
+              "synonyms": "error, failure, problem, unsuccessful",
+              "tier": "internal"
             }
           ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "SelectableItem",
+          "name": "SelectableItemSelection",
+          "scope": "collection",
           "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              },
+              {
+                "description": "Indicates a selectable item has been successfully loaded.",
+                "key": "SelectableItemLoaded",
+                "name": "SelectableItem loaded",
+                "payloadSchema": [
+                  {
+                    "name": "data",
+                    "type": "[SelectableItem]"
+                  }
+                ],
+                "synonyms": "loaded, initialized, ready",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a selectable item failed to load.",
+                "key": "SelectableItemLoadFailed",
+                "name": "SelectableItem load failed",
+                "payloadSchema": [
+                  {
+                    "name": "error",
+                    "type": "string"
+                  },
+                  {
+                    "name": "code",
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "error, failure, problem, unsuccessful",
+                "tier": "internal"
+              },
+              {
+                "description": "Indicates an item has been chosen.",
+                "key": "SELECT",
+                "name": "Select",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "chosen, picked, highlighted",
+                "tier": "essential"
+              },
+              {
+                "description": "Indicates a selection has been finalized.",
+                "key": "CONFIRM_SELECTION",
+                "name": "Confirm Selection",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "synonyms": "accept, finalize, submit, choose",
+                "tier": "essential"
+              },
+              {
+                "key": "CLEAR",
+                "name": "Clear"
+              }
+            ],
             "states": [
               {
-                "name": "loading",
-                "isInitial": true
+                "isInitial": true,
+                "name": "loading"
               },
               {
                 "name": "idle"
@@ -106,79 +201,8 @@
                 "name": "error"
               }
             ],
-            "events": [
-              {
-                "key": "INIT",
-                "name": "Initialize"
-              },
-              {
-                "key": "SelectableItemLoaded",
-                "name": "SelectableItem loaded",
-                "description": "Indicates a selectable item has been successfully loaded.",
-                "synonyms": "loaded, initialized, ready",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "data",
-                    "type": "[SelectableItem]"
-                  }
-                ]
-              },
-              {
-                "key": "SelectableItemLoadFailed",
-                "name": "SelectableItem load failed",
-                "description": "Indicates a selectable item failed to load.",
-                "synonyms": "error, failure, problem, unsuccessful",
-                "tier": "internal",
-                "payloadSchema": [
-                  {
-                    "name": "error",
-                    "type": "string"
-                  },
-                  {
-                    "name": "code",
-                    "type": "string"
-                  }
-                ]
-              },
-              {
-                "key": "SELECT",
-                "name": "Select",
-                "description": "Indicates an item has been chosen.",
-                "synonyms": "chosen, picked, highlighted",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CONFIRM_SELECTION",
-                "name": "Confirm Selection",
-                "description": "Indicates a selection has been finalized.",
-                "synonyms": "accept, finalize, submit, choose",
-                "tier": "essential",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string",
-                    "required": true
-                  }
-                ]
-              },
-              {
-                "key": "CLEAR",
-                "name": "Clear"
-              }
-            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -194,42 +218,38 @@
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "variant": "caption",
                           "color": "muted",
                           "content": "Loading…",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
-                      "className": "py-12"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "idle",
-                "event": "SelectableItemLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
                           "align": "center",
-                          "direction": "horizontal",
-                          "type": "stack",
                           "children": [
                             {
                               "name": "check-square",
@@ -241,20 +261,23 @@
                               "variant": "h2"
                             }
                           ],
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "color": "muted",
                           "content": "Choose a selectableitem to continue.",
                           "type": "typography",
-                          "color": "muted",
                           "variant": "caption"
                         },
                         {
+                          "className": "transition-shadow hover:shadow-md cursor-pointer",
+                          "entity": "@payload.data",
                           "fields": [],
-                          "look": "@config.tableLook",
                           "itemActions": [
                             {
                               "event": "SELECT",
@@ -262,7 +285,7 @@
                               "label": "Select"
                             }
                           ],
-                          "type": "data-grid",
+                          "look": "@config.tableLook",
                           "renderItem": [
                             "fn",
                             "item",
@@ -270,8 +293,8 @@
                               "align": "center",
                               "children": [
                                 {
-                                  "type": "checkbox",
-                                  "label": "@item.name"
+                                  "label": "@item.name",
+                                  "type": "checkbox"
                                 }
                               ],
                               "direction": "horizontal",
@@ -279,62 +302,63 @@
                               "type": "stack"
                             }
                           ],
-                          "className": "transition-shadow hover:shadow-md cursor-pointer",
-                          "entity": "@payload.data"
+                          "type": "data-grid"
                         }
                       ],
-                      "gap": "lg"
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "SelectableItemLoaded",
+                "from": "loading",
+                "to": "idle"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "SelectableItemLoadFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
-                      "className": "py-12",
-                      "type": "stack",
                       "align": "center",
                       "children": [
                         {
-                          "type": "icon",
+                          "color": "error",
                           "name": "alert-triangle",
-                          "color": "destructive"
+                          "type": "icon"
                         },
                         {
                           "content": "Failed to load",
-                          "variant": "h3",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         {
-                          "type": "typography",
                           "color": "muted",
                           "content": "@payload.error",
+                          "type": "typography",
                           "variant": "body"
                         },
                         {
+                          "action": "INIT",
                           "icon": "rotate-ccw",
                           "label": "Retry",
-                          "action": "INIT",
                           "type": "button",
                           "variant": "primary"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "SelectableItemLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "idle",
-                "to": "selecting",
-                "event": "SELECT",
                 "effects": [
                   [
                     "render-ui",
@@ -342,10 +366,10 @@
                     {
                       "children": [
                         {
-                          "gap": "md",
-                          "type": "stack",
+                          "align": "center",
                           "children": [
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "name": "check-square",
@@ -358,11 +382,11 @@
                                 }
                               ],
                               "direction": "horizontal",
-                              "align": "center",
                               "gap": "md",
                               "type": "stack"
                             },
                             {
+                              "align": "center",
                               "children": [
                                 {
                                   "label": "Selecting",
@@ -370,111 +394,109 @@
                                 },
                                 {
                                   "action": "CLEAR",
-                                  "variant": "ghost",
+                                  "icon": "x",
                                   "label": "Clear",
                                   "type": "button",
-                                  "icon": "x"
+                                  "variant": "ghost"
                                 }
                               ],
-                              "gap": "sm",
-                              "type": "stack",
                               "direction": "horizontal",
-                              "align": "center"
+                              "gap": "sm",
+                              "type": "stack"
                             }
                           ],
-                          "align": "center",
+                          "direction": "horizontal",
+                          "gap": "md",
                           "justify": "between",
-                          "direction": "horizontal"
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
+                          "message": "@payload.id",
                           "type": "alert",
-                          "variant": "info",
-                          "message": "@payload.id"
+                          "variant": "info"
                         },
                         {
-                          "direction": "horizontal",
                           "children": [
                             {
-                              "icon": "check",
                               "action": "CONFIRM_SELECTION",
-                              "type": "button",
-                              "label": "Confirm",
-                              "variant": "primary",
                               "actionPayload": {
                                 "id": "@payload.id"
-                              }
+                              },
+                              "icon": "check",
+                              "label": "Confirm",
+                              "type": "button",
+                              "variant": "primary"
                             }
                           ],
-                          "type": "stack",
-                          "gap": "sm"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         }
                       ],
-                      "type": "stack",
                       "direction": "vertical",
-                      "gap": "lg"
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "SELECT",
+                "from": "idle",
+                "to": "selecting"
               },
               {
-                "from": "selecting",
-                "to": "selected",
-                "event": "CONFIRM_SELECTION",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
-                      "gap": "lg",
                       "children": [
                         {
-                          "justify": "between",
-                          "type": "stack",
-                          "direction": "horizontal",
+                          "align": "center",
                           "children": [
                             {
-                              "type": "stack",
+                              "align": "center",
                               "children": [
                                 {
                                   "name": "check-circle",
                                   "type": "icon"
                                 },
                                 {
+                                  "content": "Selection Confirmed",
                                   "type": "typography",
-                                  "variant": "h2",
-                                  "content": "Selection Confirmed"
+                                  "variant": "h2"
                                 }
                               ],
                               "direction": "horizontal",
-                              "align": "center",
-                              "gap": "md"
+                              "gap": "md",
+                              "type": "stack"
                             },
                             {
                               "label": "Confirmed",
                               "type": "badge"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "md",
-                          "align": "center"
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "variant": "success",
+                          "message": "Selection confirmed successfully.",
                           "type": "alert",
-                          "message": "Selection confirmed successfully."
+                          "variant": "success"
                         },
                         {
+                          "align": "center",
                           "children": [
                             {
-                              "type": "typography",
                               "content": "Selected ID:",
+                              "type": "typography",
                               "variant": "caption"
                             },
                             {
@@ -483,27 +505,29 @@
                               "variant": "body"
                             }
                           ],
-                          "gap": "md",
-                          "align": "center",
                           "direction": "horizontal",
+                          "gap": "md",
                           "type": "stack"
                         },
                         {
-                          "variant": "ghost",
                           "action": "CLEAR",
-                          "label": "Clear Selection",
                           "icon": "rotate-ccw",
-                          "type": "button"
+                          "label": "Clear Selection",
+                          "type": "button",
+                          "variant": "ghost"
                         }
-                      ]
+                      ],
+                      "direction": "vertical",
+                      "gap": "lg",
+                      "type": "stack"
                     }
                   ]
-                ]
-              },
-              {
+                ],
+                "event": "CONFIRM_SELECTION",
                 "from": "selecting",
-                "to": "loading",
-                "event": "CLEAR",
+                "to": "selected"
+              },
+              {
                 "effects": [
                   [
                     "fetch",
@@ -522,12 +546,36 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "CLEAR",
+                "from": "selecting",
+                "to": "loading"
               },
               {
+                "effects": [
+                  [
+                    "fetch",
+                    "SelectableItem",
+                    {
+                      "emit": {
+                        "failure": "SelectableItemLoadFailed",
+                        "success": "SelectableItemLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "CLEAR",
                 "from": "selected",
-                "to": "loading",
-                "event": "CLEAR",
+                "to": "loading"
+              },
+              {
                 "effects": [
                   [
                     "fetch",
@@ -546,64 +594,16 @@
                       "type": "spinner"
                     }
                   ]
-                ]
-              },
-              {
-                "from": "error",
-                "to": "loading",
+                ],
                 "event": "INIT",
-                "effects": [
-                  [
-                    "fetch",
-                    "SelectableItem",
-                    {
-                      "emit": {
-                        "success": "SelectableItemLoaded",
-                        "failure": "SelectableItemLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner"
-                    }
-                  ]
-                ]
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "config": {
-            "tableLook": {
-              "type": "string",
-              "default": "dense",
-              "label": "Table look",
-              "description": "Layer 2 visual treatment for the data table rendered by this atom.",
-              "tier": "presentation",
-              "values": [
-                "dense",
-                "spacious",
-                "striped",
-                "borderless",
-                "card-rows"
-              ]
-            }
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "SelectableItemSelectionPage",
-          "path": "/selectableitems/selection",
-          "traits": [
-            {
-              "ref": "SelectableItemSelection"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

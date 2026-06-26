@@ -1,111 +1,113 @@
 {
-  "name": "std-agent-activity-log",
-  "version": "1.0.0",
   "description": "std-agent-activity-log as a Function",
+  "name": "std-agent-activity-log",
   "orbitals": [
     {
-      "name": "AgentActivityLogOrbital",
       "entity": {
-        "name": "AgentActivityLog",
         "collection": "agentactivitylogs",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "name",
-            "type": "string",
             "description": "A short identifier or label for the activity.",
-            "synonyms": "label, identifier, title"
+            "name": "name",
+            "synonyms": "label, identifier, title",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A textual explanation of the activity.",
-            "synonyms": "explanation, note, summary, remarks"
+            "name": "description",
+            "synonyms": "explanation, note, summary, remarks",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Current operational state of the activity.",
+            "name": "status",
+            "synonyms": "state, condition, operational_status",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending"
-            ],
-            "description": "Current operational state of the activity.",
-            "synonyms": "state, condition, operational_status"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "action",
-            "type": "string",
             "default": "",
             "description": "The event or operation that occurred.",
-            "synonyms": "event, operation, type, task"
+            "name": "action",
+            "synonyms": "event, operation, type, task",
+            "type": "string"
           },
           {
-            "name": "detail",
-            "type": "string",
             "default": "",
             "description": "Provides additional information about the activity.",
-            "synonyms": "notes, specifics, particulars, details"
+            "name": "detail",
+            "synonyms": "notes, specifics, particulars, details",
+            "type": "string"
           },
           {
-            "name": "timestamp",
-            "type": "string",
             "default": "",
             "description": "The date and time when the event occurred.",
-            "synonyms": "date, time, when"
+            "name": "timestamp",
+            "synonyms": "date, time, when",
+            "type": "string"
           },
           {
-            "name": "duration",
-            "type": "number",
             "default": 0.0,
             "description": "The length of time an activity took to complete.",
-            "synonyms": "time, length, elapsed"
+            "name": "duration",
+            "synonyms": "time, length, elapsed",
+            "type": "number"
           },
           {
-            "name": "icon",
-            "type": "string",
             "default": "circle",
             "description": "A visual representation, often a symbol or image.",
-            "synonyms": "image, symbol, graphic, representation"
+            "name": "icon",
+            "synonyms": "image, symbol, graphic, representation",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "AgentActivityLog",
+        "persistence": "persistent"
       },
+      "name": "AgentActivityLogOrbital",
+      "pages": [
+        {
+          "name": "AgentActivityLogPage",
+          "path": "/agentactivitylogs",
+          "traits": [
+            {
+              "ref": "AgentActivityLogLog"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "AgentActivityLogLog",
-          "entityRebindable": true,
-          "entityContract": {
-            "requires": [],
-            "provides": []
-          },
           "category": "interaction",
-          "linkedEntity": "AgentActivityLog",
           "emits": [
             {
-              "event": "AgentActivityLogLoaded",
               "description": "Fired when the AgentActivityLog collection finishes loading; payload.data holds the list",
-              "scope": "internal",
+              "event": "AgentActivityLogLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[AgentActivityLog]"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentActivityLogLoadFailed",
               "description": "Fired when the AgentActivityLog collection fails to load",
-              "scope": "internal",
+              "event": "AgentActivityLogLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -115,23 +117,23 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentActivityLogSaved",
               "description": "Fired when a LOG_ENTRY persist succeeds",
-              "scope": "internal",
+              "event": "AgentActivityLogSaved",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentActivityLogSaveFailed",
               "description": "Fired when a LOG_ENTRY persist fails",
-              "scope": "internal",
+              "event": "AgentActivityLogSaveFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -141,23 +143,23 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentActivityLogDeleted",
               "description": "Fired when CLEAR deletes activity log rows",
-              "scope": "internal",
+              "event": "AgentActivityLogDeleted",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentActivityLogDeleteFailed",
               "description": "Fired when CLEAR fails to delete",
-              "scope": "internal",
+              "event": "AgentActivityLogDeleteFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -167,28 +169,19 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             }
           ],
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AgentActivityLog",
+          "name": "AgentActivityLogLog",
+          "scope": "collection",
           "stateMachine": {
-            "states": [
-              {
-                "name": "loading",
-                "isInitial": true
-              },
-              {
-                "name": "logging"
-              },
-              {
-                "name": "persisting"
-              },
-              {
-                "name": "deleting"
-              },
-              {
-                "name": "error"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
@@ -289,11 +282,26 @@
                 ]
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "loading"
+              },
+              {
+                "name": "logging"
+              },
+              {
+                "name": "persisting"
+              },
+              {
+                "name": "deleting"
+              },
+              {
+                "name": "error"
+              }
+            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -309,48 +317,45 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
-                      "gap": "md",
                       "align": "center",
-                      "type": "stack",
-                      "className": "py-12",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
                           "color": "muted",
-                          "type": "typography",
                           "content": "Loading activity log…",
+                          "type": "typography",
                           "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "logging",
-                "event": "AgentActivityLogLoaded",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "gap": "lg",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "justify": "between",
                           "align": "center",
                           "children": [
                             {
-                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "activity"
+                                  "name": "activity",
+                                  "type": "icon"
                                 },
                                 {
                                   "content": "Activity Log",
@@ -359,20 +364,21 @@
                                 }
                               ],
                               "direction": "horizontal",
-                              "align": "center",
+                              "gap": "sm",
                               "type": "stack"
                             },
                             {
                               "action": "CLEAR",
-                              "type": "button",
+                              "icon": "trash",
                               "label": "Clear",
-                              "variant": "ghost",
-                              "icon": "trash"
+                              "type": "button",
+                              "variant": "ghost"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
-                          "direction": "horizontal"
+                          "justify": "between",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
@@ -383,73 +389,75 @@
                           "type": "timeline"
                         }
                       ],
+                      "direction": "vertical",
+                      "gap": "lg",
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentActivityLogLoaded",
+                "from": "loading",
+                "to": "logging"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "AgentActivityLogLoadFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
-                      "className": "py-12",
                       "children": [
                         {
+                          "color": "error",
                           "name": "alert-triangle",
-                          "color": "destructive",
                           "type": "icon"
                         },
                         {
                           "content": "Failed to load activity log",
-                          "variant": "h3",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "h3"
                         },
                         {
                           "color": "muted",
-                          "variant": "body",
                           "content": "@payload.error",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "body"
                         },
                         {
-                          "variant": "primary",
+                          "action": "INIT",
                           "icon": "rotate-ccw",
                           "label": "Retry",
-                          "action": "INIT",
-                          "type": "button"
+                          "type": "button",
+                          "variant": "primary"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentActivityLogLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "logging",
-                "to": "persisting",
-                "event": "LOG_ENTRY",
                 "effects": [
                   [
                     "persist",
                     "create",
                     "AgentActivityLog",
                     {
-                      "timestamp": "@now",
-                      "status": "@payload.status",
                       "action": "@payload.action",
-                      "detail": "@payload.detail"
+                      "detail": "@payload.detail",
+                      "status": "@payload.status",
+                      "timestamp": "@now"
                     },
                     {
                       "emit": {
-                        "success": "AgentActivityLogSaved",
-                        "failure": "AgentActivityLogSaveFailed"
+                        "failure": "AgentActivityLogSaveFailed",
+                        "success": "AgentActivityLogSaved"
                       }
                     }
                   ],
@@ -458,29 +466,29 @@
                     "main",
                     {
                       "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
-                      "className": "py-12",
-                      "gap": "md",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
+                          "color": "muted",
                           "content": "Recording entry…",
-                          "variant": "caption",
                           "type": "typography",
-                          "color": "muted"
+                          "variant": "caption"
                         }
-                      ]
+                      ],
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "LOG_ENTRY",
+                "from": "logging",
+                "to": "persisting"
               },
               {
-                "from": "logging",
-                "to": "deleting",
-                "event": "CLEAR",
                 "effects": [
                   [
                     "persist",
@@ -488,8 +496,8 @@
                     "AgentActivityLog",
                     {
                       "emit": {
-                        "success": "AgentActivityLogDeleted",
-                        "failure": "AgentActivityLogDeleteFailed"
+                        "failure": "AgentActivityLogDeleteFailed",
+                        "success": "AgentActivityLogDeleted"
                       }
                     }
                   ],
@@ -497,38 +505,38 @@
                     "render-ui",
                     "main",
                     {
-                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
+                          "color": "muted",
                           "content": "Clearing activity log…",
-                          "variant": "caption",
-                          "color": "muted"
+                          "type": "typography",
+                          "variant": "caption"
                         }
                       ],
+                      "className": "py-12",
+                      "direction": "vertical",
                       "gap": "md",
-                      "align": "center",
-                      "type": "stack",
-                      "className": "py-12"
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "CLEAR",
+                "from": "logging",
+                "to": "deleting"
               },
               {
-                "from": "persisting",
-                "to": "loading",
-                "event": "AgentActivityLogSaved",
                 "effects": [
                   [
                     "fetch",
                     "AgentActivityLog",
                     {
                       "emit": {
-                        "success": "AgentActivityLogLoaded",
-                        "failure": "AgentActivityLogLoadFailed"
+                        "failure": "AgentActivityLogLoadFailed",
+                        "success": "AgentActivityLogLoaded"
                       }
                     }
                   ],
@@ -539,24 +547,23 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentActivityLogSaved",
+                "from": "persisting",
+                "to": "loading"
               },
               {
-                "from": "persisting",
-                "to": "error",
-                "event": "AgentActivityLogSaveFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "gap": "md",
+                      "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "color": "destructive",
-                          "name": "alert-triangle"
+                          "color": "error",
+                          "name": "alert-triangle",
+                          "type": "icon"
                         },
                         {
                           "content": "Failed to record entry",
@@ -564,30 +571,31 @@
                           "variant": "h3"
                         },
                         {
-                          "content": "@payload.error",
                           "color": "muted",
+                          "content": "@payload.error",
                           "type": "typography",
                           "variant": "body"
                         },
                         {
+                          "action": "INIT",
                           "icon": "rotate-ccw",
                           "label": "Retry",
-                          "action": "INIT",
                           "type": "button",
                           "variant": "primary"
                         }
                       ],
-                      "align": "center",
                       "className": "py-12",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentActivityLogSaveFailed",
+                "from": "persisting",
+                "to": "error"
               },
               {
-                "from": "deleting",
-                "to": "loading",
-                "event": "AgentActivityLogDeleted",
                 "effects": [
                   [
                     "fetch",
@@ -606,26 +614,23 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentActivityLogDeleted",
+                "from": "deleting",
+                "to": "loading"
               },
               {
-                "from": "deleting",
-                "to": "error",
-                "event": "AgentActivityLogDeleteFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "gap": "md",
-                      "type": "stack",
-                      "direction": "vertical",
                       "align": "center",
                       "children": [
                         {
-                          "type": "icon",
-                          "color": "destructive",
-                          "name": "alert-triangle"
+                          "color": "error",
+                          "name": "alert-triangle",
+                          "type": "icon"
                         },
                         {
                           "content": "Failed to clear activity log",
@@ -633,28 +638,31 @@
                           "variant": "h3"
                         },
                         {
-                          "type": "typography",
+                          "color": "muted",
                           "content": "@payload.error",
-                          "variant": "body",
-                          "color": "muted"
+                          "type": "typography",
+                          "variant": "body"
                         },
                         {
-                          "variant": "primary",
-                          "label": "Retry",
-                          "icon": "rotate-ccw",
                           "action": "INIT",
-                          "type": "button"
+                          "icon": "rotate-ccw",
+                          "label": "Retry",
+                          "type": "button",
+                          "variant": "primary"
                         }
                       ],
-                      "className": "py-12"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentActivityLogDeleteFailed",
+                "from": "deleting",
+                "to": "error"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -673,24 +681,16 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "AgentActivityLogPage",
-          "path": "/agentactivitylogs",
-          "traits": [
-            {
-              "ref": "AgentActivityLogLog"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }

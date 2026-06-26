@@ -1,137 +1,147 @@
 {
-  "name": "std-agent-conversation",
-  "version": "1.0.0",
   "description": "std-agent-conversation as a Function",
+  "name": "std-agent-conversation",
   "orbitals": [
     {
-      "name": "AgentConversationOrbital",
       "entity": {
-        "name": "AgentConversation",
         "collection": "agentconversations",
-        "persistence": "persistent",
         "fields": [
           {
             "name": "id",
-            "type": "string",
-            "required": true
+            "required": true,
+            "type": "string"
           },
           {
-            "name": "name",
-            "type": "string",
             "description": "A human-readable identifier for the conversation.",
-            "synonyms": "title, label, identifier"
+            "name": "name",
+            "synonyms": "title, label, identifier",
+            "type": "string"
           },
           {
-            "name": "description",
-            "type": "string",
             "description": "A textual summary or explanation of the conversation.",
-            "synonyms": "summary, explanation, details, overview"
+            "name": "description",
+            "synonyms": "summary, explanation, details, overview",
+            "type": "string"
           },
           {
-            "name": "status",
-            "type": "string",
             "default": "active",
+            "description": "Current operational state of the conversation.",
+            "name": "status",
+            "synonyms": "state, condition, mode",
+            "type": "string",
             "values": [
               "active",
               "inactive",
               "pending",
               "sent"
-            ],
-            "description": "Current operational state of the conversation.",
-            "synonyms": "state, condition, mode"
+            ]
           },
           {
             "name": "createdAt",
             "type": "string"
           },
           {
-            "name": "messages",
-            "type": "array",
             "default": [],
+            "description": "An array of messages exchanged during the conversation.",
             "items": {
               "type": "string"
             },
-            "description": "An array of messages exchanged during the conversation.",
-            "synonyms": "conversation history, chat log, message list"
+            "name": "messages",
+            "synonyms": "conversation history, chat log, message list",
+            "type": "array"
           },
           {
-            "name": "turnCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of turns in the conversation.",
-            "synonyms": "count, number, iterations"
+            "name": "turnCount",
+            "synonyms": "count, number, iterations",
+            "type": "number"
           },
           {
-            "name": "lastMessage",
-            "type": "string",
             "default": "",
             "description": "The text of the most recent message.",
-            "synonyms": "latest message, recent message, last text"
+            "name": "lastMessage",
+            "synonyms": "latest message, recent message, last text",
+            "type": "string"
           },
           {
-            "name": "tokenCount",
-            "type": "number",
             "default": 0.0,
             "description": "The number of tokens used in the conversation.",
-            "synonyms": "count, length, size"
+            "name": "tokenCount",
+            "synonyms": "count, length, size",
+            "type": "number"
           },
           {
-            "name": "role",
-            "type": "string",
             "default": "user",
+            "description": "Identifies the participant in the conversation.",
+            "name": "role",
+            "synonyms": "participant, speaker, actor, persona",
+            "type": "string",
             "values": [
               "user",
               "assistant",
               "system",
               "tool"
-            ],
-            "description": "Identifies the participant in the conversation.",
-            "synonyms": "participant, speaker, actor, persona"
+            ]
           },
           {
-            "name": "content",
-            "type": "string",
             "default": "",
             "description": "The textual body of a message or response.",
-            "synonyms": "text, body, payload, value"
+            "name": "content",
+            "synonyms": "text, body, payload, value",
+            "type": "string"
           },
           {
-            "name": "timestamp",
-            "type": "string",
             "default": "",
             "description": "The date and time when an event occurred.",
-            "synonyms": "date, time, when"
+            "name": "timestamp",
+            "synonyms": "date, time, when",
+            "type": "string"
           },
           {
-            "name": "toolName",
-            "type": "string",
             "default": "",
             "description": "The name of the tool utilized in this conversation.",
-            "synonyms": "tool, utility, application"
+            "name": "toolName",
+            "synonyms": "tool, utility, application",
+            "type": "string"
           }
-        ]
+        ],
+        "name": "AgentConversation",
+        "persistence": "persistent"
       },
+      "name": "AgentConversationOrbital",
+      "pages": [
+        {
+          "name": "AgentConversationPage",
+          "path": "/agentconversations",
+          "traits": [
+            {
+              "ref": "AgentConversationThread"
+            },
+            {
+              "ref": "AgentConversationAgent"
+            }
+          ]
+        }
+      ],
       "traits": [
         {
-          "name": "AgentConversationThread",
           "category": "interaction",
-          "linkedEntity": "AgentConversation",
           "emits": [
             {
-              "event": "AgentConversationLoaded",
               "description": "Fired when conversation finishes loading; payload.data holds the turns",
-              "scope": "internal",
+              "event": "AgentConversationLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[AgentConversation]"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentConversationLoadFailed",
               "description": "Fired when conversation fails to load",
-              "scope": "internal",
+              "event": "AgentConversationLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -141,23 +151,23 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentConversationSaved",
               "description": "Fired when a new turn is persisted",
-              "scope": "internal",
+              "event": "AgentConversationSaved",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentConversationSaveFailed",
               "description": "Fired when persisting a turn fails",
-              "scope": "internal",
+              "event": "AgentConversationSaveFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -167,23 +177,23 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentConversationDeleted",
               "description": "Fired when the conversation is cleared",
-              "scope": "internal",
+              "event": "AgentConversationDeleted",
               "payloadSchema": [
                 {
                   "name": "id",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentConversationDeleteFailed",
               "description": "Fired when clearing the conversation fails",
-              "scope": "internal",
+              "event": "AgentConversationDeleteFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -193,31 +203,14 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             }
           ],
+          "linkedEntity": "AgentConversation",
+          "name": "AgentConversationThread",
+          "scope": "collection",
           "stateMachine": {
-            "states": [
-              {
-                "name": "loading",
-                "isInitial": true
-              },
-              {
-                "name": "idle"
-              },
-              {
-                "name": "composing"
-              },
-              {
-                "name": "persisting"
-              },
-              {
-                "name": "deleting"
-              },
-              {
-                "name": "error"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
@@ -261,8 +254,8 @@
                 "payloadSchema": [
                   {
                     "name": "content",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   }
                 ]
               },
@@ -319,11 +312,29 @@
                 ]
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "loading"
+              },
+              {
+                "name": "idle"
+              },
+              {
+                "name": "composing"
+              },
+              {
+                "name": "persisting"
+              },
+              {
+                "name": "deleting"
+              },
+              {
+                "name": "error"
+              }
+            ],
             "transitions": [
               {
-                "from": "loading",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -339,30 +350,30 @@
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
-                      "direction": "vertical",
+                      "align": "center",
                       "children": [
                         {
                           "type": "spinner"
                         },
                         {
-                          "type": "typography",
-                          "content": "Loading conversation…",
                           "color": "muted",
+                          "content": "Loading conversation…",
+                          "type": "typography",
                           "variant": "caption"
                         }
                       ],
-                      "align": "center",
                       "className": "py-12",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "loading",
+                "to": "loading"
               },
               {
-                "from": "loading",
-                "to": "idle",
-                "event": "AgentConversationLoaded",
                 "effects": [
                   [
                     "render-ui",
@@ -370,15 +381,14 @@
                     {
                       "children": [
                         {
-                          "gap": "sm",
+                          "align": "center",
                           "children": [
                             {
-                              "direction": "horizontal",
-                              "gap": "sm",
+                              "align": "center",
                               "children": [
                                 {
-                                  "type": "icon",
-                                  "name": "message-circle"
+                                  "name": "message-circle",
+                                  "type": "icon"
                                 },
                                 {
                                   "content": "Conversation Thread",
@@ -386,19 +396,20 @@
                                   "variant": "h2"
                                 }
                               ],
-                              "align": "center",
+                              "direction": "horizontal",
+                              "gap": "sm",
                               "type": "stack"
                             },
                             {
-                              "type": "button",
-                              "variant": "primary",
                               "action": "COMPOSE",
+                              "icon": "plus",
                               "label": "New Message",
-                              "icon": "plus"
+                              "type": "button",
+                              "variant": "primary"
                             }
                           ],
-                          "align": "center",
                           "direction": "horizontal",
+                          "gap": "sm",
                           "justify": "between",
                           "type": "stack"
                         },
@@ -406,6 +417,8 @@
                           "type": "divider"
                         },
                         {
+                          "entity": "@payload.data",
+                          "fields": [],
                           "renderItem": [
                             "fn",
                             "item",
@@ -413,31 +426,31 @@
                               "children": [
                                 {
                                   "align": "center",
-                                  "gap": "sm",
-                                  "direction": "horizontal",
-                                  "type": "stack",
                                   "children": [
                                     {
                                       "label": "@item.role",
                                       "type": "badge"
                                     },
                                     {
-                                      "variant": "secondary",
                                       "label": "@item.status",
-                                      "type": "badge"
+                                      "type": "badge",
+                                      "variant": "secondary"
                                     },
                                     {
-                                      "type": "typography",
                                       "color": "muted",
                                       "content": "@item.timestamp",
+                                      "type": "typography",
                                       "variant": "caption"
                                     }
-                                  ]
+                                  ],
+                                  "direction": "horizontal",
+                                  "gap": "sm",
+                                  "type": "stack"
                                 },
                                 {
-                                  "variant": "body",
+                                  "content": "@item.content",
                                   "type": "typography",
-                                  "content": "@item.content"
+                                  "variant": "body"
                                 }
                               ],
                               "direction": "vertical",
@@ -445,9 +458,7 @@
                               "type": "stack"
                             }
                           ],
-                          "type": "data-list",
-                          "fields": [],
-                          "entity": "@payload.data"
+                          "type": "data-list"
                         }
                       ],
                       "direction": "vertical",
@@ -455,25 +466,23 @@
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentConversationLoaded",
+                "from": "loading",
+                "to": "idle"
               },
               {
-                "from": "loading",
-                "to": "error",
-                "event": "AgentConversationLoadFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "type": "stack",
                       "align": "center",
-                      "direction": "vertical",
                       "children": [
                         {
+                          "color": "error",
                           "name": "alert-triangle",
-                          "type": "icon",
-                          "color": "destructive"
+                          "type": "icon"
                         },
                         {
                           "content": "Failed to load",
@@ -481,29 +490,31 @@
                           "variant": "h3"
                         },
                         {
-                          "variant": "body",
                           "color": "muted",
                           "content": "@payload.error",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "body"
                         },
                         {
-                          "variant": "primary",
                           "action": "INIT",
-                          "type": "button",
+                          "icon": "rotate-ccw",
                           "label": "Retry",
-                          "icon": "rotate-ccw"
+                          "type": "button",
+                          "variant": "primary"
                         }
                       ],
                       "className": "py-12",
-                      "gap": "md"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentConversationLoadFailed",
+                "from": "loading",
+                "to": "error"
               },
               {
-                "from": "idle",
-                "to": "composing",
-                "event": "COMPOSE",
                 "effects": [
                   [
                     "render-ui",
@@ -512,32 +523,32 @@
                       "children": [
                         {
                           "align": "center",
-                          "gap": "sm",
-                          "type": "stack",
                           "children": [
                             {
                               "name": "message-circle",
                               "type": "icon"
                             },
                             {
-                              "variant": "h2",
+                              "content": "Conversation Thread",
                               "type": "typography",
-                              "content": "Conversation Thread"
+                              "variant": "h2"
                             }
                           ],
-                          "direction": "horizontal"
+                          "direction": "horizontal",
+                          "gap": "sm",
+                          "type": "stack"
                         },
                         {
                           "type": "divider"
                         },
                         {
-                          "type": "form-section",
-                          "mode": "create",
+                          "cancelEvent": "CANCEL_COMPOSE",
                           "fields": [
                             "content"
                           ],
-                          "cancelEvent": "CANCEL_COMPOSE",
-                          "submitEvent": "SEND"
+                          "mode": "create",
+                          "submitEvent": "SEND",
+                          "type": "form-section"
                         }
                       ],
                       "direction": "vertical",
@@ -545,12 +556,12 @@
                       "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "COMPOSE",
+                "from": "idle",
+                "to": "composing"
               },
               {
-                "from": "idle",
-                "to": "deleting",
-                "event": "CLEAR",
                 "effects": [
                   [
                     "persist",
@@ -570,12 +581,12 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "CLEAR",
+                "from": "idle",
+                "to": "deleting"
               },
               {
-                "from": "composing",
-                "to": "persisting",
-                "event": "SEND",
                 "effects": [
                   [
                     "persist",
@@ -583,14 +594,14 @@
                     "AgentConversation",
                     {
                       "content": "@payload.content",
-                      "timestamp": "@now",
                       "role": "user",
-                      "status": "sent"
+                      "status": "sent",
+                      "timestamp": "@now"
                     },
                     {
                       "emit": {
-                        "success": "AgentConversationSaved",
-                        "failure": "AgentConversationSaveFailed"
+                        "failure": "AgentConversationSaveFailed",
+                        "success": "AgentConversationSaved"
                       }
                     }
                   ],
@@ -601,36 +612,12 @@
                       "type": "spinner"
                     }
                   ]
-                ]
-              },
-              {
+                ],
+                "event": "SEND",
                 "from": "composing",
-                "to": "loading",
-                "event": "CANCEL_COMPOSE",
-                "effects": [
-                  [
-                    "fetch",
-                    "AgentConversation",
-                    {
-                      "emit": {
-                        "success": "AgentConversationLoaded",
-                        "failure": "AgentConversationLoadFailed"
-                      }
-                    }
-                  ],
-                  [
-                    "render-ui",
-                    "main",
-                    {
-                      "type": "spinner"
-                    }
-                  ]
-                ]
+                "to": "persisting"
               },
               {
-                "from": "persisting",
-                "to": "loading",
-                "event": "AgentConversationSaved",
                 "effects": [
                   [
                     "fetch",
@@ -649,20 +636,45 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "CANCEL_COMPOSE",
+                "from": "composing",
+                "to": "loading"
               },
               {
+                "effects": [
+                  [
+                    "fetch",
+                    "AgentConversation",
+                    {
+                      "emit": {
+                        "failure": "AgentConversationLoadFailed",
+                        "success": "AgentConversationLoaded"
+                      }
+                    }
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "type": "spinner"
+                    }
+                  ]
+                ],
+                "event": "AgentConversationSaved",
                 "from": "persisting",
-                "to": "error",
-                "event": "AgentConversationSaveFailed",
+                "to": "loading"
+              },
+              {
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
+                      "align": "center",
                       "children": [
                         {
-                          "color": "destructive",
+                          "color": "error",
                           "name": "alert-triangle",
                           "type": "icon"
                         },
@@ -672,40 +684,39 @@
                           "variant": "h3"
                         },
                         {
-                          "type": "typography",
-                          "variant": "body",
                           "color": "muted",
-                          "content": "@payload.error"
+                          "content": "@payload.error",
+                          "type": "typography",
+                          "variant": "body"
                         },
                         {
-                          "label": "Retry",
-                          "variant": "primary",
-                          "icon": "rotate-ccw",
                           "action": "INIT",
-                          "type": "button"
+                          "icon": "rotate-ccw",
+                          "label": "Retry",
+                          "type": "button",
+                          "variant": "primary"
                         }
                       ],
-                      "type": "stack",
-                      "gap": "md",
                       "className": "py-12",
-                      "align": "center",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentConversationSaveFailed",
+                "from": "persisting",
+                "to": "error"
               },
               {
-                "from": "deleting",
-                "to": "loading",
-                "event": "AgentConversationDeleted",
                 "effects": [
                   [
                     "fetch",
                     "AgentConversation",
                     {
                       "emit": {
-                        "success": "AgentConversationLoaded",
-                        "failure": "AgentConversationLoadFailed"
+                        "failure": "AgentConversationLoadFailed",
+                        "success": "AgentConversationLoaded"
                       }
                     }
                   ],
@@ -716,63 +727,63 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentConversationDeleted",
+                "from": "deleting",
+                "to": "loading"
               },
               {
-                "from": "deleting",
-                "to": "error",
-                "event": "AgentConversationDeleteFailed",
                 "effects": [
                   [
                     "render-ui",
                     "main",
                     {
-                      "className": "py-12",
                       "align": "center",
-                      "type": "stack",
-                      "direction": "vertical",
                       "children": [
                         {
-                          "color": "destructive",
+                          "color": "error",
                           "name": "alert-triangle",
                           "type": "icon"
                         },
                         {
-                          "type": "typography",
                           "content": "Failed to clear",
+                          "type": "typography",
                           "variant": "h3"
                         },
                         {
                           "color": "muted",
                           "content": "@payload.error",
-                          "variant": "body",
-                          "type": "typography"
+                          "type": "typography",
+                          "variant": "body"
                         },
                         {
-                          "variant": "primary",
-                          "type": "button",
-                          "label": "Retry",
+                          "action": "INIT",
                           "icon": "rotate-ccw",
-                          "action": "INIT"
+                          "label": "Retry",
+                          "type": "button",
+                          "variant": "primary"
                         }
                       ],
-                      "gap": "md"
+                      "className": "py-12",
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
                   ]
-                ]
+                ],
+                "event": "AgentConversationDeleteFailed",
+                "from": "deleting",
+                "to": "error"
               },
               {
-                "from": "error",
-                "to": "loading",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
                     "AgentConversation",
                     {
                       "emit": {
-                        "success": "AgentConversationLoaded",
-                        "failure": "AgentConversationLoadFailed"
+                        "failure": "AgentConversationLoadFailed",
+                        "success": "AgentConversationLoaded"
                       }
                     }
                   ],
@@ -783,43 +794,42 @@
                       "type": "spinner"
                     }
                   ]
-                ]
+                ],
+                "event": "INIT",
+                "from": "error",
+                "to": "loading"
               }
             ]
-          },
-          "scope": "collection"
+          }
         },
         {
-          "name": "AgentConversationAgent",
           "category": "interaction",
-          "linkedEntity": "AgentConversation",
           "emits": [
             {
               "event": "TOKEN_UPDATE",
-              "scope": "internal",
               "payloadSchema": [
                 {
                   "name": "tokenCount",
-                  "type": "number",
-                  "required": true
+                  "required": true,
+                  "type": "number"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentConversationLoaded",
               "description": "Fired when conversation finishes loading; payload.data holds the turns",
-              "scope": "internal",
+              "event": "AgentConversationLoaded",
               "payloadSchema": [
                 {
                   "name": "data",
                   "type": "[AgentConversation]"
                 }
-              ]
+              ],
+              "scope": "internal"
             },
             {
-              "event": "AgentConversationLoadFailed",
               "description": "Fired when conversation fails to load",
-              "scope": "internal",
+              "event": "AgentConversationLoadFailed",
               "payloadSchema": [
                 {
                   "name": "error",
@@ -829,22 +839,14 @@
                   "name": "code",
                   "type": "string"
                 }
-              ]
+              ],
+              "scope": "internal"
             }
           ],
+          "linkedEntity": "AgentConversation",
+          "name": "AgentConversationAgent",
+          "scope": "collection",
           "stateMachine": {
-            "states": [
-              {
-                "name": "idle",
-                "isInitial": true
-              },
-              {
-                "name": "active"
-              },
-              {
-                "name": "paused"
-              }
-            ],
             "events": [
               {
                 "key": "INIT",
@@ -856,8 +858,8 @@
                 "payloadSchema": [
                   {
                     "name": "content",
-                    "type": "string",
-                    "required": true
+                    "required": true,
+                    "type": "string"
                   }
                 ]
               },
@@ -879,8 +881,8 @@
                 "payloadSchema": [
                   {
                     "name": "tokenCount",
-                    "type": "number",
-                    "required": true
+                    "required": true,
+                    "type": "number"
                   }
                 ]
               },
@@ -909,11 +911,20 @@
                 ]
               }
             ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              },
+              {
+                "name": "active"
+              },
+              {
+                "name": "paused"
+              }
+            ],
             "transitions": [
               {
-                "from": "idle",
-                "to": "idle",
-                "event": "INIT",
                 "effects": [
                   [
                     "fetch",
@@ -930,17 +941,17 @@
                     "main",
                     {
                       "description": "Conversation is ready",
+                      "icon": "message-circle",
                       "title": "Conversation",
-                      "type": "empty-state",
-                      "icon": "message-circle"
+                      "type": "empty-state"
                     }
                   ]
-                ]
-              },
-              {
+                ],
+                "event": "INIT",
                 "from": "idle",
-                "to": "active",
-                "event": "SEND_MESSAGE",
+                "to": "idle"
+              },
+              {
                 "effects": [
                   [
                     "agent/generate",
@@ -953,12 +964,12 @@
                       "tokenCount": 0.0
                     }
                   ]
-                ]
+                ],
+                "event": "SEND_MESSAGE",
+                "from": "idle",
+                "to": "active"
               },
               {
-                "from": "active",
-                "to": "active",
-                "event": "SEND_MESSAGE",
                 "effects": [
                   [
                     "agent/generate",
@@ -971,47 +982,36 @@
                       "tokenCount": 0.0
                     }
                   ]
-                ]
-              },
-              {
+                ],
+                "event": "SEND_MESSAGE",
                 "from": "active",
-                "to": "paused",
-                "event": "PAUSE"
+                "to": "active"
               },
               {
+                "event": "PAUSE",
                 "from": "active",
-                "to": "idle",
-                "event": "CLEAR"
+                "to": "paused"
               },
               {
-                "from": "paused",
-                "to": "active",
-                "event": "RESUME"
+                "event": "CLEAR",
+                "from": "active",
+                "to": "idle"
               },
               {
+                "event": "RESUME",
                 "from": "paused",
-                "to": "idle",
-                "event": "CLEAR"
+                "to": "active"
+              },
+              {
+                "event": "CLEAR",
+                "from": "paused",
+                "to": "idle"
               }
             ]
-          },
-          "scope": "collection"
-        }
-      ],
-      "pages": [
-        {
-          "name": "AgentConversationPage",
-          "path": "/agentconversations",
-          "traits": [
-            {
-              "ref": "AgentConversationThread"
-            },
-            {
-              "ref": "AgentConversationAgent"
-            }
-          ]
+          }
         }
       ]
     }
-  ]
+  ],
+  "version": "1.0.0"
 }
