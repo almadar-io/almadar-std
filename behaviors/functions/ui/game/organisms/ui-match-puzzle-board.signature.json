@@ -1,0 +1,707 @@
+[
+  {
+    "organism": "ui-match-puzzle-board",
+    "orbital": "MatchPuzzleBoardOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/organisms/ui-match-puzzle-board.ts",
+    "entities": [
+      {
+        "name": "MatchPuzzleBoardItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "MatchPuzzleBoardRender",
+        "emittedEvents": [
+          "TILE_CLICK",
+          "UNIT_CLICK"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+            "tier": "essential"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "activeFilters",
+            "type": "json",
+            "default": {},
+            "label": "Active Filters",
+            "description": "Active filters",
+            "tier": "presentation"
+          },
+          {
+            "key": "assetBaseUrl",
+            "type": "asset",
+            "default": "https://almadar-kflow-assets.web.app/shared/",
+            "label": "Asset Base Url",
+            "description": "Base URL prepended to manifest sprite paths",
+            "tier": "presentation"
+          },
+          {
+            "key": "assetManifest",
+            "type": "string",
+            "default": "",
+            "label": "Asset Manifest",
+            "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "enableCamera",
+            "type": "boolean",
+            "default": false,
+            "label": "Enable Camera",
+            "description": "Enable camera pan/zoom controls",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "MatchPuzzleBoardError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "features",
+            "type": "[MatchPuzzleBoardFeaturesItem]",
+            "default": [
+              {
+                "id": "f1",
+                "sprite": "https://almadar-kflow-assets.web.app/shared/sprite-sheets/gems/gem_special.png",
+                "type": "powerup",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "id": "f2",
+                "sprite": "https://almadar-kflow-assets.web.app/shared/sprite-sheets/gems/gem_blocked.png",
+                "type": "blocker",
+                "x": 4,
+                "y": 1
+              }
+            ],
+            "label": "Features",
+            "description": "Gem/tile features on the board",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "assetUrl": {
+                  "name": "assetUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": true,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "pageProp",
+            "type": "number",
+            "default": 0,
+            "label": "Page",
+            "description": "Current page number",
+            "synonyms": "page",
+            "tier": "presentation"
+          },
+          {
+            "key": "pageSize",
+            "type": "number",
+            "default": 0,
+            "label": "Page Size",
+            "description": "Number of items per page",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.45,
+            "label": "Scale",
+            "description": "Render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "searchValue",
+            "type": "string",
+            "default": "Search Value",
+            "label": "Search Value",
+            "description": "Current search query value",
+            "tier": "presentation"
+          },
+          {
+            "key": "selectedIds",
+            "type": "[string]",
+            "default": [],
+            "label": "Selected Ids",
+            "description": "Currently selected item IDs",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "showMinimap",
+            "type": "boolean",
+            "default": false,
+            "label": "Show Minimap",
+            "description": "Show minimap overlay",
+            "tier": "presentation"
+          },
+          {
+            "key": "sortBy",
+            "type": "string",
+            "default": "Sort By",
+            "label": "Sort By",
+            "description": "Current sort field",
+            "tier": "presentation"
+          },
+          {
+            "key": "sortDirection",
+            "type": "string",
+            "default": "asc",
+            "label": "Sort Direction",
+            "description": "Current sort direction",
+            "tier": "presentation",
+            "enumValues": [
+              "asc",
+              "desc"
+            ]
+          },
+          {
+            "key": "tiles",
+            "type": "[MatchPuzzleBoardTilesItem]",
+            "default": [
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_111.png",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_163.png",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_120.png",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_122.png",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_187.png",
+                "x": 4,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_163.png",
+                "x": 0,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_111.png",
+                "x": 1,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_122.png",
+                "x": 2,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_120.png",
+                "x": 3,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_111.png",
+                "x": 4,
+                "y": 1
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_120.png",
+                "x": 0,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_187.png",
+                "x": 1,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_163.png",
+                "x": 2,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_111.png",
+                "x": 3,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_122.png",
+                "x": 4,
+                "y": 2
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_122.png",
+                "x": 0,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_120.png",
+                "x": 1,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_187.png",
+                "x": 2,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_163.png",
+                "x": 3,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_120.png",
+                "x": 4,
+                "y": 3
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_187.png",
+                "x": 0,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_122.png",
+                "x": 1,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_111.png",
+                "x": 2,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_187.png",
+                "x": 3,
+                "y": 4
+              },
+              {
+                "passable": true,
+                "terrain": "gem",
+                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/terrains/tiles-flat-topdown/kenney-map-pack/mapTile_163.png",
+                "x": 4,
+                "y": 4
+              }
+            ],
+            "label": "Tiles",
+            "description": "Grid tiles for the match puzzle board",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "movementCost": {
+                  "name": "movementCost",
+                  "required": false,
+                  "type": "number"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "terrainSprite": {
+                  "name": "terrainSprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "tileType": {
+                  "name": "tileType",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "totalCount",
+            "type": "number",
+            "default": 0,
+            "label": "Total Count",
+            "description": "Total number of items",
+            "tier": "presentation"
+          },
+          {
+            "key": "units",
+            "type": "[MatchPuzzleBoardUnitsItem]",
+            "default": [],
+            "label": "Units",
+            "description": "Units on the board",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "faction": {
+                  "name": "faction",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "heroId": {
+                  "name": "heroId",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "previousPosition": {
+                  "name": "previousPosition",
+                  "required": false,
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "spriteSheet": {
+                  "name": "spriteSheet",
+                  "required": false,
+                  "type": "string"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "traits": {
+                  "name": "traits",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "cooldown": {
+                        "name": "cooldown",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "currentState": {
+                        "name": "currentState",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "states": {
+                        "name": "states",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "MatchPuzzleBoardPage",
+        "defaultPath": "/match-puzzle-board",
+        "primaryEntity": "MatchPuzzleBoardItem"
+      }
+    ],
+    "emittedEvents": [
+      "TILE_CLICK",
+      "UNIT_CLICK"
+    ],
+    "listenedEvents": []
+  }
+]

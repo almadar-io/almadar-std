@@ -77,7 +77,7 @@ export interface StdUiHeaderConfig {
   isLoading?: boolean;
   /** Default: `false` */
   isMenuOpen?: boolean;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"` */
   logoSrc?: unknown;
   /** Default: `"compact-bar"` */
   look?: 'hero' | 'compact-bar' | 'breadcrumb' | 'contextual' | 'editorial-banner';
@@ -91,7 +91,7 @@ export interface StdUiHeaderConfig {
   showSearch?: boolean;
   /** Default: `true` */
   sticky?: boolean;
-  /** Default: `{"alt":"Alt","initials":"Initials","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
+  /** Default: `{"alt":"Alt","initials":"Initials","src":"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"}` */
   userAvatar?: EntityRow;
   /** Default: `"User Name"` */
   userName?: string;

@@ -39,7 +39,7 @@ export type StdUiCardBattlerTemplateEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiCardBattlerTemplateConfig {
-  /** Default: `{"baseUrl":"https://almadar-kflow-assets.web.app/shared/","cards":{"bear":"cards/bear.png","elephant":"cards/elephant.png","frog":"cards/frog.png","gorilla":"cards/gorilla.png","monkey":"cards/monkey.png","owl":"cards/owl.png","panda":"cards/panda.png","parrot":"cards/parrot.png","penguin":"cards/penguin.png","rhino":"cards/rhino.png","snake":"cards/snake.png","whale":"cards/whale.png"}}` */
+  /** Default: `{"baseUrl":"https://almadar-kflow-assets.web.app/shared/","cards":{"bear":"cards/cards-standard/trait-wars/standard/bear.png","elephant":"cards/cards-standard/trait-wars/standard/elephant.png","frog":"cards/cards-standard/trait-wars/standard/frog.png","gorilla":"cards/cards-standard/trait-wars/standard/gorilla.png","monkey":"cards/cards-standard/trait-wars/standard/monkey.png","owl":"cards/cards-standard/trait-wars/standard/owl.png","panda":"cards/cards-standard/trait-wars/standard/panda.png","parrot":"cards/cards-standard/trait-wars/standard/parrot.png","penguin":"cards/cards-standard/trait-wars/standard/penguin.png","rhino":"cards/cards-standard/trait-wars/standard/rhino.png","snake":"cards/cards-standard/trait-wars/standard/snake.png","whale":"cards/cards-standard/trait-wars/standard/whale.png"}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;

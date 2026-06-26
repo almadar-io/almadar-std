@@ -1,0 +1,329 @@
+[
+  {
+    "organism": "ui-holiday-runner-board",
+    "orbital": "HolidayRunnerBoardOrbital",
+    "tier": "organisms",
+    "factoryPath": "behaviors/functions/ui/game/organisms/ui-holiday-runner-board.ts",
+    "entities": [
+      {
+        "name": "HolidayRunnerBoardItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "HolidayRunnerBoardRender",
+        "emittedEvents": [
+          "TICK",
+          "DRAW"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TICK",
+            "direction": "emit",
+            "description": "Declarative event: emits UI:{tickEvent} with { dt, frame } each tick",
+            "tier": "essential"
+          },
+          {
+            "name": "DRAW",
+            "direction": "emit",
+            "description": "Declarative event: emits UI:{drawEvent} with { frame } each draw frame",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "assetBaseUrl",
+            "type": "asset",
+            "default": "https://almadar-kflow-assets.web.app/shared/",
+            "label": "Asset Base Url",
+            "description": "Base URL prepended to manifest sprite paths",
+            "tier": "presentation"
+          },
+          {
+            "key": "assetManifest",
+            "type": "string",
+            "default": "",
+            "label": "Asset Manifest",
+            "description": "Asset sprite manifest",
+            "tier": "presentation"
+          },
+          {
+            "key": "backgroundImage",
+            "type": "asset",
+            "default": "https://almadar-kflow-assets.web.app/shared/backgrounds/bg-parallax/trait-wars/scenes/court.png",
+            "label": "Background Image",
+            "description": "Background image URL for the runner level",
+            "tier": "presentation"
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "Additional CSS classes",
+            "tier": "presentation"
+          },
+          {
+            "key": "enableCamera",
+            "type": "boolean",
+            "default": false,
+            "label": "Enable Camera",
+            "description": "Enable camera pan/zoom controls",
+            "tier": "presentation"
+          },
+          {
+            "key": "error",
+            "type": "HolidayRunnerBoardError",
+            "label": "Error",
+            "description": "Error state (UiError)",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "fps",
+            "type": "number",
+            "default": 60,
+            "label": "FPS",
+            "description": "Target frames per second",
+            "tier": "presentation"
+          },
+          {
+            "key": "height",
+            "type": "number",
+            "default": 400,
+            "label": "Height",
+            "description": "Canvas height in pixels",
+            "tier": "presentation"
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 1,
+            "label": "Scale",
+            "description": "Render scale",
+            "tier": "presentation"
+          },
+          {
+            "key": "showMinimap",
+            "type": "boolean",
+            "default": false,
+            "label": "Show Minimap",
+            "description": "Show minimap overlay",
+            "tier": "presentation"
+          },
+          {
+            "key": "tiles",
+            "type": "[HolidayRunnerBoardTilesItem]",
+            "default": [
+              {
+                "passable": true,
+                "terrain": "ground",
+                "x": 0,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "x": 1,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "platform",
+                "x": 2,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "x": 3,
+                "y": 0
+              },
+              {
+                "passable": true,
+                "terrain": "ground",
+                "x": 4,
+                "y": 0
+              }
+            ],
+            "label": "Tiles",
+            "description": "Flat side-scroll level tiles (ground, platform, gap)",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "passable": {
+                  "name": "passable",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "terrain": {
+                  "name": "terrain",
+                  "required": false,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "units",
+            "type": "[HolidayRunnerBoardUnitsItem]",
+            "default": [
+              {
+                "health": 3,
+                "id": "runner1",
+                "maxHealth": 3,
+                "name": "Holiday Runner",
+                "sprite": "https://almadar-kflow-assets.web.app/shared/units/chars-roguelike/trait-wars/sprite-sheets/amir-sprite-sheet-se.png",
+                "team": "player",
+                "unitType": "runner",
+                "x": 1,
+                "y": 0
+              }
+            ],
+            "label": "Units",
+            "description": "Units on the board",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "width",
+            "type": "number",
+            "default": 800,
+            "label": "Width",
+            "description": "Canvas width in pixels",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "HolidayRunnerBoardPage",
+        "defaultPath": "/holiday-runner-board",
+        "primaryEntity": "HolidayRunnerBoardItem"
+      }
+    ],
+    "emittedEvents": [
+      "DRAW",
+      "TICK"
+    ],
+    "listenedEvents": []
+  }
+]

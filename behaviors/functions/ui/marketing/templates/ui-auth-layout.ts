@@ -41,7 +41,7 @@ export type StdUiAuthLayoutEventKey = 'INIT';
 export interface StdUiAuthLayoutConfig {
   /** Default: `"My App"` */
   appName?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/units/chars-toon/trait-wars/citizens/archetypes/00_base_model.png"` */
   backgroundImage?: unknown;
   brandingContent?: unknown;
   /** Default: `true` */
