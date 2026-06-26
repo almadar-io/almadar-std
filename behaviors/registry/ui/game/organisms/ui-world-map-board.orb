@@ -1,5 +1,5 @@
 {
-  "description": "WorldMapBoard — overworld exploration: model owns hero selection, movement validation (Manhattan range + passable), battle encounters, and win/lose conditions.",
+  "description": "WorldMapBoard — game-shell composition with isometric canvas, overworld hero movement, battle encounters, and walk/idle animation ticks.",
   "name": "ui-world-map-board",
   "orbitals": [
     {
@@ -13,6 +13,11 @@
           {
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "elevation": {
                   "name": "elevation",
                   "required": false,
@@ -27,6 +32,11 @@
                     "enemy",
                     "neutral"
                   ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
                 },
                 "health": {
                   "name": "health",
@@ -328,6 +338,36 @@
             "default": 3.0,
             "name": "movementRange",
             "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "WorldMapBoardItem",
@@ -358,6 +398,9 @@
             },
             "assetManifest": {
               "default": {
+                "effects": {
+                  "slash": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/effects/slash_03.png"
+                },
                 "features": {
                   "gold_mine": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/gold_mine.png",
                   "portal": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/portal.png"
@@ -379,6 +422,14 @@
                   "name": "baseUrl",
                   "required": false,
                   "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
                 },
                 "features": {
                   "items": {
@@ -2689,6 +2740,8 @@
             "units": {
               "default": [
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 10.0,
                   "id": "u_hero",
                   "maxHealth": 10.0,
@@ -2703,6 +2756,8 @@
                   "unitType": "hero"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 8.0,
                   "id": "u_guard",
                   "maxHealth": 8.0,
@@ -2720,6 +2775,11 @@
               "description": "Initial hero/unit roster seeded into entity on INIT — team+health drive win/lose conditions.",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "elevation": {
                     "name": "elevation",
                     "required": false,
@@ -2734,6 +2794,11 @@
                       "enemy",
                       "neutral"
                     ]
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
                   },
                   "health": {
                     "name": "health",
@@ -3003,6 +3068,7 @@
           ],
           "entityContract": {
             "provides": [
+              "effects",
               "features",
               "gridHeight",
               "gridWidth",
@@ -3167,7 +3233,22 @@
                   [
                     "set",
                     "@entity.units",
-                    "@config.units"
+                    [
+                      "array/map",
+                      "@config.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "object/merge",
+                          "@u",
+                          {
+                            "animation": "idle",
+                            "frame": 0.0
+                          }
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -3210,30 +3291,45 @@
                     3.0
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
-                      "assetManifest": "@config.assetManifest",
-                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
-                      "diamondTopY": "@config.diamondTopY",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "enableCamera": "@config.enableCamera",
-                      "entity": "@entity",
-                      "featureEnterEvent": "FEATURE_ENTER",
-                      "features": "@entity.features",
-                      "heroMoveEvent": "HERO_MOVE",
-                      "heroSelectEvent": "HERO_SELECT",
-                      "onBattleEncounter": "BATTLE_ENCOUNTER",
-                      "onFeatureEnter": "FEATURE_ENTER",
-                      "onHeroMove": "HERO_MOVE",
-                      "onHeroSelect": "HERO_SELECT",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "world-map-board",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Region",
+                            "value": "Overworld"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": 0.0
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3246,7 +3342,22 @@
                   [
                     "set",
                     "@entity.units",
-                    "@config.units"
+                    [
+                      "array/map",
+                      "@config.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "object/merge",
+                          "@u",
+                          {
+                            "animation": "idle",
+                            "frame": 0.0
+                          }
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -3289,30 +3400,45 @@
                     3.0
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
-                      "assetManifest": "@config.assetManifest",
-                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
-                      "diamondTopY": "@config.diamondTopY",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "enableCamera": "@config.enableCamera",
-                      "entity": "@entity",
-                      "featureEnterEvent": "FEATURE_ENTER",
-                      "features": "@entity.features",
-                      "heroMoveEvent": "HERO_MOVE",
-                      "heroSelectEvent": "HERO_SELECT",
-                      "onBattleEncounter": "BATTLE_ENCOUNTER",
-                      "onFeatureEnter": "FEATURE_ENTER",
-                      "onHeroMove": "HERO_MOVE",
-                      "onHeroSelect": "HERO_SELECT",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "world-map-board",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Region",
+                            "value": "Overworld"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": 0.0
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3331,27 +3457,37 @@
                     "render-ui",
                     "main",
                     {
-                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
-                      "assetManifest": "@config.assetManifest",
-                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
-                      "diamondTopY": "@config.diamondTopY",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "enableCamera": "@config.enableCamera",
-                      "entity": "@entity",
-                      "featureEnterEvent": "FEATURE_ENTER",
-                      "features": "@entity.features",
-                      "heroMoveEvent": "HERO_MOVE",
-                      "heroSelectEvent": "HERO_SELECT",
-                      "onBattleEncounter": "BATTLE_ENCOUNTER",
-                      "onFeatureEnter": "FEATURE_ENTER",
-                      "onHeroMove": "HERO_MOVE",
-                      "onHeroSelect": "HERO_SELECT",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "world-map-board",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Region",
+                            "value": "Overworld"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": 0.0
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3402,6 +3538,7 @@
                             "object/merge",
                             "@u",
                             {
+                              "animation": "walk",
                               "position": {
                                 "x": "@payload.toX",
                                 "y": "@payload.toY"
@@ -3422,27 +3559,37 @@
                     "render-ui",
                     "main",
                     {
-                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
-                      "assetManifest": "@config.assetManifest",
-                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
-                      "diamondTopY": "@config.diamondTopY",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "enableCamera": "@config.enableCamera",
-                      "entity": "@entity",
-                      "featureEnterEvent": "FEATURE_ENTER",
-                      "features": "@entity.features",
-                      "heroMoveEvent": "HERO_MOVE",
-                      "heroSelectEvent": "HERO_SELECT",
-                      "onBattleEncounter": "BATTLE_ENCOUNTER",
-                      "onFeatureEnter": "FEATURE_ENTER",
-                      "onHeroMove": "HERO_MOVE",
-                      "onHeroSelect": "HERO_SELECT",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "world-map-board",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Region",
+                            "value": "Overworld"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": 0.0
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3607,6 +3754,7 @@
                             "object/merge",
                             "@u",
                             {
+                              "animation": "hit",
                               "health": [
                                 "math/max",
                                 0.0,
@@ -3629,6 +3777,60 @@
                   ],
                   [
                     "set",
+                    "@entity.effects",
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "slash",
+                        "ttl": 4.0,
+                        "x": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.defenderId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@payload.defenderId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "y"
+                        ]
+                      }
+                    ]
+                  ],
+                  [
+                    "set",
                     "@entity.selectedHeroId",
                     ""
                   ],
@@ -3645,27 +3847,37 @@
                     "render-ui",
                     "main",
                     {
-                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
-                      "assetManifest": "@config.assetManifest",
-                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
-                      "diamondTopY": "@config.diamondTopY",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "enableCamera": "@config.enableCamera",
-                      "entity": "@entity",
-                      "featureEnterEvent": "FEATURE_ENTER",
-                      "features": "@entity.features",
-                      "heroMoveEvent": "HERO_MOVE",
-                      "heroSelectEvent": "HERO_SELECT",
-                      "onBattleEncounter": "BATTLE_ENCOUNTER",
-                      "onFeatureEnter": "FEATURE_ENTER",
-                      "onHeroMove": "HERO_MOVE",
-                      "onHeroSelect": "HERO_SELECT",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "world-map-board",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Region",
+                            "value": "Overworld"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": 0.0
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3737,27 +3949,37 @@
                     "render-ui",
                     "main",
                     {
-                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
-                      "assetManifest": "@config.assetManifest",
-                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
-                      "diamondTopY": "@config.diamondTopY",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "enableCamera": "@config.enableCamera",
-                      "entity": "@entity",
-                      "featureEnterEvent": "FEATURE_ENTER",
-                      "features": "@entity.features",
-                      "heroMoveEvent": "HERO_MOVE",
-                      "heroSelectEvent": "HERO_SELECT",
-                      "onBattleEncounter": "BATTLE_ENCOUNTER",
-                      "onFeatureEnter": "FEATURE_ENTER",
-                      "onHeroMove": "HERO_MOVE",
-                      "onHeroSelect": "HERO_SELECT",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "world-map-board",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Region",
+                            "value": "Overworld"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": 0.0
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3771,27 +3993,37 @@
                     "render-ui",
                     "main",
                     {
-                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
-                      "assetManifest": "@config.assetManifest",
-                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
-                      "diamondTopY": "@config.diamondTopY",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "enableCamera": "@config.enableCamera",
-                      "entity": "@entity",
-                      "featureEnterEvent": "FEATURE_ENTER",
-                      "features": "@entity.features",
-                      "heroMoveEvent": "HERO_MOVE",
-                      "heroSelectEvent": "HERO_SELECT",
-                      "onBattleEncounter": "BATTLE_ENCOUNTER",
-                      "onFeatureEnter": "FEATURE_ENTER",
-                      "onHeroMove": "HERO_MOVE",
-                      "onHeroSelect": "HERO_SELECT",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "world-map-board",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Region",
+                            "value": "Overworld"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": 0.0
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3846,27 +4078,37 @@
                     "render-ui",
                     "main",
                     {
-                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
-                      "assetManifest": "@config.assetManifest",
-                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
-                      "diamondTopY": "@config.diamondTopY",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "enableCamera": "@config.enableCamera",
-                      "entity": "@entity",
-                      "featureEnterEvent": "FEATURE_ENTER",
-                      "features": "@entity.features",
-                      "heroMoveEvent": "HERO_MOVE",
-                      "heroSelectEvent": "HERO_SELECT",
-                      "onBattleEncounter": "BATTLE_ENCOUNTER",
-                      "onFeatureEnter": "FEATURE_ENTER",
-                      "onHeroMove": "HERO_MOVE",
-                      "onHeroSelect": "HERO_SELECT",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "world-map-board",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Region",
+                            "value": "Overworld"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": 0.0
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3946,7 +4188,22 @@
                   [
                     "set",
                     "@entity.units",
-                    "@config.units"
+                    [
+                      "array/map",
+                      "@config.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "object/merge",
+                          "@u",
+                          {
+                            "animation": "idle",
+                            "frame": 0.0
+                          }
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -3974,30 +4231,45 @@
                     "none"
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "allowMoveAllHeroes": "@config.allowMoveAllHeroes",
-                      "assetManifest": "@config.assetManifest",
-                      "battleEncounterEvent": "BATTLE_ENCOUNTER",
-                      "diamondTopY": "@config.diamondTopY",
-                      "effectSpriteUrls": "@config.effectSpriteUrls",
-                      "enableCamera": "@config.enableCamera",
-                      "entity": "@entity",
-                      "featureEnterEvent": "FEATURE_ENTER",
-                      "features": "@entity.features",
-                      "heroMoveEvent": "HERO_MOVE",
-                      "heroSelectEvent": "HERO_SELECT",
-                      "onBattleEncounter": "BATTLE_ENCOUNTER",
-                      "onFeatureEnter": "FEATURE_ENTER",
-                      "onHeroMove": "HERO_MOVE",
-                      "onHeroSelect": "HERO_SELECT",
-                      "scale": "@config.scale",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@entity.tiles",
-                      "type": "world-map-board",
-                      "unitScale": "@config.unitScale",
-                      "units": "@entity.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@entity.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Region",
+                            "value": "Overworld"
+                          },
+                          {
+                            "label": "Turn",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": 0.0
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -4006,7 +4278,126 @@
                 "to": "menu"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "@u",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@entity.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@entity.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Region",
+                          "value": "Overworld"
+                        },
+                        {
+                          "label": "Turn",
+                          "value": "@entity.turn"
+                        },
+                        {
+                          "label": "Gold",
+                          "value": 0.0
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            }
+          ]
         }
       ]
     }

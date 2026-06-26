@@ -1,6 +1,12 @@
 app ui-uncontrolled-battle-board "1.0.0"
-"UncontrolledBattleBoard — self-resolving battle: model seeds units[], owns STEP resolution (attack→damage→hp), guards win/lose."
+"UncontrolledBattleBoard — game-shell composition with LOLO-driven sprite animation and combat effects; self-resolving auto-battle."
 orbital UncontrolledBattleBoardOrbital {
+  type UncontrolledBattleBoardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
   type UncontrolledBattleBoardTilesItem = {
     id : string
     x : number!
@@ -26,10 +32,18 @@ orbital UncontrolledBattleBoardOrbital {
     position : UncontrolledBattleBoardUnitsItemPosition
     modelUrl : asset
     unitType : string
+    animation : string
+    frame : number
   }
   type UncontrolledBattleBoardUnitsItemPosition = {
     x : number!
     y : number!
+  }
+  type UncontrolledBattleBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type UncontrolledBattleBoardFeaturesItem = {
     id : string
@@ -37,10 +51,17 @@ orbital UncontrolledBattleBoardOrbital {
     y : number!
     z : number
     type : string!
-    sprite : json
-    assetUrl : json
+    sprite : asset
+    assetUrl : asset
     color : string
     elevation : number
+  }
+  type UncontrolledBattleBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
   }
 
   entity UncontrolledBattleBoardItem [runtime] {
@@ -50,6 +71,7 @@ orbital UncontrolledBattleBoardOrbital {
     result : "none" | "victory" | "defeat" = none
     title : string
     description : string
+    effects : [UncontrolledBattleBoardEffectItem] = []
   }
 
   trait UncontrolledBattleBoardRender -> @rebindable UncontrolledBattleBoardItem [interaction, instance] {
@@ -62,14 +84,11 @@ orbital UncontrolledBattleBoardOrbital {
         (set @entity.result "none")
         (set @entity.title @config.title)
         (set @entity.description @config.description)
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          features: @config.features
-          assetManifest: @config.assetManifest
-          stepEvent: STEP
-          playAgainEvent: PLAY_AGAIN
-          type: uncontrolled-battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Round", value: @entity.turn }, { label: "Allies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) }, { label: "Enemies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -80,51 +99,38 @@ orbital UncontrolledBattleBoardOrbital {
         (set @entity.result "none")
         (set @entity.title @config.title)
         (set @entity.description @config.description)
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          features: @config.features
-          assetManifest: @config.assetManifest
-          stepEvent: STEP
-          playAgainEvent: PLAY_AGAIN
-          type: uncontrolled-battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Round", value: @entity.turn }, { label: "Allies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) }, { label: "Enemies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       STEP -> complete when (== (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) 0)
         (set @entity.result "defeat")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          features: @config.features
-          assetManifest: @config.assetManifest
-          stepEvent: STEP
-          playAgainEvent: PLAY_AGAIN
-          type: uncontrolled-battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Round", value: @entity.turn }, { label: "Allies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) }, { label: "Enemies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       STEP -> complete when (== (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) 0)
         (set @entity.result "victory")
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          features: @config.features
-          assetManifest: @config.assetManifest
-          stepEvent: STEP
-          playAgainEvent: PLAY_AGAIN
-          type: uncontrolled-battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Round", value: @entity.turn }, { label: "Allies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) }, { label: "Enemies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       STEP -> playing
-        (set @entity.units (array/map @entity.units (fn u (if (== (object/get u id) ?targetId) (object/merge u { hp: (math/max 0 (- (object/get u hp) ?damage)) }) u))))
+        (set @entity.units (array/map @entity.units (fn u (if (== (object/get u id) ?targetId) (object/merge u { hp: (math/max 0 (- (object/get u hp) ?damage)), animation: (if (<= (math/max 0 (- (object/get u hp) ?damage)) 0) "death" "hit") }) (if (== (object/get u id) ?attackerId) (object/merge u { animation: "attack" }) u)))))
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== (object/get u id) ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== (object/get u id) ?targetId))) position) y), ttl: 4 }))
+        (if (<= (object/get (array/find @entity.units (fn u (== (object/get u id) ?targetId))) hp) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== (object/get u id) ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== (object/get u id) ?targetId))) position) y), ttl: 5 })) null)
         (set @entity.turn (+ @entity.turn 1))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          features: @config.features
-          assetManifest: @config.assetManifest
-          stepEvent: STEP
-          playAgainEvent: PLAY_AGAIN
-          type: uncontrolled-battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Round", value: @entity.turn }, { label: "Allies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) }, { label: "Enemies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -133,14 +139,35 @@ orbital UncontrolledBattleBoardOrbital {
         (set @entity.units @config.initialUnits)
         (set @entity.turn 1)
         (set @entity.result "none")
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          features: @config.features
-          assetManifest: @config.assetManifest
-          stepEvent: STEP
-          playAgainEvent: PLAY_AGAIN
-          type: uncontrolled-battle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Round", value: @entity.turn }, { label: "Allies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) }, { label: "Enemies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge u { frame: (% (+ (object/get u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge e { ttl: (- (object/get e ttl) 1) }))) (fn e (> (object/get e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Round", value: @entity.turn }, { label: "Allies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) }, { label: "Enemies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      autoBattleTick every 1s
+        when (and (== @entity.result "none") (> (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) 0) (> (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) 0))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== (object/get u team) "player") (> (object/get u hp) 0)) (if (> (array/len (array/filter @entity.units (fn e (and (and (== (object/get e team) "enemy") (> (object/get e hp) 0)) (== (grid/manhattan-distance (object/get u position) (object/get e position)) 1))))) 0) (object/merge u { animation: "attack" }) u) (if (and (== (object/get u team) "enemy") (> (object/get u hp) 0)) (if (> (array/len (array/filter @entity.units (fn p (and (and (== (object/get p team) "player") (> (object/get p hp) 0)) (== (grid/manhattan-distance (object/get u position) (object/get p position)) 1))))) 0) (object/merge u { animation: "attack" }) u) u))))
+        (set @entity.units (array/map @entity.units (fn u (if (and (== (object/get u team) "enemy") (> (object/get u hp) 0)) (let ((target (array/first (array/filter @entity.units (fn p (and (== (object/get p team) "player") (> (object/get p hp) 0))))))) (if (and (!= @target null) (== (grid/manhattan-distance (object/get u position) (object/get @target position)) 1)) (object/merge (array/first (array/filter @entity.units (fn p (== (object/get p id) (object/get @target id))))) { hp: (math/max 0 (- (object/get (array/first (array/filter @entity.units (fn p (== (object/get p id) (object/get @target id))))) hp) (object/get u atk))), animation: (if (<= (math/max 0 (- (object/get (array/first (array/filter @entity.units (fn p (== (object/get p id) (object/get @target id))))) hp) (object/get u atk))) 0) "death" "hit") }) u) u) u))))
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/first (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) position) x), y: (object/get (object/get (array/first (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) position) y), ttl: 4 }))
+        (set @entity.result (if (== (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) 0) "defeat" (if (== (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) 0) "victory" "none")))
+        (set @entity.turn (+ @entity.turn 1))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Round", value: @entity.turn }, { label: "Allies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) }, { label: "Enemies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -168,7 +195,7 @@ orbital UncontrolledBattleBoardOrbital {
         @label "Description"
         @description "Short scenario description."
         @tier "domain"
-      initialUnits : [UncontrolledBattleBoardUnitsItem] = [{ id: "u1", name: "Mender", team: "player", hp: 20, maxHp: 20, atk: 5, def: 2, position: { x: 1, y: 2 }, unitType: "mender", modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png" }, { id: "u2", name: "Shadow Legion", team: "enemy", hp: 15, maxHp: 15, atk: 4, def: 1, position: { x: 3, y: 2 }, unitType: "shadow", modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png" }]
+      initialUnits : [UncontrolledBattleBoardUnitsItem] = [{ id: "u1", name: "Mender", team: "player", hp: 20, maxHp: 20, atk: 5, def: 2, position: { x: 1, y: 2 }, unitType: "mender", modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png", animation: "idle", frame: 0 }, { id: "u2", name: "Shadow Legion", team: "enemy", hp: 15, maxHp: 15, atk: 4, def: 1, position: { x: 3, y: 2 }, unitType: "shadow", modelUrl: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png", animation: "idle", frame: 0 }]
         @label "Initial Units"
         @description "Starting unit roster — each needs id, team (player|enemy), hp, atk, position."
         @tier "domain"
@@ -180,9 +207,13 @@ orbital UncontrolledBattleBoardOrbital {
         @label "Features"
         @description "Environmental features on the battlefield."
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : UncontrolledBattleBoardAssetManifest = { terrains: { stone: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png", grass: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png", dirt: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png", planks: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png", stairs: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stairs.png" }, units: { mender: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png", shadow: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png" }, features: { barrels: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/barrels.png", chest: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/chest.png" }, effects: { slash: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/effects/slash_03.png", explosion: "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/effects/pixelExplosion07.png" } }
         @label "Asset Manifest"
-        @description "Base asset URL for the battlefield renderer."
+        @description "Asset manifest with terrain, unit, feature, and effect sprite URLs."
+        @tier "presentation"
+      scale : number = 0.25
+        @label "Scale"
+        @description "Canvas render scale."
         @tier "presentation"
     }
   }

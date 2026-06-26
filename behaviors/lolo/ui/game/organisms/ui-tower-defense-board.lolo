@@ -1,5 +1,5 @@
 app ui-tower-defense-board "1.0.0"
-"TowerDefenseBoard — UI factory (1:1 with the @almadar/ui tower-defense-board pattern)."
+"TowerDefenseBoard — game-shell composition with LOLO-driven sprite animation and combat effects."
 orbital TowerDefenseBoardOrbital {
   type TowerDefenseBoardError = {
     message : string!
@@ -36,6 +36,21 @@ orbital TowerDefenseBoardOrbital {
     maxHp : number!
     pathIndex : number!
     speed : number!
+    animation : string
+    frame : number
+  }
+  type TowerDefenseBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
+  }
+  type TowerDefenseBoardFeaturesItem = {
+    id : string
+    x : number!
+    y : number!
+    type : string!
+    sprite : asset
   }
   type TowerDefenseBoardHero = {
     id : string!
@@ -47,6 +62,7 @@ orbital TowerDefenseBoardOrbital {
     terrains : Map string asset
     units : Map string asset
     features : Map string asset
+    effects : Map string asset
   }
 
   entity TowerDefenseBoardItem [runtime] {
@@ -63,6 +79,7 @@ orbital TowerDefenseBoardOrbital {
     result : "none" | "won" | "lost" = none
     tick : number = 0
     waveActive : boolean = false
+    effects : [TowerDefenseBoardEffectItem] = []
   }
 
   trait TowerDefenseBoardRender -> @rebindable TowerDefenseBoardItem [interaction, instance] {
@@ -80,138 +97,44 @@ orbital TowerDefenseBoardOrbital {
         (set @entity.towers @config.towers)
         (set @entity.creeps [])
         (set @entity.hero @config.hero)
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          path: @config.path
-          towers: @entity.towers
-          creeps: @entity.creeps
-          hero: @entity.hero
-          gold: @entity.gold
-          lives: @entity.lives
-          wave: @entity.wave
-          maxWaves: @entity.maxWaves
-          result: @entity.result
-          waveActive: @entity.waveActive
-          towerCost: @config.towerCost
-          placeTowerEvent: PLACE_TOWER
-          startWaveEvent: START_WAVE
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          moveHeroEvent: MOVE_HERO
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: tower-defense-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       PLACE_TOWER -> playing when (and (>= @entity.gold @config.towerCost) (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (== (array/len (array/filter @entity.towers (fn t (and (== @t.x ?x) (== @t.y ?y))))) 0) (== (array/len (array/filter @config.path (fn p (and (== (object/get @p x) ?x) (== (object/get @p y) ?y))))) 0))))
         (set @entity.gold (- @entity.gold @config.towerCost))
         (set @entity.towers (array/concat @entity.towers [{ id: (str/concat "tower-" (array/len @entity.towers)), x: ?x, y: ?y, range: @config.towerRange, damage: @config.towerDamage, cooldown: @config.towerCooldown, lastFiredAt: 0 }]))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          path: @config.path
-          towers: @entity.towers
-          creeps: @entity.creeps
-          hero: @entity.hero
-          gold: @entity.gold
-          lives: @entity.lives
-          wave: @entity.wave
-          maxWaves: @entity.maxWaves
-          result: @entity.result
-          waveActive: @entity.waveActive
-          towerCost: @config.towerCost
-          placeTowerEvent: PLACE_TOWER
-          startWaveEvent: START_WAVE
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          moveHeroEvent: MOVE_HERO
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: tower-defense-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       START_WAVE -> playing when (and (== @entity.waveActive false) (== @entity.result "none"))
         (set @entity.waveActive true)
-        (set @entity.creeps (array/map (array/range 0 @config.creepsPerWave) (fn i { id: (str/concat "creep-" @i), x: (object/get (array/first @config.path) x), y: (object/get (array/first @config.path) y), hp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), maxHp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), pathIndex: 0, speed: @config.creepSpeed })))
+        (set @entity.creeps (array/map (array/range 0 @config.creepsPerWave) (fn i { id: (str/concat "creep-" @i), x: (object/get (array/first @config.path) x), y: (object/get (array/first @config.path) y), hp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), maxHp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), pathIndex: 0, speed: @config.creepSpeed, animation: "walk", frame: 0 })))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          path: @config.path
-          towers: @entity.towers
-          creeps: @entity.creeps
-          hero: @entity.hero
-          gold: @entity.gold
-          lives: @entity.lives
-          wave: @entity.wave
-          maxWaves: @entity.maxWaves
-          result: @entity.result
-          waveActive: @entity.waveActive
-          towerCost: @config.towerCost
-          placeTowerEvent: PLACE_TOWER
-          startWaveEvent: START_WAVE
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          moveHeroEvent: MOVE_HERO
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: tower-defense-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       MOVE_HERO -> playing when (== @entity.result "none")
         (set @entity.hero (object/merge @entity.hero { x: (math/max 0 (math/min (- @config.gridWidth 1) (+ (object/get @entity.hero x) ?dx))), y: (math/max 0 (math/min (- @config.gridHeight 1) (+ (object/get @entity.hero y) ?dy))) }))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          path: @config.path
-          towers: @entity.towers
-          creeps: @entity.creeps
-          hero: @entity.hero
-          gold: @entity.gold
-          lives: @entity.lives
-          wave: @entity.wave
-          maxWaves: @entity.maxWaves
-          result: @entity.result
-          waveActive: @entity.waveActive
-          towerCost: @config.towerCost
-          placeTowerEvent: PLACE_TOWER
-          startWaveEvent: START_WAVE
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          moveHeroEvent: MOVE_HERO
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: tower-defense-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       GAME_END -> gameover when (or (== @entity.result "won") (== @entity.result "lost"))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          path: @config.path
-          towers: @entity.towers
-          creeps: @entity.creeps
-          hero: @entity.hero
-          gold: @entity.gold
-          lives: @entity.lives
-          wave: @entity.wave
-          maxWaves: @entity.maxWaves
-          result: @entity.result
-          waveActive: @entity.waveActive
-          towerCost: @config.towerCost
-          placeTowerEvent: PLACE_TOWER
-          startWaveEvent: START_WAVE
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          moveHeroEvent: MOVE_HERO
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: tower-defense-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -226,102 +149,51 @@ orbital TowerDefenseBoardOrbital {
         (set @entity.towers @config.towers)
         (set @entity.creeps [])
         (set @entity.hero @config.hero)
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          path: @config.path
-          towers: @entity.towers
-          creeps: @entity.creeps
-          hero: @entity.hero
-          gold: @entity.gold
-          lives: @entity.lives
-          wave: @entity.wave
-          maxWaves: @entity.maxWaves
-          result: @entity.result
-          waveActive: @entity.waveActive
-          towerCost: @config.towerCost
-          placeTowerEvent: PLACE_TOWER
-          startWaveEvent: START_WAVE
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          moveHeroEvent: MOVE_HERO
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: tower-defense-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
     ticks {
+      animTick every 100ms
+        (set @entity.creeps (array/map @entity.creeps (fn c (object/merge @c { frame: (% (+ (object/get @c frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
       creepMoveTick every 1s
         when (and (== @entity.waveActive true) (and (== @entity.result "none") (> (array/len @entity.creeps) 0)))
         (set @entity.tick (+ @entity.tick 1))
-        # advance each creep one step along the path waypoints
-        (set @entity.creeps (array/map @entity.creeps (fn c (let ((nextIndex (math/min (+ (object/get @c pathIndex) 1) (- (array/len @config.path) 1))) (nextWaypoint (array/nth @config.path (math/min (+ (object/get @c pathIndex) 1) (- (array/len @config.path) 1))))) (object/merge @c { x: (object/get @nextWaypoint x), y: (object/get @nextWaypoint y), pathIndex: @nextIndex })))))
-        # creeps that reached the last waypoint drain lives
+        (set @entity.creeps (array/map @entity.creeps (fn c (let ((nextIndex (math/min (+ (object/get @c pathIndex) 1) (- (array/len @config.path) 1))) (nextWaypoint (array/nth @config.path (math/min (+ (object/get @c pathIndex) 1) (- (array/len @config.path) 1))))) (object/merge @c { x: (object/get @nextWaypoint x), y: (object/get @nextWaypoint y), pathIndex: @nextIndex, animation: "walk" })))))
+        (if (> (array/len (array/filter @entity.creeps (fn c (== (object/get @c pathIndex) (- (array/len @config.path) 1))))) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (array/first (array/filter @entity.creeps (fn c (== (object/get @c pathIndex) (- (array/len @config.path) 1))))) x), y: (object/get (array/first (array/filter @entity.creeps (fn c (== (object/get @c pathIndex) (- (array/len @config.path) 1))))) y), ttl: 5 })) null)
         (set @entity.lives (- @entity.lives (array/len (array/filter @entity.creeps (fn c (== (object/get @c pathIndex) (- (array/len @config.path) 1)))))))
-        # remove creeps that reached the end
         (set @entity.creeps (array/filter @entity.creeps (fn c (< (object/get @c pathIndex) (- (array/len @config.path) 1)))))
-        # check lose condition
         (set @entity.result (if (<= @entity.lives 0) "lost" @entity.result))
         (set @entity.waveActive (if (<= @entity.lives 0) false (if (== (array/len @entity.creeps) 0) false @entity.waveActive)))
         (set @entity.wave (if (and (== (array/len @entity.creeps) 0) (and (> @entity.lives 0) (== @entity.result "none"))) (+ @entity.wave 1) @entity.wave))
         (set @entity.result (if (and (== (array/len @entity.creeps) 0) (and (> @entity.lives 0) (>= @entity.wave @entity.maxWaves))) "won" @entity.result))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          path: @config.path
-          towers: @entity.towers
-          creeps: @entity.creeps
-          hero: @entity.hero
-          gold: @entity.gold
-          lives: @entity.lives
-          wave: @entity.wave
-          maxWaves: @entity.maxWaves
-          result: @entity.result
-          waveActive: @entity.waveActive
-          towerCost: @config.towerCost
-          placeTowerEvent: PLACE_TOWER
-          startWaveEvent: START_WAVE
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          moveHeroEvent: MOVE_HERO
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: tower-defense-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       towerFireTick every 1s
         when (and (== @entity.waveActive true) (and (== @entity.result "none") (> (array/len @entity.creeps) 0)))
-        # each tower finds the nearest creep in range and deals damage
-        (set @entity.creeps (array/map @entity.creeps (fn c (let ((inRangeTowers (array/filter @entity.towers (fn t (<= (vec/distance { x: (object/get @t x), y: (object/get @t y) } { x: (object/get @c x), y: (object/get @c y) }) (object/get @t range)))))) (if (> (array/len @inRangeTowers) 0) (object/merge @c { hp: (math/max 0 (- (object/get @c hp) (object/get (array/first @inRangeTowers) damage))) }) @c)))))
-        # remove dead creeps, award gold per kill
+        (set @entity.creeps (array/map @entity.creeps (fn c (let ((inRangeTowers (array/filter @entity.towers (fn t (<= (vec/distance { x: (object/get @t x), y: (object/get @t y) } { x: (object/get @c x), y: (object/get @c y) }) (object/get @t range)))))) (if (> (array/len @inRangeTowers) 0) (object/merge @c { hp: (math/max 0 (- (object/get @c hp) (object/get (array/first @inRangeTowers) damage))), animation: (if (<= (math/max 0 (- (object/get @c hp) (object/get (array/first @inRangeTowers) damage))) 0) "death" "walk") }) @c)))))
+        (if (> (array/len (array/filter @entity.creeps (fn c (<= (object/get @c hp) 0)))) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (array/first (array/filter @entity.creeps (fn c (<= (object/get @c hp) 0)))) x), y: (object/get (array/first (array/filter @entity.creeps (fn c (<= (object/get @c hp) 0)))) y), ttl: 5 })) null)
         (set @entity.gold (+ @entity.gold (* @config.goldPerKill (array/len (array/filter @entity.creeps (fn c (<= (object/get @c hp) 0)))))))
         (set @entity.creeps (array/filter @entity.creeps (fn c (> (object/get @c hp) 0))))
         (render-ui main {
-          entity: @entity
-          tiles: @config.tiles
-          path: @config.path
-          towers: @entity.towers
-          creeps: @entity.creeps
-          hero: @entity.hero
-          gold: @entity.gold
-          lives: @entity.lives
-          wave: @entity.wave
-          maxWaves: @entity.maxWaves
-          result: @entity.result
-          waveActive: @entity.waveActive
-          towerCost: @config.towerCost
-          placeTowerEvent: PLACE_TOWER
-          startWaveEvent: START_WAVE
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          moveHeroEvent: MOVE_HERO
-          scale: @config.scale
-          unitScale: @config.unitScale
-          assetManifest: @config.assetManifest
-          type: tower-defense-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -448,9 +320,13 @@ orbital TowerDefenseBoardOrbital {
         @label "Hero"
         @description "Controllable player hero; seeded at map center"
         @tier "presentation"
-      assetManifest : TowerDefenseBoardAssetManifest = {baseUrl:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/",terrains:{ground:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png",path:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png",wall:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png"},units:{creep:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/creep.png",hero:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/hero.png"},features:{tower:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/features/tower.png"}}
+      assetManifest : TowerDefenseBoardAssetManifest = {baseUrl:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/",terrains:{ground:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png",path:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png",wall:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png"},units:{creep:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/creep.png",hero:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/hero.png"},features:{tower:"https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/features/tower.png"},effects:{explosion:"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png"}}
         @label "Asset Manifest"
         @description "Base-url + terrain/unit/structure sprite maps; towers render as the structure asset."
+        @tier "presentation"
+      features : [TowerDefenseBoardFeaturesItem] = []
+        @label "Features"
+        @description "Static map features (structures, decorations) rendered on the board."
         @tier "presentation"
     }
   }

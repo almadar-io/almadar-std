@@ -1,5 +1,5 @@
 app ui-castle-board "1.0.0"
-"CastleBoard — build-and-defend: model owns gold, buildings, garrison, wave counter, health, and win/lose; ticks drive resource income; FEATURE_CLICK purchases buildings guarded by cost."
+"CastleBoard — build-and-defend: game-shell + isometric-canvas with LOLO-driven sprite animation and combat effects."
 orbital CastleBoardOrbital {
   type CastleBoardTilesItem = {
     id : string
@@ -33,6 +33,14 @@ orbital CastleBoardOrbital {
     traits : [CastleBoardUnitsItemTraitsItem]
     previousPosition : CastleBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type CastleBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type CastleBoardUnitsItemPosition = {
     x : number!
@@ -72,6 +80,7 @@ orbital CastleBoardOrbital {
     terrains : Map string asset
     units : Map string asset
     features : Map string asset
+    effects : Map string asset
   }
   type CastleBoardFEATURECLICKFeature = {
     id : string
@@ -131,6 +140,7 @@ orbital CastleBoardOrbital {
     tickCount : number = 0
     lastWaveDamage : number = 0
     result : "none" | "victory" | "defeat" = none
+    effects : [CastleBoardEffectItem] = []
   }
 
   trait CastleBoardRender -> @rebindable CastleBoardItem [interaction, instance] {
@@ -149,22 +159,11 @@ orbital CastleBoardOrbital {
         (set @entity.tickCount 0)
         (set @entity.lastWaveDamage 0)
         (set @entity.result "none")
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          onFeatureClick: FEATURE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileClick: TILE_CLICK
-          featureClickEvent: FEATURE_CLICK
-          unitClickEvent: UNIT_CLICK
-          tileClickEvent: TILE_CLICK
-          playAgainEvent: PLAY_AGAIN
-          className: @config.className
-          type: castle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -181,123 +180,64 @@ orbital CastleBoardOrbital {
         (set @entity.tickCount 0)
         (set @entity.lastWaveDamage 0)
         (set @entity.result "none")
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          onFeatureClick: FEATURE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileClick: TILE_CLICK
-          featureClickEvent: FEATURE_CLICK
-          unitClickEvent: UNIT_CLICK
-          tileClickEvent: TILE_CLICK
-          playAgainEvent: PLAY_AGAIN
-          className: @config.className
-          type: castle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       FEATURE_CLICK -> idle when (>= @entity.gold 25)
         (set @entity.gold (- @entity.gold 25))
         (set @entity.buildings (array/append @entity.buildings { id: ?featureId, type: ?featureType, x: ?x, y: ?y, cost: 25, incomePerTick: 5 }))
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          onFeatureClick: FEATURE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileClick: TILE_CLICK
-          featureClickEvent: FEATURE_CLICK
-          unitClickEvent: UNIT_CLICK
-          tileClickEvent: TILE_CLICK
-          playAgainEvent: PLAY_AGAIN
-          className: @config.className
-          type: castle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       UNIT_CLICK -> idle
         (set @entity.wave (+ @entity.wave 1))
         (set @entity.health (math/max 0 (- @entity.health 5)))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?unitId) (object/merge @u { animation: "hit" }) @u))))
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) y), ttl: 4 }))
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          onFeatureClick: FEATURE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileClick: TILE_CLICK
-          featureClickEvent: FEATURE_CLICK
-          unitClickEvent: UNIT_CLICK
-          tileClickEvent: TILE_CLICK
-          playAgainEvent: PLAY_AGAIN
-          className: @config.className
-          type: castle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       TILE_CLICK -> idle
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          onFeatureClick: FEATURE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileClick: TILE_CLICK
-          featureClickEvent: FEATURE_CLICK
-          unitClickEvent: UNIT_CLICK
-          tileClickEvent: TILE_CLICK
-          playAgainEvent: PLAY_AGAIN
-          className: @config.className
-          type: castle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      ATTACK -> idle when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?targetId) (object/merge @u { health: (math/max 0 (- (object/get @u health) ?damage)), animation: (if (<= (math/max 0 (- (object/get @u health) ?damage)) 0) "death" "hit") }) (if (== @u.id ?attackerId) (object/merge @u { animation: "attack" }) @u)))))
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 4 }))
+        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 5 })) null)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       WAVE_DEFEATED -> victory when (>= @entity.wave 3)
         (set @entity.result "victory")
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          onFeatureClick: FEATURE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileClick: TILE_CLICK
-          featureClickEvent: FEATURE_CLICK
-          unitClickEvent: UNIT_CLICK
-          tileClickEvent: TILE_CLICK
-          playAgainEvent: PLAY_AGAIN
-          className: @config.className
-          type: castle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       CASTLE_HIT -> defeat when (<= @entity.health 0)
         (set @entity.result "defeat")
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          onFeatureClick: FEATURE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileClick: TILE_CLICK
-          featureClickEvent: FEATURE_CLICK
-          unitClickEvent: UNIT_CLICK
-          tileClickEvent: TILE_CLICK
-          playAgainEvent: PLAY_AGAIN
-          className: @config.className
-          type: castle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -314,22 +254,11 @@ orbital CastleBoardOrbital {
         (set @entity.tickCount 0)
         (set @entity.lastWaveDamage 0)
         (set @entity.result "none")
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          onFeatureClick: FEATURE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileClick: TILE_CLICK
-          featureClickEvent: FEATURE_CLICK
-          unitClickEvent: UNIT_CLICK
-          tileClickEvent: TILE_CLICK
-          playAgainEvent: PLAY_AGAIN
-          className: @config.className
-          type: castle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -346,76 +275,61 @@ orbital CastleBoardOrbital {
         (set @entity.tickCount 0)
         (set @entity.lastWaveDamage 0)
         (set @entity.result "none")
+        (set @entity.effects [])
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          onFeatureClick: FEATURE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileClick: TILE_CLICK
-          featureClickEvent: FEATURE_CLICK
-          unitClickEvent: UNIT_CLICK
-          tileClickEvent: TILE_CLICK
-          playAgainEvent: PLAY_AGAIN
-          className: @config.className
-          type: castle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
     ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
       incomeTick every 4s
         when (> @entity.health 0)
         (set @entity.gold (+ @entity.gold (+ 10 (* (array/len @entity.buildings) 5))))
         (set @entity.tickCount (+ @entity.tickCount 1))
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          onFeatureClick: FEATURE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileClick: TILE_CLICK
-          featureClickEvent: FEATURE_CLICK
-          unitClickEvent: UNIT_CLICK
-          tileClickEvent: TILE_CLICK
-          playAgainEvent: PLAY_AGAIN
-          className: @config.className
-          type: castle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
-      # enemy wave arrives every 8s: damage = wave number minus buildings count (each building absorbs one point); emit outcome event so existing guards route to victory/defeat
       waveTick every 8s
         when (and (> @entity.health 0) (< @entity.wave 3))
         (set @entity.wave (+ @entity.wave 1))
         (set @entity.lastWaveDamage (math/max 0 (- @entity.wave (array/len @entity.buildings))))
         (set @entity.health (math/max 0 (- @entity.health @entity.lastWaveDamage)))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.team "enemy") (object/merge @u { animation: "attack" }) (if (== @u.team "player") (object/merge @u { animation: (if (<= @entity.health 0) "hit" "idle") }) @u)))))
+        (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/first (array/filter @entity.units (fn u (== @u.team "enemy")))) position) x), y: (object/get (object/get (array/first (array/filter @entity.units (fn u (== @u.team "enemy")))) position) y), ttl: 4 }))
+        (if (<= @entity.health 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: 4, y: 4, ttl: 5 })) null)
         (render-ui main {
-          entity: @entity
-          tiles: @entity.tiles
-          units: @entity.units
-          features: @entity.features
-          assetManifest: @config.assetManifest
-          scale: @config.scale
-          onFeatureClick: FEATURE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileClick: TILE_CLICK
-          featureClickEvent: FEATURE_CLICK
-          unitClickEvent: UNIT_CLICK
-          tileClickEvent: TILE_CLICK
-          playAgainEvent: PLAY_AGAIN
-          className: @config.className
-          type: castle-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
         (emit CASTLE_HIT { damage: @entity.lastWaveDamage })
         (emit WAVE_DEFEATED { wave: @entity.wave })
     }
 
     emits {
+      ATTACK -> external {
+        attacker : object
+        target : object
+        damage : number
+        attackerId : string!
+        targetId : string!
+      }
+        @description "-- Callbacks --"
+        @tier "essential"
       FEATURE_CLICK -> external {
         feature : CastleBoardFEATURECLICKFeature
         featureId : string!
@@ -459,7 +373,7 @@ orbital CastleBoardOrbital {
         @label "Tiles"
         @description "Initial tile map seeded into entity on INIT."
         @tier "presentation"
-      units : [CastleBoardUnitsItem] = [{ id: "g1", x: 1, y: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png", unitType: "guardian", name: "Guardian", team: "player", health: 10, maxHealth: 10, elevation: 0 }, { id: "g2", x: 7, y: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png", unitType: "guardian", name: "Guardian", team: "player", health: 10, maxHealth: 10, elevation: 0 }, { id: "g3", x: 1, y: 7, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png", unitType: "guardian", name: "Guardian", team: "player", health: 10, maxHealth: 10, elevation: 0 }, { id: "g4", x: 7, y: 7, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png", unitType: "guardian", name: "Guardian", team: "player", health: 10, maxHealth: 10, elevation: 0 }, { id: "w1", x: 3, y: 3, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/worker.png", unitType: "worker", name: "Worker", team: "player", health: 5, maxHealth: 5, elevation: 0 }, { id: "w2", x: 5, y: 5, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/worker.png", unitType: "worker", name: "Worker", team: "player", health: 5, maxHealth: 5, elevation: 0 }]
+      units : [CastleBoardUnitsItem] = [{ id: "g1", position: { x: 1, y: 1 }, unitType: "guardian", name: "Guardian", team: "player", faction: "player", health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png", animation: "idle", frame: 0 }, { id: "g2", position: { x: 7, y: 1 }, unitType: "guardian", name: "Guardian", team: "player", faction: "player", health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png", animation: "idle", frame: 0 }, { id: "g3", position: { x: 1, y: 7 }, unitType: "guardian", name: "Guardian", team: "player", faction: "player", health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png", animation: "idle", frame: 0 }, { id: "g4", position: { x: 7, y: 7 }, unitType: "guardian", name: "Guardian", team: "player", faction: "player", health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png", animation: "idle", frame: 0 }, { id: "w1", position: { x: 3, y: 3 }, unitType: "worker", name: "Worker", team: "player", faction: "player", health: 5, maxHealth: 5, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/worker.png", animation: "idle", frame: 0 }, { id: "w2", position: { x: 5, y: 5 }, unitType: "worker", name: "Worker", team: "player", faction: "player", health: 5, maxHealth: 5, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/worker.png", animation: "idle", frame: 0 }, { id: "e1", position: { x: 4, y: 0 }, unitType: "raider", name: "Raider", team: "enemy", faction: "enemy", health: 8, maxHealth: 8, sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png", animation: "idle", frame: 0 }]
         @label "Units"
         @description "Initial garrison and enemy units seeded into entity on INIT."
         @tier "presentation"
@@ -467,7 +381,7 @@ orbital CastleBoardOrbital {
         @label "Features"
         @description "Initial feature / building slots seeded into entity on INIT."
         @tier "presentation"
-      assetManifest : CastleBoardAssetManifest = { baseUrl: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default", terrains: { grass: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/terrain/grass.png", stone: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/terrain/stone.png", planks: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/terrain/planks.png" }, units: { worker: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/worker.png", guardian: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png" }, features: { gold_mine: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/features/gold_mine.png", portal: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/features/portal.png" } }
+      assetManifest : CastleBoardAssetManifest = { baseUrl: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default", terrains: { grass: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/terrain/grass.png", stone: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/terrain/stone.png", planks: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/terrain/planks.png" }, units: { worker: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/worker.png", guardian: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png" }, features: { gold_mine: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/features/gold_mine.png", portal: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/features/portal.png" }, effects: { slash: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/slash_03.png", explosion: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png" } }
         @label "Asset Manifest"
         @description "Direct asset manifest — takes priority over entity-derived manifest."
         @tier "presentation"
