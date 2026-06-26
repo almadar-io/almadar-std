@@ -1,5 +1,5 @@
 app ui-minigolf-board "1.0.0"
-"MinigolfBoard — UI factory (1:1 with the @almadar/ui minigolf-board pattern)."
+"MinigolfBoard — game-shell composition with HUD, isometric-canvas, and animation ticks."
 orbital MinigolfBoardOrbital {
   type MinigolfBoardError = {
     message : string!
@@ -28,7 +28,6 @@ orbital MinigolfBoardOrbital {
     y : number
     z : number
     sprite : asset
-    spriteSheet : asset
     modelUrl : asset
     unitType : string
     heroId : string
@@ -40,6 +39,14 @@ orbital MinigolfBoardOrbital {
     traits : [MinigolfBoardUnitsItemTraitsItem]
     previousPosition : MinigolfBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type MinigolfBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type MinigolfBoardUnitsItemPosition = {
     x : number!
@@ -66,39 +73,91 @@ orbital MinigolfBoardOrbital {
     color : string
     elevation : number
   }
+  type MinigolfBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
 
   entity MinigolfBoardItem [runtime] {
     id : string!
+    units : [MinigolfBoardUnitsItem]
+    hole : number = 1
+    strokes : number = 0
+    result : "none" | "complete" = none
+    effects : [MinigolfBoardEffectItem] = []
   }
 
   trait MinigolfBoardRender -> @rebindable MinigolfBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.hole 1)
+        (set @entity.strokes 0)
+        (set @entity.result "none")
+        (set @entity.effects [])
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: minigolf-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Hole", value: @entity.hole }, { label: "Strokes", value: @entity.strokes } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing when (== @entity.result "none")
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.unitType "ball") (object/merge @u { position: { x: ?x, y: ?y }, animation: "roll" }) @u))))
+        (set @entity.strokes (+ @entity.strokes 1))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Hole", value: @entity.hole }, { label: "Strokes", value: @entity.strokes } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      HOLE_IN -> complete when (== @entity.result "none")
+        (set @entity.result "complete")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Hole", value: @entity.hole }, { label: "Strokes", value: @entity.strokes } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    state complete {
+      NEXT_HOLE -> playing
+        (set @entity.hole (+ @entity.hole 1))
+        (set @entity.strokes 0)
+        (set @entity.units @config.units)
+        (set @entity.result "none")
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Hole", value: @entity.hole }, { label: "Strokes", value: @entity.strokes } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      PLAY_AGAIN -> playing
+        (set @entity.units @config.units)
+        (set @entity.hole 1)
+        (set @entity.strokes 0)
+        (set @entity.result "none")
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Hole", value: @entity.hole }, { label: "Strokes", value: @entity.strokes } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Hole", value: @entity.hole }, { label: "Strokes", value: @entity.strokes } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
         })
     }
 
@@ -107,12 +166,27 @@ orbital MinigolfBoardOrbital {
         x : number!
         y : number!
       }
-        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @description "Emits UI:{tileClickEvent} with { x, y } on tile click"
         @tier "essential"
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+      HOLE_IN -> external {
+        id : string
+      }
+        @description "Emits when ball reaches the hole"
+        @tier "essential"
+      NEXT_HOLE -> external {
+        id : string
+      }
+        @description "Emits to advance to the next hole"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits to restart from hole 1"
         @tier "essential"
     }
 
@@ -154,7 +228,7 @@ orbital MinigolfBoardOrbital {
         @label "Total Count"
         @description "Total number of items"
         @tier "presentation"
-      activeFilters : json = {}
+      activeFilters : json
         @label "Active Filters"
         @description "Active filters"
         @tier "presentation"
@@ -166,33 +240,21 @@ orbital MinigolfBoardOrbital {
         @label "Tiles"
         @description "Isometric grid tiles"
         @tier "presentation"
-      units : [MinigolfBoardUnitsItem] = [{ id: "ball1", position: { x: 0, y: 4 }, sprite: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/units/ball.png", unitType: "ball", name: "Ball", team: player, health: 1, maxHealth: 1 }]
+      units : [MinigolfBoardUnitsItem] = [{ id: "ball1", position: { x: 0, y: 4 }, sprite: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/units/ball.png", unitType: "ball", name: "Ball", team: player, health: 1, maxHealth: 1, animation: "idle", frame: 0 }]
         @label "Units"
         @description "Units on the board"
         @tier "presentation"
       features : [MinigolfBoardFeaturesItem] = [{ id: "hole1", x: 5, y: 1, type: "hole" }, { id: "flag1", x: 5, y: 1, type: "flag", assetUrl: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/features/flag.png" }]
         @label "Features"
-        @description "Features (holes, obstacles, etc.) on the board"
+        @description "Features (holes, obstacles) on the board"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : MinigolfBoardAssetManifest = { terrains: { green: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png", fairway: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png", hole: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/hole.png" }, units: { ball: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/units/ball.png" }, features: { hole: "", flag: "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/features/flag.png" }, effects: {} }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
-        @tier "presentation"
-      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
-        @label "Asset Base Url"
-        @description "Base URL prepended to manifest sprite paths"
+        @description "Asset sprite manifest"
         @tier "presentation"
       scale : number = 0.45
         @label "Scale"
         @description "Render scale"
-        @tier "presentation"
-      showMinimap : boolean = true
-        @label "Show Minimap"
-        @description "Show minimap overlay"
-        @tier "presentation"
-      enableCamera : boolean = true
-        @label "Enable Camera"
-        @description "Enable camera pan/zoom controls"
         @tier "presentation"
     }
   }

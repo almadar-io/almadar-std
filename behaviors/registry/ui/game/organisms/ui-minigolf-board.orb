@@ -1,5 +1,5 @@
 {
-  "description": "MinigolfBoard — UI factory (1:1 with the @almadar/ui minigolf-board pattern).",
+  "description": "MinigolfBoard — game-shell composition with HUD, isometric-canvas, and animation ticks.",
   "name": "ui-minigolf-board",
   "orbitals": [
     {
@@ -9,6 +9,221 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "faction": {
+                  "name": "faction",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "heroId": {
+                  "name": "heroId",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "previousPosition": {
+                  "name": "previousPosition",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "traits": {
+                  "items": {
+                    "properties": {
+                      "cooldown": {
+                        "name": "cooldown",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "currentState": {
+                        "name": "currentState",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "name": {
+                        "name": "name",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "states": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "name": "states",
+                        "required": true,
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "traits",
+                  "required": false,
+                  "type": "array"
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "default": 1.0,
+            "name": "hole",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "strokes",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "complete"
+            ]
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "MinigolfBoardItem",
@@ -31,25 +246,70 @@
           "category": "interaction",
           "config": {
             "activeFilters": {
-              "default": {},
               "description": "Active filters",
               "label": "Active Filters",
               "tier": "presentation",
               "type": "json"
             },
-            "assetBaseUrl": {
-              "default": "https://almadar-kflow-assets.web.app/shared/",
-              "description": "Base URL prepended to manifest sprite paths",
-              "label": "Asset Base Url",
-              "tier": "presentation",
-              "type": "asset"
-            },
             "assetManifest": {
-              "default": "",
-              "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
+              "default": {
+                "effects": {},
+                "features": {
+                  "flag": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/features/flag.png",
+                  "hole": ""
+                },
+                "terrains": {
+                  "fairway": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png",
+                  "green": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                  "hole": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/hole.png"
+                },
+                "units": {
+                  "ball": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/units/ball.png"
+                }
+              },
+              "description": "Asset sprite manifest",
               "label": "Asset Manifest",
+              "properties": {
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
+                },
+                "features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "terrains": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "terrains",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
               "tier": "presentation",
-              "type": "string"
+              "type": "MinigolfBoardAssetManifest"
             },
             "className": {
               "default": "",
@@ -57,13 +317,6 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
-            },
-            "enableCamera": {
-              "default": true,
-              "description": "Enable camera pan/zoom controls",
-              "label": "Enable Camera",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "error": {
               "description": "Error state (UiError)",
@@ -109,7 +362,7 @@
                   "y": 1.0
                 }
               ],
-              "description": "Features (holes, obstacles, etc.) on the board",
+              "description": "Features (holes, obstacles) on the board",
               "items": {
                 "properties": {
                   "assetUrl": {
@@ -209,13 +462,6 @@
               "label": "Selected Ids",
               "tier": "presentation",
               "type": "[string]"
-            },
-            "showMinimap": {
-              "default": true,
-              "description": "Show minimap overlay",
-              "label": "Show Minimap",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "sortBy": {
               "default": "Sort By",
@@ -563,6 +809,8 @@
             "units": {
               "default": [
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "health": 1.0,
                   "id": "ball1",
                   "maxHealth": 1.0,
@@ -579,6 +827,11 @@
               "description": "Units on the board",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "elevation": {
                     "name": "elevation",
                     "required": false,
@@ -593,6 +846,11 @@
                       "enemy",
                       "neutral"
                     ]
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
                   },
                   "health": {
                     "name": "health",
@@ -660,11 +918,6 @@
                   },
                   "sprite": {
                     "name": "sprite",
-                    "required": false,
-                    "type": "string"
-                  },
-                  "spriteSheet": {
-                    "name": "spriteSheet",
                     "required": false,
                     "type": "string"
                   },
@@ -741,7 +994,7 @@
           },
           "emits": [
             {
-              "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+              "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
               "event": "TILE_CLICK",
               "payloadSchema": [
                 {
@@ -759,7 +1012,7 @@
               "tier": "essential"
             },
             {
-              "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+              "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
               "event": "UNIT_CLICK",
               "payloadSchema": [
                 {
@@ -770,10 +1023,52 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "Emits when ball reaches the hole",
+              "event": "HOLE_IN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits to advance to the next hole",
+              "event": "NEXT_HOLE",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits to restart from hole 1",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "effects",
+              "hole",
+              "result",
+              "strokes",
+              "units"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -787,7 +1082,7 @@
                 "name": "Initialize"
               },
               {
-                "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+                "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
                 "key": "TILE_CLICK",
                 "name": "Tile Click",
                 "payloadSchema": [
@@ -805,7 +1100,43 @@
                 "tier": "essential"
               },
               {
-                "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+                "description": "Emits when ball reaches the hole",
+                "key": "HOLE_IN",
+                "name": "Hole In",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits to advance to the next hole",
+                "key": "NEXT_HOLE",
+                "name": "Next Hole",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits to restart from hole 1",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
                 "key": "UNIT_CLICK",
                 "name": "Unit Click",
                 "payloadSchema": [
@@ -821,47 +1152,465 @@
             "states": [
               {
                 "isInitial": true,
-                "name": "idle"
+                "name": "playing"
+              },
+              {
+                "name": "complete"
               }
             ],
             "transitions": [
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.hole",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.strokes",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "activeFilters": "@config.activeFilters",
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "enableCamera": "@config.enableCamera",
-                      "error": "@config.error",
-                      "features": "@config.features",
-                      "isLoading": "@config.isLoading",
-                      "page": "@config.pageProp",
-                      "pageSize": "@config.pageSize",
-                      "scale": "@config.scale",
-                      "searchValue": "@config.searchValue",
-                      "selectedIds": "@config.selectedIds",
-                      "showMinimap": "@config.showMinimap",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "totalCount": "@config.totalCount",
-                      "type": "minigolf-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@config.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Hole",
+                            "value": "@entity.hole"
+                          },
+                          {
+                            "label": "Strokes",
+                            "value": "@entity.strokes"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.unitType",
+                            "ball"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "roll",
+                              "position": {
+                                "x": "@payload.x",
+                                "y": "@payload.y"
+                              }
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.strokes",
+                    [
+                      "+",
+                      "@entity.strokes",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Hole",
+                            "value": "@entity.hole"
+                          },
+                          {
+                            "label": "Strokes",
+                            "value": "@entity.strokes"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "complete"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Hole",
+                            "value": "@entity.hole"
+                          },
+                          {
+                            "label": "Strokes",
+                            "value": "@entity.strokes"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "HOLE_IN",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "complete"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.hole",
+                    [
+                      "+",
+                      "@entity.hole",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.strokes",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Hole",
+                            "value": "@entity.hole"
+                          },
+                          {
+                            "label": "Strokes",
+                            "value": "@entity.strokes"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "NEXT_HOLE",
+                "from": "complete",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.hole",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.strokes",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Hole",
+                            "value": "@entity.hole"
+                          },
+                          {
+                            "label": "Strokes",
+                            "value": "@entity.strokes"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "complete",
+                "to": "playing"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "@u",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": false,
+                        "tileLayout": "flat",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Hole",
+                          "value": "@entity.hole"
+                        },
+                        {
+                          "label": "Strokes",
+                          "value": "@entity.strokes"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            }
+          ]
         }
       ]
     }

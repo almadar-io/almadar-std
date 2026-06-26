@@ -1,5 +1,5 @@
 {
-  "description": "RacingBoard — UI factory (1:1 with the @almadar/ui racing-board pattern).",
+  "description": "RacingBoard — game-shell composition with LOLO-driven sprite animation on a flat tile track.",
   "name": "ui-racing-board",
   "orbitals": [
     {
@@ -9,6 +9,184 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "elevation": {
+                  "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "modelUrl": {
+                  "name": "modelUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "previousPosition": {
+                  "name": "previousPosition",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "spriteSheet": {
+                  "name": "spriteSheet",
+                  "required": false,
+                  "type": "string"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "rival",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                },
+                "z": {
+                  "name": "z",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "default": 1.0,
+            "name": "lap",
+            "type": "number"
+          },
+          {
+            "default": 1.0,
+            "name": "position",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "victory",
+              "defeat"
+            ]
+          },
+          {
+            "default": "racing",
+            "name": "phase",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "RacingBoardItem",
@@ -30,26 +208,62 @@
         {
           "category": "interaction",
           "config": {
-            "activeFilters": {
-              "default": {},
-              "description": "Active filters",
-              "label": "Active Filters",
-              "tier": "presentation",
-              "type": "json"
-            },
-            "assetBaseUrl": {
-              "default": "https://almadar-kflow-assets.web.app/shared/",
-              "description": "Base URL prepended to manifest sprite paths",
-              "label": "Asset Base Url",
-              "tier": "presentation",
-              "type": "asset"
-            },
             "assetManifest": {
-              "default": "",
-              "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
+              "default": {
+                "effects": {},
+                "features": {},
+                "terrains": {
+                  "grass": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                  "road": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
+                "units": {
+                  "car_player": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png",
+                  "car_rival": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png"
+                }
+              },
+              "description": "Asset sprite manifest",
               "label": "Asset Manifest",
+              "properties": {
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
+                },
+                "features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "terrains": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "terrains",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
               "tier": "presentation",
-              "type": "string"
+              "type": "RacingBoardAssetManifest"
             },
             "className": {
               "default": "",
@@ -57,13 +271,6 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
-            },
-            "enableCamera": {
-              "default": true,
-              "description": "Enable camera pan/zoom controls",
-              "label": "Enable Camera",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "error": {
               "description": "Error state (UiError)",
@@ -157,69 +364,12 @@
               "tier": "presentation",
               "type": "boolean"
             },
-            "pageProp": {
-              "default": 0.0,
-              "description": "Current page number",
-              "label": "Page",
-              "synonyms": "page",
-              "tier": "presentation",
-              "type": "number"
-            },
-            "pageSize": {
-              "default": 0.0,
-              "description": "Number of items per page",
-              "label": "Page Size",
-              "tier": "presentation",
-              "type": "number"
-            },
             "scale": {
               "default": 0.45,
               "description": "Render scale",
               "label": "Scale",
               "tier": "presentation",
               "type": "number"
-            },
-            "searchValue": {
-              "default": "Search Value",
-              "description": "Current search query value",
-              "label": "Search Value",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "selectedIds": {
-              "default": [],
-              "description": "Currently selected item IDs",
-              "items": {
-                "type": "string"
-              },
-              "label": "Selected Ids",
-              "tier": "presentation",
-              "type": "[string]"
-            },
-            "showMinimap": {
-              "default": true,
-              "description": "Show minimap overlay",
-              "label": "Show Minimap",
-              "tier": "presentation",
-              "type": "boolean"
-            },
-            "sortBy": {
-              "default": "Sort By",
-              "description": "Current sort field",
-              "label": "Sort By",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "sortDirection": {
-              "default": "asc",
-              "description": "Current sort direction",
-              "label": "Sort Direction",
-              "tier": "presentation",
-              "type": "string",
-              "values": [
-                "asc",
-                "desc"
-              ]
             },
             "tiles": {
               "default": [
@@ -742,16 +892,18 @@
               "tier": "presentation",
               "type": "[RacingBoardTilesItem]"
             },
-            "totalCount": {
-              "default": 0.0,
-              "description": "Total number of items",
-              "label": "Total Count",
+            "totalLaps": {
+              "default": 3.0,
+              "description": "Number of laps to complete",
+              "label": "Total Laps",
               "tier": "presentation",
               "type": "number"
             },
             "units": {
               "default": [
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "id": "player",
                   "name": "Player",
                   "position": {
@@ -763,6 +915,8 @@
                   "unitType": "car"
                 },
                 {
+                  "animation": "idle",
+                  "frame": 0.0,
                   "id": "rival1",
                   "name": "Rival",
                   "position": {
@@ -777,8 +931,18 @@
               "description": "Cars on the track (player + rival)",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "elevation": {
                     "name": "elevation",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "frame": {
+                    "name": "frame",
                     "required": false,
                     "type": "number"
                   },
@@ -891,7 +1055,7 @@
           },
           "emits": [
             {
-              "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+              "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
               "event": "TILE_CLICK",
               "payloadSchema": [
                 {
@@ -909,7 +1073,7 @@
               "tier": "essential"
             },
             {
-              "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+              "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
               "event": "UNIT_CLICK",
               "payloadSchema": [
                 {
@@ -920,10 +1084,90 @@
               ],
               "scope": "external",
               "tier": "essential"
+            },
+            {
+              "description": "Emitted when a car moves to a new tile",
+              "event": "MOVE",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "required": true,
+                  "type": "string"
+                },
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emitted when a lap is completed",
+              "event": "LAP_COMPLETE",
+              "payloadSchema": [
+                {
+                  "name": "lap",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emitted when race position changes",
+              "event": "POSITION_UPDATE",
+              "payloadSchema": [
+                {
+                  "name": "newPosition",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emitted when the race ends",
+              "event": "RACE_END",
+              "payloadSchema": [
+                {
+                  "name": "result",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
+            },
+            {
+              "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+              "event": "PLAY_AGAIN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "essential"
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "effects",
+              "lap",
+              "phase",
+              "position",
+              "result",
+              "units"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -933,11 +1177,89 @@
           "stateMachine": {
             "events": [
               {
+                "key": "START",
+                "name": "Start"
+              },
+              {
                 "key": "INIT",
                 "name": "Initialize"
               },
               {
-                "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+                "description": "Emitted when a car moves to a new tile",
+                "key": "MOVE",
+                "name": "Move",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  },
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emitted when a lap is completed",
+                "key": "LAP_COMPLETE",
+                "name": "Lap Complete",
+                "payloadSchema": [
+                  {
+                    "name": "lap",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emitted when race position changes",
+                "key": "POSITION_UPDATE",
+                "name": "Position Update",
+                "payloadSchema": [
+                  {
+                    "name": "newPosition",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emitted when the race ends",
+                "key": "RACE_END",
+                "name": "Race End",
+                "payloadSchema": [
+                  {
+                    "name": "result",
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "essential"
+              },
+              {
+                "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
                 "key": "TILE_CLICK",
                 "name": "Tile Click",
                 "payloadSchema": [
@@ -955,13 +1277,12 @@
                 "tier": "essential"
               },
               {
-                "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
-                "key": "UNIT_CLICK",
-                "name": "Unit Click",
+                "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
                 "payloadSchema": [
                   {
-                    "name": "unitId",
-                    "required": true,
+                    "name": "id",
                     "type": "string"
                   }
                 ],
@@ -971,47 +1292,681 @@
             "states": [
               {
                 "isInitial": true,
-                "name": "idle"
+                "name": "racing"
+              },
+              {
+                "name": "menu"
+              },
+              {
+                "name": "gameover"
               }
             ],
             "transitions": [
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.lap",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.position",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "racing"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "activeFilters": "@config.activeFilters",
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "enableCamera": "@config.enableCamera",
-                      "error": "@config.error",
-                      "features": "@config.features",
-                      "isLoading": "@config.isLoading",
-                      "page": "@config.pageProp",
-                      "pageSize": "@config.pageSize",
-                      "scale": "@config.scale",
-                      "searchValue": "@config.searchValue",
-                      "selectedIds": "@config.selectedIds",
-                      "showMinimap": "@config.showMinimap",
-                      "sortBy": "@config.sortBy",
-                      "sortDirection": "@config.sortDirection",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "totalCount": "@config.totalCount",
-                      "type": "racing-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@config.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Lap",
+                            "value": "@entity.lap"
+                          },
+                          {
+                            "label": "Position",
+                            "value": "@entity.position"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "START",
+                "from": "menu",
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.lap",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.position",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "racing"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Lap",
+                            "value": "@entity.lap"
+                          },
+                          {
+                            "label": "Position",
+                            "value": "@entity.position"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
+                "from": "racing",
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    [
+                      "array/map",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "if",
+                          [
+                            "==",
+                            "@u.id",
+                            "@payload.unitId"
+                          ],
+                          [
+                            "object/merge",
+                            "@u",
+                            {
+                              "animation": "walk",
+                              "position": {
+                                "x": "@payload.x",
+                                "y": "@payload.y"
+                              },
+                              "previousPosition": [
+                                "object/get",
+                                "@u",
+                                "position"
+                              ]
+                            }
+                          ],
+                          "@u"
+                        ]
+                      ]
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Lap",
+                            "value": "@entity.lap"
+                          },
+                          {
+                            "label": "Position",
+                            "value": "@entity.position"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "MOVE",
+                "from": "racing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.lap",
+                    [
+                      "+",
+                      "@entity.lap",
+                      1.0
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Lap",
+                            "value": "@entity.lap"
+                          },
+                          {
+                            "label": "Position",
+                            "value": "@entity.position"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "LAP_COMPLETE",
+                "from": "racing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.position",
+                    "@payload.newPosition"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Lap",
+                            "value": "@entity.lap"
+                          },
+                          {
+                            "label": "Position",
+                            "value": "@entity.position"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "POSITION_UPDATE",
+                "from": "racing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    [
+                      "if",
+                      [
+                        "==",
+                        "@entity.position",
+                        1.0
+                      ],
+                      "victory",
+                      "defeat"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "game_over"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Lap",
+                            "value": "@entity.lap"
+                          },
+                          {
+                            "label": "Position",
+                            "value": "@entity.position"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "RACE_END",
+                "from": "racing",
+                "guard": [
+                  "or",
+                  [
+                    ">=",
+                    "@entity.lap",
+                    "@config.totalLaps"
+                  ],
+                  [
+                    "==",
+                    "@entity.result",
+                    "none"
+                  ]
+                ],
+                "to": "gameover"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Lap",
+                            "value": "@entity.lap"
+                          },
+                          {
+                            "label": "Position",
+                            "value": "@entity.position"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "racing",
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Lap",
+                            "value": "@entity.lap"
+                          },
+                          {
+                            "label": "Position",
+                            "value": "@entity.position"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "racing",
+                "to": "racing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.lap",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.position",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.phase",
+                    "racing"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Lap",
+                            "value": "@entity.lap"
+                          },
+                          {
+                            "label": "Position",
+                            "value": "@entity.position"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "gameover",
+                "to": "menu"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "@u",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": false,
+                        "tileLayout": "flat",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Lap",
+                          "value": "@entity.lap"
+                        },
+                        {
+                          "label": "Position",
+                          "value": "@entity.position"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            }
+          ]
         }
       ]
     }

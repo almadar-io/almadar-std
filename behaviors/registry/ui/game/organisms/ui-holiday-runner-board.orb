@@ -1,5 +1,5 @@
 {
-  "description": "HolidayRunnerBoard — UI factory (1:1 with the @almadar/ui holiday-runner-board pattern).",
+  "description": "HolidayRunnerBoard — endless runner on a flat tiled scene, composed via game-shell.",
   "name": "ui-holiday-runner-board",
   "orbitals": [
     {
@@ -9,6 +9,132 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "health": {
+                  "name": "health",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "maxHealth": {
+                  "name": "maxHealth",
+                  "required": false,
+                  "type": "number"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "position": {
+                  "name": "position",
+                  "properties": {
+                    "x": {
+                      "name": "x",
+                      "required": true,
+                      "type": "number"
+                    },
+                    "y": {
+                      "name": "y",
+                      "required": true,
+                      "type": "number"
+                    }
+                  },
+                  "required": false,
+                  "type": "object"
+                },
+                "sprite": {
+                  "name": "sprite",
+                  "required": false,
+                  "type": "string"
+                },
+                "team": {
+                  "name": "team",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "player",
+                    "enemy",
+                    "neutral"
+                  ]
+                },
+                "unitType": {
+                  "name": "unitType",
+                  "required": false,
+                  "type": "string"
+                },
+                "x": {
+                  "name": "x",
+                  "required": false,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": false,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "distance",
+            "type": "number"
+          },
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "HolidayRunnerBoardItem",
@@ -30,19 +156,62 @@
         {
           "category": "interaction",
           "config": {
-            "assetBaseUrl": {
-              "default": "https://almadar-kflow-assets.web.app/shared/",
-              "description": "Base URL prepended to manifest sprite paths",
-              "label": "Asset Base Url",
-              "tier": "presentation",
-              "type": "asset"
-            },
             "assetManifest": {
-              "default": "",
-              "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
+              "default": {
+                "effects": {},
+                "features": {},
+                "terrains": {
+                  "ground": "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/ground.png",
+                  "sky": "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/terrain/sky.png"
+                },
+                "units": {
+                  "obstacle": "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/features/obstacle.png",
+                  "runner": "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/units/runner.png"
+                }
+              },
+              "description": "Asset sprite manifest",
               "label": "Asset Manifest",
+              "properties": {
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
+                },
+                "features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "terrains": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "terrains",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
               "tier": "presentation",
-              "type": "string"
+              "type": "HolidayRunnerBoardAssetManifest"
             },
             "className": {
               "default": "",
@@ -50,13 +219,6 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
-            },
-            "enableCamera": {
-              "default": true,
-              "description": "Enable camera pan/zoom controls",
-              "label": "Enable Camera",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "error": {
               "description": "Error state (UiError)",
@@ -87,25 +249,8 @@
               "type": "HolidayRunnerBoardError"
             },
             "features": {
-              "default": [
-                {
-                  "color": "#c0392b",
-                  "id": "obs1",
-                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/features/obstacle.png",
-                  "type": "obstacle",
-                  "x": 4.0,
-                  "y": 2.0
-                },
-                {
-                  "color": "#c0392b",
-                  "id": "obs2",
-                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/features/obstacle.png",
-                  "type": "obstacle",
-                  "x": 6.0,
-                  "y": 2.0
-                }
-              ],
-              "description": "Obstacle features on the ground row",
+              "default": [],
+              "description": "Static features on the board",
               "items": {
                 "properties": {
                   "color": {
@@ -158,13 +303,6 @@
               "label": "Scale",
               "tier": "presentation",
               "type": "number"
-            },
-            "showMinimap": {
-              "default": false,
-              "description": "Show minimap overlay",
-              "label": "Show Minimap",
-              "tier": "presentation",
-              "type": "boolean"
             },
             "tiles": {
               "default": [
@@ -456,6 +594,8 @@
             "units": {
               "default": [
                 {
+                  "animation": "walk",
+                  "frame": 0.0,
                   "health": 3.0,
                   "id": "runner1",
                   "maxHealth": 3.0,
@@ -467,11 +607,51 @@
                   "sprite": "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/units/runner.png",
                   "team": "player",
                   "unitType": "runner"
+                },
+                {
+                  "animation": "idle",
+                  "frame": 0.0,
+                  "health": 1.0,
+                  "id": "obs1",
+                  "maxHealth": 1.0,
+                  "name": "Obstacle",
+                  "position": {
+                    "x": 4.0,
+                    "y": 2.0
+                  },
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/features/obstacle.png",
+                  "team": "neutral",
+                  "unitType": "obstacle"
+                },
+                {
+                  "animation": "idle",
+                  "frame": 0.0,
+                  "health": 1.0,
+                  "id": "obs2",
+                  "maxHealth": 1.0,
+                  "name": "Obstacle",
+                  "position": {
+                    "x": 6.0,
+                    "y": 2.0
+                  },
+                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/features/obstacle.png",
+                  "team": "neutral",
+                  "unitType": "obstacle"
                 }
               ],
-              "description": "Runner unit standing on the ground row",
+              "description": "Runner (animation:walk) plus obstacles on the ground row",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
+                    "type": "number"
+                  },
                   "health": {
                     "name": "health",
                     "required": false,
@@ -581,7 +761,12 @@
             }
           ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "distance",
+              "effects",
+              "score",
+              "units"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -629,39 +814,276 @@
             "states": [
               {
                 "isInitial": true,
-                "name": "idle"
+                "name": "running"
               }
             ],
             "transitions": [
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.units",
+                    "@config.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.distance",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetBaseUrl": "@config.assetBaseUrl",
-                      "assetManifest": "@config.assetManifest",
-                      "className": "@config.className",
-                      "enableCamera": "@config.enableCamera",
-                      "error": "@config.error",
-                      "features": "@config.features",
-                      "isLoading": "@config.isLoading",
-                      "scale": "@config.scale",
-                      "showMinimap": "@config.showMinimap",
-                      "tileClickEvent": "TILE_CLICK",
-                      "tiles": "@config.tiles",
-                      "type": "holiday-runner-board",
-                      "unitClickEvent": "UNIT_CLICK",
-                      "units": "@config.units"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Distance",
+                            "value": "@entity.distance"
+                          },
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
+                "from": "running",
+                "to": "running"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Distance",
+                            "value": "@entity.distance"
+                          },
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "running",
+                "to": "running"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": false,
+                          "tileLayout": "flat",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Distance",
+                            "value": "@entity.distance"
+                          },
+                          {
+                            "label": "Score",
+                            "value": "@entity.score"
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "running",
+                "to": "running"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "@u",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.distance",
+                  [
+                    "+",
+                    "@entity.distance",
+                    1.0
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": false,
+                        "tileLayout": "flat",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Distance",
+                          "value": "@entity.distance"
+                        },
+                        {
+                          "label": "Score",
+                          "value": "@entity.score"
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            }
+          ]
         }
       ]
     }

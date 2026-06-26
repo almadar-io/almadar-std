@@ -1,5 +1,5 @@
 app ui-space-station-board "1.0.0"
-"SpaceStationBoard — UI factory (1:1 with the @almadar/ui space-station-board pattern)."
+"SpaceStationBoard — game-shell composition with crew animation and isometric canvas."
 orbital SpaceStationBoardOrbital {
   type SpaceStationBoardError = {
     message : string!
@@ -40,6 +40,14 @@ orbital SpaceStationBoardOrbital {
     traits : [SpaceStationBoardUnitsItemTraitsItem]
     previousPosition : SpaceStationBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type SpaceStationBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type SpaceStationBoardUnitsItemPosition = {
     x : number!
@@ -66,39 +74,91 @@ orbital SpaceStationBoardOrbital {
     color : string
     elevation : number
   }
+  type SpaceStationBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
 
   entity SpaceStationBoardItem [runtime] {
     id : string!
+    units : [SpaceStationBoardUnitsItem]
+    selectedUnitId : string
+    oxygen : number = 100
+    crewCount : number = 3
+    phase : string = "idle"
+    gridWidth : number = 7
+    gridHeight : number = 7
+    effects : [SpaceStationBoardEffectItem] = []
   }
 
   trait SpaceStationBoardRender -> @rebindable SpaceStationBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.selectedUnitId "")
+        (set @entity.oxygen 100)
+        (set @entity.crewCount 3)
+        (set @entity.phase "idle")
+        (set @entity.effects [])
+        (set @entity.gridWidth 7)
+        (set @entity.gridHeight 7)
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: space-station-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount }, { label: "Oxygen", value: @entity.oxygen } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
+        (set @entity.phase "idle")
+        (set @entity.selectedUnitId "")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount }, { label: "Oxygen", value: @entity.oxygen } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.phase "movement")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount }, { label: "Oxygen", value: @entity.oxygen } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) 2) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?y }, animation: "walk" }) @u))))
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "idle")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount }, { label: "Oxygen", value: @entity.oxygen } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+
+      CANCEL -> playing when (!= @entity.selectedUnitId "")
+        (set @entity.selectedUnitId "")
+        (set @entity.phase "idle")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount }, { label: "Oxygen", value: @entity.oxygen } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8), animation: (if (== (object/get @u animation) "walk") "idle" (object/get @u animation)) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Crew", value: @entity.crewCount }, { label: "Oxygen", value: @entity.oxygen } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -107,12 +167,17 @@ orbital SpaceStationBoardOrbital {
         x : number!
         y : number!
       }
-        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @description "Emits UI:{tileClickEvent} with { x, y } on tile click"
         @tier "essential"
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+      CANCEL -> external {
+        id : string
+      }
+        @description "Emits UI:{cancelEvent} with {} on cancel"
         @tier "essential"
     }
 
@@ -217,12 +282,12 @@ orbital SpaceStationBoardOrbital {
         @description "Isometric grid tiles"
         @tier "presentation"
       units : [SpaceStationBoardUnitsItem] = [
-        { id: "u1", position: { x: 2, y: 3 }, unitType: "crew", name: "Commander", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png" },
-        { id: "u2", position: { x: 4, y: 3 }, unitType: "crew", name: "Engineer", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png" },
-        { id: "u3", position: { x: 3, y: 5 }, unitType: "crew", name: "Technician", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png" }
+        { id: "u1", position: { x: 2, y: 3 }, unitType: "crew", name: "Commander", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png", animation: "idle", frame: 0 },
+        { id: "u2", position: { x: 4, y: 3 }, unitType: "crew", name: "Engineer", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png", animation: "idle", frame: 0 },
+        { id: "u3", position: { x: 3, y: 5 }, unitType: "crew", name: "Technician", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png", animation: "idle", frame: 0 }
       ]
         @label "Units"
-        @description "Units on the board"
+        @description "Crew units on the board"
         @tier "presentation"
       features : [SpaceStationBoardFeaturesItem] = [
         { id: "f1", x: 1, y: 2, type: "console", sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png" },
@@ -233,25 +298,13 @@ orbital SpaceStationBoardOrbital {
         @label "Features"
         @description "Features (consoles, airlocks, etc.) on the board"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : SpaceStationBoardAssetManifest = { terrains: { wall: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png", floor: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png", console: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/console.png" }, units: { crew: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png" }, features: { console: "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png" }, effects: {} }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
-        @tier "presentation"
-      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
-        @label "Asset Base Url"
-        @description "Base URL prepended to manifest sprite paths"
+        @description "Asset sprite manifest"
         @tier "presentation"
       scale : number = 0.45
         @label "Scale"
         @description "Render scale"
-        @tier "presentation"
-      showMinimap : boolean = true
-        @label "Show Minimap"
-        @description "Show minimap overlay"
-        @tier "presentation"
-      enableCamera : boolean = true
-        @label "Enable Camera"
-        @description "Enable camera pan/zoom controls"
         @tier "presentation"
     }
   }

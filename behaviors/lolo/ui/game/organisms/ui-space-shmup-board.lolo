@@ -1,5 +1,5 @@
 app ui-space-shmup-board "1.0.0"
-"SpaceShmupBoard — vertical SHMUP field on a flat IsometricCanvas tile grid."
+"SpaceShmupBoard — vertical SHMUP on a flat IsometricCanvas tile grid with HUD, sprite animation, and explosion fx."
 orbital SpaceShmupBoardOrbital {
   type SpaceShmupBoardError = {
     message : string!
@@ -40,6 +40,14 @@ orbital SpaceShmupBoardOrbital {
     traits : [SpaceShmupBoardUnitsItemTraitsItem]
     previousPosition : SpaceShmupBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type SpaceShmupBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type SpaceShmupBoardUnitsItemPosition = {
     x : number!
@@ -66,39 +74,117 @@ orbital SpaceShmupBoardOrbital {
     color : string
     elevation : number
   }
+  type SpaceShmupBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
 
   entity SpaceShmupBoardItem [runtime] {
     id : string!
+    units : [SpaceShmupBoardUnitsItem]
+    score : number = 0
+    lives : number = 3
+    result : "none" | "victory" | "defeat" = none
+    effects : [SpaceShmupBoardEffectItem] = []
   }
 
   trait SpaceShmupBoardRender -> @rebindable SpaceShmupBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state menu {
+      START -> playing
+        (set @entity.units @config.units)
+        (set @entity.score 0)
+        (set @entity.lives 3)
+        (set @entity.result "none")
+        (set @entity.effects [])
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: space-shmup-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.score 0)
+        (set @entity.lives 3)
+        (set @entity.result "none")
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      SHOOT -> playing when (!= (array/len (array/filter @entity.units (fn u (== @u.team "player")))) 0)
+        (set @entity.units (array/map @entity.units (fn u (if (and (== @u.id ?targetId) (== @u.team "enemy")) (object/merge @u { health: (math/max 0 (- (object/get @u health) 1)), animation: (if (<= (math/max 0 (- (object/get @u health) 1)) 0) "death" "hit") }) @u))))
+        (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 5 })) null)
+        (set @entity.score (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (+ @entity.score 100) @entity.score))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      PLAYER_HIT -> playing when (> @entity.lives 0)
+        (set @entity.lives (- @entity.lives 1))
+        (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/first (array/filter @entity.units (fn u (== @u.team "player")))) position) x), y: (object/get (object/get (array/first (array/filter @entity.units (fn u (== @u.team "player")))) position) y), ttl: 5 }))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (<= @entity.lives 0))
+        (set @entity.result (if (<= @entity.lives 0) "defeat" "victory"))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.score 0)
+        (set @entity.lives 3)
+        (set @entity.result "none")
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
         })
     }
 
@@ -107,12 +193,32 @@ orbital SpaceShmupBoardOrbital {
         x : number!
         y : number!
       }
-        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @description "Fires on tile click with grid coordinates"
         @tier "essential"
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Fires on unit click with unit id"
+        @tier "essential"
+      SHOOT -> external {
+        targetId : string!
+      }
+        @description "Player fires at an enemy unit"
+        @tier "essential"
+      PLAYER_HIT -> external {
+        id : string
+      }
+        @description "Player ship takes a hit"
+        @tier "essential"
+      GAME_END -> external {
+        result : string
+      }
+        @description "Fires when all enemies are destroyed or lives reach zero"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Reset and restart the game"
         @tier "essential"
     }
 
@@ -166,7 +272,7 @@ orbital SpaceShmupBoardOrbital {
         @label "Tiles"
         @description "6×8 flat space-terrain tile grid"
         @tier "presentation"
-      units : [SpaceShmupBoardUnitsItem] = [{ id: "enemy1", position: { x: 1, y: 0 }, unitType: "ship", name: "Invader A", team: enemy, health: 1, maxHealth: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png" }, { id: "enemy2", position: { x: 3, y: 0 }, unitType: "ship", name: "Invader B", team: enemy, health: 1, maxHealth: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png" }, { id: "enemy3", position: { x: 0, y: 1 }, unitType: "ship", name: "Invader C", team: enemy, health: 1, maxHealth: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png" }, { id: "enemy4", position: { x: 4, y: 1 }, unitType: "ship", name: "Invader D", team: enemy, health: 1, maxHealth: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png" }, { id: "player1", position: { x: 2, y: 7 }, unitType: "ship", name: "Player", team: player, health: 3, maxHealth: 3, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png" }]
+      units : [SpaceShmupBoardUnitsItem] = [{ id: "enemy1", position: { x: 1, y: 0 }, unitType: "ship", name: "Invader A", team: enemy, health: 1, maxHealth: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png", animation: "idle", frame: 0 }, { id: "enemy2", position: { x: 3, y: 0 }, unitType: "ship", name: "Invader B", team: enemy, health: 1, maxHealth: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png", animation: "idle", frame: 0 }, { id: "enemy3", position: { x: 0, y: 1 }, unitType: "ship", name: "Invader C", team: enemy, health: 1, maxHealth: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png", animation: "idle", frame: 0 }, { id: "enemy4", position: { x: 4, y: 1 }, unitType: "ship", name: "Invader D", team: enemy, health: 1, maxHealth: 1, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png", animation: "idle", frame: 0 }, { id: "player1", position: { x: 2, y: 7 }, unitType: "ship", name: "Player", team: player, health: 3, maxHealth: 3, sprite: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png", animation: "idle", frame: 0 }]
         @label "Units"
         @description "Player ship (bottom centre) and 4 enemy ships across the top rows"
         @tier "presentation"
@@ -174,25 +280,13 @@ orbital SpaceShmupBoardOrbital {
         @label "Features"
         @description "Optional hazards or power-ups on the field"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : SpaceShmupBoardAssetManifest = { terrains: { space: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png" }, units: { ship: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png", enemy: "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png" }, features: {}, effects: { explosion: "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png" } }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
-        @tier "presentation"
-      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
-        @label "Asset Base Url"
-        @description "Base URL prepended to manifest sprite paths"
+        @description "Sprite manifest for terrain, units, and effects"
         @tier "presentation"
       scale : number = 0.45
         @label "Scale"
         @description "Render scale"
-        @tier "presentation"
-      showMinimap : boolean = false
-        @label "Show Minimap"
-        @description "Show minimap overlay"
-        @tier "presentation"
-      enableCamera : boolean = true
-        @label "Enable Camera"
-        @description "Enable camera pan/zoom controls"
         @tier "presentation"
     }
   }

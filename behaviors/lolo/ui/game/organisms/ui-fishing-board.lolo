@@ -1,5 +1,5 @@
 app ui-fishing-board "1.0.0"
-"FishingBoard — UI factory (1:1 with the @almadar/ui fishing-board pattern)."
+"FishingBoard — game-shell composition with LOLO-driven sprite animation and catch effects."
 orbital FishingBoardOrbital {
   type FishingBoardError = {
     message : string!
@@ -40,6 +40,14 @@ orbital FishingBoardOrbital {
     traits : [FishingBoardUnitsItemTraitsItem]
     previousPosition : FishingBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type FishingBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type FishingBoardUnitsItemPosition = {
     x : number!
@@ -66,39 +74,71 @@ orbital FishingBoardOrbital {
     color : string
     elevation : number
   }
+  type FishingBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
 
   entity FishingBoardItem [runtime] {
     id : string!
+    units : [FishingBoardUnitsItem]
+    catchCount : number = 0
+    score : number = 0
+    effects : [FishingBoardEffectItem] = []
   }
 
   trait FishingBoardRender -> @rebindable FishingBoardItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
+    state playing {
+      INIT -> playing
+        (set @entity.units @config.units)
+        (set @entity.catchCount 0)
+        (set @entity.score 0)
+        (set @entity.effects [])
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: fishing-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Catch", value: @entity.catchCount }, { label: "Score", value: @entity.score } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> playing
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Catch", value: @entity.catchCount }, { label: "Score", value: @entity.score } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> playing
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Catch", value: @entity.catchCount }, { label: "Score", value: @entity.score } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      CAST -> playing
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?unitId) (object/merge @u { animation: "cast" }) @u))))
+        (if (== ?hitFish true) (set @entity.catchCount (+ @entity.catchCount 1)) null)
+        (if (== ?hitFish true) (set @entity.score (+ @entity.score ?points)) null)
+        (if (== ?hitFish true) (set @entity.effects (array/append @entity.effects { key: "splash", x: ?x, y: ?y, ttl: 4 })) null)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Catch", value: @entity.catchCount }, { label: "Score", value: @entity.score } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Catch", value: @entity.catchCount }, { label: "Score", value: @entity.score } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
         })
     }
 
@@ -107,12 +147,21 @@ orbital FishingBoardOrbital {
         x : number!
         y : number!
       }
-        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @description "Emits UI:{tileClickEvent} with { x, y } on tile click"
         @tier "essential"
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+      CAST -> external {
+        unitId : string!
+        x : number!
+        y : number!
+        hitFish : boolean
+        points : number
+      }
+        @description "Emits when a cast action is triggered"
         @tier "essential"
     }
 
@@ -166,33 +215,21 @@ orbital FishingBoardOrbital {
         @label "Tiles"
         @description "Flat top-down fishing scene tiles (water + seabed)"
         @tier "presentation"
-      units : [FishingBoardUnitsItem] = [{ id: "u1", position: { x: 2, y: 0 }, unitType: "boat", name: "Fishing Boat", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png" }, { id: "u2", position: { x: 2, y: 2 }, unitType: "hook", name: "Hook", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png" }]
+      units : [FishingBoardUnitsItem] = [{ id: "u1", position: { x: 2, y: 0 }, unitType: "boat", name: "Fishing Boat", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png", animation: "idle", frame: 0 }, { id: "u2", position: { x: 2, y: 2 }, unitType: "hook", name: "Hook", team: player, health: 10, maxHealth: 10, sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png", animation: "idle", frame: 0 }]
         @label "Units"
         @description "Units on the board (boat, hook)"
         @tier "presentation"
       features : [FishingBoardFeaturesItem] = [{ id: "f1", x: 0, y: 2, type: "seaweed", sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png" }, { id: "f2", x: 1, y: 2, type: "fish", sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png" }, { id: "f3", x: 3, y: 2, type: "fish", sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png" }, { id: "f4", x: 4, y: 2, type: "seaweed", sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png" }, { id: "f5", x: 0, y: 3, type: "fish", sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png" }, { id: "f6", x: 2, y: 3, type: "fish", sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png" }, { id: "f7", x: 4, y: 3, type: "fish", sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png" }, { id: "f8", x: 1, y: 4, type: "seaweed", sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png" }, { id: "f9", x: 2, y: 4, type: "fish", sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png" }, { id: "f10", x: 3, y: 4, type: "seaweed", sprite: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png" }]
         @label "Features"
-        @description "Features on the board (fish spots)"
+        @description "Features on the board (fish spots, seaweed)"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : FishingBoardAssetManifest = { terrains: { water: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png", seabed: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png" }, units: { boat: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png", hook: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png" }, features: { fish: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png", seaweed: "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png" }, effects: {} }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
-        @tier "presentation"
-      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
-        @label "Asset Base Url"
-        @description "Base URL prepended to manifest sprite paths"
+        @description "Asset sprite manifest"
         @tier "presentation"
       scale : number = 1
         @label "Scale"
         @description "Render scale"
-        @tier "presentation"
-      showMinimap : boolean = false
-        @label "Show Minimap"
-        @description "Show minimap overlay"
-        @tier "presentation"
-      enableCamera : boolean = true
-        @label "Enable Camera"
-        @description "Enable camera pan/zoom controls"
         @tier "presentation"
     }
   }

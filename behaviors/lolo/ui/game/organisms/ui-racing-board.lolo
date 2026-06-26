@@ -1,5 +1,5 @@
 app ui-racing-board "1.0.0"
-"RacingBoard — UI factory (1:1 with the @almadar/ui racing-board pattern)."
+"RacingBoard — game-shell composition with LOLO-driven sprite animation on a flat tile track."
 orbital RacingBoardOrbital {
   type RacingBoardError = {
     message : string!
@@ -37,6 +37,14 @@ orbital RacingBoardOrbital {
     maxHealth : number
     previousPosition : RacingBoardUnitsItemPreviousPosition
     elevation : number
+    animation : string
+    frame : number
+  }
+  type RacingBoardEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type RacingBoardUnitsItemPosition = {
     x : number!
@@ -57,39 +65,127 @@ orbital RacingBoardOrbital {
     color : string
     elevation : number
   }
+  type RacingBoardAssetManifest = {
+    baseUrl : asset
+    terrains : Map string asset
+    units : Map string asset
+    features : Map string asset
+    effects : Map string asset
+  }
 
   entity RacingBoardItem [runtime] {
     id : string!
+    units : [RacingBoardUnitsItem]
+    lap : number = 1
+    position : number = 1
+    result : "none" | "victory" | "defeat" = none
+    phase : string = "racing"
+    effects : [RacingBoardEffectItem] = []
   }
 
   trait RacingBoardRender -> @rebindable RacingBoardItem [interaction, instance] {
-    initial: idle
+    initial: racing
 
-    state idle {
-      INIT -> idle
+    state menu {
+      START -> racing
+        (set @entity.units @config.units)
+        (set @entity.lap 1)
+        (set @entity.position 1)
+        (set @entity.result "none")
+        (set @entity.phase "racing")
+        (set @entity.effects [])
         (render-ui main {
-          className: @config.className
-          isLoading: @config.isLoading
-          error: @config.error
-          sortBy: @config.sortBy
-          sortDirection: @config.sortDirection
-          searchValue: @config.searchValue
-          page: @config.pageProp
-          pageSize: @config.pageSize
-          totalCount: @config.totalCount
-          activeFilters: @config.activeFilters
-          selectedIds: @config.selectedIds
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          assetBaseUrl: @config.assetBaseUrl
-          scale: @config.scale
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
-          tileClickEvent: TILE_CLICK
-          unitClickEvent: UNIT_CLICK
-          type: racing-board
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.lap }, { label: "Position", value: @entity.position } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    state racing {
+      INIT -> racing
+        (set @entity.units @config.units)
+        (set @entity.lap 1)
+        (set @entity.position 1)
+        (set @entity.result "none")
+        (set @entity.phase "racing")
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.lap }, { label: "Position", value: @entity.position } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      MOVE -> racing when (== @entity.result "none")
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.id ?unitId) (object/merge @u { position: { x: ?x, y: ?y }, animation: "walk", previousPosition: (object/get @u position) }) @u))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.lap }, { label: "Position", value: @entity.position } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      LAP_COMPLETE -> racing when (== @entity.result "none")
+        (set @entity.lap (+ @entity.lap 1))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.lap }, { label: "Position", value: @entity.position } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      POSITION_UPDATE -> racing when (== @entity.result "none")
+        (set @entity.position ?newPosition)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.lap }, { label: "Position", value: @entity.position } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      RACE_END -> gameover when (or (>= @entity.lap @config.totalLaps) (== @entity.result "none"))
+        (set @entity.result (if (== @entity.position 1) "victory" "defeat"))
+        (set @entity.phase "game_over")
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.lap }, { label: "Position", value: @entity.position } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      UNIT_CLICK -> racing
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.lap }, { label: "Position", value: @entity.position } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+
+      TILE_CLICK -> racing
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.lap }, { label: "Position", value: @entity.position } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    state gameover {
+      PLAY_AGAIN -> menu
+        (set @entity.units @config.units)
+        (set @entity.lap 1)
+        (set @entity.position 1)
+        (set @entity.result "none")
+        (set @entity.phase "racing")
+        (set @entity.effects [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.lap }, { label: "Position", value: @entity.position } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
+        })
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Lap", value: @entity.lap }, { label: "Position", value: @entity.position } ] }
+          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "flat", showMinimap: false, scale: @config.scale } ]
         })
     }
 
@@ -98,12 +194,39 @@ orbital RacingBoardOrbital {
         x : number!
         y : number!
       }
-        @description "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click"
+        @description "Emits UI:{tileClickEvent} with { x, y } on tile click"
         @tier "essential"
       UNIT_CLICK -> external {
         unitId : string!
       }
-        @description "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click"
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
+        @tier "essential"
+      MOVE -> external {
+        unitId : string!
+        x : number!
+        y : number!
+      }
+        @description "Emitted when a car moves to a new tile"
+        @tier "essential"
+      LAP_COMPLETE -> external {
+        lap : number!
+      }
+        @description "Emitted when a lap is completed"
+        @tier "essential"
+      POSITION_UPDATE -> external {
+        newPosition : number!
+      }
+        @description "Emitted when race position changes"
+        @tier "essential"
+      RACE_END -> external {
+        result : string
+      }
+        @description "Emitted when the race ends"
+        @tier "essential"
+      PLAY_AGAIN -> external {
+        id : string
+      }
+        @description "Emits UI:{playAgainEvent} with {} on play again / reset"
         @tier "essential"
     }
 
@@ -120,44 +243,15 @@ orbital RacingBoardOrbital {
         @label "Error"
         @description "Error state (UiError)"
         @tier "presentation"
-      sortBy : string = "Sort By"
-        @label "Sort By"
-        @description "Current sort field"
-        @tier "presentation"
-      sortDirection : "asc" | "desc" = asc
-        @label "Sort Direction"
-        @description "Current sort direction"
-        @tier "presentation"
-      searchValue : string = "Search Value"
-        @label "Search Value"
-        @description "Current search query value"
-        @tier "presentation"
-      pageProp : number = 0
-        @label "Page"
-        @description "Current page number"
-        @synonyms "page"
-        @tier "presentation"
-      pageSize : number = 0
-        @label "Page Size"
-        @description "Number of items per page"
-        @tier "presentation"
-      totalCount : number = 0
-        @label "Total Count"
-        @description "Total number of items"
-        @tier "presentation"
-      activeFilters : json = {}
-        @label "Active Filters"
-        @description "Active filters"
-        @tier "presentation"
-      selectedIds : [string] = []
-        @label "Selected Ids"
-        @description "Currently selected item IDs"
+      totalLaps : number = 3
+        @label "Total Laps"
+        @description "Number of laps to complete"
         @tier "presentation"
       tiles : [RacingBoardTilesItem] = [{ x: 0, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 2, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 3, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 4, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 5, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 6, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 7, y: 0, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 1, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 1, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 1, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 2, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 2, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 2, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 3, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 3, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 3, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 4, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 4, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 5, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 5, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 5, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 6, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 2, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 3, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 4, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 5, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 6, y: 6, terrain: "grass", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, { x: 7, y: 6, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 0, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 1, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 2, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 3, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 4, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 5, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 6, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }, { x: 7, y: 7, terrain: "road", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png" }]
         @label "Tiles"
         @description "Road circuit + grass infield tiles (8x8 rectangular track)"
         @tier "presentation"
-      units : [RacingBoardUnitsItem] = [{ id: "player", position: { x: 3, y: 0 }, unitType: "car", name: "Player", team: player, sprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png" }, { id: "rival1", position: { x: 4, y: 0 }, unitType: "car", name: "Rival", team: rival, sprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png" }]
+      units : [RacingBoardUnitsItem] = [{ id: "player", position: { x: 3, y: 0 }, unitType: "car", name: "Player", team: player, sprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png", animation: "idle", frame: 0 }, { id: "rival1", position: { x: 4, y: 0 }, unitType: "car", name: "Rival", team: rival, sprite: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png", animation: "idle", frame: 0 }]
         @label "Units"
         @description "Cars on the track (player + rival)"
         @tier "presentation"
@@ -165,25 +259,13 @@ orbital RacingBoardOrbital {
         @label "Features"
         @description "Track features (pit markers, start line, etc.)"
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : RacingBoardAssetManifest = { terrains: { road: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png", grass: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png" }, units: { car_player: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png", car_rival: "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png" }, features: {}, effects: {} }
         @label "Asset Manifest"
-        @description "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)"
-        @tier "presentation"
-      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
-        @label "Asset Base Url"
-        @description "Base URL prepended to manifest sprite paths"
+        @description "Asset sprite manifest"
         @tier "presentation"
       scale : number = 0.45
         @label "Scale"
         @description "Render scale"
-        @tier "presentation"
-      showMinimap : boolean = true
-        @label "Show Minimap"
-        @description "Show minimap overlay"
-        @tier "presentation"
-      enableCamera : boolean = true
-        @label "Enable Camera"
-        @description "Enable camera pan/zoom controls"
         @tier "presentation"
     }
   }
