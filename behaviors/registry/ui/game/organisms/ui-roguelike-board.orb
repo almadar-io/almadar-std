@@ -1,5 +1,5 @@
 {
-  "description": "RoguelikeBoard — turn-based dungeon crawler on the isometric canvas.",
+  "description": "RoguelikeBoard — game-shell composition with LOLO-driven sprite animation and combat effects.",
   "name": "ui-roguelike-board",
   "orbitals": [
     {
@@ -90,11 +90,31 @@
             "type": "number"
           },
           {
+            "default": "idle",
+            "name": "playerAnimation",
+            "type": "string"
+          },
+          {
+            "default": 0.0,
+            "name": "playerFrame",
+            "type": "number"
+          },
+          {
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "attack": {
                   "name": "attack",
                   "required": true,
+                  "type": "number"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
                   "type": "number"
                 },
                 "hp": {
@@ -196,6 +216,36 @@
             "default": 16.0,
             "name": "gridHeight",
             "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "RoguelikeBoardItem",
@@ -220,6 +270,10 @@
             "assetManifest": {
               "default": {
                 "baseUrl": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default",
+                "effects": {
+                  "explosion": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/effects/pixelExplosion07.png",
+                  "slash": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/effects/slash_03.png"
+                },
                 "features": {
                   "health_potion": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/health_potion.png",
                   "shield": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/shield.png",
@@ -236,13 +290,21 @@
                   "player": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"
                 }
               },
-              "description": "CDN sprite paths for terrain, player, enemies, and items.",
+              "description": "CDN sprite paths for terrain, player, enemies, items, and effects.",
               "label": "Asset Manifest",
               "properties": {
                 "baseUrl": {
                   "name": "baseUrl",
                   "required": false,
                   "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
                 },
                 "features": {
                   "items": {
@@ -282,21 +344,27 @@
             "enemies": {
               "default": [
                 {
+                  "animation": "idle",
                   "attack": 1.0,
+                  "frame": 0.0,
                   "hp": 4.0,
                   "id": "e1",
                   "x": 4.0,
                   "y": 3.0
                 },
                 {
+                  "animation": "idle",
                   "attack": 2.0,
+                  "frame": 0.0,
                   "hp": 5.0,
                   "id": "e2",
                   "x": 5.0,
                   "y": 10.0
                 },
                 {
+                  "animation": "idle",
                   "attack": 3.0,
+                  "frame": 0.0,
                   "hp": 7.0,
                   "id": "e3",
                   "x": 11.0,
@@ -306,9 +374,19 @@
               "description": "Guard in Room A, warrior in Room B, boss in Room C.",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "attack": {
                     "name": "attack",
                     "required": true,
+                    "type": "number"
+                  },
+                  "frame": {
+                    "name": "frame",
+                    "required": false,
                     "type": "number"
                   },
                   "hp": {
@@ -2637,13 +2715,16 @@
           "entityContract": {
             "provides": [
               "depth",
+              "effects",
               "enemies",
               "gridHeight",
               "gridWidth",
               "items",
               "phase",
               "player",
+              "playerAnimation",
               "playerAttack",
+              "playerFrame",
               "playerHp",
               "playerMaxHp",
               "result",
@@ -2745,8 +2826,33 @@
                   ],
                   [
                     "set",
+                    "@entity.playerAnimation",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.playerFrame",
+                    0.0
+                  ],
+                  [
+                    "set",
                     "@entity.enemies",
-                    "@config.enemies"
+                    [
+                      "array/map",
+                      "@config.enemies",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "animation": "idle",
+                            "frame": 0.0
+                          }
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -2789,27 +2895,92 @@
                     16.0
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "depth": "@entity.depth",
-                      "enemies": "@entity.enemies",
-                      "entity": "@entity",
-                      "items": "@entity.items",
-                      "moveEvent": "MOVE",
-                      "phase": "@entity.phase",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "playerHp": "@entity.playerHp",
-                      "playerMaxHp": "@entity.playerMaxHp",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "stairsX": "@entity.stairsX",
-                      "stairsY": "@entity.stairsY",
-                      "tiles": "@entity.tiles",
-                      "type": "roguelike-board",
-                      "unitScale": "@config.unitScale"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.items",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": [
+                            "array/append",
+                            [
+                              "array/map",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                [
+                                  "object/merge",
+                                  {
+                                    "animation": "@e.animation",
+                                    "frame": "@e.frame",
+                                    "health": "@e.hp",
+                                    "id": "@e.id",
+                                    "maxHealth": 5.0,
+                                    "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png",
+                                    "team": "enemy",
+                                    "x": "@e.x",
+                                    "y": "@e.y"
+                                  },
+                                  {}
+                                ]
+                              ]
+                            ],
+                            {
+                              "animation": "@entity.playerAnimation",
+                              "frame": "@entity.playerFrame",
+                              "health": "@entity.playerHp",
+                              "id": "player",
+                              "maxHealth": "@entity.playerMaxHp",
+                              "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png",
+                              "team": "player",
+                              "x": [
+                                "object/get",
+                                "@entity.player",
+                                "x"
+                              ],
+                              "y": [
+                                "object/get",
+                                "@entity.player",
+                                "y"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "HP",
+                            "value": "@entity.playerHp"
+                          },
+                          {
+                            "label": "Floor",
+                            "value": "@entity.depth"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": [
+                              "array/len",
+                              "@entity.enemies"
+                            ]
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3090,12 +3261,20 @@
                               "@inBounds"
                             ],
                             [
-                              "set",
-                              "@entity.player",
-                              {
-                                "x": "@tx",
-                                "y": "@ty"
-                              }
+                              "do",
+                              [
+                                "set",
+                                "@entity.player",
+                                {
+                                  "x": "@tx",
+                                  "y": "@ty"
+                                }
+                              ],
+                              [
+                                "set",
+                                "@entity.playerAnimation",
+                                "walk"
+                              ]
                             ],
                             true
                           ]
@@ -3108,43 +3287,142 @@
                             null
                           ],
                           [
-                            "set",
-                            "@entity.enemies",
+                            "do",
                             [
-                              "array/map",
+                              "set",
+                              "@entity.playerAnimation",
+                              "attack"
+                            ],
+                            [
+                              "set",
                               "@entity.enemies",
                               [
-                                "fn",
-                                "e",
+                                "array/map",
+                                "@entity.enemies",
                                 [
-                                  "if",
+                                  "fn",
+                                  "e",
                                   [
-                                    "==",
-                                    "@e.id",
+                                    "if",
                                     [
-                                      "object/get",
-                                      "@hitEnemy",
-                                      "id"
-                                    ]
-                                  ],
-                                  [
-                                    "object/merge",
-                                    "@e",
-                                    {
-                                      "hp": [
-                                        "math/max",
-                                        0.0,
-                                        [
-                                          "-",
-                                          "@e.hp",
-                                          "@entity.playerAttack"
-                                        ]
+                                      "==",
+                                      "@e.id",
+                                      [
+                                        "object/get",
+                                        "@hitEnemy",
+                                        "id"
                                       ]
-                                    }
-                                  ],
-                                  "@e"
+                                    ],
+                                    [
+                                      "object/merge",
+                                      "@e",
+                                      {
+                                        "animation": [
+                                          "if",
+                                          [
+                                            "<=",
+                                            [
+                                              "math/max",
+                                              0.0,
+                                              [
+                                                "-",
+                                                "@e.hp",
+                                                "@entity.playerAttack"
+                                              ]
+                                            ],
+                                            0.0
+                                          ],
+                                          "death",
+                                          "hit"
+                                        ],
+                                        "hp": [
+                                          "math/max",
+                                          0.0,
+                                          [
+                                            "-",
+                                            "@e.hp",
+                                            "@entity.playerAttack"
+                                          ]
+                                        ]
+                                      }
+                                    ],
+                                    "@e"
+                                  ]
                                 ]
                               ]
+                            ],
+                            [
+                              "set",
+                              "@entity.effects",
+                              [
+                                "array/append",
+                                "@entity.effects",
+                                {
+                                  "key": "slash",
+                                  "ttl": 4.0,
+                                  "x": [
+                                    "object/get",
+                                    "@hitEnemy",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@hitEnemy",
+                                    "y"
+                                  ]
+                                }
+                              ]
+                            ],
+                            [
+                              "if",
+                              [
+                                "<=",
+                                [
+                                  "object/get",
+                                  [
+                                    "array/find",
+                                    "@entity.enemies",
+                                    [
+                                      "fn",
+                                      "e",
+                                      [
+                                        "==",
+                                        "@e.id",
+                                        [
+                                          "object/get",
+                                          "@hitEnemy",
+                                          "id"
+                                        ]
+                                      ]
+                                    ]
+                                  ],
+                                  "hp"
+                                ],
+                                0.0
+                              ],
+                              [
+                                "set",
+                                "@entity.effects",
+                                [
+                                  "array/append",
+                                  "@entity.effects",
+                                  {
+                                    "key": "explosion",
+                                    "ttl": 5.0,
+                                    "x": [
+                                      "object/get",
+                                      "@hitEnemy",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@hitEnemy",
+                                      "y"
+                                    ]
+                                  }
+                                ]
+                              ],
+                              null
                             ]
                           ],
                           true
@@ -3260,24 +3538,84 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "depth": "@entity.depth",
-                      "enemies": "@entity.enemies",
-                      "entity": "@entity",
-                      "items": "@entity.items",
-                      "moveEvent": "MOVE",
-                      "phase": "@entity.phase",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "playerHp": "@entity.playerHp",
-                      "playerMaxHp": "@entity.playerMaxHp",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "stairsX": "@entity.stairsX",
-                      "stairsY": "@entity.stairsY",
-                      "tiles": "@entity.tiles",
-                      "type": "roguelike-board",
-                      "unitScale": "@config.unitScale"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.items",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": [
+                            "array/append",
+                            [
+                              "array/map",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                [
+                                  "object/merge",
+                                  {
+                                    "animation": "@e.animation",
+                                    "frame": "@e.frame",
+                                    "health": "@e.hp",
+                                    "id": "@e.id",
+                                    "maxHealth": 5.0,
+                                    "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png",
+                                    "team": "enemy",
+                                    "x": "@e.x",
+                                    "y": "@e.y"
+                                  },
+                                  {}
+                                ]
+                              ]
+                            ],
+                            {
+                              "animation": "@entity.playerAnimation",
+                              "frame": "@entity.playerFrame",
+                              "health": "@entity.playerHp",
+                              "id": "player",
+                              "maxHealth": "@entity.playerMaxHp",
+                              "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png",
+                              "team": "player",
+                              "x": [
+                                "object/get",
+                                "@entity.player",
+                                "x"
+                              ],
+                              "y": [
+                                "object/get",
+                                "@entity.player",
+                                "y"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "HP",
+                            "value": "@entity.playerHp"
+                          },
+                          {
+                            "label": "Floor",
+                            "value": "@entity.depth"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": [
+                              "array/len",
+                              "@entity.enemies"
+                            ]
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3304,24 +3642,84 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "depth": "@entity.depth",
-                      "enemies": "@entity.enemies",
-                      "entity": "@entity",
-                      "items": "@entity.items",
-                      "moveEvent": "MOVE",
-                      "phase": "@entity.phase",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "playerHp": "@entity.playerHp",
-                      "playerMaxHp": "@entity.playerMaxHp",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "stairsX": "@entity.stairsX",
-                      "stairsY": "@entity.stairsY",
-                      "tiles": "@entity.tiles",
-                      "type": "roguelike-board",
-                      "unitScale": "@config.unitScale"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.items",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": [
+                            "array/append",
+                            [
+                              "array/map",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                [
+                                  "object/merge",
+                                  {
+                                    "animation": "@e.animation",
+                                    "frame": "@e.frame",
+                                    "health": "@e.hp",
+                                    "id": "@e.id",
+                                    "maxHealth": 5.0,
+                                    "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png",
+                                    "team": "enemy",
+                                    "x": "@e.x",
+                                    "y": "@e.y"
+                                  },
+                                  {}
+                                ]
+                              ]
+                            ],
+                            {
+                              "animation": "@entity.playerAnimation",
+                              "frame": "@entity.playerFrame",
+                              "health": "@entity.playerHp",
+                              "id": "player",
+                              "maxHealth": "@entity.playerMaxHp",
+                              "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png",
+                              "team": "player",
+                              "x": [
+                                "object/get",
+                                "@entity.player",
+                                "x"
+                              ],
+                              "y": [
+                                "object/get",
+                                "@entity.player",
+                                "y"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "HP",
+                            "value": "@entity.playerHp"
+                          },
+                          {
+                            "label": "Floor",
+                            "value": "@entity.depth"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": [
+                              "array/len",
+                              "@entity.enemies"
+                            ]
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3361,8 +3759,33 @@
                   ],
                   [
                     "set",
+                    "@entity.playerAnimation",
+                    "idle"
+                  ],
+                  [
+                    "set",
+                    "@entity.playerFrame",
+                    0.0
+                  ],
+                  [
+                    "set",
                     "@entity.enemies",
-                    "@config.enemies"
+                    [
+                      "array/map",
+                      "@config.enemies",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "animation": "idle",
+                            "frame": 0.0
+                          }
+                        ]
+                      ]
+                    ]
                   ],
                   [
                     "set",
@@ -3395,27 +3818,92 @@
                     "@config.stairsY"
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "depth": "@entity.depth",
-                      "enemies": "@entity.enemies",
-                      "entity": "@entity",
-                      "items": "@entity.items",
-                      "moveEvent": "MOVE",
-                      "phase": "@entity.phase",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "player": "@entity.player",
-                      "playerHp": "@entity.playerHp",
-                      "playerMaxHp": "@entity.playerMaxHp",
-                      "result": "@entity.result",
-                      "scale": "@config.scale",
-                      "stairsX": "@entity.stairsX",
-                      "stairsY": "@entity.stairsY",
-                      "tiles": "@entity.tiles",
-                      "type": "roguelike-board",
-                      "unitScale": "@config.unitScale"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.items",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@entity.tiles",
+                          "type": "isometric-canvas",
+                          "units": [
+                            "array/append",
+                            [
+                              "array/map",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                [
+                                  "object/merge",
+                                  {
+                                    "animation": "@e.animation",
+                                    "frame": "@e.frame",
+                                    "health": "@e.hp",
+                                    "id": "@e.id",
+                                    "maxHealth": 5.0,
+                                    "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png",
+                                    "team": "enemy",
+                                    "x": "@e.x",
+                                    "y": "@e.y"
+                                  },
+                                  {}
+                                ]
+                              ]
+                            ],
+                            {
+                              "animation": "@entity.playerAnimation",
+                              "frame": "@entity.playerFrame",
+                              "health": "@entity.playerHp",
+                              "id": "player",
+                              "maxHealth": "@entity.playerMaxHp",
+                              "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png",
+                              "team": "player",
+                              "x": [
+                                "object/get",
+                                "@entity.player",
+                                "x"
+                              ],
+                              "y": [
+                                "object/get",
+                                "@entity.player",
+                                "y"
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "HP",
+                            "value": "@entity.playerHp"
+                          },
+                          {
+                            "label": "Floor",
+                            "value": "@entity.depth"
+                          },
+                          {
+                            "label": "Gold",
+                            "value": [
+                              "array/len",
+                              "@entity.enemies"
+                            ]
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -3426,6 +3914,183 @@
             ]
           },
           "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.playerFrame",
+                  [
+                    "%",
+                    [
+                      "+",
+                      "@entity.playerFrame",
+                      1.0
+                    ],
+                    8.0
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.enemies",
+                  [
+                    "array/map",
+                    "@entity.enemies",
+                    [
+                      "fn",
+                      "e",
+                      [
+                        "object/merge",
+                        "@e",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@e",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.items",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@entity.tiles",
+                        "type": "isometric-canvas",
+                        "units": [
+                          "array/append",
+                          [
+                            "array/map",
+                            "@entity.enemies",
+                            [
+                              "fn",
+                              "e",
+                              [
+                                "object/merge",
+                                {
+                                  "animation": "@e.animation",
+                                  "frame": "@e.frame",
+                                  "health": "@e.hp",
+                                  "id": "@e.id",
+                                  "maxHealth": 5.0,
+                                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png",
+                                  "team": "enemy",
+                                  "x": "@e.x",
+                                  "y": "@e.y"
+                                },
+                                {}
+                              ]
+                            ]
+                          ],
+                          {
+                            "animation": "@entity.playerAnimation",
+                            "frame": "@entity.playerFrame",
+                            "health": "@entity.playerHp",
+                            "id": "player",
+                            "maxHealth": "@entity.playerMaxHp",
+                            "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png",
+                            "team": "player",
+                            "x": [
+                              "object/get",
+                              "@entity.player",
+                              "x"
+                            ],
+                            "y": [
+                              "object/get",
+                              "@entity.player",
+                              "y"
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "HP",
+                          "value": "@entity.playerHp"
+                        },
+                        {
+                          "label": "Floor",
+                          "value": "@entity.depth"
+                        },
+                        {
+                          "label": "Gold",
+                          "value": [
+                            "array/len",
+                            "@entity.enemies"
+                          ]
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            },
             {
               "effects": [
                 [
@@ -3528,12 +4193,15 @@
                             [
                               "object/merge",
                               "@e",
-                              {}
+                              {
+                                "animation": "attack"
+                              }
                             ],
                             [
                               "object/merge",
                               "@e",
                               {
+                                "animation": "walk",
                                 "x": [
                                   "math/clamp",
                                   [
@@ -3714,6 +4382,223 @@
                   ]
                 ],
                 [
+                  "set",
+                  "@entity.playerAnimation",
+                  [
+                    "if",
+                    [
+                      ">",
+                      [
+                        "let",
+                        [
+                          [
+                            "adjEnemies",
+                            [
+                              "array/filter",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                [
+                                  "and",
+                                  [
+                                    ">",
+                                    "@e.hp",
+                                    0.0
+                                  ],
+                                  [
+                                    "or",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "math/abs",
+                                          [
+                                            "-",
+                                            "@e.x",
+                                            [
+                                              "object/get",
+                                              "@entity.player",
+                                              "x"
+                                            ]
+                                          ]
+                                        ],
+                                        1.0
+                                      ],
+                                      [
+                                        "==",
+                                        "@e.y",
+                                        [
+                                          "object/get",
+                                          "@entity.player",
+                                          "y"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        "@e.x",
+                                        [
+                                          "object/get",
+                                          "@entity.player",
+                                          "x"
+                                        ]
+                                      ],
+                                      [
+                                        "==",
+                                        [
+                                          "math/abs",
+                                          [
+                                            "-",
+                                            "@e.y",
+                                            [
+                                              "object/get",
+                                              "@entity.player",
+                                              "y"
+                                            ]
+                                          ]
+                                        ],
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "array/len",
+                          "@adjEnemies"
+                        ]
+                      ],
+                      0.0
+                    ],
+                    [
+                      "if",
+                      [
+                        "<=",
+                        "@entity.playerHp",
+                        0.0
+                      ],
+                      "death",
+                      "hit"
+                    ],
+                    "idle"
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "if",
+                    [
+                      ">",
+                      [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.enemies",
+                          [
+                            "fn",
+                            "e",
+                            [
+                              "and",
+                              [
+                                ">",
+                                "@e.hp",
+                                0.0
+                              ],
+                              [
+                                "or",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    [
+                                      "math/abs",
+                                      [
+                                        "-",
+                                        "@e.x",
+                                        [
+                                          "object/get",
+                                          "@entity.player",
+                                          "x"
+                                        ]
+                                      ]
+                                    ],
+                                    1.0
+                                  ],
+                                  [
+                                    "==",
+                                    "@e.y",
+                                    [
+                                      "object/get",
+                                      "@entity.player",
+                                      "y"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    "@e.x",
+                                    [
+                                      "object/get",
+                                      "@entity.player",
+                                      "x"
+                                    ]
+                                  ],
+                                  [
+                                    "==",
+                                    [
+                                      "math/abs",
+                                      [
+                                        "-",
+                                        "@e.y",
+                                        [
+                                          "object/get",
+                                          "@entity.player",
+                                          "y"
+                                        ]
+                                      ]
+                                    ],
+                                    1.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      0.0
+                    ],
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "slash",
+                        "ttl": 4.0,
+                        "x": [
+                          "object/get",
+                          "@entity.player",
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          "@entity.player",
+                          "y"
+                        ]
+                      }
+                    ],
+                    "@entity.effects"
+                  ]
+                ],
+                [
                   "if",
                   [
                     "and",
@@ -3818,24 +4703,84 @@
                   "render-ui",
                   "main",
                   {
-                    "assetManifest": "@config.assetManifest",
-                    "depth": "@entity.depth",
-                    "enemies": "@entity.enemies",
-                    "entity": "@entity",
-                    "items": "@entity.items",
-                    "moveEvent": "MOVE",
-                    "phase": "@entity.phase",
-                    "playAgainEvent": "PLAY_AGAIN",
-                    "player": "@entity.player",
-                    "playerHp": "@entity.playerHp",
-                    "playerMaxHp": "@entity.playerMaxHp",
-                    "result": "@entity.result",
-                    "scale": "@config.scale",
-                    "stairsX": "@entity.stairsX",
-                    "stairsY": "@entity.stairsY",
-                    "tiles": "@entity.tiles",
-                    "type": "roguelike-board",
-                    "unitScale": "@config.unitScale"
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.items",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@entity.tiles",
+                        "type": "isometric-canvas",
+                        "units": [
+                          "array/append",
+                          [
+                            "array/map",
+                            "@entity.enemies",
+                            [
+                              "fn",
+                              "e",
+                              [
+                                "object/merge",
+                                {
+                                  "animation": "@e.animation",
+                                  "frame": "@e.frame",
+                                  "health": "@e.hp",
+                                  "id": "@e.id",
+                                  "maxHealth": 5.0,
+                                  "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png",
+                                  "team": "enemy",
+                                  "x": "@e.x",
+                                  "y": "@e.y"
+                                },
+                                {}
+                              ]
+                            ]
+                          ],
+                          {
+                            "animation": "@entity.playerAnimation",
+                            "frame": "@entity.playerFrame",
+                            "health": "@entity.playerHp",
+                            "id": "player",
+                            "maxHealth": "@entity.playerMaxHp",
+                            "sprite": "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png",
+                            "team": "player",
+                            "x": [
+                              "object/get",
+                              "@entity.player",
+                              "x"
+                            ],
+                            "y": [
+                              "object/get",
+                              "@entity.player",
+                              "y"
+                            ]
+                          }
+                        ]
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "HP",
+                          "value": "@entity.playerHp"
+                        },
+                        {
+                          "label": "Floor",
+                          "value": "@entity.depth"
+                        },
+                        {
+                          "label": "Gold",
+                          "value": [
+                            "array/len",
+                            "@entity.enemies"
+                          ]
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
                   }
                 ]
               ],

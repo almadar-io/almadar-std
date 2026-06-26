@@ -1,5 +1,5 @@
 {
-  "description": "UncontrolledBattleBoard — self-resolving battle: model seeds units[], owns STEP resolution (attack→damage→hp), guards win/lose.",
+  "description": "UncontrolledBattleBoard — game-shell composition with LOLO-driven sprite animation and combat effects; self-resolving auto-battle.",
   "name": "ui-uncontrolled-battle-board",
   "orbitals": [
     {
@@ -13,6 +13,11 @@
           {
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "atk": {
                   "name": "atk",
                   "required": true,
@@ -20,6 +25,11 @@
                 },
                 "def": {
                   "name": "def",
+                  "required": false,
+                  "type": "number"
+                },
+                "frame": {
+                  "name": "frame",
                   "required": false,
                   "type": "number"
                 },
@@ -108,6 +118,36 @@
           {
             "name": "description",
             "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
           }
         ],
         "name": "UncontrolledBattleBoardItem",
@@ -130,11 +170,70 @@
           "category": "interaction",
           "config": {
             "assetManifest": {
-              "default": "",
-              "description": "Base asset URL for the battlefield renderer.",
+              "default": {
+                "effects": {
+                  "explosion": "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/effects/pixelExplosion07.png",
+                  "slash": "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/effects/slash_03.png"
+                },
+                "features": {
+                  "barrels": "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/barrels.png",
+                  "chest": "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/chest.png"
+                },
+                "terrains": {
+                  "dirt": "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png",
+                  "grass": "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png",
+                  "planks": "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png",
+                  "stairs": "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stairs.png",
+                  "stone": "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png"
+                },
+                "units": {
+                  "mender": "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png",
+                  "shadow": "https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png"
+                }
+              },
+              "description": "Asset manifest with terrain, unit, feature, and effect sprite URLs.",
               "label": "Asset Manifest",
+              "properties": {
+                "baseUrl": {
+                  "name": "baseUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "effects": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "effects",
+                  "required": false,
+                  "type": "object"
+                },
+                "features": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "features",
+                  "required": false,
+                  "type": "object"
+                },
+                "terrains": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "terrains",
+                  "required": false,
+                  "type": "object"
+                },
+                "units": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "name": "units",
+                  "required": false,
+                  "type": "object"
+                }
+              },
               "tier": "presentation",
-              "type": "string"
+              "type": "UncontrolledBattleBoardAssetManifest"
             },
             "description": {
               "default": "Watch the units battle to the last one standing.",
@@ -218,8 +317,10 @@
             "initialUnits": {
               "default": [
                 {
+                  "animation": "idle",
                   "atk": 5.0,
                   "def": 2.0,
+                  "frame": 0.0,
                   "hp": 20.0,
                   "id": "u1",
                   "maxHp": 20.0,
@@ -233,8 +334,10 @@
                   "unitType": "mender"
                 },
                 {
+                  "animation": "idle",
                   "atk": 4.0,
                   "def": 1.0,
+                  "frame": 0.0,
                   "hp": 15.0,
                   "id": "u2",
                   "maxHp": 15.0,
@@ -251,6 +354,11 @@
               "description": "Starting unit roster — each needs id, team (player|enemy), hp, atk, position.",
               "items": {
                 "properties": {
+                  "animation": {
+                    "name": "animation",
+                    "required": false,
+                    "type": "string"
+                  },
                   "atk": {
                     "name": "atk",
                     "required": true,
@@ -258,6 +366,11 @@
                   },
                   "def": {
                     "name": "def",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "frame": {
+                    "name": "frame",
                     "required": false,
                     "type": "number"
                   },
@@ -324,6 +437,13 @@
               "label": "Initial Units",
               "tier": "domain",
               "type": "[UncontrolledBattleBoardUnitsItem]"
+            },
+            "scale": {
+              "default": 0.25,
+              "description": "Canvas render scale.",
+              "label": "Scale",
+              "tier": "presentation",
+              "type": "number"
             },
             "tiles": {
               "default": [
@@ -621,6 +741,7 @@
           "entityContract": {
             "provides": [
               "description",
+              "effects",
               "result",
               "title",
               "turn",
@@ -719,16 +840,107 @@
                     "@config.description"
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "stepEvent": "STEP",
-                      "tiles": "@config.tiles",
-                      "type": "uncontrolled-battle-board"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Round",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Allies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "player"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "label": "Enemies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "enemy"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -764,16 +976,107 @@
                     "@config.description"
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "stepEvent": "STEP",
-                      "tiles": "@config.tiles",
-                      "type": "uncontrolled-battle-board"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Round",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Allies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "player"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "label": "Enemies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "enemy"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -792,13 +1095,99 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "stepEvent": "STEP",
-                      "tiles": "@config.tiles",
-                      "type": "uncontrolled-battle-board"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Round",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Allies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "player"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "label": "Enemies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "enemy"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -853,13 +1242,99 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "stepEvent": "STEP",
-                      "tiles": "@config.tiles",
-                      "type": "uncontrolled-battle-board"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Round",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Allies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "player"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "label": "Enemies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "enemy"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -929,6 +1404,28 @@
                             "object/merge",
                             "u",
                             {
+                              "animation": [
+                                "if",
+                                [
+                                  "<=",
+                                  [
+                                    "math/max",
+                                    0.0,
+                                    [
+                                      "-",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      "@payload.damage"
+                                    ]
+                                  ],
+                                  0.0
+                                ],
+                                "death",
+                                "hit"
+                              ],
                               "hp": [
                                 "math/max",
                                 0.0,
@@ -944,10 +1441,182 @@
                               ]
                             }
                           ],
-                          "u"
+                          [
+                            "if",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "u",
+                                "id"
+                              ],
+                              "@payload.attackerId"
+                            ],
+                            [
+                              "object/merge",
+                              "u",
+                              {
+                                "animation": "attack"
+                              }
+                            ],
+                            "u"
+                          ]
                         ]
                       ]
                     ]
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    [
+                      "array/append",
+                      "@entity.effects",
+                      {
+                        "key": "slash",
+                        "ttl": 4.0,
+                        "x": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "u",
+                                    "id"
+                                  ],
+                                  "@payload.targetId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "x"
+                        ],
+                        "y": [
+                          "object/get",
+                          [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "u",
+                                    "id"
+                                  ],
+                                  "@payload.targetId"
+                                ]
+                              ]
+                            ],
+                            "position"
+                          ],
+                          "y"
+                        ]
+                      }
+                    ]
+                  ],
+                  [
+                    "if",
+                    [
+                      "<=",
+                      [
+                        "object/get",
+                        [
+                          "array/find",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "u",
+                                "id"
+                              ],
+                              "@payload.targetId"
+                            ]
+                          ]
+                        ],
+                        "hp"
+                      ],
+                      0.0
+                    ],
+                    [
+                      "set",
+                      "@entity.effects",
+                      [
+                        "array/append",
+                        "@entity.effects",
+                        {
+                          "key": "explosion",
+                          "ttl": 5.0,
+                          "x": [
+                            "object/get",
+                            [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "id"
+                                    ],
+                                    "@payload.targetId"
+                                  ]
+                                ]
+                              ],
+                              "position"
+                            ],
+                            "x"
+                          ],
+                          "y": [
+                            "object/get",
+                            [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "id"
+                                    ],
+                                    "@payload.targetId"
+                                  ]
+                                ]
+                              ],
+                              "position"
+                            ],
+                            "y"
+                          ]
+                        }
+                      ]
+                    ],
+                    null
                   ],
                   [
                     "set",
@@ -962,13 +1631,99 @@
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "stepEvent": "STEP",
-                      "tiles": "@config.tiles",
-                      "type": "uncontrolled-battle-board"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Round",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Allies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "player"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "label": "Enemies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "enemy"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -994,16 +1749,107 @@
                     "none"
                   ],
                   [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
-                      "assetManifest": "@config.assetManifest",
-                      "entity": "@entity",
-                      "features": "@config.features",
-                      "playAgainEvent": "PLAY_AGAIN",
-                      "stepEvent": "STEP",
-                      "tiles": "@config.tiles",
-                      "type": "uncontrolled-battle-board"
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "scale": "@config.scale",
+                          "showMinimap": true,
+                          "tileLayout": "isometric",
+                          "tiles": "@config.tiles",
+                          "type": "isometric-canvas",
+                          "units": "@entity.units"
+                        }
+                      ],
+                      "hud": {
+                        "stats": [
+                          {
+                            "label": "Round",
+                            "value": "@entity.turn"
+                          },
+                          {
+                            "label": "Allies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "player"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          },
+                          {
+                            "label": "Enemies",
+                            "value": [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "team"
+                                      ],
+                                      "enemy"
+                                    ],
+                                    [
+                                      ">",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          }
+                        ],
+                        "type": "game-hud"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
@@ -1012,7 +1858,979 @@
                 "to": "menu"
               }
             ]
-          }
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "u",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            8.0
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Round",
+                          "value": "@entity.turn"
+                        },
+                        {
+                          "label": "Allies",
+                          "value": [
+                            "array/len",
+                            [
+                              "array/filter",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "team"
+                                    ],
+                                    "player"
+                                  ],
+                                  [
+                                    ">",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "hp"
+                                    ],
+                                    0.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        },
+                        {
+                          "label": "Enemies",
+                          "value": [
+                            "array/len",
+                            [
+                              "array/filter",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "team"
+                                    ],
+                                    "enemy"
+                                  ],
+                                  [
+                                    ">",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "hp"
+                                    ],
+                                    0.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            },
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "if",
+                        [
+                          "and",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "u",
+                              "team"
+                            ],
+                            "player"
+                          ],
+                          [
+                            ">",
+                            [
+                              "object/get",
+                              "u",
+                              "hp"
+                            ],
+                            0.0
+                          ]
+                        ],
+                        [
+                          "if",
+                          [
+                            ">",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "e",
+                                  [
+                                    "and",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "e",
+                                          "team"
+                                        ],
+                                        "enemy"
+                                      ],
+                                      [
+                                        ">",
+                                        [
+                                          "object/get",
+                                          "e",
+                                          "hp"
+                                        ],
+                                        0.0
+                                      ]
+                                    ],
+                                    [
+                                      "==",
+                                      [
+                                        "grid/manhattan-distance",
+                                        [
+                                          "object/get",
+                                          "u",
+                                          "position"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "e",
+                                          "position"
+                                        ]
+                                      ],
+                                      1.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            0.0
+                          ],
+                          [
+                            "object/merge",
+                            "u",
+                            {
+                              "animation": "attack"
+                            }
+                          ],
+                          "u"
+                        ],
+                        [
+                          "if",
+                          [
+                            "and",
+                            [
+                              "==",
+                              [
+                                "object/get",
+                                "u",
+                                "team"
+                              ],
+                              "enemy"
+                            ],
+                            [
+                              ">",
+                              [
+                                "object/get",
+                                "u",
+                                "hp"
+                              ],
+                              0.0
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              ">",
+                              [
+                                "array/len",
+                                [
+                                  "array/filter",
+                                  "@entity.units",
+                                  [
+                                    "fn",
+                                    "p",
+                                    [
+                                      "and",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            "p",
+                                            "team"
+                                          ],
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          [
+                                            "object/get",
+                                            "p",
+                                            "hp"
+                                          ],
+                                          0.0
+                                        ]
+                                      ],
+                                      [
+                                        "==",
+                                        [
+                                          "grid/manhattan-distance",
+                                          [
+                                            "object/get",
+                                            "u",
+                                            "position"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "p",
+                                            "position"
+                                          ]
+                                        ],
+                                        1.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              0.0
+                            ],
+                            [
+                              "object/merge",
+                              "u",
+                              {
+                                "animation": "attack"
+                              }
+                            ],
+                            "u"
+                          ],
+                          "u"
+                        ]
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "if",
+                        [
+                          "and",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "u",
+                              "team"
+                            ],
+                            "enemy"
+                          ],
+                          [
+                            ">",
+                            [
+                              "object/get",
+                              "u",
+                              "hp"
+                            ],
+                            0.0
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "target",
+                              [
+                                "array/first",
+                                [
+                                  "array/filter",
+                                  "@entity.units",
+                                  [
+                                    "fn",
+                                    "p",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "p",
+                                          "team"
+                                        ],
+                                        "player"
+                                      ],
+                                      [
+                                        ">",
+                                        [
+                                          "object/get",
+                                          "p",
+                                          "hp"
+                                        ],
+                                        0.0
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "if",
+                            [
+                              "and",
+                              [
+                                "!=",
+                                "@target",
+                                null
+                              ],
+                              [
+                                "==",
+                                [
+                                  "grid/manhattan-distance",
+                                  [
+                                    "object/get",
+                                    "u",
+                                    "position"
+                                  ],
+                                  [
+                                    "object/get",
+                                    "@target",
+                                    "position"
+                                  ]
+                                ],
+                                1.0
+                              ]
+                            ],
+                            [
+                              "object/merge",
+                              [
+                                "array/first",
+                                [
+                                  "array/filter",
+                                  "@entity.units",
+                                  [
+                                    "fn",
+                                    "p",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "p",
+                                        "id"
+                                      ],
+                                      [
+                                        "object/get",
+                                        "@target",
+                                        "id"
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              {
+                                "animation": [
+                                  "if",
+                                  [
+                                    "<=",
+                                    [
+                                      "math/max",
+                                      0.0,
+                                      [
+                                        "-",
+                                        [
+                                          "object/get",
+                                          [
+                                            "array/first",
+                                            [
+                                              "array/filter",
+                                              "@entity.units",
+                                              [
+                                                "fn",
+                                                "p",
+                                                [
+                                                  "==",
+                                                  [
+                                                    "object/get",
+                                                    "p",
+                                                    "id"
+                                                  ],
+                                                  [
+                                                    "object/get",
+                                                    "@target",
+                                                    "id"
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ],
+                                          "hp"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "u",
+                                          "atk"
+                                        ]
+                                      ]
+                                    ],
+                                    0.0
+                                  ],
+                                  "death",
+                                  "hit"
+                                ],
+                                "hp": [
+                                  "math/max",
+                                  0.0,
+                                  [
+                                    "-",
+                                    [
+                                      "object/get",
+                                      [
+                                        "array/first",
+                                        [
+                                          "array/filter",
+                                          "@entity.units",
+                                          [
+                                            "fn",
+                                            "p",
+                                            [
+                                              "==",
+                                              [
+                                                "object/get",
+                                                "p",
+                                                "id"
+                                              ],
+                                              [
+                                                "object/get",
+                                                "@target",
+                                                "id"
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      ],
+                                      "hp"
+                                    ],
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "atk"
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ],
+                            "u"
+                          ],
+                          "u"
+                        ],
+                        "u"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/append",
+                    "@entity.effects",
+                    {
+                      "key": "slash",
+                      "ttl": 4.0,
+                      "x": [
+                        "object/get",
+                        [
+                          "object/get",
+                          [
+                            "array/first",
+                            [
+                              "array/filter",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "team"
+                                    ],
+                                    "player"
+                                  ],
+                                  [
+                                    ">",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "hp"
+                                    ],
+                                    0.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          "position"
+                        ],
+                        "x"
+                      ],
+                      "y": [
+                        "object/get",
+                        [
+                          "object/get",
+                          [
+                            "array/first",
+                            [
+                              "array/filter",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "team"
+                                    ],
+                                    "player"
+                                  ],
+                                  [
+                                    ">",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "hp"
+                                    ],
+                                    0.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          "position"
+                        ],
+                        "y"
+                      ]
+                    }
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.result",
+                  [
+                    "if",
+                    [
+                      "==",
+                      [
+                        "array/len",
+                        [
+                          "array/filter",
+                          "@entity.units",
+                          [
+                            "fn",
+                            "u",
+                            [
+                              "and",
+                              [
+                                "==",
+                                [
+                                  "object/get",
+                                  "u",
+                                  "team"
+                                ],
+                                "player"
+                              ],
+                              [
+                                ">",
+                                [
+                                  "object/get",
+                                  "u",
+                                  "hp"
+                                ],
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      0.0
+                    ],
+                    "defeat",
+                    [
+                      "if",
+                      [
+                        "==",
+                        [
+                          "array/len",
+                          [
+                            "array/filter",
+                            "@entity.units",
+                            [
+                              "fn",
+                              "u",
+                              [
+                                "and",
+                                [
+                                  "==",
+                                  [
+                                    "object/get",
+                                    "u",
+                                    "team"
+                                  ],
+                                  "enemy"
+                                ],
+                                [
+                                  ">",
+                                  [
+                                    "object/get",
+                                    "u",
+                                    "hp"
+                                  ],
+                                  0.0
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        0.0
+                      ],
+                      "victory",
+                      "none"
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.turn",
+                  [
+                    "+",
+                    "@entity.turn",
+                    1.0
+                  ]
+                ],
+                [
+                  "render-ui",
+                  "main",
+                  {
+                    "children": [
+                      {
+                        "assetManifest": "@config.assetManifest",
+                        "effects": "@entity.effects",
+                        "features": "@config.features",
+                        "scale": "@config.scale",
+                        "showMinimap": true,
+                        "tileLayout": "isometric",
+                        "tiles": "@config.tiles",
+                        "type": "isometric-canvas",
+                        "units": "@entity.units"
+                      }
+                    ],
+                    "hud": {
+                      "stats": [
+                        {
+                          "label": "Round",
+                          "value": "@entity.turn"
+                        },
+                        {
+                          "label": "Allies",
+                          "value": [
+                            "array/len",
+                            [
+                              "array/filter",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "team"
+                                    ],
+                                    "player"
+                                  ],
+                                  [
+                                    ">",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "hp"
+                                    ],
+                                    0.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        },
+                        {
+                          "label": "Enemies",
+                          "value": [
+                            "array/len",
+                            [
+                              "array/filter",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "and",
+                                  [
+                                    "==",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "team"
+                                    ],
+                                    "enemy"
+                                  ],
+                                  [
+                                    ">",
+                                    [
+                                      "object/get",
+                                      "u",
+                                      "hp"
+                                    ],
+                                    0.0
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        }
+                      ],
+                      "type": "game-hud"
+                    },
+                    "type": "game-shell"
+                  }
+                ]
+              ],
+              "guard": [
+                "and",
+                [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                [
+                  ">",
+                  [
+                    "array/len",
+                    [
+                      "array/filter",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "and",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "u",
+                              "team"
+                            ],
+                            "player"
+                          ],
+                          [
+                            ">",
+                            [
+                              "object/get",
+                              "u",
+                              "hp"
+                            ],
+                            0.0
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  0.0
+                ],
+                [
+                  ">",
+                  [
+                    "array/len",
+                    [
+                      "array/filter",
+                      "@entity.units",
+                      [
+                        "fn",
+                        "u",
+                        [
+                          "and",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "u",
+                              "team"
+                            ],
+                            "enemy"
+                          ],
+                          [
+                            ">",
+                            [
+                              "object/get",
+                              "u",
+                              "hp"
+                            ],
+                            0.0
+                          ]
+                        ]
+                      ]
+                    ]
+                  ],
+                  0.0
+                ]
+              ],
+              "interval": 1000.0,
+              "name": "autoBattleTick"
+            }
+          ]
         }
       ]
     }
