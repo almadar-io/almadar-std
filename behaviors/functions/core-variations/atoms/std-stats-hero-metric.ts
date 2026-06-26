@@ -31,8 +31,8 @@ const ALIAS = 'StatsHeroMetric';
  * without modifying its state-machine topology.
  */
 export interface StdStatsHeroMetricConfig {
-  metrics?: TraitConfig;
   bodyContent?: unknown;
+  metrics?: TraitConfig;
 }
 
 /**

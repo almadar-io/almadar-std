@@ -40,6 +40,8 @@ orbital IsometricCanvasOrbital {
     traits : [IsometricCanvasUnitsItemTraitsItem]
     previousPosition : IsometricCanvasUnitsItemPreviousPosition
     elevation : number
+    animation : "idle" | "walk" | "attack" | "hit" | "death"
+    frame : number
   }
   type IsometricCanvasUnitsItemPosition = {
     x : number!
@@ -65,6 +67,12 @@ orbital IsometricCanvasOrbital {
     assetUrl : asset
     color : string
     elevation : number
+  }
+  type IsometricCanvasEffectsItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
   type IsometricCanvasValidMovesItem = {
     x : number!
@@ -101,6 +109,7 @@ orbital IsometricCanvasOrbital {
           tiles: @config.tiles
           units: @config.units
           features: @config.features
+          effects: @config.effects
           selectedUnitId: @config.selectedUnitId
           validMoves: @config.validMoves
           attackTargets: @config.attackTargets
@@ -182,6 +191,10 @@ orbital IsometricCanvasOrbital {
       features : [IsometricCanvasFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb" }, { id: "f2", x: 3, y: 1, type: "portal", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb" }]
         @label "Features"
         @description "Array of features (resources, portals, buildings, etc.)"
+        @tier "presentation"
+      effects : [IsometricCanvasEffectsItem] = [{ key: "Key", x: 1, y: 1, ttl: 1 }, { key: "Key 2", x: 2, y: 2, ttl: 2 }]
+        @label "Effects"
+        @description "Active visual effects to draw after units. Sprite URLs resolved via assetManifest.effects[fx.key]."
         @tier "presentation"
       selectedUnitId : string = ""
         @label "Selected Unit Id"

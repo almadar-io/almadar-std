@@ -31,8 +31,8 @@ const ALIAS = 'StatsSparklineRow';
  * without modifying its state-machine topology.
  */
 export interface StdStatsSparklineRowConfig {
-  metrics?: TraitConfig;
   bodyContent?: unknown;
+  metrics?: TraitConfig;
 }
 
 /**

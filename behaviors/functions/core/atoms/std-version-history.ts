@@ -94,12 +94,12 @@ export interface StdVersionHistoryRevisionRollbackFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdVersionHistoryConfig {
+  /** Default: `"elevated"` */
+  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `"Version History"` */
   title?: string;
-  /** Default: `"elevated"` */
-  statLook?: 'elevated' | 'flat' | 'progress-backed' | 'gauge' | 'sparkline';
 }
 
 /**

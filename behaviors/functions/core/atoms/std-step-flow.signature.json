@@ -185,10 +185,7 @@
             "default": {
               "children": [
                 {
-                  "type": "stack",
                   "align": "center",
-                  "direction": "horizontal",
-                  "gap": "sm",
                   "children": [
                     {
                       "name": "shield-check",
@@ -199,111 +196,114 @@
                       "type": "typography",
                       "variant": "h3"
                     }
-                  ]
+                  ],
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
                 },
                 {
-                  "type": "wizard-progress",
-                  "steps": "@entity.wizardSteps",
+                  "allowNavigation": false,
                   "currentStep": "@entity.currentStepIndex",
-                  "allowNavigation": false
+                  "steps": "@entity.wizardSteps",
+                  "type": "wizard-progress"
                 },
                 {
-                  "look": "@config.cardLook",
-                  "type": "card",
                   "children": [
                     {
-                      "gap": "md",
                       "children": [
                         {
+                          "align": "center",
                           "children": [
                             {
                               "name": "@entity.currentStepIcon",
-                              "type": "icon",
-                              "size": "lg"
+                              "size": "lg",
+                              "type": "icon"
                             },
                             {
-                              "type": "stack",
-                              "gap": "xs",
                               "children": [
                                 {
-                                  "type": "typography",
                                   "content": "@entity.currentStepLabel",
+                                  "type": "typography",
                                   "variant": "h2"
                                 },
                                 {
+                                  "color": "muted",
                                   "content": "@entity.currentStepDescription",
                                   "type": "typography",
-                                  "color": "muted",
                                   "variant": "body"
                                 }
                               ],
-                              "direction": "vertical"
+                              "direction": "vertical",
+                              "gap": "xs",
+                              "type": "stack"
                             }
                           ],
+                          "direction": "horizontal",
                           "gap": "sm",
-                          "type": "stack",
-                          "align": "center",
-                          "direction": "horizontal"
+                          "type": "stack"
                         }
                       ],
-                      "type": "stack",
-                      "direction": "vertical"
+                      "direction": "vertical",
+                      "gap": "md",
+                      "type": "stack"
                     }
-                  ]
+                  ],
+                  "look": "@config.cardLook",
+                  "type": "card"
                 },
                 {
-                  "gap": "sm",
                   "align": "center",
-                  "type": "stack",
-                  "direction": "horizontal",
                   "children": [
                     {
-                      "label": "Back",
-                      "variant": "ghost",
-                      "type": "button",
-                      "disabled": "@entity.isFirstStep",
                       "action": "BACK",
                       "actionPayload": {
                         "id": "@entity.id"
                       },
-                      "icon": "chevron-left"
+                      "disabled": "@entity.isFirstStep",
+                      "icon": "chevron-left",
+                      "label": "Back",
+                      "type": "button",
+                      "variant": "ghost"
                     },
                     {
-                      "type": "button",
+                      "action": "REJECT",
                       "actionPayload": {
                         "id": "@entity.id"
                       },
-                      "action": "REJECT",
-                      "variant": "ghost",
                       "icon": "x",
-                      "label": "Reject"
+                      "label": "Reject",
+                      "type": "button",
+                      "variant": "ghost"
                     },
                     {
-                      "label": "Escalate",
+                      "action": "ESCALATE",
                       "actionPayload": {
                         "id": "@entity.id"
                       },
                       "icon": "alert-triangle",
+                      "label": "Escalate",
                       "type": "button",
-                      "action": "ESCALATE",
                       "variant": "ghost"
                     },
                     {
-                      "icon": "@entity.primaryActionIcon",
                       "action": "ADVANCE",
                       "actionPayload": {
                         "id": "@entity.id"
                       },
+                      "icon": "@entity.primaryActionIcon",
                       "label": "@entity.primaryActionLabel",
-                      "variant": "primary",
-                      "type": "button"
+                      "type": "button",
+                      "variant": "primary"
                     }
-                  ]
+                  ],
+                  "direction": "horizontal",
+                  "gap": "sm",
+                  "type": "stack"
                 }
               ],
+              "direction": "vertical",
               "gap": "lg",
-              "type": "stack",
-              "direction": "vertical"
+              "type": "stack"
             },
             "label": "Body content tree",
             "description": "Render-ui SExpr rendered while the step chain is active (loading-success, running, BACK). Default is the canonical wizard-progress + step-card + action-row tree. Layer 3 variants override this with their own tree (horizontal stepper, sidebar progress, card carousel, etc.) to deliver entirely different step UX while inheriting the same trait, state machine, emits, and listens.",
@@ -332,20 +332,20 @@
             "default": [
               {
                 "description": "Initial review by direct manager",
-                "key": "manager",
                 "icon": "user",
+                "key": "manager",
                 "label": "Manager Review"
               },
               {
-                "key": "director",
-                "label": "Director Approval",
                 "description": "Department director sign-off",
-                "icon": "users"
+                "icon": "users",
+                "key": "director",
+                "label": "Director Approval"
               },
               {
                 "description": "Final executive approval",
-                "key": "executive",
                 "icon": "shield",
+                "key": "executive",
                 "label": "Executive Sign-off"
               }
             ],
@@ -354,8 +354,16 @@
             "tier": "domain",
             "items": {
               "properties": {
-                "key": {
-                  "name": "key",
+                "allowedRoles": {
+                  "name": "allowedRoles",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "description": {
+                  "name": "description",
                   "required": false,
                   "type": "string"
                 },
@@ -364,8 +372,8 @@
                   "required": false,
                   "type": "string"
                 },
-                "description": {
-                  "name": "description",
+                "key": {
+                  "name": "key",
                   "required": false,
                   "type": "string"
                 },
@@ -373,14 +381,6 @@
                   "name": "label",
                   "required": true,
                   "type": "string"
-                },
-                "allowedRoles": {
-                  "name": "allowedRoles",
-                  "required": false,
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  }
                 }
               },
               "type": "object"

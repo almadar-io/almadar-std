@@ -198,7 +198,7 @@ export function stdUiHeroOrganismHeroOrganismOrbital(params: StdUiHeroOrganismHe
           {
             'default': {
               'alt': 'Alt',
-              'src': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/chamber.png',
+              'src': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
             },
             'name': 'image',
             'properties': {

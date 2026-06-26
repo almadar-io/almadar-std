@@ -93,16 +93,16 @@ export interface StdModQueueModQueueItemReviewFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdModQueueConfig {
-  /** Default: `"modal"` */
-  reviewSlot?: unknown;
   /** Default: `5` */
   autoEscalateThreshold?: number;
   /** Default: `false` */
   enabled?: boolean;
-  /** Default: `"Moderation Queue"` */
-  title?: string;
+  /** Default: `"modal"` */
+  reviewSlot?: unknown;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"Moderation Queue"` */
+  title?: string;
 }
 
 /**

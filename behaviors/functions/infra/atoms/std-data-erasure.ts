@@ -110,16 +110,16 @@ export interface StdDataErasureExecSteppedPayload {
 export interface StdDataErasureConfig {
   /** Default: `"anonymize"` */
   anonymizeVsDelete?: 'anonymize' | 'delete';
-  /** Default: `"dense"` */
-  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
-  /** Default: `"modal"` */
-  reviewSlot?: unknown;
-  /** Default: `[]` */
-  piiFields?: string[];
-  /** Default: `30` */
-  gracePeriodDays?: number;
   /** Default: `false` */
   enabled?: boolean;
+  /** Default: `30` */
+  gracePeriodDays?: number;
+  /** Default: `[]` */
+  piiFields?: string[];
+  /** Default: `"modal"` */
+  reviewSlot?: unknown;
+  /** Default: `"dense"` */
+  tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
   /** Default: `""` */
   targetEntity?: string;
 }

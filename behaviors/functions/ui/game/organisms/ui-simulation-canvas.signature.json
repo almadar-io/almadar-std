@@ -7,16 +7,49 @@
     "entities": [
       {
         "name": "SimulationCanvasItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "preset",
+            "type": "object",
+            "required": false
+          },
+          {
+            "name": "running",
+            "type": "boolean",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
     "traits": [
       {
         "name": "SimulationCanvasRender",
-        "emittedEvents": [],
+        "emittedEvents": [
+          "PAUSE",
+          "RESUME",
+          "RESET"
+        ],
         "listenedEvents": [],
         "events": [
+          {
+            "name": "PAUSE",
+            "direction": "emit",
+            "description": "Pause simulation",
+            "tier": "essential"
+          },
+          {
+            "name": "RESUME",
+            "direction": "emit",
+            "description": "Resume simulation",
+            "tier": "essential"
+          },
+          {
+            "name": "RESET",
+            "direction": "emit",
+            "description": "Reset bodies to initial config",
+            "tier": "essential"
+          },
           {
             "name": "INIT",
             "direction": "listen"
@@ -28,7 +61,7 @@
             "type": "string",
             "default": "",
             "label": "Class Name",
-            "description": "className prop",
+            "description": "Additional CSS classes",
             "tier": "presentation"
           },
           {
@@ -36,7 +69,7 @@
             "type": "number",
             "default": 400,
             "label": "Height",
-            "description": "height prop",
+            "description": "Canvas height in pixels",
             "tier": "presentation"
           },
           {
@@ -101,15 +134,8 @@
                   "y": 280
                 }
               ],
-              "constraints": [
-                {
-                  "bodyA": 1,
-                  "bodyB": 3,
-                  "length": 160,
-                  "stiffness": 0.4
-                }
-              ],
-              "description": "Bouncing bodies with a spring",
+              "constraints": [],
+              "description": "Bouncing bodies with wall reflection",
               "domain": "mechanics",
               "gravity": {
                 "x": 0,
@@ -121,7 +147,7 @@
               "showVelocity": true
             },
             "label": "Preset",
-            "description": "preset prop",
+            "description": "Initial simulation preset; bodies are live-mutated each tick",
             "tier": "presentation",
             "properties": {
               "backgroundColor": {
@@ -268,7 +294,7 @@
             "type": "boolean",
             "default": true,
             "label": "Running",
-            "description": "running prop",
+            "description": "Whether the simulation ticks on mount",
             "tier": "presentation"
           },
           {
@@ -276,7 +302,7 @@
             "type": "number",
             "default": 1,
             "label": "Speed",
-            "description": "speed prop",
+            "description": "Simulation speed multiplier (cosmetic)",
             "tier": "presentation"
           },
           {
@@ -284,7 +310,7 @@
             "type": "number",
             "default": 600,
             "label": "Width",
-            "description": "width prop",
+            "description": "Canvas width in pixels",
             "tier": "presentation"
           }
         ],
@@ -292,7 +318,10 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "preset",
+            "running"
+          ]
         }
       }
     ],
@@ -303,7 +332,11 @@
         "primaryEntity": "SimulationCanvasItem"
       }
     ],
-    "emittedEvents": [],
+    "emittedEvents": [
+      "PAUSE",
+      "RESET",
+      "RESUME"
+    ],
     "listenedEvents": []
   }
 ]

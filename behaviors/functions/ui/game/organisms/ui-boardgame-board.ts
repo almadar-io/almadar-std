@@ -89,7 +89,7 @@ export interface StdUiBoardgameBoardConfig {
   tiles?: EntityRow[];
   /** Default: `0` */
   totalCount?: number;
-  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"name":"Token A","position":{"x":1,"y":1},"sprite":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png","team":"player","unitType":"token"},{"health":10,"id":"u2","maxHealth":10,"name":"Token B","position":{"x":2,"y":2},"sprite":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png","team":"enemy","unitType":"token"}]` */
+  /** Default: `[{"health":10,"id":"u1","maxHealth":10,"name":"Token A","position":{"x":1,"y":1},"sprite":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png","team":"player","unitType":"token"},{"health":10,"id":"u2","maxHealth":10,"name":"Token B","position":{"x":2,"y":2},"sprite":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png","team":"enemy","unitType":"token"}]` */
   units?: EntityRow[];
 }
 
@@ -580,7 +580,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'x': 2,
                   'y': 2,
                 },
-                'sprite': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png',
+                'sprite': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png',
                 'team': 'enemy',
                 'unitType': 'token',
               },

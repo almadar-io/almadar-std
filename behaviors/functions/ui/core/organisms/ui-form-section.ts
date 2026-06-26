@@ -83,8 +83,6 @@ export interface StdUiFormSectionConfig {
   gap?: 'sm' | 'md' | 'lg';
   /** Default: `[]` */
   hiddenCalculations?: EntityRow[];
-  /** Default: `{}` */
-  initialData?: unknown;
   /** Default: `false` */
   isLoading?: boolean;
   /** Default: `"vertical"` */
@@ -247,7 +245,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'type': 'FormSectionError',
           },
           'evaluationContext': {
-            'description': 'Context for S-expression evaluation - accepts flexible types from generated code',
+            'description': 'Context for S-expression evaluation',
             'label': 'Evaluation Context',
             'properties': {
               'entity': {
@@ -261,14 +259,20 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                 'type': 'string',
               },
               'globalVariables': {
+                'items': {
+                  'type': 'string',
+                },
                 'name': 'globalVariables',
                 'required': true,
-                'type': 'string',
+                'type': 'object',
               },
               'localVariables': {
+                'items': {
+                  'type': 'string',
+                },
                 'name': 'localVariables',
                 'required': false,
-                'type': 'string',
+                'type': 'object',
               },
             },
             'tier': 'presentation',
@@ -518,13 +522,6 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
             'label': 'Hidden Calculations',
             'tier': 'presentation',
             'type': '[FormSectionHiddenCalculationsItem]',
-          },
-          'initialData': {
-            'default': {},
-            'description': 'Initial form data',
-            'label': 'Initial Data',
-            'tier': 'presentation',
-            'type': 'json',
           },
           'isLoading': {
             'default': false,
@@ -1206,7 +1203,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'fields': '@config.fields',
                     'gap': '@config.gap',
                     'hiddenCalculations': '@config.hiddenCalculations',
-                    'initialData': '@config.initialData',
+                    'initialData': '@entity',
                     'isLoading': '@config.isLoading',
                     'layout': '@config.layout',
                     'mode': '@config.mode',
@@ -1254,7 +1251,7 @@ export function stdUiFormSectionFormSectionOrbital(params: StdUiFormSectionFormS
                     'fields': '@config.fields',
                     'gap': '@config.gap',
                     'hiddenCalculations': '@config.hiddenCalculations',
-                    'initialData': '@config.initialData',
+                    'initialData': '@payload.data',
                     'isLoading': '@config.isLoading',
                     'layout': '@config.layout',
                     'mode': '@config.mode',

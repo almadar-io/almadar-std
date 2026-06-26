@@ -70,18 +70,18 @@ export interface StdReminderSchedulerReminderSteppedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdReminderSchedulerConfig {
+  /** Default: `"dueAt"` */
+  dateField?: string;
+  /** Default: `false` */
+  enabled?: boolean;
   /** Default: `24` */
   offsetHours?: number;
   /** Default: `"info"` */
   severity?: string;
-  /** Default: `""` */
-  template?: string;
-  /** Default: `"dueAt"` */
-  dateField?: string;
   /** Default: `"ReminderRunLog"` */
   targetEntity?: string;
-  /** Default: `false` */
-  enabled?: boolean;
+  /** Default: `""` */
+  template?: string;
 }
 
 /**

@@ -70,10 +70,10 @@ export interface StdTagTaxonomyTagSelectedPayload {
 export interface StdTagTaxonomyConfig {
   /** Default: `false` */
   allowEdit?: boolean;
-  /** Default: `"Categories"` */
-  title?: string;
   /** Default: `"dense"` */
   tableLook?: 'dense' | 'spacious' | 'striped' | 'borderless' | 'card-rows';
+  /** Default: `"Categories"` */
+  title?: string;
 }
 
 /**

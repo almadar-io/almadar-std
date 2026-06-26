@@ -59,8 +59,8 @@ export interface StdUiWizardContainerConfig {
   className?: string;
   /** Default: `false` */
   compact?: boolean;
-  /** Default: `{}` */
-  currentStep?: unknown;
+  /** Default: `"Current Step"` */
+  currentStep?: string;
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;

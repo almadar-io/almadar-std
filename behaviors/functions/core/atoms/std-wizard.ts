@@ -83,12 +83,12 @@ export interface StdWizardWizardSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdWizardConfig {
-  /** Default: `"Wizard"` */
-  title?: string;
-  /** Default: `[{"label":"Details","fields":["title","description"],"key":"details","description":"Basic information","icon":"file-text"},{"key":"options","description":"Configure preferences","icon":"settings","label":"Options","fields":["category","priority"]},{"label":"Review","fields":["notes"],"icon":"check-circle","key":"review","description":"Confirm and submit"}]` */
-  steps?: EntityRow[];
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
+  /** Default: `[{"description":"Basic information","fields":["title","description"],"icon":"file-text","key":"details","label":"Details"},{"description":"Configure preferences","fields":["category","priority"],"icon":"settings","key":"options","label":"Options"},{"description":"Confirm and submit","fields":["notes"],"icon":"check-circle","key":"review","label":"Review"}]` */
+  steps?: EntityRow[];
+  /** Default: `"Wizard"` */
+  title?: string;
 }
 
 /**

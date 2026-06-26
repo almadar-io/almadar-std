@@ -57,7 +57,7 @@ export interface StdUiFeatureRendererConfig {
   cellSize?: number;
   /** Default: `{}` */
   featureColors?: Record<string, TraitConfig>;
-  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png","id":"f1","type":"resource","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png","id":"f2","type":"outpost","x":3,"y":1}]` */
+  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":1}]` */
   features?: EntityRow[];
   /** Default: `0` */
   offsetX?: number;

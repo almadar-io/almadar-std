@@ -57,7 +57,7 @@ export interface StdUiAnimatedGraphicConfig {
   fillColor?: string;
   /** Default: `"Height"` */
   height?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/chamber.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
   src?: unknown;
   /** Default: `"Stroke Color"` */
   strokeColor?: string;

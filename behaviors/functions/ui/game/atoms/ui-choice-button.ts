@@ -46,10 +46,14 @@ export interface StdUiChoiceButtonClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiChoiceButtonConfig {
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  assetUrl?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `false` */
   disabled?: boolean;
+  /** Default: `"circle"` */
+  icon?: unknown;
   /** Default: `0` */
   index?: number;
   /** Default: `false` */

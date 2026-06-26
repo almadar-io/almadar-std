@@ -53,10 +53,10 @@ export interface StdPaginationPagedItemLoadedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdPaginationConfig {
-  /** Default: `10` */
-  pageSize?: number;
   /** Default: `"PAGE"` */
   event?: string;
+  /** Default: `10` */
+  pageSize?: number;
 }
 
 /**

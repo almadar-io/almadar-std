@@ -41,7 +41,7 @@ export type StdUiDialogueBubbleEventKey = 'INIT';
 export interface StdUiDialogueBubbleConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/04_hero.png"` */
   portrait?: unknown;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';

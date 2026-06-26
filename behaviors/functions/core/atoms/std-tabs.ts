@@ -46,16 +46,16 @@ export interface StdTabsTabChangedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdTabsConfig {
-  /** Default: `[{"id":"overview","icon":"info","label":"Overview"},{"label":"Details","icon":"list","id":"details"},{"id":"settings","label":"Settings","icon":"settings"}]` */
-  tabs?: EntityRow[];
+  /** Default: `{"activeTab":"@entity.activeTab","items":"@entity.items","orientation":"@config.orientation","tabChangeEvent":"TAB_CHANGED","type":"tabs","variant":"@config.variant"}` */
+  bodyContent?: unknown;
   /** Default: `"overview"` */
   defaultTab?: string;
-  /** Default: `"default"` */
-  variant?: 'default' | 'pills' | 'underline';
   /** Default: `"horizontal"` */
   orientation?: 'horizontal' | 'vertical';
-  /** Default: `{"type":"tabs","variant":"@config.variant","tabChangeEvent":"TAB_CHANGED","items":"@entity.items","orientation":"@config.orientation","activeTab":"@entity.activeTab"}` */
-  bodyContent?: unknown;
+  /** Default: `[{"icon":"info","id":"overview","label":"Overview"},{"icon":"list","id":"details","label":"Details"},{"icon":"settings","id":"settings","label":"Settings"}]` */
+  tabs?: EntityRow[];
+  /** Default: `"default"` */
+  variant?: 'default' | 'pills' | 'underline';
 }
 
 /**

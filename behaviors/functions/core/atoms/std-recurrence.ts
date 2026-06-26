@@ -98,14 +98,14 @@ export interface StdRecurrenceRecurrenceSaveFailedPayload {
  * without modifying its state-machine topology.
  */
 export interface StdRecurrenceConfig {
-  /** Default: `"vertical-spacious"` */
-  timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
   /** Default: `"elevated"` */
   cardLook?: 'elevated' | 'flat-bordered' | 'borderless-divider' | 'ticket' | 'invoice' | 'chip' | 'tile-image-first';
-  /** Default: `"Schedule"` */
-  title?: string;
   /** Default: `["frequency","interval","startDate","endDate","endAfterCount"]` */
   formFields?: string[];
+  /** Default: `"vertical-spacious"` */
+  timelineLook?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
+  /** Default: `"Schedule"` */
+  title?: string;
 }
 
 /**
