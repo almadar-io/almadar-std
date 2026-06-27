@@ -124,7 +124,7 @@ orbital WorldMapBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
-          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -143,7 +143,7 @@ orbital WorldMapBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
-          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       HERO_SELECT -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?heroId))) team) "player")
@@ -151,7 +151,7 @@ orbital WorldMapBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
-          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       HERO_MOVE -> playing when (and (!= @entity.selectedHeroId "") (and (grid/in-bounds { x: ?toX, y: ?toY } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedHeroId))) position) { x: ?toX, y: ?toY }) @entity.movementRange) (and (== (object/get (array/find @entity.tiles (fn t (and (== (object/get @t x) ?toX) (== (object/get @t y) ?toY)))) passable) true) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?toX) (== (object/get (object/get @u position) y) ?toY))))) 0)))))
@@ -160,7 +160,7 @@ orbital WorldMapBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
-          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       BATTLE_ENCOUNTER -> playing when (and (!= @entity.selectedHeroId "") (== (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position) (object/get (array/find @entity.units (fn u (== @u.id ?defenderId))) position)) 1))
@@ -171,7 +171,7 @@ orbital WorldMapBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
-          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       FEATURE_ENTER -> playing
@@ -179,14 +179,14 @@ orbital WorldMapBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
-          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       TILE_CLICK -> playing
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
-          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
@@ -194,7 +194,7 @@ orbital WorldMapBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
-          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -210,7 +210,7 @@ orbital WorldMapBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
-          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -221,7 +221,7 @@ orbital WorldMapBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }
-          children: [ { type: isometric-canvas, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
