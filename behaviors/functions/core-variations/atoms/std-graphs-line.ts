@@ -31,6 +31,8 @@ const ALIAS = 'GraphsLine';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsLineConfig {
+  /** Default: `"line"` */
+  chartType?: unknown;
 }
 
 /**

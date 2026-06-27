@@ -31,6 +31,8 @@ const ALIAS = 'DetailDrawer';
  * without modifying its state-machine topology.
  */
 export interface StdDetailDrawerConfig {
+  /** Default: `"drawer"` */
+  detailSlot?: unknown;
 }
 
 /**

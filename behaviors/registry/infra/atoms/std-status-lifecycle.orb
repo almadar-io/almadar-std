@@ -41,16 +41,16 @@
             "enabled": {
               "default": false,
               "description": "Validate and apply status transitions against the configured table. Off by default.",
-              "label": "Enforce status lifecycle",
+              "label": "Enforce status lifecycle rules?",
               "synonyms": "lifecycle, statuses, states, stages, workflow, status transitions, enforce, enable, apply",
               "tier": "infra",
               "type": "boolean"
             },
             "initialStatus": {
               "default": "draft",
-              "description": "The status a new record starts in.",
-              "label": "Initial status",
-              "synonyms": "starting state, default status, first stage",
+              "description": "The status assigned when a record is first created.",
+              "label": "What status do new records start in?",
+              "synonyms": "starting state, default status, first stage, initial state",
               "tier": "domain",
               "type": "string"
             },
@@ -60,26 +60,26 @@
                 "active",
                 "archived"
               ],
-              "description": "The closed set of statuses a record can hold.",
+              "description": "The complete set of statuses a record can hold.",
               "items": {
                 "type": "string"
               },
-              "label": "Statuses",
+              "label": "What are the possible statuses?",
               "synonyms": "states, stages, phases, statuses, lifecycle, workflow steps",
               "tier": "domain",
               "type": "[string]"
             },
             "statusField": {
               "default": "status",
-              "description": "Which entity field this lifecycle drives. Defaults to 'status'; set it to bind any field (e.g. 'state', 'stage', 'phase').",
-              "label": "Status field",
+              "description": "Entity field this lifecycle drives (e.g. 'status', 'state', 'stage', 'phase').",
+              "label": "Which field holds the status?",
               "synonyms": "state field, stage field, status column, lifecycle field",
               "tier": "domain",
               "type": "string"
             },
             "targetEntity": {
               "default": "StatusRecord",
-              "description": "Entity name whose status field this lifecycle drives (e.g. 'Contract'). Defaults to the atom's own record so the standalone validates; rebind per composition.",
+              "description": "Entity name whose status field this lifecycle drives (e.g. 'Contract'). Rebind per composition.",
               "label": "Target entity",
               "tier": "internal",
               "type": "string"
@@ -99,7 +99,7 @@
                   "to": "archived"
                 }
               ],
-              "description": "The legal moves: each row is { from, to, event, label }. A requested move is applied only if it matches a row.",
+              "description": "Legal transitions as { from, to, event, label }. Only matching moves are applied.",
               "items": {
                 "properties": {
                   "event": {
@@ -125,7 +125,7 @@
                 },
                 "type": "object"
               },
-              "label": "Allowed transitions",
+              "label": "Which status moves are allowed?",
               "synonyms": "edges, allowed moves, status flow, workflow transitions",
               "tier": "domain",
               "type": "[TransitionSpec]"

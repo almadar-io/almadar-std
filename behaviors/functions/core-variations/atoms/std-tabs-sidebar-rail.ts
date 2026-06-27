@@ -31,6 +31,7 @@ const ALIAS = 'TabsSidebarRail';
  * without modifying its state-machine topology.
  */
 export interface StdTabsSidebarRailConfig {
+  /** Default: `{"align":"stretch","children":[{"align":"stretch","children":[{"activeTab":"@entity.activeTab","className":"px-2 gap-1","items":[{"icon":"home","id":"tab1","label":"Tab 1"},{"icon":"settings","id":"tab2","label":"Tab 2"},{"icon":"user","id":"tab3","label":"Tab 3"}],"orientation":"vertical","tabChangeEvent":"TAB_CHANGED","type":"tabs","variant":"pills"}],"className":"w-56 shrink-0 border-r bg-muted/30 py-3","direction":"vertical","gap":"none","type":"stack"},{"children":[],"className":"flex-1 min-w-0 p-card-md","direction":"vertical","gap":"md","type":"stack"}],"className":"min-h-[24rem] border rounded-md overflow-hidden","direction":"horizontal","gap":"none","type":"stack"}` */
   bodyContent?: unknown;
 }
 

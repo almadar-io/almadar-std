@@ -31,6 +31,7 @@ const ALIAS = 'CalendarWeekTimeline';
  * without modifying its state-machine topology.
  */
 export interface StdCalendarWeekTimelineConfig {
+  /** Default: `{"children":[{"align":"center","children":[{"align":"center","children":[{"name":"calendar","type":"icon"},{"content":"Week","type":"typography","variant":"h2"}],"direction":"horizontal","gap":"sm","type":"stack"},{"onSelect":"SELECT_DAY","selected":"@entity.selectedRange","type":"date-range-selector"}],"direction":"horizontal","gap":"md","justify":"between","type":"stack"},{"type":"divider"},{"className":"w-full","dayWindow":7,"events":"@payload.data","type":"calendar-grid"}],"direction":"vertical","gap":"md","type":"stack"}` */
   bodyContent?: unknown;
 }
 

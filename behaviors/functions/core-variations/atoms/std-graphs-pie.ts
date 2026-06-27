@@ -31,6 +31,8 @@ const ALIAS = 'GraphsPie';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsPieConfig {
+  /** Default: `"pie"` */
+  chartType?: unknown;
 }
 
 /**

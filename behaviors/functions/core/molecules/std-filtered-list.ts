@@ -31,6 +31,10 @@ const ALIAS = 'FilteredList';
  * without modifying its state-machine topology.
  */
 export interface StdFilteredListConfig {
+  /** Default: `"SEARCH"` */
+  event?: unknown;
+  /** Default: `"Search filtered items…"` */
+  placeholder?: unknown;
 }
 
 /**

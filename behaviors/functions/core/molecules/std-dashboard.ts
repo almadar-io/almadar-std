@@ -37,7 +37,10 @@ export type StdDashboardListenKey = 'BrowseItemLoaded';
  * without modifying its state-machine topology.
  */
 export interface StdDashboardConfig {
-  metrics?: TraitConfig;
+  /** Default: `[{"aggregation":"count","format":"number","icon":"list","label":"Total Items","variant":"primary"},{"aggregation":"count","filter":["fn","row",["=","@row.status","active"]],"format":"number","icon":"check-circle","label":"Active","variant":"success"},{"aggregation":"sum","field":"amount","format":"currency","icon":"dollar-sign","label":"Total Revenue","target":10000,"variant":"info"},{"aggregation":"avg","field":"units","format":"number","icon":"trending-up","label":"Avg Units","suffix":" units","variant":"default"}]` */
+  metrics?: unknown;
+  /** Default: `"Summary"` */
+  title?: unknown;
 }
 
 /**

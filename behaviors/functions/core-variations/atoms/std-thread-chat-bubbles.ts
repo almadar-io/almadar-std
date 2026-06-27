@@ -31,7 +31,10 @@ const ALIAS = 'ThreadChatBubbles';
  * without modifying its state-machine topology.
  */
 export interface StdThreadChatBubblesConfig {
+  /** Default: `{"children":[{"align":"center","children":[{"name":"@config.recipientName","size":"md","type":"avatar"},{"children":[{"content":"@config.recipientName","type":"typography","variant":"body","weight":"medium"},{"color":"muted","content":"Active now","type":"typography","variant":"caption"}],"className":"flex-1","direction":"vertical","gap":"xs","type":"stack"}],"className":"pb-md border-b border-[var(--color-border)]","direction":"horizontal","gap":"sm","type":"stack"},{"className":"flex-1 overflow-y-auto py-md","currentUser":"me","entity":"@payload.data","fields":[{"name":"content","variant":"body"},{"format":"date","name":"createdAt"}],"gap":"sm","senderField":"authorId","type":"data-list","variant":"message"},{"children":[{"entity":"@entity","fields":["content"],"mode":"edit","submitEvent":"REPLY","submitLabel":"Send","type":"form-section"}],"className":"mt-md border-t border-[var(--color-border)] pt-md","direction":"vertical","gap":"sm","type":"stack"}],"className":"w-full px-card-md py-section h-full","direction":"vertical","gap":"none","type":"stack"}` */
   bodyContent?: unknown;
+  /** Default: `"Alex Rivera"` */
+  recipientName?: unknown;
 }
 
 /**
