@@ -7,7 +7,38 @@
     "entities": [
       {
         "name": "RacingBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "lap",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "position",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "effects",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -16,21 +47,60 @@
         "name": "RacingBoardRender",
         "emittedEvents": [
           "TILE_CLICK",
-          "UNIT_CLICK"
+          "UNIT_CLICK",
+          "MOVE",
+          "LAP_COMPLETE",
+          "POSITION_UPDATE",
+          "RACE_END",
+          "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
           {
             "name": "TILE_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
             "tier": "essential"
           },
           {
             "name": "UNIT_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
             "tier": "essential"
+          },
+          {
+            "name": "MOVE",
+            "direction": "emit",
+            "description": "Emitted when a car moves to a new tile",
+            "tier": "essential"
+          },
+          {
+            "name": "LAP_COMPLETE",
+            "direction": "emit",
+            "description": "Emitted when a lap is completed",
+            "tier": "essential"
+          },
+          {
+            "name": "POSITION_UPDATE",
+            "direction": "emit",
+            "description": "Emitted when race position changes",
+            "tier": "essential"
+          },
+          {
+            "name": "RACE_END",
+            "direction": "emit",
+            "description": "Emitted when the race ends",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
+            "tier": "essential"
+          },
+          {
+            "name": "START",
+            "direction": "listen"
           },
           {
             "name": "INIT",
@@ -39,28 +109,313 @@
         ],
         "overridableConfigKeys": [
           {
-            "key": "activeFilters",
-            "type": "json",
-            "default": {},
-            "label": "Active Filters",
-            "description": "Active filters",
-            "tier": "presentation"
-          },
-          {
-            "key": "assetBaseUrl",
-            "type": "asset",
-            "default": "https://almadar-kflow-assets.web.app/shared/",
-            "label": "Asset Base Url",
-            "description": "Base URL prepended to manifest sprite paths",
-            "tier": "presentation"
-          },
-          {
             "key": "assetManifest",
-            "type": "string",
-            "default": "",
+            "type": "RacingBoardAssetManifest",
+            "default": {
+              "effects": {},
+              "features": {},
+              "terrains": {
+                "grass": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
+                "road": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                }
+              },
+              "units": {
+                "car_player": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "car_player",
+                  "dimension": "2d",
+                  "name": "car_player",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png"
+                },
+                "car_rival": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "car_rival",
+                  "dimension": "2d",
+                  "name": "car_rival",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png"
+                }
+              }
+            },
             "label": "Asset Manifest",
-            "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
-            "tier": "presentation"
+            "description": "Asset sprite manifest",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
           },
           {
             "key": "className",
@@ -68,14 +423,6 @@
             "default": "",
             "label": "Class Name",
             "description": "Additional CSS classes",
-            "tier": "presentation"
-          },
-          {
-            "key": "enableCamera",
-            "type": "boolean",
-            "default": true,
-            "label": "Enable Camera",
-            "description": "Enable camera pan/zoom controls",
             "tier": "presentation"
           },
           {
@@ -119,7 +466,57 @@
                 "assetUrl": {
                   "name": "assetUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "color": {
                   "name": "color",
@@ -139,7 +536,57 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "type": {
                   "name": "type",
@@ -174,23 +621,6 @@
             "tier": "presentation"
           },
           {
-            "key": "pageProp",
-            "type": "number",
-            "default": 0,
-            "label": "Page",
-            "description": "Current page number",
-            "synonyms": "page",
-            "tier": "presentation"
-          },
-          {
-            "key": "pageSize",
-            "type": "number",
-            "default": 0,
-            "label": "Page Size",
-            "description": "Number of items per page",
-            "tier": "presentation"
-          },
-          {
             "key": "scale",
             "type": "number",
             "default": 0.45,
@@ -199,501 +629,1222 @@
             "tier": "presentation"
           },
           {
-            "key": "searchValue",
-            "type": "string",
-            "default": "Search Value",
-            "label": "Search Value",
-            "description": "Current search query value",
-            "tier": "presentation"
-          },
-          {
-            "key": "selectedIds",
-            "type": "[string]",
-            "default": [],
-            "label": "Selected Ids",
-            "description": "Currently selected item IDs",
-            "tier": "presentation",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "key": "showMinimap",
-            "type": "boolean",
-            "default": true,
-            "label": "Show Minimap",
-            "description": "Show minimap overlay",
-            "tier": "presentation"
-          },
-          {
-            "key": "sortBy",
-            "type": "string",
-            "default": "Sort By",
-            "label": "Sort By",
-            "description": "Current sort field",
-            "tier": "presentation"
-          },
-          {
-            "key": "sortDirection",
-            "type": "string",
-            "default": "asc",
-            "label": "Sort Direction",
-            "description": "Current sort direction",
-            "tier": "presentation",
-            "enumValues": [
-              "asc",
-              "desc"
-            ]
-          },
-          {
             "key": "tiles",
             "type": "[RacingBoardTilesItem]",
             "default": [
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 0,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 1,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 2,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 3,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 4,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 5,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 6,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 7,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 0,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 1,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 2,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 3,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 4,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 5,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 6,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 7,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 0,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 1,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 2,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 3,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 4,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 5,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 6,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 7,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 0,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 1,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 2,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 3,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 4,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 5,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 6,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 7,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 0,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 1,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 2,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 3,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 4,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 5,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 6,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 7,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 0,
                 "y": 5
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 1,
                 "y": 5
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 2,
                 "y": 5
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 3,
                 "y": 5
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 4,
                 "y": 5
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 5,
                 "y": 5
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 6,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 7,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 0,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 1,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 2,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 3,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 4,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 5,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "grass",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/grass.png"
+                },
                 "x": 6,
                 "y": 6
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 7,
                 "y": 6
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 0,
                 "y": 7
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 1,
                 "y": 7
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 2,
                 "y": 7
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 3,
                 "y": 7
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 4,
                 "y": 7
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 5,
                 "y": 7
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 6,
                 "y": 7
               },
               {
                 "passable": true,
                 "terrain": "road",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "road",
+                  "dimension": "2d",
+                  "name": "road",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/terrain/road.png"
+                },
                 "x": 7,
                 "y": 7
               }
@@ -716,7 +1867,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "movementCost": {
                   "name": "movementCost",
@@ -736,7 +1937,57 @@
                 "terrainSprite": {
                   "name": "terrainSprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "tileType": {
                   "name": "tileType",
@@ -768,11 +2019,11 @@
             }
           },
           {
-            "key": "totalCount",
+            "key": "totalLaps",
             "type": "number",
-            "default": 0,
-            "label": "Total Count",
-            "description": "Total number of items",
+            "default": 3,
+            "label": "Total Laps",
+            "description": "Number of laps to complete",
             "tier": "presentation"
           },
           {
@@ -780,24 +2031,60 @@
             "type": "[RacingBoardUnitsItem]",
             "default": [
               {
+                "animation": "idle",
+                "frame": 0,
                 "id": "player",
                 "name": "Player",
                 "position": {
                   "x": 3,
                   "y": 0
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "car_player",
+                  "dimension": "2d",
+                  "name": "car_player",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_player.png"
+                },
                 "team": "player",
                 "unitType": "car"
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "id": "rival1",
                 "name": "Rival",
                 "position": {
                   "x": 4,
                   "y": 0
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "car_rival",
+                  "dimension": "2d",
+                  "name": "car_rival",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-racing-board/default/units/car_rival.png"
+                },
                 "team": "rival",
                 "unitType": "car"
               }
@@ -807,8 +2094,18 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "elevation": {
                   "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "frame": {
+                  "name": "frame",
                   "required": false,
                   "type": "number"
                 },
@@ -830,7 +2127,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "name": {
                   "name": "name",
@@ -874,12 +2221,112 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "spriteSheet": {
                   "name": "spriteSheet",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "team": {
                   "name": "team",
@@ -920,7 +2367,14 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "effects",
+            "lap",
+            "phase",
+            "position",
+            "result",
+            "units"
+          ]
         }
       }
     ],
@@ -932,6 +2386,11 @@
       }
     ],
     "emittedEvents": [
+      "LAP_COMPLETE",
+      "MOVE",
+      "PLAY_AGAIN",
+      "POSITION_UPDATE",
+      "RACE_END",
       "TILE_CLICK",
       "UNIT_CLICK"
     ],

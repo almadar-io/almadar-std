@@ -14,12 +14,34 @@ orbital IsometricCanvasOrbital {
     z : number
     terrain : string
     type : string
-    terrainSprite : asset
+    terrainSprite : IsometricCanvasTilesItemTerrainSprite
     passable : boolean
     movementCost : number
     tileType : string
     elevation : number
-    modelUrl : asset
+    modelUrl : IsometricCanvasTilesItemModelUrl
+  }
+  type IsometricCanvasTilesItemTerrainSprite = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type IsometricCanvasTilesItemModelUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
   }
   type IsometricCanvasUnitsItem = {
     id : string!
@@ -27,9 +49,9 @@ orbital IsometricCanvasOrbital {
     x : number
     y : number
     z : number
-    sprite : asset
-    spriteSheet : asset
-    modelUrl : asset
+    sprite : IsometricCanvasUnitsItemSprite
+    spriteSheet : IsometricCanvasUnitsItemSpriteSheet
+    modelUrl : IsometricCanvasUnitsItemModelUrl
     unitType : string
     heroId : string
     name : string
@@ -47,6 +69,39 @@ orbital IsometricCanvasOrbital {
     x : number!
     y : number!
   }
+  type IsometricCanvasUnitsItemSprite = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type IsometricCanvasUnitsItemSpriteSheet = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type IsometricCanvasUnitsItemModelUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
   type IsometricCanvasUnitsItemTraitsItem = {
     name : string!
     currentState : string!
@@ -63,10 +118,32 @@ orbital IsometricCanvasOrbital {
     y : number!
     z : number
     type : string!
-    sprite : asset
-    assetUrl : asset
+    sprite : IsometricCanvasFeaturesItemSprite
+    assetUrl : IsometricCanvasFeaturesItemAssetUrl
     color : string
     elevation : number
+  }
+  type IsometricCanvasFeaturesItemSprite = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type IsometricCanvasFeaturesItemAssetUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
   }
   type IsometricCanvasEffectsItem = {
     key : string!
@@ -87,10 +164,54 @@ orbital IsometricCanvasOrbital {
     y : number!
   }
   type IsometricCanvasAssetManifest = {
-    terrains : Map string string
-    units : Map string string
-    features : Map string string
-    effects : Map string string
+    terrains : Map string IsometricCanvasAssetManifestTerrainsValue
+    units : Map string IsometricCanvasAssetManifestUnitsValue
+    features : Map string IsometricCanvasAssetManifestFeaturesValue
+    effects : Map string IsometricCanvasAssetManifestEffectsValue
+  }
+  type IsometricCanvasAssetManifestTerrainsValue = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type IsometricCanvasAssetManifestUnitsValue = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type IsometricCanvasAssetManifestFeaturesValue = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type IsometricCanvasAssetManifestEffectsValue = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
   }
 
   entity IsometricCanvasItem [runtime] {
@@ -136,7 +257,6 @@ orbital IsometricCanvasOrbital {
           diamondTopY: @config.diamondTopY
           effectSpriteUrls: @config.effectSpriteUrls
           hasActiveEffects: @config.hasActiveEffects
-          assetBaseUrl: @config.assetBaseUrl
           assetManifest: @config.assetManifest
           type: isometric-canvas
         })
@@ -180,15 +300,15 @@ orbital IsometricCanvasOrbital {
         @label "Error"
         @description "Error state"
         @tier "presentation"
-      tiles : [IsometricCanvasTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 2, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 3, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 4, y: 0, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 1, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 2, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 3, y: 1, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 4, y: 1, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 2, y: 2, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 3, y: 2, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 4, y: 2, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 2, y: 3, terrain: "grass", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb" }, { x: 3, y: 3, terrain: "dirt", passable: true, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb" }, { x: 4, y: 3, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 0, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 1, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 2, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 3, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }, { x: 4, y: 4, terrain: "stone", passable: false, modelUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb" }]
+      tiles : [IsometricCanvasTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 2, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 3, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 4, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 1, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 1, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { x: 2, y: 1, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 3, y: 1, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 4, y: 1, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 2, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 2, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 2, y: 2, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { x: 3, y: 2, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 4, y: 2, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 3, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 3, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 2, y: 3, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 3, y: 3, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { x: 4, y: 3, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 2, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 3, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 4, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }]
         @label "Tiles"
         @description "--- Grid data ---"
         @tier "presentation"
-      units : [IsometricCanvasUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "worker", name: "Worker", team: player, health: 10, maxHealth: 10, modelUrl: "https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb" }, { id: "u2", position: { x: 3, y: 3 }, unitType: "guardian", name: "Guardian", team: enemy, health: 8, maxHealth: 10, modelUrl: "https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb" }]
+      units : [IsometricCanvasUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "worker", name: "Worker", team: player, health: 10, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb", role: "npc", category: "worker", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "3d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }, { id: "u2", position: { x: 3, y: 3 }, unitType: "guardian", name: "Guardian", team: enemy, health: 8, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb", role: "npc", category: "guardian", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "3d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }]
         @label "Units"
         @description "Array of units on the board"
         @tier "presentation"
-      features : [IsometricCanvasFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb" }, { id: "f2", x: 3, y: 1, type: "portal", assetUrl: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb" }]
+      features : [IsometricCanvasFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb", role: "decoration", category: "gold_mine", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" } }, { id: "f2", x: 3, y: 1, type: "portal", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb", role: "decoration", category: "portal", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "portal", thumbnailUrl: "" } }]
         @label "Features"
         @description "Array of features (resources, portals, buildings, etc.)"
         @tier "presentation"
@@ -268,13 +388,9 @@ orbital IsometricCanvasOrbital {
         @label "Has Active Effects"
         @description "Whether there are active effects — keeps RAF loop alive"
         @tier "presentation"
-      assetBaseUrl : asset = "https://almadar-kflow-assets.web.app/shared/"
-        @label "Asset Base Url"
-        @description "--- Remote asset loading ---"
-        @tier "presentation"
-      assetManifest : IsometricCanvasAssetManifest = { terrains: { grass: "isometric-dungeon/Isometric/dirt_E.png", dirt: "isometric-dungeon/Isometric/dirtTiles_E.png", stone: "isometric-dungeon/Isometric/stoneInset_E.png", forest: "isometric-dungeon/Isometric/planks_E.png", castle: "isometric-dungeon/Isometric/stoneTile_E.png" }, units: { worker: "units/worker.png", guardian: "units/guardian.png", scrapper: "units/scrapper.png", mender: "units/mender.png" }, features: { gold_mine: "world-map/gold_mine.png", portal: "world-map/portal_open.png", castle: "castle/resonator_citadel.png" }, effects: {} }
+      assetManifest : IsometricCanvasAssetManifest = { terrains: { grass: { url: "isometric-dungeon/Isometric/dirt_E.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, dirt: { url: "isometric-dungeon/Isometric/dirtTiles_E.png", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" }, stone: { url: "isometric-dungeon/Isometric/stoneInset_E.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, forest: { url: "isometric-dungeon/Isometric/planks_E.png", role: "tile", category: "forest", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "forest", thumbnailUrl: "" }, castle: { url: "isometric-dungeon/Isometric/stoneTile_E.png", role: "tile", category: "castle", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "castle", thumbnailUrl: "" } }, units: { worker: { url: "units/worker.png", role: "npc", category: "worker", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, guardian: { url: "units/guardian.png", role: "npc", category: "guardian", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, scrapper: { url: "units/scrapper.png", role: "npc", category: "scrapper", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "scrapper", thumbnailUrl: "" }, mender: { url: "units/mender.png", role: "npc", category: "mender", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "mender", thumbnailUrl: "" } }, features: { gold_mine: { url: "world-map/gold_mine.png", role: "decoration", category: "gold_mine", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" }, portal: { url: "world-map/portal_open.png", role: "decoration", category: "portal", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" }, castle: { url: "castle/resonator_citadel.png", role: "decoration", category: "castle", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "castle", thumbnailUrl: "" } }, effects: {} }
         @label "Asset Manifest"
-        @description "Manifest mapping entity keys to relative sprite paths. Combined with assetBaseUrl to produce full URLs. Used as a fallback when inline URLs and callbacks don't resolve."
+        @description "--- Remote asset loading ---"
         @tier "presentation"
     }
   }

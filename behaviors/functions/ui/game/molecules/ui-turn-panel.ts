@@ -39,7 +39,7 @@ export type StdUiTurnPanelEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiTurnPanelConfig {
-  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","disabled":false,"icon":"circle","label":"Label"},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","disabled":true,"icon":"circle","label":"Label 2"}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"disabled":false,"icon":"circle","label":"Label"},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"disabled":true,"icon":"circle","label":"Label 2"}]` */
   actions?: EntityRow[];
   /** Default: `"Heroes"` */
   activeTeam?: string;

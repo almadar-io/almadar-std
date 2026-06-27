@@ -39,7 +39,7 @@ export type StdUiActionPaletteEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionPaletteConfig {
-  /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name"},{"category":"Category 2","description":"Description 2","iconEmoji":"Icon Emoji 2","id":"Id 2","name":"Name 2"}]` */
+  /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","name":"Name"},{"category":"Category 2","description":"Description 2","iconEmoji":"Icon Emoji 2","iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id 2","name":"Name 2"}]` */
   actions?: EntityRow[];
   /** Default: `true` */
   allowDuplicates?: boolean;
@@ -133,6 +133,7 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                 'category': 'Category',
                 'description': 'Description',
                 'iconEmoji': 'Icon Emoji',
+                'iconUrl': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
                 'id': 'Id',
                 'name': 'Name',
               },
@@ -140,6 +141,7 @@ export function stdUiActionPaletteActionPaletteOrbital(params: StdUiActionPalett
                 'category': 'Category 2',
                 'description': 'Description 2',
                 'iconEmoji': 'Icon Emoji 2',
+                'iconUrl': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
                 'id': 'Id 2',
                 'name': 'Name 2',
               },

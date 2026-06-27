@@ -7,7 +7,38 @@
     "entities": [
       {
         "name": "SportsBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "homeScore",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "awayScore",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "effects",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -16,20 +47,34 @@
         "name": "SportsBoardRender",
         "emittedEvents": [
           "TILE_CLICK",
-          "UNIT_CLICK"
+          "UNIT_CLICK",
+          "GOAL",
+          "RESET"
         ],
         "listenedEvents": [],
         "events": [
           {
             "name": "TILE_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
             "tier": "essential"
           },
           {
             "name": "UNIT_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+            "tier": "essential"
+          },
+          {
+            "name": "GOAL",
+            "direction": "emit",
+            "description": "Fired when a goal is scored; team is 'player' or 'enemy'",
+            "tier": "essential"
+          },
+          {
+            "name": "RESET",
+            "direction": "emit",
+            "description": "Resets the match to initial state",
             "tier": "essential"
           },
           {
@@ -48,19 +93,384 @@
           },
           {
             "key": "assetBaseUrl",
-            "type": "asset",
+            "type": "Asset",
             "default": "https://almadar-kflow-assets.web.app/shared/",
             "label": "Asset Base Url",
             "description": "Base URL prepended to asset paths",
-            "tier": "presentation"
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
           },
           {
             "key": "assetManifest",
-            "type": "string",
-            "default": "",
+            "type": "SportsBoardAssetManifest",
+            "default": {
+              "effects": {},
+              "features": {
+                "ball": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ball",
+                  "dimension": "2d",
+                  "name": "ball",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/ball_soccer.png"
+                },
+                "goal": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "goal",
+                  "dimension": "2d",
+                  "name": "goal",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                }
+              },
+              "terrains": {
+                "court": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "court",
+                  "dimension": "2d",
+                  "name": "court",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                }
+              },
+              "units": {
+                "characterBlue": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "characterBlue",
+                  "dimension": "2d",
+                  "name": "characterBlue",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png"
+                },
+                "characterGreen": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "characterGreen",
+                  "dimension": "2d",
+                  "name": "characterGreen",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png"
+                }
+              }
+            },
             "label": "Asset Manifest",
-            "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
-            "tier": "presentation"
+            "description": "Asset sprite manifest",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
           },
           {
             "key": "className",
@@ -68,14 +478,6 @@
             "default": "",
             "label": "Class Name",
             "description": "Additional CSS classes",
-            "tier": "presentation"
-          },
-          {
-            "key": "enableCamera",
-            "type": "boolean",
-            "default": true,
-            "label": "Enable Camera",
-            "description": "Enable camera pan/zoom controls",
             "tier": "presentation"
           },
           {
@@ -113,49 +515,133 @@
             "default": [
               {
                 "id": "goal-l1",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "goal_net",
+                  "dimension": "2d",
+                  "name": "goal_net",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                },
                 "type": "goal",
                 "x": 0,
                 "y": 1
               },
               {
                 "id": "goal-l2",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "goal_net",
+                  "dimension": "2d",
+                  "name": "goal_net",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                },
                 "type": "goal",
                 "x": 0,
                 "y": 2
               },
               {
                 "id": "goal-l3",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "goal_net",
+                  "dimension": "2d",
+                  "name": "goal_net",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                },
                 "type": "goal",
                 "x": 0,
                 "y": 3
               },
               {
                 "id": "goal-r1",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "goal_net",
+                  "dimension": "2d",
+                  "name": "goal_net",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                },
                 "type": "goal",
                 "x": 7,
                 "y": 1
               },
               {
                 "id": "goal-r2",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "goal_net",
+                  "dimension": "2d",
+                  "name": "goal_net",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                },
                 "type": "goal",
                 "x": 7,
                 "y": 2
               },
               {
                 "id": "goal-r3",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "goal_net",
+                  "dimension": "2d",
+                  "name": "goal_net",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                },
                 "type": "goal",
                 "x": 7,
                 "y": 3
               },
               {
                 "id": "ball",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/ball_soccer.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ball_soccer",
+                  "dimension": "2d",
+                  "name": "ball_soccer",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/ball_soccer.png"
+                },
                 "type": "ball",
                 "x": 3,
                 "y": 2
@@ -169,7 +655,57 @@
                 "assetUrl": {
                   "name": "assetUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "color": {
                   "name": "color",
@@ -189,7 +725,57 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "type": {
                   "name": "type",
@@ -268,14 +854,6 @@
             }
           },
           {
-            "key": "showMinimap",
-            "type": "boolean",
-            "default": false,
-            "label": "Show Minimap",
-            "description": "Show minimap overlay",
-            "tier": "presentation"
-          },
-          {
             "key": "sortBy",
             "type": "string",
             "default": "Sort By",
@@ -302,280 +880,760 @@
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 0,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 1,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 2,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 3,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 4,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 5,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 6,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 7,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 0,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 1,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 2,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 3,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 4,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 5,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 6,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 7,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 0,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 1,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 2,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 3,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 4,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 5,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 6,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 7,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 0,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 1,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 2,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 3,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 4,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 5,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 6,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 7,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 0,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 1,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 2,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 3,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 4,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 5,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 6,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "court",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "groundGrass_mown",
+                  "dimension": "2d",
+                  "name": "groundGrass_mown",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                },
                 "x": 7,
                 "y": 4
               }
@@ -598,7 +1656,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "movementCost": {
                   "name": "movementCost",
@@ -618,7 +1726,57 @@
                 "terrainSprite": {
                   "name": "terrainSprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "tileType": {
                   "name": "tileType",
@@ -662,6 +1820,8 @@
             "type": "[SportsBoardUnitsItem]",
             "default": [
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "g1",
                 "maxHealth": 10,
@@ -670,11 +1830,29 @@
                   "x": 1,
                   "y": 2
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "characterGreen",
+                  "dimension": "2d",
+                  "name": "characterGreen",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png"
+                },
                 "team": "player",
                 "unitType": "player"
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "g2",
                 "maxHealth": 10,
@@ -683,11 +1861,29 @@
                   "x": 2,
                   "y": 1
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "characterGreen",
+                  "dimension": "2d",
+                  "name": "characterGreen",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png"
+                },
                 "team": "player",
                 "unitType": "player"
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "g3",
                 "maxHealth": 10,
@@ -696,11 +1892,29 @@
                   "x": 3,
                   "y": 2
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "characterGreen",
+                  "dimension": "2d",
+                  "name": "characterGreen",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png"
+                },
                 "team": "player",
                 "unitType": "player"
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "g4",
                 "maxHealth": 10,
@@ -709,11 +1923,29 @@
                   "x": 2,
                   "y": 3
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "characterGreen",
+                  "dimension": "2d",
+                  "name": "characterGreen",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png"
+                },
                 "team": "player",
                 "unitType": "player"
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "b1",
                 "maxHealth": 10,
@@ -722,11 +1954,29 @@
                   "x": 6,
                   "y": 2
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "characterBlue",
+                  "dimension": "2d",
+                  "name": "characterBlue",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png"
+                },
                 "team": "enemy",
                 "unitType": "player"
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "b2",
                 "maxHealth": 10,
@@ -735,11 +1985,29 @@
                   "x": 5,
                   "y": 1
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "characterBlue",
+                  "dimension": "2d",
+                  "name": "characterBlue",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png"
+                },
                 "team": "enemy",
                 "unitType": "player"
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "b3",
                 "maxHealth": 10,
@@ -748,11 +2016,29 @@
                   "x": 4,
                   "y": 2
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "characterBlue",
+                  "dimension": "2d",
+                  "name": "characterBlue",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png"
+                },
                 "team": "enemy",
                 "unitType": "player"
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "b4",
                 "maxHealth": 10,
@@ -761,7 +2047,23 @@
                   "x": 5,
                   "y": 3
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "characterBlue",
+                  "dimension": "2d",
+                  "name": "characterBlue",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png"
+                },
                 "team": "enemy",
                 "unitType": "player"
               }
@@ -771,6 +2073,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "elevation": {
                   "name": "elevation",
                   "required": false,
@@ -785,6 +2092,11 @@
                     "enemy",
                     "neutral"
                   ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
                 },
                 "health": {
                   "name": "health",
@@ -809,7 +2121,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "name": {
                   "name": "name",
@@ -853,12 +2215,112 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "spriteSheet": {
                   "name": "spriteSheet",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "team": {
                   "name": "team",
@@ -932,7 +2394,14 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "awayScore",
+            "effects",
+            "homeScore",
+            "phase",
+            "selectedUnitId",
+            "units"
+          ]
         }
       }
     ],
@@ -944,6 +2413,8 @@
       }
     ],
     "emittedEvents": [
+      "GOAL",
+      "RESET",
       "TILE_CLICK",
       "UNIT_CLICK"
     ],

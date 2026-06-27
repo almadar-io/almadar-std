@@ -182,8 +182,58 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                 },
                 'iconUrl': {
                   'name': 'iconUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
                   'required': false,
-                  'type': 'string',
+                  'type': 'object',
                 },
                 'id': {
                   'name': 'id',
@@ -316,8 +366,58 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                 },
                 'iconUrl': {
                   'name': 'iconUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
                   'required': false,
-                  'type': 'string',
+                  'type': 'object',
                 },
                 'id': {
                   'name': 'id',

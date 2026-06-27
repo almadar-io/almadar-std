@@ -68,7 +68,7 @@ export interface StdUiSequenceBarConfig {
   size?: 'sm' | 'md' | 'lg';
   /** Default: `[]` */
   slotFeedback?: string[];
-  /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name"},{"category":"Category 2","description":"Description 2","iconEmoji":"Icon Emoji 2","id":"Id 2","name":"Name 2"}]` */
+  /** Default: `[{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","name":"Name"},{"category":"Category 2","description":"Description 2","iconEmoji":"Icon Emoji 2","iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id 2","name":"Name 2"}]` */
   slots?: EntityRow[];
 }
 
@@ -226,6 +226,7 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                 'category': 'Category',
                 'description': 'Description',
                 'iconEmoji': 'Icon Emoji',
+                'iconUrl': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
                 'id': 'Id',
                 'name': 'Name',
               },
@@ -233,6 +234,7 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                 'category': 'Category 2',
                 'description': 'Description 2',
                 'iconEmoji': 'Icon Emoji 2',
+                'iconUrl': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
                 'id': 'Id 2',
                 'name': 'Name 2',
               },
@@ -320,7 +322,7 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                   },
                   {
                     'name': 'iconUrl',
-                    'type': 'json',
+                    'type': 'asset',
                   },
                   {
                     'name': 'stateMachine',
@@ -397,7 +399,7 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
                     },
                     {
                       'name': 'iconUrl',
-                      'type': 'json',
+                      'type': 'asset',
                     },
                     {
                       'name': 'stateMachine',

@@ -48,8 +48,8 @@ export interface StdUiGameCanvas2dTickPayload {
 export interface StdUiGameCanvas2dConfig {
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
   assetBaseUrl?: unknown;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
-  backgroundImage?: unknown;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
+  backgroundImage?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `"Draw Event"` */

@@ -47,7 +47,7 @@ export interface StdUiCardHandCardClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCardHandConfig {
-  /** Default: `[{"attack":1,"cost":1,"defense":1,"disabled":false,"iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","title":"Title"},{"attack":2,"cost":2,"defense":2,"disabled":true,"iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id 2","title":"Title 2"}]` */
+  /** Default: `[{"attack":1,"cost":1,"defense":1,"disabled":false,"iconUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"id":"Id","title":"Title"},{"attack":2,"cost":2,"defense":2,"disabled":true,"iconUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"id":"Id 2","title":"Title 2"}]` */
   cards?: EntityRow[];
   /** Default: `""` */
   className?: string;

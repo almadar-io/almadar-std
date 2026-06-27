@@ -39,7 +39,7 @@ export type StdUiActionTileEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiActionTileConfig {
-  /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","id":"Id","name":"Name"}` */
+  /** Default: `{"category":"Category","description":"Description","iconEmoji":"Icon Emoji","iconUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","id":"Id","name":"Name"}` */
   action?: EntityRow;
   /** Default: `{}` */
   activeFilters?: unknown;
@@ -147,6 +147,7 @@ export function stdUiActionTileActionTileOrbital(params: StdUiActionTileActionTi
               'category': 'Category',
               'description': 'Description',
               'iconEmoji': 'Icon Emoji',
+              'iconUrl': 'https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png',
               'id': 'Id',
               'name': 'Name',
             },

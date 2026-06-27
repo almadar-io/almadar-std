@@ -7,7 +7,28 @@
     "entities": [
       {
         "name": "SokobanBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "moves",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "boxesDone",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "effects",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -48,19 +69,380 @@
           },
           {
             "key": "assetBaseUrl",
-            "type": "asset",
+            "type": "Asset",
             "default": "https://almadar-kflow-assets.web.app/shared/",
             "label": "Asset Base Url",
             "description": "Base URL prepended to manifest sprite paths",
-            "tier": "presentation"
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
           },
           {
             "key": "assetManifest",
-            "type": "string",
-            "default": "",
+            "type": "SokobanBoardAssetManifest",
+            "default": {
+              "effects": {},
+              "features": {
+                "crate": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "crate",
+                  "dimension": "2d",
+                  "name": "crate",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png"
+                }
+              },
+              "terrains": {
+                "floor": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
+                "target": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "target",
+                  "dimension": "2d",
+                  "name": "target",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png"
+                },
+                "wall": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                }
+              },
+              "units": {
+                "pusher": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "pusher",
+                  "dimension": "2d",
+                  "name": "pusher",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/units/pusher.png"
+                }
+              }
+            },
             "label": "Asset Manifest",
-            "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
-            "tier": "presentation"
+            "description": "Asset sprite manifest",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
           },
           {
             "key": "className",
@@ -113,21 +495,57 @@
             "default": [
               {
                 "id": "crate1",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "crate",
+                  "dimension": "2d",
+                  "name": "crate",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png"
+                },
                 "type": "crate",
                 "x": 2,
                 "y": 1
               },
               {
                 "id": "crate2",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "crate",
+                  "dimension": "2d",
+                  "name": "crate",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png"
+                },
                 "type": "crate",
                 "x": 2,
                 "y": 3
               },
               {
                 "id": "crate3",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "crate",
+                  "dimension": "2d",
+                  "name": "crate",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/features/crate.png"
+                },
                 "type": "crate",
                 "x": 2,
                 "y": 5
@@ -141,7 +559,57 @@
                 "assetUrl": {
                   "name": "assetUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "color": {
                   "name": "color",
@@ -161,7 +629,57 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "type": {
                   "name": "type",
@@ -274,343 +792,931 @@
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 1,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 2,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 3,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 4,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 5,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "target",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "target",
+                  "dimension": "2d",
+                  "name": "target",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png"
+                },
                 "x": 1,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 2,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 3,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 4,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 5,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 1,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 2,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 3,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 4,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 5,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "target",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "target",
+                  "dimension": "2d",
+                  "name": "target",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png"
+                },
                 "x": 1,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 2,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 3,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 4,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 5,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 1,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 2,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 3,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 4,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 5,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "target",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "target",
+                  "dimension": "2d",
+                  "name": "target",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/target.png"
+                },
                 "x": 1,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 2,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 3,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 4,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/floor.png"
+                },
                 "x": 5,
                 "y": 5
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 5
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 1,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 2,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 3,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 4,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 5,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 6
               }
@@ -633,7 +1739,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "movementCost": {
                   "name": "movementCost",
@@ -653,7 +1809,57 @@
                 "terrainSprite": {
                   "name": "terrainSprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "tileType": {
                   "name": "tileType",
@@ -697,6 +1903,8 @@
             "type": "[SokobanBoardUnitsItem]",
             "default": [
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "pusher",
                 "maxHealth": 10,
@@ -705,7 +1913,23 @@
                   "x": 4,
                   "y": 2
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/units/pusher.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "pusher",
+                  "dimension": "2d",
+                  "name": "pusher",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-sokoban-board/default/units/pusher.png"
+                },
                 "team": "player",
                 "unitType": "pusher"
               }
@@ -715,6 +1939,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "elevation": {
                   "name": "elevation",
                   "required": false,
@@ -729,6 +1958,11 @@
                     "enemy",
                     "neutral"
                   ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
                 },
                 "health": {
                   "name": "health",
@@ -753,7 +1987,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "name": {
                   "name": "name",
@@ -797,12 +2081,112 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "spriteSheet": {
                   "name": "spriteSheet",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "team": {
                   "name": "team",
@@ -876,7 +2260,12 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "boxesDone",
+            "effects",
+            "moves",
+            "units"
+          ]
         }
       }
     ],

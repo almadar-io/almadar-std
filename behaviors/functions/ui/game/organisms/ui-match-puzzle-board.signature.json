@@ -7,7 +7,23 @@
     "entities": [
       {
         "name": "MatchPuzzleBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "moves",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "effects",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -23,13 +39,13 @@
           {
             "name": "TILE_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
             "tier": "essential"
           },
           {
             "name": "UNIT_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
             "tier": "essential"
           },
           {
@@ -48,19 +64,415 @@
           },
           {
             "key": "assetBaseUrl",
-            "type": "asset",
+            "type": "Asset",
             "default": "https://almadar-kflow-assets.web.app/shared/",
             "label": "Asset Base Url",
             "description": "Base URL prepended to manifest sprite paths",
-            "tier": "presentation"
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
           },
           {
             "key": "assetManifest",
-            "type": "string",
-            "default": "",
+            "type": "MatchPuzzleBoardAssetManifest",
+            "default": {
+              "effects": {
+                "spark": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "8:1",
+                  "category": "spark",
+                  "dimension": "2d",
+                  "name": "spark",
+                  "role": "effect",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png"
+                }
+              },
+              "features": {
+                "blocker": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "blocker",
+                  "dimension": "2d",
+                  "name": "blocker",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/blocker.png"
+                },
+                "powerup": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "powerup",
+                  "dimension": "2d",
+                  "name": "powerup",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/powerup.png"
+                }
+              },
+              "terrains": {
+                "gem_blue": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_blue",
+                  "dimension": "2d",
+                  "name": "gem_blue",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png"
+                },
+                "gem_green": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_green",
+                  "dimension": "2d",
+                  "name": "gem_green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png"
+                },
+                "gem_purple": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_purple",
+                  "dimension": "2d",
+                  "name": "gem_purple",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png"
+                },
+                "gem_red": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_red",
+                  "dimension": "2d",
+                  "name": "gem_red",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png"
+                },
+                "gem_yellow": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_yellow",
+                  "dimension": "2d",
+                  "name": "gem_yellow",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png"
+                }
+              },
+              "units": {}
+            },
             "label": "Asset Manifest",
-            "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
-            "tier": "presentation"
+            "description": "Asset sprite manifest — terrains/units/features/effects maps",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
           },
           {
             "key": "className",
@@ -68,14 +480,6 @@
             "default": "",
             "label": "Class Name",
             "description": "Additional CSS classes",
-            "tier": "presentation"
-          },
-          {
-            "key": "enableCamera",
-            "type": "boolean",
-            "default": false,
-            "label": "Enable Camera",
-            "description": "Enable camera pan/zoom controls",
             "tier": "presentation"
           },
           {
@@ -113,21 +517,57 @@
             "default": [
               {
                 "id": "f1",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/powerup.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "powerup",
+                  "dimension": "2d",
+                  "name": "powerup",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/powerup.png"
+                },
                 "type": "powerup",
                 "x": 2,
                 "y": 2
               },
               {
                 "id": "f2",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/blocker.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "blocker",
+                  "dimension": "2d",
+                  "name": "blocker",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/blocker.png"
+                },
                 "type": "blocker",
                 "x": 3,
                 "y": 3
               },
               {
                 "id": "f3",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/blocker.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "blocker",
+                  "dimension": "2d",
+                  "name": "blocker",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/features/blocker.png"
+                },
                 "type": "blocker",
                 "x": 4,
                 "y": 4
@@ -141,7 +581,57 @@
                 "assetUrl": {
                   "name": "assetUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "color": {
                   "name": "color",
@@ -161,7 +651,57 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "type": {
                   "name": "type",
@@ -240,14 +780,6 @@
             }
           },
           {
-            "key": "showMinimap",
-            "type": "boolean",
-            "default": false,
-            "label": "Show Minimap",
-            "description": "Show minimap overlay",
-            "tier": "presentation"
-          },
-          {
             "key": "sortBy",
             "type": "string",
             "default": "Sort By",
@@ -272,177 +804,527 @@
             "type": "[MatchPuzzleBoardTilesItem]",
             "default": [
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_red",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_red",
+                  "dimension": "2d",
+                  "name": "gem_red",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png"
+                },
                 "x": 0,
                 "y": 0
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_blue",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_blue",
+                  "dimension": "2d",
+                  "name": "gem_blue",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png"
+                },
                 "x": 1,
                 "y": 0
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_green",
+                  "dimension": "2d",
+                  "name": "gem_green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png"
+                },
                 "x": 2,
                 "y": 0
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_yellow",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_yellow",
+                  "dimension": "2d",
+                  "name": "gem_yellow",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png"
+                },
                 "x": 3,
                 "y": 0
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_purple",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_purple",
+                  "dimension": "2d",
+                  "name": "gem_purple",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png"
+                },
                 "x": 4,
                 "y": 0
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_blue",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_blue",
+                  "dimension": "2d",
+                  "name": "gem_blue",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png"
+                },
                 "x": 0,
                 "y": 1
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_green",
+                  "dimension": "2d",
+                  "name": "gem_green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png"
+                },
                 "x": 1,
                 "y": 1
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_yellow",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_yellow",
+                  "dimension": "2d",
+                  "name": "gem_yellow",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png"
+                },
                 "x": 2,
                 "y": 1
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_purple",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_purple",
+                  "dimension": "2d",
+                  "name": "gem_purple",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png"
+                },
                 "x": 3,
                 "y": 1
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_red",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_red",
+                  "dimension": "2d",
+                  "name": "gem_red",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png"
+                },
                 "x": 4,
                 "y": 1
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_green",
+                  "dimension": "2d",
+                  "name": "gem_green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png"
+                },
                 "x": 0,
                 "y": 2
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_yellow",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_yellow",
+                  "dimension": "2d",
+                  "name": "gem_yellow",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png"
+                },
                 "x": 1,
                 "y": 2
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_red",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_red",
+                  "dimension": "2d",
+                  "name": "gem_red",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png"
+                },
                 "x": 2,
                 "y": 2
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_blue",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_blue",
+                  "dimension": "2d",
+                  "name": "gem_blue",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png"
+                },
                 "x": 3,
                 "y": 2
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_green",
+                  "dimension": "2d",
+                  "name": "gem_green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png"
+                },
                 "x": 4,
                 "y": 2
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_purple",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_purple",
+                  "dimension": "2d",
+                  "name": "gem_purple",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png"
+                },
                 "x": 0,
                 "y": 3
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_red",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_red",
+                  "dimension": "2d",
+                  "name": "gem_red",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png"
+                },
                 "x": 1,
                 "y": 3
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_blue",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_blue",
+                  "dimension": "2d",
+                  "name": "gem_blue",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png"
+                },
                 "x": 2,
                 "y": 3
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_green",
+                  "dimension": "2d",
+                  "name": "gem_green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_green.png"
+                },
                 "x": 3,
                 "y": 3
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_yellow",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_yellow",
+                  "dimension": "2d",
+                  "name": "gem_yellow",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png"
+                },
                 "x": 4,
                 "y": 3
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_purple",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_purple",
+                  "dimension": "2d",
+                  "name": "gem_purple",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png"
+                },
                 "x": 0,
                 "y": 4
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_purple",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_purple",
+                  "dimension": "2d",
+                  "name": "gem_purple",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_purple.png"
+                },
                 "x": 1,
                 "y": 4
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_yellow",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_yellow",
+                  "dimension": "2d",
+                  "name": "gem_yellow",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_yellow.png"
+                },
                 "x": 2,
                 "y": 4
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_red",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_red",
+                  "dimension": "2d",
+                  "name": "gem_red",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_red.png"
+                },
                 "x": 3,
                 "y": 4
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "passable": true,
                 "terrain": "gem_blue",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gem_blue",
+                  "dimension": "2d",
+                  "name": "gem_blue",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-match-puzzle-board/default/terrain/gem_blue.png"
+                },
                 "x": 4,
                 "y": 4
               }
@@ -452,8 +1334,18 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "elevation": {
                   "name": "elevation",
+                  "required": false,
+                  "type": "number"
+                },
+                "frame": {
+                  "name": "frame",
                   "required": false,
                   "type": "number"
                 },
@@ -465,7 +1357,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "movementCost": {
                   "name": "movementCost",
@@ -485,7 +1427,57 @@
                 "terrainSprite": {
                   "name": "terrainSprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "tileType": {
                   "name": "tileType",
@@ -533,6 +1525,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "elevation": {
                   "name": "elevation",
                   "required": false,
@@ -547,6 +1544,11 @@
                     "enemy",
                     "neutral"
                   ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
                 },
                 "health": {
                   "name": "health",
@@ -571,7 +1573,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "name": {
                   "name": "name",
@@ -615,12 +1667,112 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "spriteSheet": {
                   "name": "spriteSheet",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "team": {
                   "name": "team",
@@ -694,7 +1846,11 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "effects",
+            "moves",
+            "score"
+          ]
         }
       }
     ],

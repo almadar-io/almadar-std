@@ -91,7 +91,7 @@ export interface StdUiSequencerBoardConfig {
   /** Default: `"Put the steps in the right order to start the day right."` */
   description?: string;
   /** Default: `""` */
-  headerImage?: unknown;
+  headerImage?: EntityRow;
   /** Default: `"You always brush your teeth before breakfast."` */
   hint?: string;
   /** Default: `3` */
@@ -208,8 +208,58 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                 },
                 'iconUrl': {
                   'name': 'iconUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
                   'required': false,
-                  'type': 'string',
+                  'type': 'object',
                 },
                 'id': {
                   'name': 'id',
@@ -265,7 +315,57 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
           },
           {
             'name': 'headerImage',
-            'type': 'string',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
+            'type': 'object',
           },
           {
             'default': 0,
@@ -355,8 +455,58 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                 },
                 'iconUrl': {
                   'name': 'iconUrl',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
                   'required': false,
-                  'type': 'string',
+                  'type': 'object',
                 },
                 'id': {
                   'name': 'id',
@@ -408,8 +558,58 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
             'default': '',
             'description': 'Optional banner image shown at the top of the board.',
             'label': 'Header Image',
+            'properties': {
+              'animations': {
+                'items': {
+                  'type': 'string',
+                },
+                'name': 'animations',
+                'required': false,
+                'type': 'array',
+              },
+              'aspect': {
+                'name': 'aspect',
+                'required': false,
+                'type': 'string',
+              },
+              'category': {
+                'name': 'category',
+                'required': false,
+                'type': 'string',
+              },
+              'dimension': {
+                'name': 'dimension',
+                'required': false,
+                'type': 'string',
+              },
+              'name': {
+                'name': 'name',
+                'required': false,
+                'type': 'string',
+              },
+              'role': {
+                'name': 'role',
+                'required': false,
+                'type': 'string',
+              },
+              'style': {
+                'name': 'style',
+                'required': false,
+                'type': 'string',
+              },
+              'thumbnailUrl': {
+                'name': 'thumbnailUrl',
+                'required': false,
+                'type': 'string',
+              },
+              'url': {
+                'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+            },
             'tier': 'presentation',
-            'type': 'asset',
+            'type': 'Asset',
           },
           'hint': {
             'default': 'You always brush your teeth before breakfast.',

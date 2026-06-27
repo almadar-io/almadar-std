@@ -43,7 +43,7 @@ export interface StdUiHealthPanelConfig {
   className?: string;
   /** Default: `75` */
   current?: number;
-  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","icon":"circle","label":"Label","variant":"buff"},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png","icon":"circle","label":"Label 2","variant":"debuff"}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"icon":"circle","label":"Label","variant":"buff"},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"icon":"circle","label":"Label 2","variant":"debuff"}]` */
   effects?: EntityRow[];
   /** Default: `"Player HP"` */
   label?: string;

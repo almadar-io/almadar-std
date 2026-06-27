@@ -77,8 +77,8 @@ export interface StdUiSpriteConfig {
   rotation?: number;
   /** Default: `1` */
   scale?: number;
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/isometric-blocks/Spritesheet/allTiles_sheet.png"` */
-  spritesheet?: unknown;
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
+  spritesheet?: EntityRow;
   /** Default: `0` */
   x?: number;
   /** Default: `0` */

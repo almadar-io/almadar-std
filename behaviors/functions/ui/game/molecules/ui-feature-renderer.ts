@@ -57,7 +57,7 @@ export interface StdUiFeatureRendererConfig {
   cellSize?: number;
   /** Default: `{}` */
   featureColors?: Record<string, TraitConfig>;
-  /** Default: `[{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb","id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb","id":"f2","type":"portal","x":3,"y":1}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"gold_mine","dimension":"3d","name":"gold_mine","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb"},"id":"f1","type":"gold_mine","x":2,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"portal","dimension":"3d","name":"portal","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb"},"id":"f2","type":"portal","x":3,"y":1}]` */
   features?: EntityRow[];
   /** Default: `0` */
   offsetX?: number;
