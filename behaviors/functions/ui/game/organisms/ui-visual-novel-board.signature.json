@@ -17,6 +17,11 @@
             "name": "currentNodeId",
             "type": "string",
             "required": false
+          },
+          {
+            "name": "currentNode",
+            "type": "object",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -35,7 +40,7 @@
           {
             "name": "CHOOSE",
             "direction": "emit",
-            "description": "Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice",
+            "description": "Emits UI:{choiceEvent} with {choice} when the player selects a branching choice",
             "tier": "essential"
           },
           {
@@ -57,40 +62,72 @@
         ],
         "overridableConfigKeys": [
           {
-            "key": "assetManifest",
-            "type": "VisualNovelBoardAssetManifest",
+            "key": "backgroundImage",
+            "type": "Asset",
             "default": {
-              "backgrounds": {
-                "chamber": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/chamber.png",
-                "core": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/core.png",
-                "corridor": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png",
-                "forge": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/forge.png"
-              },
-              "baseUrl": "https://almadar-kflow-assets.web.app/shared/",
-              "portraits": {
-                "emissary": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/emissary.png",
-                "guide": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png",
-                "rival": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/rival.png"
-              }
+              "animations": [
+                "static"
+              ],
+              "aspect": "16:9",
+              "category": "corridor",
+              "dimension": "2d",
+              "name": "corridor",
+              "role": "decoration",
+              "style": "",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"
             },
-            "label": "Asset Manifest",
-            "description": "Base-url + scene-background and character-portrait sprite maps keyed by node backgroundKey/portraitKey.",
+            "label": "Background Image",
+            "description": "Full-frame scene background rendered behind the dialogue box.",
             "tier": "presentation",
             "properties": {
-              "backgrounds": {
-                "name": "backgrounds",
+              "animations": {
+                "name": "animations",
                 "required": false,
-                "type": "object"
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
               },
-              "baseUrl": {
-                "name": "baseUrl",
+              "aspect": {
+                "name": "aspect",
                 "required": false,
                 "type": "string"
               },
-              "portraits": {
-                "name": "portraits",
+              "category": {
+                "name": "category",
                 "required": false,
-                "type": "object"
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
               }
             }
           },
@@ -267,6 +304,76 @@
             "tier": "presentation"
           },
           {
+            "key": "portraitUrl",
+            "type": "Asset",
+            "default": {
+              "animations": [
+                "static"
+              ],
+              "aspect": "1:1",
+              "category": "guide",
+              "dimension": "2d",
+              "name": "guide",
+              "role": "npc",
+              "style": "",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png"
+            },
+            "label": "Portrait Url",
+            "description": "Large character portrait rendered standing over the scene.",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
             "key": "startNodeId",
             "type": "string",
             "default": "start",
@@ -288,6 +395,7 @@
         "entityContract": {
           "requires": [],
           "provides": [
+            "currentNode",
             "currentNodeId",
             "nodes"
           ]

@@ -7,7 +7,48 @@
     "entities": [
       {
         "name": "SpaceStationBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "oxygen",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "crewCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "phase",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "gridWidth",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "gridHeight",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "effects",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -16,20 +57,27 @@
         "name": "SpaceStationBoardRender",
         "emittedEvents": [
           "TILE_CLICK",
-          "UNIT_CLICK"
+          "UNIT_CLICK",
+          "CANCEL"
         ],
         "listenedEvents": [],
         "events": [
           {
             "name": "TILE_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
             "tier": "essential"
           },
           {
             "name": "UNIT_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+            "tier": "essential"
+          },
+          {
+            "name": "CANCEL",
+            "direction": "emit",
+            "description": "Emits UI:{cancelEvent} with {} on cancel",
             "tier": "essential"
           },
           {
@@ -47,20 +95,323 @@
             "tier": "presentation"
           },
           {
-            "key": "assetBaseUrl",
-            "type": "asset",
-            "default": "https://almadar-kflow-assets.web.app/shared/",
-            "label": "Asset Base Url",
-            "description": "Base URL prepended to manifest sprite paths",
-            "tier": "presentation"
-          },
-          {
             "key": "assetManifest",
-            "type": "string",
-            "default": "",
+            "type": "SpaceStationBoardAssetManifest",
+            "default": {
+              "effects": {},
+              "features": {
+                "console": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "console",
+                  "dimension": "2d",
+                  "name": "console",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png"
+                }
+              },
+              "terrains": {
+                "console": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "console",
+                  "dimension": "2d",
+                  "name": "console",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/console.png"
+                },
+                "floor": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
+                "wall": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                }
+              },
+              "units": {
+                "crew": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "crew",
+                  "dimension": "2d",
+                  "name": "crew",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png"
+                }
+              }
+            },
             "label": "Asset Manifest",
-            "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
-            "tier": "presentation"
+            "description": "Asset sprite manifest",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
           },
           {
             "key": "className",
@@ -68,14 +419,6 @@
             "default": "",
             "label": "Class Name",
             "description": "Additional CSS classes",
-            "tier": "presentation"
-          },
-          {
-            "key": "enableCamera",
-            "type": "boolean",
-            "default": true,
-            "label": "Enable Camera",
-            "description": "Enable camera pan/zoom controls",
             "tier": "presentation"
           },
           {
@@ -113,28 +456,76 @@
             "default": [
               {
                 "id": "f1",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "console",
+                  "dimension": "2d",
+                  "name": "console",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png"
+                },
                 "type": "console",
                 "x": 1,
                 "y": 2
               },
               {
                 "id": "f2",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "console",
+                  "dimension": "2d",
+                  "name": "console",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png"
+                },
                 "type": "console",
                 "x": 5,
                 "y": 2
               },
               {
                 "id": "f3",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "console",
+                  "dimension": "2d",
+                  "name": "console",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png"
+                },
                 "type": "console",
                 "x": 1,
                 "y": 4
               },
               {
                 "id": "f4",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "console",
+                  "dimension": "2d",
+                  "name": "console",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/features/console.png"
+                },
                 "type": "console",
                 "x": 5,
                 "y": 4
@@ -148,7 +539,57 @@
                 "assetUrl": {
                   "name": "assetUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "color": {
                   "name": "color",
@@ -168,7 +609,57 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "type": {
                   "name": "type",
@@ -247,14 +738,6 @@
             }
           },
           {
-            "key": "showMinimap",
-            "type": "boolean",
-            "default": true,
-            "label": "Show Minimap",
-            "description": "Show minimap overlay",
-            "tier": "presentation"
-          },
-          {
             "key": "sortBy",
             "type": "string",
             "default": "Sort By",
@@ -281,343 +764,931 @@
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 1,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 2,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 3,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 4,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 5,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 1,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 2,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 3,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 4,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 5,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "console",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/console.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "console",
+                  "dimension": "2d",
+                  "name": "console",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/console.png"
+                },
                 "x": 1,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 2,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 3,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 4,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "console",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/console.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "console",
+                  "dimension": "2d",
+                  "name": "console",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/console.png"
+                },
                 "x": 5,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 1,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 2,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 3,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 4,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 5,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "console",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/console.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "console",
+                  "dimension": "2d",
+                  "name": "console",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/console.png"
+                },
                 "x": 1,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 2,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 3,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 4,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "console",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/console.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "console",
+                  "dimension": "2d",
+                  "name": "console",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/console.png"
+                },
                 "x": 5,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 1,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 2,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 3,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 4,
                 "y": 5
               },
               {
                 "passable": true,
                 "terrain": "floor",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "floor",
+                  "dimension": "2d",
+                  "name": "floor",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/floor.png"
+                },
                 "x": 5,
                 "y": 5
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 5
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 0,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 1,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 2,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 3,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 4,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 5,
                 "y": 6
               },
               {
                 "passable": false,
                 "terrain": "wall",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "wall",
+                  "dimension": "2d",
+                  "name": "wall",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/terrain/wall.png"
+                },
                 "x": 6,
                 "y": 6
               }
@@ -640,7 +1711,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "movementCost": {
                   "name": "movementCost",
@@ -660,7 +1781,57 @@
                 "terrainSprite": {
                   "name": "terrainSprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "tileType": {
                   "name": "tileType",
@@ -704,6 +1875,8 @@
             "type": "[SpaceStationBoardUnitsItem]",
             "default": [
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "u1",
                 "maxHealth": 10,
@@ -712,11 +1885,29 @@
                   "x": 2,
                   "y": 3
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "crew",
+                  "dimension": "2d",
+                  "name": "crew",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png"
+                },
                 "team": "player",
                 "unitType": "crew"
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "u2",
                 "maxHealth": 10,
@@ -725,11 +1916,29 @@
                   "x": 4,
                   "y": 3
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "crew",
+                  "dimension": "2d",
+                  "name": "crew",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png"
+                },
                 "team": "player",
                 "unitType": "crew"
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "u3",
                 "maxHealth": 10,
@@ -738,16 +1947,37 @@
                   "x": 3,
                   "y": 5
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "crew",
+                  "dimension": "2d",
+                  "name": "crew",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-station-board/default/units/crew.png"
+                },
                 "team": "player",
                 "unitType": "crew"
               }
             ],
             "label": "Units",
-            "description": "Units on the board",
+            "description": "Crew units on the board",
             "tier": "presentation",
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "elevation": {
                   "name": "elevation",
                   "required": false,
@@ -762,6 +1992,11 @@
                     "enemy",
                     "neutral"
                   ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
                 },
                 "health": {
                   "name": "health",
@@ -786,7 +2021,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "name": {
                   "name": "name",
@@ -830,12 +2115,112 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "spriteSheet": {
                   "name": "spriteSheet",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "team": {
                   "name": "team",
@@ -909,7 +2294,16 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "crewCount",
+            "effects",
+            "gridHeight",
+            "gridWidth",
+            "oxygen",
+            "phase",
+            "selectedUnitId",
+            "units"
+          ]
         }
       }
     ],
@@ -921,6 +2315,7 @@
       }
     ],
     "emittedEvents": [
+      "CANCEL",
       "TILE_CLICK",
       "UNIT_CLICK"
     ],

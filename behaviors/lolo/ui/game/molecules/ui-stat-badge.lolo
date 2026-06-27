@@ -1,6 +1,29 @@
 app ui-stat-badge "1.0.0"
 "StatBadge — UI factory (1:1 with the @almadar/ui stat-badge pattern)."
 orbital StatBadgeOrbital {
+  type StatBadgeAssetUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type StatBadgeIconUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+
   entity StatBadgeItem [runtime] {
     id : string!
   }
@@ -12,6 +35,7 @@ orbital StatBadgeOrbital {
       INIT -> idle
         (render-ui main {
           assetUrl: @config.assetUrl
+          iconUrl: @config.iconUrl
           label: @config.label
           value: @config.value
           max: @config.max
@@ -27,9 +51,13 @@ orbital StatBadgeOrbital {
     }
 
     config {
-      assetUrl : asset = "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"
+      assetUrl : StatBadgeAssetUrl = { url: "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png", role: "decoration", category: "asset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }
         @label "Asset Url"
-        @description "Sprite image URL — takes precedence over icon when provided"
+        @description "Sprite asset — takes precedence over icon when provided"
+        @tier "presentation"
+      iconUrl : StatBadgeIconUrl = { url: "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png", role: "decoration", category: "asset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }
+        @label "Icon Url"
+        @description "Asset image (board ui/ PNG); takes precedence over the Lucide icon."
         @tier "presentation"
       label : string = "Label"
         @label "Label"

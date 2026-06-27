@@ -7,7 +7,28 @@
     "entities": [
       {
         "name": "FishingBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "catchCount",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "score",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "effects",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -16,20 +37,27 @@
         "name": "FishingBoardRender",
         "emittedEvents": [
           "TILE_CLICK",
-          "UNIT_CLICK"
+          "UNIT_CLICK",
+          "CAST"
         ],
         "listenedEvents": [],
         "events": [
           {
             "name": "TILE_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
             "tier": "essential"
           },
           {
             "name": "UNIT_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+            "tier": "essential"
+          },
+          {
+            "name": "CAST",
+            "direction": "emit",
+            "description": "Emits when a cast action is triggered",
             "tier": "essential"
           },
           {
@@ -47,20 +75,354 @@
             "tier": "presentation"
           },
           {
-            "key": "assetBaseUrl",
-            "type": "asset",
-            "default": "https://almadar-kflow-assets.web.app/shared/",
-            "label": "Asset Base Url",
-            "description": "Base URL prepended to manifest sprite paths",
-            "tier": "presentation"
-          },
-          {
             "key": "assetManifest",
-            "type": "string",
-            "default": "",
+            "type": "FishingBoardAssetManifest",
+            "default": {
+              "effects": {
+                "splash": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "8:1",
+                  "category": "splash",
+                  "dimension": "2d",
+                  "name": "splash",
+                  "role": "effect",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png"
+                }
+              },
+              "features": {
+                "fish": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fish",
+                  "dimension": "2d",
+                  "name": "fish",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png"
+                },
+                "seaweed": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seaweed",
+                  "dimension": "2d",
+                  "name": "seaweed",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png"
+                }
+              },
+              "terrains": {
+                "seabed": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
+                "water": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "water",
+                  "dimension": "2d",
+                  "name": "water",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                }
+              },
+              "units": {
+                "boat": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "boat",
+                  "dimension": "2d",
+                  "name": "boat",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png"
+                },
+                "hook": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "hook",
+                  "dimension": "2d",
+                  "name": "hook",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png"
+                }
+              }
+            },
             "label": "Asset Manifest",
-            "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
-            "tier": "presentation"
+            "description": "Asset sprite manifest",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
           },
           {
             "key": "className",
@@ -68,14 +430,6 @@
             "default": "",
             "label": "Class Name",
             "description": "Additional CSS classes",
-            "tier": "presentation"
-          },
-          {
-            "key": "enableCamera",
-            "type": "boolean",
-            "default": true,
-            "label": "Enable Camera",
-            "description": "Enable camera pan/zoom controls",
             "tier": "presentation"
           },
           {
@@ -113,84 +467,254 @@
             "default": [
               {
                 "id": "f1",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seaweed",
+                  "dimension": "2d",
+                  "name": "seaweed",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png"
+                },
                 "type": "seaweed",
                 "x": 0,
                 "y": 2
               },
               {
                 "id": "f2",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fish-blue",
+                  "dimension": "2d",
+                  "name": "fish-blue",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png"
+                },
                 "type": "fish",
                 "x": 1,
                 "y": 2
               },
               {
                 "id": "f3",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fish-orange",
+                  "dimension": "2d",
+                  "name": "fish-orange",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png"
+                },
                 "type": "fish",
                 "x": 3,
                 "y": 2
               },
               {
                 "id": "f4",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seaweed",
+                  "dimension": "2d",
+                  "name": "seaweed",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png"
+                },
                 "type": "seaweed",
                 "x": 4,
                 "y": 2
               },
               {
                 "id": "f5",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fish-green",
+                  "dimension": "2d",
+                  "name": "fish-green",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png"
+                },
                 "type": "fish",
                 "x": 0,
                 "y": 3
               },
               {
                 "id": "f6",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fish-blue",
+                  "dimension": "2d",
+                  "name": "fish-blue",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png"
+                },
                 "type": "fish",
                 "x": 2,
                 "y": 3
               },
               {
                 "id": "f7",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fish-orange",
+                  "dimension": "2d",
+                  "name": "fish-orange",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png"
+                },
                 "type": "fish",
                 "x": 4,
                 "y": 3
               },
               {
                 "id": "f8",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seaweed",
+                  "dimension": "2d",
+                  "name": "seaweed",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png"
+                },
                 "type": "seaweed",
                 "x": 1,
                 "y": 4
               },
               {
                 "id": "f9",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fish-green",
+                  "dimension": "2d",
+                  "name": "fish-green",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png"
+                },
                 "type": "fish",
                 "x": 2,
                 "y": 4
               },
               {
                 "id": "f10",
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png",
+                "sprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seaweed",
+                  "dimension": "2d",
+                  "name": "seaweed",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png"
+                },
                 "type": "seaweed",
                 "x": 3,
                 "y": 4
               }
             ],
             "label": "Features",
-            "description": "Features on the board (fish spots)",
+            "description": "Features on the board (fish spots, seaweed)",
             "tier": "presentation",
             "items": {
               "properties": {
                 "assetUrl": {
                   "name": "assetUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "color": {
                   "name": "color",
@@ -210,7 +734,57 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "type": {
                   "name": "type",
@@ -289,14 +863,6 @@
             }
           },
           {
-            "key": "showMinimap",
-            "type": "boolean",
-            "default": false,
-            "label": "Show Minimap",
-            "description": "Show minimap overlay",
-            "tier": "presentation"
-          },
-          {
             "key": "sortBy",
             "type": "string",
             "default": "Sort By",
@@ -323,175 +889,475 @@
               {
                 "passable": true,
                 "terrain": "water",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "water",
+                  "dimension": "2d",
+                  "name": "water",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                },
                 "x": 0,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "water",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "water",
+                  "dimension": "2d",
+                  "name": "water",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                },
                 "x": 1,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "water",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "water",
+                  "dimension": "2d",
+                  "name": "water",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                },
                 "x": 2,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "water",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "water",
+                  "dimension": "2d",
+                  "name": "water",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                },
                 "x": 3,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "water",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "water",
+                  "dimension": "2d",
+                  "name": "water",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                },
                 "x": 4,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "water",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "water",
+                  "dimension": "2d",
+                  "name": "water",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                },
                 "x": 0,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "water",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "water",
+                  "dimension": "2d",
+                  "name": "water",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                },
                 "x": 1,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "water",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "water",
+                  "dimension": "2d",
+                  "name": "water",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                },
                 "x": 2,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "water",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "water",
+                  "dimension": "2d",
+                  "name": "water",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                },
                 "x": 3,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "water",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "water",
+                  "dimension": "2d",
+                  "name": "water",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"
+                },
                 "x": 4,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 0,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 1,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 2,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 3,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 4,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 0,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 1,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 2,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 3,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 4,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 0,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 1,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 2,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 3,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "seabed",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "seabed",
+                  "dimension": "2d",
+                  "name": "seabed",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"
+                },
                 "x": 4,
                 "y": 4
               }
@@ -514,7 +1380,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "movementCost": {
                   "name": "movementCost",
@@ -534,7 +1450,57 @@
                 "terrainSprite": {
                   "name": "terrainSprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "tileType": {
                   "name": "tileType",
@@ -578,6 +1544,8 @@
             "type": "[FishingBoardUnitsItem]",
             "default": [
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "u1",
                 "maxHealth": 10,
@@ -586,11 +1554,29 @@
                   "x": 2,
                   "y": 0
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "boat",
+                  "dimension": "2d",
+                  "name": "boat",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png"
+                },
                 "team": "player",
                 "unitType": "boat"
               },
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 10,
                 "id": "u2",
                 "maxHealth": 10,
@@ -599,7 +1585,23 @@
                   "x": 2,
                   "y": 2
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "hook",
+                  "dimension": "2d",
+                  "name": "hook",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png"
+                },
                 "team": "player",
                 "unitType": "hook"
               }
@@ -609,6 +1611,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "elevation": {
                   "name": "elevation",
                   "required": false,
@@ -623,6 +1630,11 @@
                     "enemy",
                     "neutral"
                   ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
                 },
                 "health": {
                   "name": "health",
@@ -647,7 +1659,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "name": {
                   "name": "name",
@@ -691,12 +1753,112 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "spriteSheet": {
                   "name": "spriteSheet",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "team": {
                   "name": "team",
@@ -770,7 +1932,12 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "catchCount",
+            "effects",
+            "score",
+            "units"
+          ]
         }
       }
     ],
@@ -782,6 +1949,7 @@
       }
     ],
     "emittedEvents": [
+      "CAST",
       "TILE_CLICK",
       "UNIT_CLICK"
     ],

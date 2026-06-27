@@ -47,6 +47,11 @@
             "name": "worldHeight",
             "type": "number",
             "required": false
+          },
+          {
+            "name": "effects",
+            "type": "array",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -108,6 +113,134 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "assetBaseUrl",
+            "type": "Asset",
+            "default": "https://almadar-kflow-assets.web.app/shared/",
+            "label": "Asset Base Url",
+            "description": "Base URL prefix for asset URLs",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "backgroundImage",
+            "type": "Asset",
+            "default": {
+              "animations": [
+                "static"
+              ],
+              "aspect": "16:9",
+              "category": "ground",
+              "dimension": "2d",
+              "name": "ground",
+              "role": "decoration",
+              "style": "",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png"
+            },
+            "label": "Background Image",
+            "description": "Background image URL",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
             "key": "bgColor",
             "type": "string",
             "default": "#5c94fc",
@@ -137,6 +270,14 @@
             "default": "",
             "label": "Class Name",
             "description": "className prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "followCamera",
+            "type": "boolean",
+            "default": true,
+            "label": "Follow Camera",
+            "description": "Camera follows player horizontally",
             "tier": "presentation"
           },
           {
@@ -261,15 +402,65 @@
           },
           {
             "key": "playerSprite",
-            "type": "asset",
+            "type": "Asset",
             "default": "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/units/player.png",
             "label": "Player Sprite",
             "description": "Player sprite image URL",
-            "tier": "presentation"
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": false,
+                "type": "string"
+              }
+            }
           },
           {
             "key": "tileSprites",
-            "type": "Map<string,asset>",
+            "type": "Map<string,Asset>",
             "default": {
               "goal": "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/goal.png",
               "ground": "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png",
@@ -280,7 +471,57 @@
             "description": "Map of platform type to tile sprite URL",
             "tier": "presentation",
             "items": {
-              "type": "string"
+              "properties": {
+                "animations": {
+                  "name": "animations",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "type": "object"
             }
           },
           {
@@ -305,6 +546,7 @@
         "entityContract": {
           "requires": [],
           "provides": [
+            "effects",
             "goalX",
             "level",
             "lives",

@@ -7,7 +7,33 @@
     "entities": [
       {
         "name": "MinigolfBoardItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "units",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "hole",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "strokes",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "result",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "effects",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -16,20 +42,41 @@
         "name": "MinigolfBoardRender",
         "emittedEvents": [
           "TILE_CLICK",
-          "UNIT_CLICK"
+          "UNIT_CLICK",
+          "HOLE_IN",
+          "NEXT_HOLE",
+          "PLAY_AGAIN"
         ],
         "listenedEvents": [],
         "events": [
           {
             "name": "TILE_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click",
+            "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
             "tier": "essential"
           },
           {
             "name": "UNIT_CLICK",
             "direction": "emit",
-            "description": "Declarative event: emits UI:{unitClickEvent} with { unitId } on unit click",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+            "tier": "essential"
+          },
+          {
+            "name": "HOLE_IN",
+            "direction": "emit",
+            "description": "Emits when ball reaches the hole",
+            "tier": "essential"
+          },
+          {
+            "name": "NEXT_HOLE",
+            "direction": "emit",
+            "description": "Emits to advance to the next hole",
+            "tier": "essential"
+          },
+          {
+            "name": "PLAY_AGAIN",
+            "direction": "emit",
+            "description": "Emits to restart from hole 1",
             "tier": "essential"
           },
           {
@@ -41,26 +88,341 @@
           {
             "key": "activeFilters",
             "type": "json",
-            "default": {},
             "label": "Active Filters",
             "description": "Active filters",
             "tier": "presentation"
           },
           {
-            "key": "assetBaseUrl",
-            "type": "asset",
-            "default": "https://almadar-kflow-assets.web.app/shared/",
-            "label": "Asset Base Url",
-            "description": "Base URL prepended to manifest sprite paths",
-            "tier": "presentation"
-          },
-          {
             "key": "assetManifest",
-            "type": "string",
-            "default": "",
+            "type": "MinigolfBoardAssetManifest",
+            "default": {
+              "effects": {},
+              "features": {
+                "flag": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "flag",
+                  "dimension": "2d",
+                  "name": "flag",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/features/flag.png"
+                },
+                "hole": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "hole",
+                  "dimension": "2d",
+                  "name": "hole",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": ""
+                }
+              },
+              "terrains": {
+                "fairway": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fairway",
+                  "dimension": "2d",
+                  "name": "fairway",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png"
+                },
+                "green": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
+                "hole": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "hole",
+                  "dimension": "2d",
+                  "name": "hole",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/hole.png"
+                }
+              },
+              "units": {
+                "ball": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ball",
+                  "dimension": "2d",
+                  "name": "ball",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/units/ball.png"
+                }
+              }
+            },
             "label": "Asset Manifest",
-            "description": "Asset sprite manifest (same shape as IsometricCanvas.assetManifest)",
-            "tier": "presentation"
+            "description": "Asset sprite manifest",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
           },
           {
             "key": "className",
@@ -68,14 +430,6 @@
             "default": "",
             "label": "Class Name",
             "description": "Additional CSS classes",
-            "tier": "presentation"
-          },
-          {
-            "key": "enableCamera",
-            "type": "boolean",
-            "default": true,
-            "label": "Enable Camera",
-            "description": "Enable camera pan/zoom controls",
             "tier": "presentation"
           },
           {
@@ -118,7 +472,19 @@
                 "y": 1
               },
               {
-                "assetUrl": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/features/flag.png",
+                "assetUrl": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "flag",
+                  "dimension": "3d",
+                  "name": "flag",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/features/flag.png"
+                },
                 "id": "flag1",
                 "type": "flag",
                 "x": 5,
@@ -126,14 +492,64 @@
               }
             ],
             "label": "Features",
-            "description": "Features (holes, obstacles, etc.) on the board",
+            "description": "Features (holes, obstacles) on the board",
             "tier": "presentation",
             "items": {
               "properties": {
                 "assetUrl": {
                   "name": "assetUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "color": {
                   "name": "color",
@@ -153,7 +569,57 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "type": {
                   "name": "type",
@@ -232,14 +698,6 @@
             }
           },
           {
-            "key": "showMinimap",
-            "type": "boolean",
-            "default": true,
-            "label": "Show Minimap",
-            "description": "Show minimap overlay",
-            "tier": "presentation"
-          },
-          {
             "key": "sortBy",
             "type": "string",
             "default": "Sort By",
@@ -266,245 +724,665 @@
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 0,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 1,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 2,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 3,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 4,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 5,
                 "y": 0
               },
               {
                 "passable": true,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 6,
                 "y": 0
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 0,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 1,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "fairway",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fairway",
+                  "dimension": "2d",
+                  "name": "fairway",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png"
+                },
                 "x": 2,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "fairway",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fairway",
+                  "dimension": "2d",
+                  "name": "fairway",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png"
+                },
                 "x": 3,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 4,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "hole",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/hole.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "hole",
+                  "dimension": "2d",
+                  "name": "hole",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/hole.png"
+                },
                 "x": 5,
                 "y": 1
               },
               {
                 "passable": true,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 6,
                 "y": 1
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 0,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "fairway",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fairway",
+                  "dimension": "2d",
+                  "name": "fairway",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png"
+                },
                 "x": 1,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "fairway",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fairway",
+                  "dimension": "2d",
+                  "name": "fairway",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png"
+                },
                 "x": 2,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 3,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 4,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 5,
                 "y": 2
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 6,
                 "y": 2
               },
               {
                 "passable": true,
                 "terrain": "fairway",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fairway",
+                  "dimension": "2d",
+                  "name": "fairway",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png"
+                },
                 "x": 0,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "fairway",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fairway",
+                  "dimension": "2d",
+                  "name": "fairway",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png"
+                },
                 "x": 1,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 2,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 3,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 4,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 5,
                 "y": 3
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 6,
                 "y": 3
               },
               {
                 "passable": true,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 0,
                 "y": 4
               },
               {
                 "passable": true,
                 "terrain": "fairway",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "fairway",
+                  "dimension": "2d",
+                  "name": "fairway",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/fairway.png"
+                },
                 "x": 1,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 2,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 3,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 4,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 5,
                 "y": 4
               },
               {
                 "passable": false,
                 "terrain": "green",
-                "terrainSprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png",
+                "terrainSprite": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "green",
+                  "dimension": "2d",
+                  "name": "green",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/terrain/green.png"
+                },
                 "x": 6,
                 "y": 4
               }
@@ -527,7 +1405,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "movementCost": {
                   "name": "movementCost",
@@ -547,7 +1475,57 @@
                 "terrainSprite": {
                   "name": "terrainSprite",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "tileType": {
                   "name": "tileType",
@@ -591,6 +1569,8 @@
             "type": "[MinigolfBoardUnitsItem]",
             "default": [
               {
+                "animation": "idle",
+                "frame": 0,
                 "health": 1,
                 "id": "ball1",
                 "maxHealth": 1,
@@ -599,7 +1579,23 @@
                   "x": 0,
                   "y": 4
                 },
-                "sprite": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/units/ball.png",
+                "sprite": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "ball",
+                  "dimension": "2d",
+                  "name": "ball",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-minigolf-board/default/units/ball.png"
+                },
                 "team": "player",
                 "unitType": "ball"
               }
@@ -609,6 +1605,11 @@
             "tier": "presentation",
             "items": {
               "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
                 "elevation": {
                   "name": "elevation",
                   "required": false,
@@ -623,6 +1624,11 @@
                     "enemy",
                     "neutral"
                   ]
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
                 },
                 "health": {
                   "name": "health",
@@ -647,7 +1653,57 @@
                 "modelUrl": {
                   "name": "modelUrl",
                   "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "name": {
                   "name": "name",
@@ -691,12 +1747,57 @@
                 "sprite": {
                   "name": "sprite",
                   "required": false,
-                  "type": "string"
-                },
-                "spriteSheet": {
-                  "name": "spriteSheet",
-                  "required": false,
-                  "type": "string"
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": false,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "team": {
                   "name": "team",
@@ -770,7 +1871,13 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "effects",
+            "hole",
+            "result",
+            "strokes",
+            "units"
+          ]
         }
       }
     ],
@@ -782,6 +1889,9 @@
       }
     ],
     "emittedEvents": [
+      "HOLE_IN",
+      "NEXT_HOLE",
+      "PLAY_AGAIN",
       "TILE_CLICK",
       "UNIT_CLICK"
     ],

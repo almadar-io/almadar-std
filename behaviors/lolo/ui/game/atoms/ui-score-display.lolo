@@ -1,6 +1,18 @@
 app ui-score-display "1.0.0"
 "ScoreDisplay — UI factory (1:1 with the @almadar/ui score-display pattern)."
 orbital ScoreDisplayOrbital {
+  type ScoreDisplayAssetUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+
   entity ScoreDisplayItem [runtime] {
     id : string!
   }
@@ -18,16 +30,15 @@ orbital ScoreDisplayOrbital {
           icon: @config.icon
           size: @config.size
           className: @config.className
-          animated: @config.animated
           locale: @config.locale
           type: score-display
         })
     }
 
     config {
-      assetUrl : asset = "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"
+      assetUrl : ScoreDisplayAssetUrl = { url: "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png", role: "decoration", category: "asset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }
         @label "Asset Url"
-        @description "Sprite image URL — takes precedence over icon when provided"
+        @description "Sprite asset — takes precedence over icon when provided"
         @tier "presentation"
       value : number = 0
         @label "Value"
@@ -52,10 +63,6 @@ orbital ScoreDisplayOrbital {
       className : string = ""
         @label "Class Name"
         @description "Additional CSS classes"
-        @tier "presentation"
-      animated : boolean = true
-        @label "Animated"
-        @description "Animation on value change"
         @tier "presentation"
       locale : string = "en-US"
         @label "Locale"

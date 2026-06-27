@@ -49,7 +49,7 @@ export interface StdUiShowcaseCardConfig {
   description?: string;
   /** Default: `"Href"` */
   href?: string;
-  /** Default: `{"alt":"Alt","src":{}}` */
+  /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
   image?: EntityRow;
   /** Default: `"Title"` */
   title?: string;
