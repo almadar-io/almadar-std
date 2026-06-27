@@ -126,7 +126,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -146,7 +146,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       UNIT_CLICK -> playing when (and (== @entity.selectedShipId ?unitId) (== (object/get (array/find @entity.ships (fn u (== @u.id ?unitId))) team) "player"))
@@ -154,7 +154,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       UNIT_CLICK -> playing when (== (object/get (array/find @entity.ships (fn u (== @u.id ?unitId))) team) "player")
@@ -163,7 +163,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedShipId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.ships (fn u (== @u.id @entity.selectedShipId))) position) { x: ?x, y: ?y }) @entity.movementRange) (== (array/len (array/filter @entity.ships (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
@@ -173,7 +173,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       CANNON_FIRE -> playing when (let ((ap (object/get (array/find @entity.ships (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.ships (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 3) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 3) (!= @ap @tp))))
@@ -184,7 +184,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       COLLECT_GOLD -> playing
@@ -192,7 +192,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       END_TURN -> playing when (== @entity.result "none")
@@ -203,7 +203,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedShipId "")
@@ -212,7 +212,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       GAME_END -> gameover when (or (== (array/len (array/filter @entity.ships (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.ships (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
@@ -221,7 +221,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -238,7 +238,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -249,7 +249,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
 
       enemyAiTick every 1s
@@ -263,7 +263,7 @@ orbital PirateBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Turn", value: @entity.turn } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "isometric", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.ships, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
         })
     }
 

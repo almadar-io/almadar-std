@@ -127,7 +127,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -147,7 +147,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
 
       UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
@@ -155,7 +155,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
 
       UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
@@ -164,7 +164,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
@@ -174,7 +174,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
 
       ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
@@ -186,7 +186,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
 
       END_TURN -> playing when (== @entity.result "none")
@@ -197,7 +197,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedUnitId "")
@@ -206,7 +206,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
 
       GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
@@ -215,7 +215,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -232,7 +232,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
     }
 
@@ -243,7 +243,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
 
       enemyAiTick every 1s
@@ -257,7 +257,7 @@ orbital HexStrategyBoardOrbital {
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: isometric-canvas, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, tileLayout: "hex", showMinimap: true, scale: @config.scale } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "hex", showMinimap: true, scale: @config.scale } ]
         })
     }
 
