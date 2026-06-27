@@ -31,7 +31,12 @@ const ALIAS = 'Flag';
  * without modifying its state-machine topology.
  */
 export interface StdFlagConfig {
-  fields?: TraitConfig;
+  /** Default: `[{"label":"Reason","name":"reason","type":"enum","values":["spam","abuse","off-topic","misinformation","nsfw","other"]},{"label":"Details","name":"notes","type":"textarea"}]` */
+  fields?: unknown;
+  /** Default: `"flag"` */
+  icon?: unknown;
+  /** Default: `"Report content"` */
+  title?: unknown;
 }
 
 /**

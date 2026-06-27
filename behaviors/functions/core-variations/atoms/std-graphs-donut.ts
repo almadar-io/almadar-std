@@ -31,6 +31,8 @@ const ALIAS = 'GraphsDonut';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsDonutConfig {
+  /** Default: `"donut"` */
+  chartType?: unknown;
 }
 
 /**

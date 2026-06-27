@@ -31,6 +31,8 @@ const ALIAS = 'GraphsScatter';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsScatterConfig {
+  /** Default: `"scatter"` */
+  chartType?: unknown;
 }
 
 /**

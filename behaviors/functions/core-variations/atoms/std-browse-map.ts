@@ -31,8 +31,12 @@ const ALIAS = 'BrowseMap';
  * without modifying its state-machine topology.
  */
 export interface StdBrowseMapConfig {
+  /** Default: `{"children":[{"align":"center","children":[{"className":"text-muted-foreground","name":"search","type":"icon"},{"action":"REFETCH_QUERY","className":"flex-1","inputType":"search","placeholder":"@config.searchPlaceholder","type":"input"}],"className":"w-full max-w-2xl rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 shadow-sm","direction":"horizontal","gap":"sm","type":"stack"},{"className":"w-full rounded-lg overflow-hidden border border-[var(--color-border)]","height":"440px","markers":"@payload.data","type":"map-view"},{"entity":"@payload.data","fields":"@config.fields","gap":"sm","itemActions":"@config.itemActions","look":"@config.tableLook","type":"data-list"}],"className":"p-card-md","direction":"vertical","gap":"md","type":"stack"}` */
   bodyContent?: unknown;
-  fields?: TraitConfig;
+  /** Default: `[{"label":"Name","name":"name","variant":"h4"},{"label":"Address","name":"address","variant":"caption"},{"label":"Status","name":"status","variant":"badge"}]` */
+  fields?: unknown;
+  /** Default: `"spacious"` */
+  tableLook?: unknown;
 }
 
 /**

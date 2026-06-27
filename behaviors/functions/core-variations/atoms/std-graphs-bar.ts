@@ -31,6 +31,8 @@ const ALIAS = 'GraphsBar';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsBarConfig {
+  /** Default: `"bar"` */
+  chartType?: unknown;
 }
 
 /**

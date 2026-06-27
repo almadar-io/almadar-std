@@ -31,6 +31,8 @@ const ALIAS = 'GraphsArea';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsAreaConfig {
+  /** Default: `"area"` */
+  chartType?: unknown;
 }
 
 /**

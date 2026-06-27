@@ -31,6 +31,7 @@ const ALIAS = 'TabsSegmentedPills';
  * without modifying its state-machine topology.
  */
 export interface StdTabsSegmentedPillsConfig {
+  /** Default: `{"align":"center","children":[{"activeTab":"@entity.activeTab","className":"gap-1","items":[{"id":"tab1","label":"Tab 1"},{"id":"tab2","label":"Tab 2"},{"id":"tab3","label":"Tab 3"}],"orientation":"horizontal","tabChangeEvent":"TAB_CHANGED","type":"tabs","variant":"pills"}],"className":"inline-flex p-1 rounded-pill bg-muted","direction":"horizontal","gap":"none","type":"stack"}` */
   bodyContent?: unknown;
 }
 

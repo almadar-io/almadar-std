@@ -31,7 +31,12 @@ const ALIAS = 'AppLayoutTopnav';
  * without modifying its state-machine topology.
  */
 export interface StdAppLayoutTopnavConfig {
-  navItems?: TraitConfig;
+  /** Default: `"Topnav Demo"` */
+  appName?: unknown;
+  /** Default: `"topnav"` */
+  layoutMode?: unknown;
+  /** Default: `[{"href":"/","icon":"home","label":"Home"},{"href":"/contacts","icon":"users","label":"Contacts"},{"href":"/tasks","icon":"check-square","label":"Tasks"},{"href":"/settings","icon":"settings","label":"Settings"}]` */
+  navItems?: unknown;
 }
 
 /**

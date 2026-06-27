@@ -31,6 +31,8 @@ const ALIAS = 'GraphsHistogram';
  * without modifying its state-machine topology.
  */
 export interface StdGraphsHistogramConfig {
+  /** Default: `"histogram"` */
+  chartType?: unknown;
 }
 
 /**

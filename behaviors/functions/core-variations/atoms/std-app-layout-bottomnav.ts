@@ -31,7 +31,12 @@ const ALIAS = 'AppLayoutBottomnav';
  * without modifying its state-machine topology.
  */
 export interface StdAppLayoutBottomnavConfig {
-  navItems?: TraitConfig;
+  /** Default: `"Bottomnav Demo"` */
+  appName?: unknown;
+  /** Default: `"bottomnav"` */
+  layoutMode?: unknown;
+  /** Default: `[{"href":"/","icon":"home","label":"Home"},{"href":"/contacts","icon":"users","label":"Contacts"},{"href":"/tasks","icon":"check-square","label":"Tasks"},{"href":"/settings","icon":"settings","label":"Settings"}]` */
+  navItems?: unknown;
 }
 
 /**
