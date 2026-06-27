@@ -349,20 +349,24 @@ orbital DataErasureOrbital {
         @description "Entity name whose records erasure requests apply to (e.g. 'CustomerAccount')."
         @tier "internal"
       gracePeriodDays : number = 30
-        @label "Grace period (days)"
-        @description "Days between request and execution. Customer can CANCEL during this window. Default 30 days matches typical GDPR practice."
+        @label "How many days before deletion is carried out?"
+        @description "Days between request submission and execution. The subject can cancel during this window."
+        @synonyms "grace period, cancellation window, deletion delay, days before delete"
         @tier "policy"
       anonymizeVsDelete : "anonymize" | "delete" = anonymize
-        @label "Mode"
-        @description "anonymize = scrub piiFields and retain row for audit. delete = remove the row entirely."
+        @label "Anonymize or fully delete the record?"
+        @description "anonymize = scrub PII fields and keep row for audit; delete = remove the row entirely."
+        @synonyms "deletion mode, anonymize, delete, scrub or remove, retention mode"
         @tier "policy"
       piiFields : [string] = []
-        @label "PII fields to scrub"
-        @description "Fields the target atom should null when anonymizeVsDelete='anonymize'."
+        @label "Which fields contain personal data to scrub?"
+        @description "Fields the target atom nulls when anonymizing (e.g. email, name, phone)."
+        @synonyms "PII fields, personal data fields, sensitive fields, fields to scrub"
         @tier "policy"
       tableLook : "dense" | "spacious" | "striped" | "borderless" | "card-rows" = dense
-        @label "Table look"
-        @description "Layer 2 visual treatment for the data table rendered by this atom."
+        @label "Erasure queue table style"
+        @description "Visual treatment for the erasure-requests data table."
+        @synonyms "table style, grid look, compact, spacious"
         @tier "presentation"
       reviewSlot : slot = modal
         @label "Review slot"

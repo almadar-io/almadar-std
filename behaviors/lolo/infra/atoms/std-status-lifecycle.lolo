@@ -51,27 +51,27 @@ orbital StatusLifecycleOrbital {
 
     config {
       enabled : boolean = false
-        @label "Enforce status lifecycle"
+        @label "Enforce status lifecycle rules?"
         @description "Validate and apply status transitions against the configured table. Off by default."
         @synonyms "lifecycle, statuses, states, stages, workflow, status transitions, enforce, enable, apply"
         @tier "infra"
       targetEntity : string = StatusRecord
         @label "Target entity"
-        @description "Entity name whose status field this lifecycle drives (e.g. 'Contract'). Defaults to the atom's own record so the standalone validates; rebind per composition."
+        @description "Entity name whose status field this lifecycle drives (e.g. 'Contract'). Rebind per composition."
         @tier "internal"
       statusField : string = "status"
-        @label "Status field"
-        @description "Which entity field this lifecycle drives. Defaults to 'status'; set it to bind any field (e.g. 'state', 'stage', 'phase')."
+        @label "Which field holds the status?"
+        @description "Entity field this lifecycle drives (e.g. 'status', 'state', 'stage', 'phase')."
         @synonyms "state field, stage field, status column, lifecycle field"
         @tier "domain"
       initialStatus : string = "draft"
-        @label "Initial status"
-        @description "The status a new record starts in."
-        @synonyms "starting state, default status, first stage"
+        @label "What status do new records start in?"
+        @description "The status assigned when a record is first created."
+        @synonyms "starting state, default status, first stage, initial state"
         @tier "domain"
       states : [string] = (draft active archived)
-        @label "Statuses"
-        @description "The closed set of statuses a record can hold."
+        @label "What are the possible statuses?"
+        @description "The complete set of statuses a record can hold."
         @synonyms "states, stages, phases, statuses, lifecycle, workflow steps"
         @tier "domain"
       transitions : [TransitionSpec] = [{
@@ -85,8 +85,8 @@ orbital StatusLifecycleOrbital {
         label: "Archive"
         to: archived
       }]
-        @label "Allowed transitions"
-        @description "The legal moves: each row is { from, to, event, label }. A requested move is applied only if it matches a row."
+        @label "Which status moves are allowed?"
+        @description "Legal transitions as { from, to, event, label }. Only matching moves are applied."
         @synonyms "edges, allowed moves, status flow, workflow transitions"
         @tier "domain"
     }
