@@ -1105,11 +1105,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
+                        'projection': 'flat',
                         'scale': '@config.scale',
                         'showMinimap': false,
-                        'tileLayout': 'flat',
                         'tiles': [],
-                        'type': 'isometric-canvas',
+                        'type': 'canvas-2d',
                         'units': [
                           'array/concat',
                           [
@@ -1314,11 +1314,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
+                        'projection': 'flat',
                         'scale': '@config.scale',
                         'showMinimap': false,
-                        'tileLayout': 'flat',
                         'tiles': [],
-                        'type': 'isometric-canvas',
+                        'type': 'canvas-2d',
                         'units': [
                           'array/concat',
                           [
@@ -1528,11 +1528,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
+                        'projection': 'flat',
                         'scale': '@config.scale',
                         'showMinimap': false,
-                        'tileLayout': 'flat',
                         'tiles': [],
-                        'type': 'isometric-canvas',
+                        'type': 'canvas-2d',
                         'units': [
                           'array/concat',
                           [
@@ -1689,11 +1689,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
+                        'projection': 'flat',
                         'scale': '@config.scale',
                         'showMinimap': false,
-                        'tileLayout': 'flat',
                         'tiles': [],
-                        'type': 'isometric-canvas',
+                        'type': 'canvas-2d',
                         'units': [
                           'array/concat',
                           [
@@ -1956,11 +1956,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                             },
                           ],
                         ],
+                        'projection': 'flat',
                         'scale': '@config.scale',
                         'showMinimap': false,
-                        'tileLayout': 'flat',
                         'tiles': [],
-                        'type': 'isometric-canvas',
+                        'type': 'canvas-2d',
                         'units': [
                           'array/concat',
                           [
@@ -2212,11 +2212,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                           },
                         ],
                       ],
+                      'projection': 'flat',
                       'scale': '@config.scale',
                       'showMinimap': false,
-                      'tileLayout': 'flat',
                       'tiles': [],
-                      'type': 'isometric-canvas',
+                      'type': 'canvas-2d',
                       'units': [
                         'array/concat',
                         [
@@ -2988,11 +2988,11 @@ export function stdUiTopDownShooterBoardTopDownShooterBoardOrbital(params: StdUi
                           },
                         ],
                       ],
+                      'projection': 'flat',
                       'scale': '@config.scale',
                       'showMinimap': false,
-                      'tileLayout': 'flat',
                       'tiles': [],
-                      'type': 'isometric-canvas',
+                      'type': 'canvas-2d',
                       'units': [
                         'array/concat',
                         [

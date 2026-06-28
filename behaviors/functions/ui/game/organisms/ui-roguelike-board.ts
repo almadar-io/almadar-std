@@ -6602,11 +6602,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                             },
                           ],
                         ],
+                        'projection': 'isometric',
                         'scale': '@config.scale',
                         'showMinimap': true,
-                        'tileLayout': 'isometric',
                         'tiles': '@entity.tiles',
-                        'type': 'isometric-canvas',
+                        'type': 'canvas-2d',
                         'units': [
                           'array/append',
                           [
@@ -7333,11 +7333,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                             },
                           ],
                         ],
+                        'projection': 'isometric',
                         'scale': '@config.scale',
                         'showMinimap': true,
-                        'tileLayout': 'isometric',
                         'tiles': '@entity.tiles',
-                        'type': 'isometric-canvas',
+                        'type': 'canvas-2d',
                         'units': [
                           'array/append',
                           [
@@ -7525,11 +7525,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                             },
                           ],
                         ],
+                        'projection': 'isometric',
                         'scale': '@config.scale',
                         'showMinimap': true,
-                        'tileLayout': 'isometric',
                         'tiles': '@entity.tiles',
-                        'type': 'isometric-canvas',
+                        'type': 'canvas-2d',
                         'units': [
                           'array/append',
                           [
@@ -7797,11 +7797,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                             },
                           ],
                         ],
+                        'projection': 'isometric',
                         'scale': '@config.scale',
                         'showMinimap': true,
-                        'tileLayout': 'isometric',
                         'tiles': '@entity.tiles',
-                        'type': 'isometric-canvas',
+                        'type': 'canvas-2d',
                         'units': [
                           'array/append',
                           [
@@ -8066,11 +8066,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           },
                         ],
                       ],
+                      'projection': 'isometric',
                       'scale': '@config.scale',
                       'showMinimap': true,
-                      'tileLayout': 'isometric',
                       'tiles': '@entity.tiles',
-                      'type': 'isometric-canvas',
+                      'type': 'canvas-2d',
                       'units': [
                         'array/append',
                         [
@@ -8860,11 +8860,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           },
                         ],
                       ],
+                      'projection': 'isometric',
                       'scale': '@config.scale',
                       'showMinimap': true,
-                      'tileLayout': 'isometric',
                       'tiles': '@entity.tiles',
-                      'type': 'isometric-canvas',
+                      'type': 'canvas-2d',
                       'units': [
                         'array/append',
                         [
