@@ -48,7 +48,7 @@ export interface StdUiVoteStackVotePayload {
 export interface StdUiVoteStackConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `1` */
   count?: number;
   /** Default: `false` */
   disabled?: boolean;

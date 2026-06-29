@@ -1,0 +1,91 @@
+app ui-game-card "1.0.0"
+"GameCard — UI factory (1:1 with the @almadar/ui game-card pattern)."
+orbital GameCardOrbital {
+  type GameCardArt = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+
+  entity GameCardItem [runtime] {
+    id : string!
+  }
+
+  trait GameCardRender -> @rebindable GameCardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          cost: @config.cost
+          art: @config.art
+          attack: @config.attack
+          defense: @config.defense
+          name: @config.name
+          selected: @config.selected
+          disabled: @config.disabled
+          size: @config.size
+          onClick: CLICK
+          clickEvent: CLICK
+          className: @config.className
+          type: game-card
+        })
+    }
+
+    emits {
+      CLICK -> external {
+        id : string
+        cardId : string!
+      }
+        @description "Direct click callback"
+        @tier "essential"
+    }
+
+    config {
+      cost : number = 0
+        @label "Cost"
+        @description "cost prop"
+        @tier "presentation"
+      art : GameCardArt = { url: "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png", role: "decoration", category: "asset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }
+        @label "Art"
+        @description "Card art asset"
+        @tier "presentation"
+      attack : number = 0
+        @label "Attack"
+        @description "attack prop"
+        @tier "presentation"
+      defense : number = 0
+        @label "Defense"
+        @description "defense prop"
+        @tier "presentation"
+      name : string = "Name"
+        @label "Name"
+        @description "name prop"
+        @tier "presentation"
+      selected : boolean = false
+        @label "Selected"
+        @description "selected prop"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "disabled prop"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size variant — controls card dimensions and art pixel size"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-card" as GameCardPage -> GameCardRender
+}

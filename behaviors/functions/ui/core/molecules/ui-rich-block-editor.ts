@@ -55,7 +55,7 @@ export interface StdUiRichBlockEditorRichBlockEditorLoadedPayload {
 export interface StdUiRichBlockEditorConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `false` */
+  /** Default: `true` */
   enableBlocks?: boolean;
   /** Default: `"Placeholder"` */
   placeholder?: string;

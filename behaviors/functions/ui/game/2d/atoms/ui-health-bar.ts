@@ -46,9 +46,15 @@ export interface StdUiHealthBarConfig {
   /** Default: `3` */
   current?: number;
   /** Default: `"hearts"` */
-  format?: 'hearts' | 'bar' | 'numeric';
+  format?: 'hearts' | 'bar' | 'numeric' | 'progress';
+  /** Default: `"Label Suffix"` */
+  labelSuffix?: string;
+  /** Default: `0` */
+  level?: number;
   /** Default: `5` */
   max?: number;
+  /** Default: `true` */
+  showLabel?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
 }

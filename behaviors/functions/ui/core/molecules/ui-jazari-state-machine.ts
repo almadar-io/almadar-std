@@ -48,8 +48,12 @@ export interface StdUiJazariStateMachineConfig {
   error?: EntityRow;
   /** Default: `false` */
   isLoading?: boolean;
+  /** Default: `{}` */
+  schema?: unknown;
   /** Default: `0` */
   traitIndex?: number;
+  /** Default: `{}` */
+  traitProp?: unknown;
 }
 
 /**

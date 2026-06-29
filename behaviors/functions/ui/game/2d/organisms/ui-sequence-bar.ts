@@ -60,7 +60,7 @@ export interface StdUiSequenceBarConfig {
   className?: string;
   /** Default: `-1` */
   currentStep?: number;
-  /** Default: `0` */
+  /** Default: `1` */
   maxSlots?: number;
   /** Default: `false` */
   playing?: boolean;
@@ -181,7 +181,7 @@ export function stdUiSequenceBarSequenceBarOrbital(params: StdUiSequenceBarSeque
             'type': 'number',
           },
           'maxSlots': {
-            'default': 0,
+            'default': 1,
             'description': 'Max number of slots',
             'label': 'Max Slots',
             'tier': 'presentation',

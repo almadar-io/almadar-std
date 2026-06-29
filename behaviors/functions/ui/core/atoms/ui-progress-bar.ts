@@ -57,7 +57,7 @@ export interface StdUiProgressBarConfig {
   size?: 'sm' | 'md' | 'lg';
   /** Default: `5` */
   steps?: number;
-  /** Default: `0` */
+  /** Default: `1` */
   value?: number;
   /** Default: `"primary"` */
   variant?: 'default' | 'primary' | 'success' | 'warning' | 'error' | 'danger';

@@ -53,8 +53,8 @@ export interface StdUiSpriteActionPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiSpriteConfig {
-  /** Default: `"idle"` */
-  animState?: 'idle' | 'walk' | 'attack' | 'hit' | 'death';
+  /** Default: `{}` */
+  animState?: unknown;
   /** Default: `""` */
   className?: string;
   /** Default: `16` */

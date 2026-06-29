@@ -50,7 +50,7 @@ export interface StdUiStateIndicatorConfig {
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
   /** Default: `"idle"` */
-  stateProp?: string;
+  stateProp?: 'idle' | 'active' | 'sleeping' | 'moving' | 'eating' | 'waiting' | 'happy' | 'scared' | 'done' | 'error' | 'ready' | 'cooldown';
   /** Default: `{}` */
   stateStyles?: Record<string, TraitConfig>;
 }

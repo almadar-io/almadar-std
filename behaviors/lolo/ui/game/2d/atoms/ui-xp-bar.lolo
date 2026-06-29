@@ -1,5 +1,5 @@
 app ui-xp-bar "1.0.0"
-"XpBar — UI factory (1:1 with the @almadar/ui xp-bar pattern)."
+"XpBar — XP progress display via resource-bar."
 orbital XpBarOrbital {
   entity XpBarItem [runtime] {
     id : string!
@@ -11,14 +11,10 @@ orbital XpBarOrbital {
     state idle {
       INIT -> idle
         (render-ui main {
-          current: @config.current
-          max: @config.max
-          level: @config.level
-          showLabel: @config.showLabel
+          resources: [{ icon: "star", label: "XP", value: @config.current, max: @config.max }]
           size: @config.size
-          animated: @config.animated
           className: @config.className
-          type: xp-bar
+          type: resource-bar
         })
     }
 
@@ -33,19 +29,11 @@ orbital XpBarOrbital {
         @tier "presentation"
       level : number = 5
         @label "Level"
-        @description "Current level"
-        @tier "presentation"
-      showLabel : boolean = true
-        @label "Show Label"
-        @description "Whether to show the XP label"
+        @description "Current level (informational)"
         @tier "presentation"
       size : "sm" | "md" | "lg" = md
         @label "Size"
         @description "Size variant"
-        @tier "presentation"
-      animated : boolean = true
-        @label "Animated"
-        @description "Animate the fill bar"
         @tier "presentation"
       className : string = ""
         @label "Class Name"
