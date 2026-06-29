@@ -68,57 +68,6 @@
             "default": "start",
             "name": "currentNodeId",
             "type": "string"
-          },
-          {
-            "name": "currentNode",
-            "properties": {
-              "backgroundKey": {
-                "name": "backgroundKey",
-                "required": false,
-                "type": "string"
-              },
-              "choices": {
-                "items": {
-                  "properties": {
-                    "label": {
-                      "name": "label",
-                      "required": true,
-                      "type": "string"
-                    },
-                    "nextId": {
-                      "name": "nextId",
-                      "required": true,
-                      "type": "string"
-                    }
-                  },
-                  "type": "object"
-                },
-                "name": "choices",
-                "required": false,
-                "type": "array"
-              },
-              "id": {
-                "name": "id",
-                "required": true,
-                "type": "string"
-              },
-              "portraitKey": {
-                "name": "portraitKey",
-                "required": false,
-                "type": "string"
-              },
-              "speaker": {
-                "name": "speaker",
-                "required": true,
-                "type": "string"
-              },
-              "text": {
-                "name": "text",
-                "required": true,
-                "type": "string"
-              }
-            },
-            "type": "object"
           }
         ],
         "name": "VisualNovelBoardItem",
@@ -462,19 +411,25 @@
           },
           "emits": [
             {
-              "description": "Emits UI:{choiceEvent} with {choice} when the player selects a branching choice",
+              "description": "Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice",
               "event": "CHOOSE",
               "payloadSchema": [
                 {
-                  "name": "choice",
-                  "type": "object"
+                  "name": "choiceIndex",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "nextId",
+                  "required": true,
+                  "type": "string"
                 }
               ],
               "scope": "external",
               "tier": "essential"
             },
             {
-              "description": "Emits UI:{advanceEvent} with {} to advance to the first choice's target node",
+              "description": "Emits UI:{advanceEvent} with {} to advance to the next node",
               "event": "ADVANCE",
               "payloadSchema": [
                 {
@@ -500,7 +455,6 @@
           ],
           "entityContract": {
             "provides": [
-              "currentNode",
               "currentNodeId",
               "nodes"
             ],
@@ -517,19 +471,25 @@
                 "name": "Initialize"
               },
               {
-                "description": "Emits UI:{choiceEvent} with {choice} when the player selects a branching choice",
+                "description": "Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice",
                 "key": "CHOOSE",
                 "name": "Choose",
                 "payloadSchema": [
                   {
-                    "name": "choice",
-                    "type": "object"
+                    "name": "choiceIndex",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "nextId",
+                    "required": true,
+                    "type": "string"
                   }
                 ],
                 "tier": "essential"
               },
               {
-                "description": "Emits UI:{advanceEvent} with {} to advance to the first choice's target node",
+                "description": "Emits UI:{advanceEvent} with {} to advance to the next node",
                 "key": "ADVANCE",
                 "name": "Advance",
                 "payloadSchema": [
@@ -573,60 +533,17 @@
                     "@config.startNodeId"
                   ],
                   [
-                    "set",
-                    "@entity.currentNode",
-                    [
-                      "array/first",
-                      [
-                        "array/filter",
-                        "@entity.nodes",
-                        [
-                          "fn",
-                          "n",
-                          [
-                            "==",
-                            [
-                              "object/get",
-                              "@n",
-                              "id"
-                            ],
-                            "@entity.currentNodeId"
-                          ]
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "portrait": "@config.portraitUrl",
-                          "position": "bottom",
-                          "speaker": [
-                            "object/get",
-                            "@entity.currentNode",
-                            "speaker"
-                          ],
-                          "text": [
-                            "object/get",
-                            "@entity.currentNode",
-                            "text"
-                          ],
-                          "type": "dialogue-bubble"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
-                          {
-                            "label": "Chapter",
-                            "value": "@entity.currentNodeId"
-                          }
-                        ],
-                        "type": "game-hud"
-                      },
-                      "type": "game-shell"
+                      "advanceEvent": "ADVANCE",
+                      "chooseEvent": "CHOOSE",
+                      "currentNodeId": "@entity.currentNodeId",
+                      "nodes": "@entity.nodes",
+                      "portraitScale": "@config.portraitScale",
+                      "restartEvent": "RESTART",
+                      "type": "visual-novel-board",
+                      "typewriterSpeed": "@config.typewriterSpeed"
                     }
                   ]
                 ],
@@ -639,220 +556,46 @@
                   [
                     "set",
                     "@entity.currentNodeId",
-                    [
-                      "object/get",
-                      "@payload.choice",
-                      "next"
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.currentNode",
-                    [
-                      "array/first",
-                      [
-                        "array/filter",
-                        "@entity.nodes",
-                        [
-                          "fn",
-                          "n",
-                          [
-                            "==",
-                            [
-                              "object/get",
-                              "@n",
-                              "id"
-                            ],
-                            "@entity.currentNodeId"
-                          ]
-                        ]
-                      ]
-                    ]
+                    "@payload.nextId"
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "portrait": "@config.portraitUrl",
-                          "position": "bottom",
-                          "speaker": [
-                            "object/get",
-                            "@entity.currentNode",
-                            "speaker"
-                          ],
-                          "text": [
-                            "object/get",
-                            "@entity.currentNode",
-                            "text"
-                          ],
-                          "type": "dialogue-bubble"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
-                          {
-                            "label": "Chapter",
-                            "value": "@entity.currentNodeId"
-                          }
-                        ],
-                        "type": "game-hud"
-                      },
-                      "type": "game-shell"
+                      "advanceEvent": "ADVANCE",
+                      "chooseEvent": "CHOOSE",
+                      "currentNodeId": "@entity.currentNodeId",
+                      "nodes": "@entity.nodes",
+                      "portraitScale": "@config.portraitScale",
+                      "restartEvent": "RESTART",
+                      "type": "visual-novel-board",
+                      "typewriterSpeed": "@config.typewriterSpeed"
                     }
                   ]
                 ],
                 "event": "CHOOSE",
                 "from": "playing",
-                "guard": [
-                  "and",
-                  [
-                    "!=",
-                    "@payload.choice",
-                    null
-                  ],
-                  [
-                    "!=",
-                    [
-                      "object/get",
-                      "@payload.choice",
-                      "next"
-                    ],
-                    ""
-                  ]
-                ],
                 "to": "playing"
               },
               {
                 "effects": [
                   [
-                    "set",
-                    "@entity.currentNodeId",
-                    [
-                      "object/get",
-                      [
-                        "array/nth",
-                        [
-                          "object/get",
-                          [
-                            "array/first",
-                            [
-                              "array/filter",
-                              "@entity.nodes",
-                              [
-                                "fn",
-                                "n",
-                                [
-                                  "==",
-                                  [
-                                    "object/get",
-                                    "@n",
-                                    "id"
-                                  ],
-                                  "@entity.currentNodeId"
-                                ]
-                              ]
-                            ]
-                          ],
-                          "choices"
-                        ],
-                        0.0
-                      ],
-                      "nextId"
-                    ]
-                  ],
-                  [
-                    "set",
-                    "@entity.currentNode",
-                    [
-                      "array/first",
-                      [
-                        "array/filter",
-                        "@entity.nodes",
-                        [
-                          "fn",
-                          "n",
-                          [
-                            "==",
-                            [
-                              "object/get",
-                              "@n",
-                              "id"
-                            ],
-                            "@entity.currentNodeId"
-                          ]
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "portrait": "@config.portraitUrl",
-                          "position": "bottom",
-                          "speaker": [
-                            "object/get",
-                            "@entity.currentNode",
-                            "speaker"
-                          ],
-                          "text": [
-                            "object/get",
-                            "@entity.currentNode",
-                            "text"
-                          ],
-                          "type": "dialogue-bubble"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
-                          {
-                            "label": "Chapter",
-                            "value": "@entity.currentNodeId"
-                          }
-                        ],
-                        "type": "game-hud"
-                      },
-                      "type": "game-shell"
+                      "advanceEvent": "ADVANCE",
+                      "chooseEvent": "CHOOSE",
+                      "currentNodeId": "@entity.currentNodeId",
+                      "nodes": "@entity.nodes",
+                      "portraitScale": "@config.portraitScale",
+                      "restartEvent": "RESTART",
+                      "type": "visual-novel-board",
+                      "typewriterSpeed": "@config.typewriterSpeed"
                     }
                   ]
                 ],
                 "event": "ADVANCE",
                 "from": "playing",
-                "guard": [
-                  ">",
-                  [
-                    "array/len",
-                    [
-                      "object/get",
-                      [
-                        "array/first",
-                        [
-                          "array/filter",
-                          "@entity.nodes",
-                          [
-                            "fn",
-                            "n",
-                            [
-                              "==",
-                              [
-                                "object/get",
-                                "@n",
-                                "id"
-                              ],
-                              "@entity.currentNodeId"
-                            ]
-                          ]
-                        ]
-                      ],
-                      "choices"
-                    ]
-                  ],
-                  0.0
-                ],
                 "to": "playing"
               },
               {
@@ -863,60 +606,17 @@
                     "@config.startNodeId"
                   ],
                   [
-                    "set",
-                    "@entity.currentNode",
-                    [
-                      "array/first",
-                      [
-                        "array/filter",
-                        "@entity.nodes",
-                        [
-                          "fn",
-                          "n",
-                          [
-                            "==",
-                            [
-                              "object/get",
-                              "@n",
-                              "id"
-                            ],
-                            "@entity.currentNodeId"
-                          ]
-                        ]
-                      ]
-                    ]
-                  ],
-                  [
                     "render-ui",
                     "main",
                     {
-                      "children": [
-                        {
-                          "portrait": "@config.portraitUrl",
-                          "position": "bottom",
-                          "speaker": [
-                            "object/get",
-                            "@entity.currentNode",
-                            "speaker"
-                          ],
-                          "text": [
-                            "object/get",
-                            "@entity.currentNode",
-                            "text"
-                          ],
-                          "type": "dialogue-bubble"
-                        }
-                      ],
-                      "hud": {
-                        "stats": [
-                          {
-                            "label": "Chapter",
-                            "value": "@entity.currentNodeId"
-                          }
-                        ],
-                        "type": "game-hud"
-                      },
-                      "type": "game-shell"
+                      "advanceEvent": "ADVANCE",
+                      "chooseEvent": "CHOOSE",
+                      "currentNodeId": "@entity.currentNodeId",
+                      "nodes": "@entity.nodes",
+                      "portraitScale": "@config.portraitScale",
+                      "restartEvent": "RESTART",
+                      "type": "visual-novel-board",
+                      "typewriterSpeed": "@config.typewriterSpeed"
                     }
                   ]
                 ],

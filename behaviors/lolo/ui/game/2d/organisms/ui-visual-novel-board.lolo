@@ -35,7 +35,6 @@ orbital VisualNovelBoardOrbital {
     id : string!
     nodes : [VisualNovelBoardNodesItem]
     currentNodeId : string = "start"
-    currentNode : VisualNovelBoardNodesItem
   }
 
   trait VisualNovelBoardRender -> @rebindable VisualNovelBoardItem [interaction, instance] {
@@ -45,83 +44,67 @@ orbital VisualNovelBoardOrbital {
       INIT -> playing
         (set @entity.nodes @config.nodes)
         (set @entity.currentNodeId @config.startNodeId)
-        (set @entity.currentNode (array/first (array/filter @entity.nodes (fn n (== (object/get @n id) @entity.currentNodeId)))))
         (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Chapter", value: @entity.currentNodeId } ] }
-          children: [
-            {
-              type: dialogue-bubble
-              position: "bottom"
-              speaker: (object/get @entity.currentNode speaker)
-              text: (object/get @entity.currentNode text)
-              portrait: @config.portraitUrl
-            }
-          ]
+          type: visual-novel-board
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
+          typewriterSpeed: @config.typewriterSpeed
+          portraitScale: @config.portraitScale
+          chooseEvent: CHOOSE
+          advanceEvent: ADVANCE
+          restartEvent: RESTART
         })
 
-      CHOOSE -> playing when (and (!= ?choice null) (!= (object/get ?choice next) ""))
-        (set @entity.currentNodeId (object/get ?choice next))
-        (set @entity.currentNode (array/first (array/filter @entity.nodes (fn n (== (object/get @n id) @entity.currentNodeId)))))
+      CHOOSE -> playing
+        (set @entity.currentNodeId ?nextId)
         (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Chapter", value: @entity.currentNodeId } ] }
-          children: [
-            {
-              type: dialogue-bubble
-              position: "bottom"
-              speaker: (object/get @entity.currentNode speaker)
-              text: (object/get @entity.currentNode text)
-              portrait: @config.portraitUrl
-            }
-          ]
+          type: visual-novel-board
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
+          typewriterSpeed: @config.typewriterSpeed
+          portraitScale: @config.portraitScale
+          chooseEvent: CHOOSE
+          advanceEvent: ADVANCE
+          restartEvent: RESTART
         })
 
-      ADVANCE -> playing when (> (array/len (object/get (array/first (array/filter @entity.nodes (fn n (== (object/get @n id) @entity.currentNodeId)))) choices)) 0)
-        (set @entity.currentNodeId (object/get (array/nth (object/get (array/first (array/filter @entity.nodes (fn n (== (object/get @n id) @entity.currentNodeId)))) choices) 0) nextId))
-        (set @entity.currentNode (array/first (array/filter @entity.nodes (fn n (== (object/get @n id) @entity.currentNodeId)))))
+      ADVANCE -> playing
         (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Chapter", value: @entity.currentNodeId } ] }
-          children: [
-            {
-              type: dialogue-bubble
-              position: "bottom"
-              speaker: (object/get @entity.currentNode speaker)
-              text: (object/get @entity.currentNode text)
-              portrait: @config.portraitUrl
-            }
-          ]
+          type: visual-novel-board
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
+          typewriterSpeed: @config.typewriterSpeed
+          portraitScale: @config.portraitScale
+          chooseEvent: CHOOSE
+          advanceEvent: ADVANCE
+          restartEvent: RESTART
         })
 
       RESTART -> playing
         (set @entity.currentNodeId @config.startNodeId)
-        (set @entity.currentNode (array/first (array/filter @entity.nodes (fn n (== (object/get @n id) @entity.currentNodeId)))))
         (render-ui main {
-          type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Chapter", value: @entity.currentNodeId } ] }
-          children: [
-            {
-              type: dialogue-bubble
-              position: "bottom"
-              speaker: (object/get @entity.currentNode speaker)
-              text: (object/get @entity.currentNode text)
-              portrait: @config.portraitUrl
-            }
-          ]
+          type: visual-novel-board
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
+          typewriterSpeed: @config.typewriterSpeed
+          portraitScale: @config.portraitScale
+          chooseEvent: CHOOSE
+          advanceEvent: ADVANCE
+          restartEvent: RESTART
         })
     }
 
     emits {
       CHOOSE -> external {
-        choice : object
+        choiceIndex : number!
+        nextId : string!
       }
-        @description "Emits UI:{choiceEvent} with {choice} when the player selects a branching choice"
+        @description "Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice"
         @tier "essential"
       ADVANCE -> external {
         id : string
       }
-        @description "Emits UI:{advanceEvent} with {} to advance to the first choice's target node"
+        @description "Emits UI:{advanceEvent} with {} to advance to the next node"
         @tier "essential"
       RESTART -> external {
         id : string
