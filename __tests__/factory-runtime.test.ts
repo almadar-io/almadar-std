@@ -6,10 +6,13 @@
  * representative organism (per the SDK plan).
  */
 
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { describe, it, expect } from 'vitest';
-import type { OrbitalSchema } from '@almadar/core';
+import type { OrbitalSchema, TraitConfigValue } from '@almadar/core';
 import {
   applyParamsToOrb,
   applyParamsToWholeOrb,
@@ -18,6 +21,77 @@ import {
 import type { OrbitalTraitOverride } from '../factory-runtime/index.js';
 
 const REGISTRY_ROOT = join(__dirname, '..', 'behaviors', 'registry');
+const SIGNATURES_PATH = join(__dirname, '..', 'behaviors', 'registry', 'factory-signatures.json');
+
+// ─── Config-override round-trip helpers ───────────────────────────────────────
+
+interface OverridableConfigKey {
+  readonly key: string;
+  readonly type: string;
+  readonly default?: unknown;
+  readonly enumValues?: readonly string[];
+}
+
+interface TraitSig {
+  readonly name: string;
+  readonly overridableConfigKeys: readonly OverridableConfigKey[];
+}
+
+interface FactorySig {
+  readonly organism: string;
+  readonly orbital: string;
+  readonly tier: string;
+  readonly factoryPath: string;
+  readonly traits: readonly TraitSig[];
+}
+
+interface FactorySignatureCatalog {
+  readonly signatures: readonly FactorySig[];
+}
+
+/**
+ * Synthesize a non-default value for every overridable config key so the
+ * round-trip exercises a non-trivial override path through `applyParamsToOrb`.
+ * The logic mirrors what the bug exposed: the old code flat-spread a config
+ * object into a bare value, producing a schema `orb resolve` rejects.
+ */
+function synthesizeConfigOverride(knobs: readonly OverridableConfigKey[]): Record<string, TraitConfigValue> {
+  const out: Record<string, TraitConfigValue> = {};
+  for (const knob of knobs) {
+    if (knob.type === 'boolean') {
+      out[knob.key] = !(knob.default ?? false);
+    } else if (knob.enumValues && knob.enumValues.length > 0) {
+      out[knob.key] = knob.enumValues[0] as string;
+    } else if (knob.type === 'number') {
+      out[knob.key] = (typeof knob.default === 'number' ? knob.default : 0) + 1;
+    } else {
+      out[knob.key] = (knob.default ?? null) as TraitConfigValue;
+    }
+  }
+  return out;
+}
+
+function resolveOrbBinary(): string | null {
+  const homeOrb = join(process.env['HOME'] ?? '', 'bin', 'orb');
+  if (existsSync(homeOrb)) return homeOrb;
+  try {
+    const { spawnSync: sp } = require('node:child_process') as typeof import('node:child_process');
+    const r = sp('which', ['orb'], { encoding: 'utf-8' });
+    if (r.status === 0 && r.stdout.trim()) return r.stdout.trim();
+  } catch { /* not on PATH */ }
+  return null;
+}
+
+/** Derive the .orb path from a factory signature's factoryPath. */
+function orbPathFromSig(sig: FactorySig): string {
+  // factoryPath: behaviors/functions/<topic>/[<subtopic>/]<tier>/<organism>.ts
+  // .orb:        behaviors/registry/<topic>/[<subtopic>/]<tier>/<organism>.orb
+  // REGISTRY_ROOT already points to behaviors/registry.
+  const rel = sig.factoryPath
+    .replace('behaviors/functions/', '')
+    .replace(/\.ts$/, '.orb');
+  return join(REGISTRY_ROOT, rel);
+}
 
 async function loadOrb(topic: string, tier: string, name: string): Promise<OrbitalSchema> {
   const path = join(REGISTRY_ROOT, topic, tier, `${name}.orb`);
@@ -118,5 +192,108 @@ describe('factory-runtime', () => {
         expect(entity.name).toBe('Metric');
       }
     });
+  });
+
+  describe('config-override round-trip (TS factory + orb resolve)', () => {
+    it(
+      'every factory with overridableConfigKeys produces an orb resolve-clean schema when config is overridden',
+      async () => {
+        const orbBin = resolveOrbBinary();
+        if (!orbBin) {
+          console.warn(
+            '[factory-config-roundtrip] orb binary not found — skipping resolve checks. ' +
+              'Install via `make release install` in orbital-rust.',
+          );
+          return;
+        }
+
+        const catalogRaw = await readFile(SIGNATURES_PATH, 'utf-8');
+        const catalog = JSON.parse(catalogRaw) as FactorySignatureCatalog;
+
+        const failures: string[] = [];
+        const tempFiles: string[] = [];
+
+        for (const sig of catalog.signatures) {
+          const traitsWithConfig = sig.traits.filter(
+            (t) => t.overridableConfigKeys.length > 0,
+          );
+          if (traitsWithConfig.length === 0) continue;
+
+          const orbFilePath = orbPathFromSig(sig);
+          let orb: OrbitalSchema;
+          try {
+            const raw = await readFile(orbFilePath, 'utf-8');
+            orb = JSON.parse(raw) as OrbitalSchema;
+          } catch {
+            failures.push(`${sig.organism}::${sig.orbital} — could not read .orb at ${orbFilePath}`);
+            continue;
+          }
+
+          const manifests = extractManifest(orb);
+          const manifest = manifests.find((m) => m.orbitalName === sig.orbital);
+          if (!manifest) {
+            failures.push(`${sig.organism}::${sig.orbital} — extractManifest returned no entry`);
+            continue;
+          }
+
+          // Build traitOverrides with synthesized config for every trait that
+          // has overridable keys AND is in the manifest's traitNames (ref-traits only —
+          // inline traits don't have a config override surface in the params bag).
+          const traitOverrides: Record<string, OrbitalTraitOverride> = {};
+          for (const traitSig of traitsWithConfig) {
+            if (!manifest.traitNames.includes(traitSig.name)) continue;
+            traitOverrides[traitSig.name] = {
+              config: synthesizeConfigOverride(traitSig.overridableConfigKeys),
+            };
+          }
+          if (Object.keys(traitOverrides).length === 0) continue;
+
+          let builtOrbital;
+          try {
+            builtOrbital = applyParamsToOrb(orb, sig.orbital, manifest, { traitOverrides });
+          } catch (e) {
+            failures.push(
+              `${sig.organism}::${sig.orbital} — applyParamsToOrb threw: ${String(e)}`,
+            );
+            continue;
+          }
+
+          // Wrap the single orbital back into an OrbitalSchema for `orb resolve`.
+          const wrappedSchema: OrbitalSchema = {
+            name: orb.name,
+            orbitals: [builtOrbital],
+          };
+          const tmpPath = join(
+            tmpdir(),
+            `factory-config-roundtrip-${sig.organism}-${sig.orbital}-${Date.now()}.orb`,
+          );
+          tempFiles.push(tmpPath);
+          await writeFile(tmpPath, JSON.stringify(wrappedSchema, null, 2), 'utf-8');
+
+          const proc = spawnSync(orbBin, ['resolve', tmpPath], {
+            encoding: 'utf-8',
+            timeout: 30_000,
+          });
+
+          if (proc.status !== 0) {
+            const output = `${proc.stdout ?? ''}\n${proc.stderr ?? ''}`.trim();
+            failures.push(
+              `${sig.organism}::${sig.orbital} — orb resolve failed:\n${output.split('\n').slice(0, 8).join('\n')}`,
+            );
+          }
+        }
+
+        // Clean up temp files regardless of outcome.
+        await Promise.allSettled(tempFiles.map((f) => unlink(f).catch(() => undefined)));
+
+        if (failures.length > 0) {
+          throw new Error(
+            `[factory-config-roundtrip] ${failures.length} factory/orbital(s) failed orb resolve with synthesized config overrides:\n\n` +
+              failures.map((f, i) => `  ${i + 1}. ${f}`).join('\n\n'),
+          );
+        }
+      },
+      120_000,
+    );
   });
 });
