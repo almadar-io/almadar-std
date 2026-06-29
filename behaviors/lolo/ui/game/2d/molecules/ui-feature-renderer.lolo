@@ -1,5 +1,5 @@
 app ui-feature-renderer "1.0.0"
-"FeatureRenderer — UI factory (1:1 with the @almadar/ui feature-renderer pattern)."
+"FeatureRenderer — feature overlay via canvas-2d (feature-renderer was deleted in Stream E)."
 orbital FeatureRendererOrbital {
   type FeatureRendererFeaturesItem = {
     id : string
@@ -40,32 +40,8 @@ orbital FeatureRendererOrbital {
     y : number!
     z : number
     type : string!
-    sprite : FeatureRendererFEATURECLICKFeatureSprite
-    assetUrl : FeatureRendererFEATURECLICKFeatureAssetUrl
     color : string
     elevation : number
-  }
-  type FeatureRendererFEATURECLICKFeatureSprite = {
-    url : asset!
-    role : string
-    category : string
-    animations : [string]
-    style : string
-    dimension : string
-    aspect : string
-    name : string
-    thumbnailUrl : string
-  }
-  type FeatureRendererFEATURECLICKFeatureAssetUrl = {
-    url : asset!
-    role : string
-    category : string
-    animations : [string]
-    style : string
-    dimension : string
-    aspect : string
-    name : string
-    thumbnailUrl : string
   }
   type FeatureRendererFEATUREHOVERFeature = {
     id : string
@@ -73,32 +49,8 @@ orbital FeatureRendererOrbital {
     y : number!
     z : number
     type : string!
-    sprite : FeatureRendererFEATUREHOVERFeatureSprite
-    assetUrl : FeatureRendererFEATUREHOVERFeatureAssetUrl
     color : string
     elevation : number
-  }
-  type FeatureRendererFEATUREHOVERFeatureSprite = {
-    url : asset!
-    role : string
-    category : string
-    animations : [string]
-    style : string
-    dimension : string
-    aspect : string
-    name : string
-    thumbnailUrl : string
-  }
-  type FeatureRendererFEATUREHOVERFeatureAssetUrl = {
-    url : asset!
-    role : string
-    category : string
-    animations : [string]
-    style : string
-    dimension : string
-    aspect : string
-    name : string
-    thumbnailUrl : string
   }
 
   entity FeatureRendererItem [runtime] {
@@ -112,14 +64,13 @@ orbital FeatureRendererOrbital {
       INIT -> idle
         (render-ui main {
           features: @config.features
-          cellSize: @config.cellSize
-          offsetX: @config.offsetX
-          offsetZ: @config.offsetZ
-          onFeatureClick: FEATURE_CLICK
-          onFeatureHover: FEATURE_HOVER
-          selectedFeatureIds: @config.selectedFeatureIds
-          featureColors: @config.featureColors
-          type: feature-renderer
+          scale: @config.cellSize
+          onTileClick: FEATURE_CLICK
+          tileClickEvent: FEATURE_CLICK
+          onTileHover: FEATURE_HOVER
+          tileHoverEvent: FEATURE_HOVER
+          projection: isometric
+          type: canvas-2d
         })
     }
 
@@ -143,23 +94,7 @@ orbital FeatureRendererOrbital {
         @tier "presentation"
       cellSize : number = 1
         @label "Cell Size"
-        @description "Grid cell size"
-        @tier "presentation"
-      offsetX : number = 0
-        @label "Offset X"
-        @description "Grid offset X"
-        @tier "presentation"
-      offsetZ : number = 0
-        @label "Offset Z"
-        @description "Grid offset Z"
-        @tier "presentation"
-      selectedFeatureIds : [string] = []
-        @label "Selected Feature Ids"
-        @description "Selected feature IDs"
-        @tier "presentation"
-      featureColors : Map string string = {}
-        @label "Feature Colors"
-        @description "Feature color overrides"
+        @description "Grid cell size (maps to canvas-2d scale)"
         @tier "presentation"
     }
   }

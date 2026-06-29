@@ -1,0 +1,96 @@
+app ui-control-grid "1.0.0"
+"ControlGrid — UI factory (1:1 with the @almadar/ui control-grid pattern)."
+orbital ControlGridOrbital {
+  type ControlGridButtonsItem = {
+    id : string!
+    label : string
+    icon : icon
+    assetUrl : ControlGridButtonsItemAssetUrl
+    variant : "primary" | "secondary" | "ghost"
+  }
+  type ControlGridButtonsItemAssetUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+
+  entity ControlGridItem [runtime] {
+    id : string!
+  }
+
+  trait ControlGridRender -> @rebindable ControlGridItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          kind: @config.kind
+          buttons: @config.buttons
+          layout: @config.layout
+          includeDiagonals: @config.includeDiagonals
+          onAction: ACTION
+          actionEvent: ACTION
+          onDirection: DIRECTION
+          directionEvent: DIRECTION
+          size: @config.size
+          disabled: @config.disabled
+          className: @config.className
+          type: control-grid
+        })
+    }
+
+    emits {
+      ACTION -> external {
+        id : string
+        pressed : boolean
+      }
+        @description "Called when a button/direction is pressed or released"
+        @tier "essential"
+      DIRECTION -> external {
+        direction : string
+        pressed : boolean
+      }
+        @description "Called when a direction is pressed or released (kind='dpad' convenience overload)"
+        @tier "essential"
+    }
+
+    config {
+      kind : "dpad" | "actions" = dpad
+        @label "Kind"
+        @description "kind prop"
+        @tier "presentation"
+      buttons : [ControlGridButtonsItem] = [{ id: "Id", label: "Label", icon: "circle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png", role: "decoration", category: "asset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }, variant: primary }, { id: "Id 2", label: "Label 2", icon: "circle", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png", role: "decoration", category: "asset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }, variant: secondary }]
+        @label "Buttons"
+        @description "action buttons (kind='actions')"
+        @tier "presentation"
+      layout : "horizontal" | "vertical" | "diamond" = horizontal
+        @label "Layout"
+        @description "Layout for kind='actions'"
+        @tier "presentation"
+      includeDiagonals : boolean = false
+        @label "Include Diagonals"
+        @description "Whether to include diagonal buttons (kind='dpad')"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "size prop"
+        @tier "presentation"
+      disabled : boolean = false
+        @label "Disabled"
+        @description "disabled prop"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/control-grid" as ControlGridPage -> ControlGridRender
+}

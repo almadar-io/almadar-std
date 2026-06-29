@@ -62,7 +62,7 @@ export interface StdUiTimelineConfig {
   isLoading?: boolean;
   /** Default: `[{"label":"Label","navigatesTo":"Navigates To","variant":"primary"},{"label":"Label 2","navigatesTo":"Navigates To 2","variant":"secondary"}]` */
   itemActions?: EntityRow[];
-  /** Default: `[]` */
+  /** Default: `[{"date":"Date","description":"Description","icon":"circle","id":"Id","status":"complete","tags":["Item","Item 2"],"title":"Title"},{"date":"Date 2","description":"Description 2","icon":"circle","id":"Id 2","status":"active","tags":["Item","Item 2"],"title":"Title 2"}]` */
   items?: EntityRow[];
   /** Default: `"vertical-spacious"` */
   look?: 'vertical-compact' | 'vertical-spacious' | 'horizontal' | 'swimlane';
@@ -246,22 +246,76 @@ export function stdUiTimelineTimelineOrbital(params: StdUiTimelineTimelineOrbita
             'type': '[TimelineItemActionsItem]',
           },
           'items': {
-            'default': [],
+            'default': [
+              {
+                'date': 'Date',
+                'description': 'Description',
+                'icon': 'circle',
+                'id': 'Id',
+                'status': 'complete',
+                'tags': [
+                  'Item',
+                  'Item 2',
+                ],
+                'title': 'Title',
+              },
+              {
+                'date': 'Date 2',
+                'description': 'Description 2',
+                'icon': 'circle',
+                'id': 'Id 2',
+                'status': 'active',
+                'tags': [
+                  'Item',
+                  'Item 2',
+                ],
+                'title': 'Title 2',
+              },
+            ],
             'description': 'Timeline items',
             'items': {
               'properties': {
-                'data': {
-                  'name': 'data',
+                'date': {
+                  'name': 'date',
+                  'required': false,
+                  'type': 'string',
+                },
+                'description': {
+                  'name': 'description',
+                  'required': false,
+                  'type': 'string',
+                },
+                'icon': {
+                  'name': 'icon',
+                  'required': false,
+                  'type': 'string',
+                },
+                'id': {
+                  'name': 'id',
                   'required': true,
                   'type': 'string',
                 },
-                'index': {
-                  'name': 'index',
-                  'required': true,
-                  'type': 'number',
+                'status': {
+                  'name': 'status',
+                  'required': false,
+                  'type': 'string',
+                  'values': [
+                    'complete',
+                    'active',
+                    'pending',
+                    'error',
+                  ],
                 },
-                'source': {
-                  'name': 'source',
+                'tags': {
+                  'items': {
+                    'type': 'string',
+                  },
+                  'name': 'tags',
+                  'required': false,
+                  'type': 'array',
+                },
+                'title': {
+                  'name': 'title',
                   'required': true,
                   'type': 'string',
                 },

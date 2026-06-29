@@ -53,7 +53,7 @@ export interface StdUiScoreDisplayConfig {
   score?: number;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `0` */
+  /** Default: `1` */
   value?: number;
 }
 

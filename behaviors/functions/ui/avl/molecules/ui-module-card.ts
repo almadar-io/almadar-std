@@ -39,8 +39,8 @@ export type StdUiModuleCardEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiModuleCardConfig {
-  /** Default: `{"entityName":"Entity Name","externalLinks":[{"direction":"Direction","eventName":"Event Name","targetOrbital":"Target Orbital","traitName":"Trait Name"},{"direction":"Direction 2","eventName":"Event Name 2","targetOrbital":"Target Orbital 2","traitName":"Trait Name 2"}],"fields":[{"hasDefault":false,"name":"Name","required":false,"type":"Type"},{"hasDefault":true,"name":"Name 2","required":true,"type":"Type 2"}],"orbitalName":"Orbital Name","pages":[{"name":"Name","route":"Route"},{"name":"Name 2","route":"Route 2"}],"persistence":"Persistence","traitDetails":{},"traits":[{"emits":["Item","Item 2"],"eventCount":1,"listens":["Item","Item 2"],"name":"Name","stateCount":1,"transitionCount":1},{"emits":["Item","Item 2"],"eventCount":2,"listens":["Item","Item 2"],"name":"Name 2","stateCount":2,"transitionCount":2}]}` */
-  data?: EntityRow;
+  /** Default: `{}` */
+  data?: unknown;
 }
 
 /**

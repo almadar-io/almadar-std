@@ -41,7 +41,7 @@ export type StdUiReflectionBlockEventKey = 'INIT';
 export interface StdUiReflectionBlockConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `1` */
   index?: number;
   /** Default: `"Prompt"` */
   prompt?: string;

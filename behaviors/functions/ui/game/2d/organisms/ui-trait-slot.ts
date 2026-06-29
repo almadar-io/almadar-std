@@ -90,7 +90,7 @@ export interface StdUiTraitSlotConfig {
   showTooltip?: boolean;
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';
-  /** Default: `0` */
+  /** Default: `1` */
   slotNumber?: number;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
   tooltipFrameUrl?: unknown;
@@ -158,7 +158,7 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
             'type': 'string',
           },
           {
-            'default': 0,
+            'default': 1,
             'name': 'slotNumber',
             'type': 'number',
           },
@@ -347,7 +347,7 @@ export function stdUiTraitSlotTraitSlotOrbital(params: StdUiTraitSlotTraitSlotOr
             ],
           },
           'slotNumber': {
-            'default': 0,
+            'default': 1,
             'description': 'Slot index (1-based)',
             'label': 'Slot Number',
             'tier': 'presentation',

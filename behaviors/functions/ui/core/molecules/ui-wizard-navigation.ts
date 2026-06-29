@@ -92,7 +92,7 @@ export interface StdUiWizardNavigationConfig {
   compact?: boolean;
   /** Default: `"Complete Label"` */
   completeLabel?: string;
-  /** Default: `0` */
+  /** Default: `1` */
   currentStep?: number;
   /** Default: `true` */
   isValid?: boolean;
@@ -104,7 +104,7 @@ export interface StdUiWizardNavigationConfig {
   showComplete?: boolean;
   /** Default: `true` */
   showNext?: boolean;
-  /** Default: `0` */
+  /** Default: `1` */
   totalSteps?: number;
 }
 

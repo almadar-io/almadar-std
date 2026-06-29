@@ -45,7 +45,6 @@ export interface StdUiSplitSectionConfig {
   bullets?: string[];
   /** Default: `""` */
   className?: string;
-  description?: unknown;
   /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
   image?: EntityRow;
   /** Default: `"right"` */

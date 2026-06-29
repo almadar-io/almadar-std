@@ -56,7 +56,7 @@ export interface StdUiPaginationPageSizeChangePayload {
 export interface StdUiPaginationConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `1` */
   currentPage?: number;
   /** Default: `7` */
   maxVisiblePages?: number;
@@ -72,7 +72,7 @@ export interface StdUiPaginationConfig {
   showTotal?: boolean;
   /** Default: `0` */
   totalItems?: number;
-  /** Default: `0` */
+  /** Default: `1` */
   totalPages?: number;
 }
 

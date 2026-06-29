@@ -1,0 +1,60 @@
+app ui-game-icon "1.0.0"
+"GameIcon — UI factory (1:1 with the @almadar/ui game-icon pattern)."
+orbital GameIconOrbital {
+  type GameIconAssetUrl = {
+    url : asset!
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+
+  entity GameIconItem [runtime] {
+    id : string!
+  }
+
+  trait GameIconRender -> @rebindable GameIconItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          assetUrl: @config.assetUrl
+          icon: @config.icon
+          size: @config.size
+          alt: @config.alt
+          className: @config.className
+          type: game-icon
+        })
+    }
+
+    config {
+      assetUrl : GameIconAssetUrl = { url: "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png", role: "decoration", category: "asset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }
+        @label "Asset Url"
+        @description "Asset — when url is present, renders an img (Asset-primary)."
+        @tier "presentation"
+      icon : icon = "circle"
+        @label "Icon"
+        @description "Lucide component or kebab-case icon name (fallback when no assetUrl)."
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Pixel size or named variant."
+        @tier "presentation"
+      alt : string = "Alt"
+        @label "Alt"
+        @description "Alt text for the img (defaults to assetUrl.category)."
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes."
+        @tier "presentation"
+    }
+  }
+
+  page "/game-icon" as GameIconPage -> GameIconRender
+}

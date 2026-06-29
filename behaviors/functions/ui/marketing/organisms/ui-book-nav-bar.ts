@@ -43,11 +43,11 @@ export interface StdUiBookNavBarConfig {
   chapterTitle?: string;
   /** Default: `""` */
   className?: string;
-  /** Default: `0` */
+  /** Default: `1` */
   currentPage?: number;
   /** Default: `"rtl"` */
   direction?: 'rtl' | 'ltr';
-  /** Default: `0` */
+  /** Default: `1` */
   totalPages?: number;
 }
 
@@ -138,7 +138,7 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
             'type': 'string',
           },
           'currentPage': {
-            'default': 0,
+            'default': 1,
             'description': 'currentPage prop',
             'label': 'Current Page',
             'tier': 'presentation',
@@ -156,7 +156,7 @@ export function stdUiBookNavBarBookNavBarOrbital(params: StdUiBookNavBarBookNavB
             ],
           },
           'totalPages': {
-            'default': 0,
+            'default': 1,
             'description': 'totalPages prop',
             'label': 'Total Pages',
             'tier': 'presentation',

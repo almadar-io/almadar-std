@@ -41,7 +41,7 @@ export type StdUiGameHudEventKey = 'INIT';
 export interface StdUiGameHudConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"bind":"Bind","format":"Format","icon":"circle","label":"Label","max":1,"position":"Position","type":"Type","value":"Value"},{"bind":"Bind 2","format":"Format 2","icon":"circle","label":"Label 2","max":2,"position":"Position 2","type":"Type 2","value":"Value 2"}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"bind":"Bind","format":"Format","icon":"circle","label":"Label","max":1,"position":"Position","type":"Type","value":"Value"},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"bind":"Bind 2","format":"Format 2","icon":"circle","label":"Label 2","max":2,"position":"Position 2","type":"Type 2","value":"Value 2"}]` */
   elements?: EntityRow[];
   /** Default: `[{"field":"Field","source":"Source"},{"field":"Field 2","source":"Source 2"}]` */
   items?: EntityRow[];

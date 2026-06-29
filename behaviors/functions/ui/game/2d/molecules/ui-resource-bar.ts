@@ -41,7 +41,7 @@ export type StdUiResourceBarEventKey = 'INIT';
 export interface StdUiResourceBarConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"icon":"circle","label":"Label","max":1,"value":1},{"icon":"circle","label":"Label 2","max":2,"value":2}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"icon":"circle","label":"Label","max":1,"value":1},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"icon":"circle","label":"Label 2","max":2,"value":2}]` */
   resources?: EntityRow[];
   /** Default: `"md"` */
   size?: 'sm' | 'md' | 'lg';

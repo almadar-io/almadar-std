@@ -62,7 +62,7 @@ export interface StdUiMeterConfig {
   thresholds?: EntityRow[];
   /** Default: `"Unit"` */
   unit?: string;
-  /** Default: `0` */
+  /** Default: `1` */
   value?: number;
   /** Default: `"linear"` */
   variant?: 'linear' | 'radial' | 'segmented';

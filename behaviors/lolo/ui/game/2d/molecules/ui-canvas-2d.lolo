@@ -1,27 +1,30 @@
 app ui-canvas-2d "1.0.0"
-"Canvas2D — UI factory (1:1 with the @almadar/ui canvas-2d pattern)."
-orbital Canvas2DOrbital {
-  type Canvas2DError = {
+"Canvas2d — UI factory (1:1 with the @almadar/ui canvas-2d pattern)."
+orbital Canvas2dOrbital {
+  type Canvas2dError = {
     message : string!
     name : string
     code : string
     stack : string
   }
-  type Canvas2DTilesItem = {
-    id : string
+  type Canvas2dPlatformsItem = {
     x : number!
     y : number!
-    z : number
-    terrain : string
-    type : string
-    terrainSprite : Canvas2DTilesItemTerrainSprite
-    passable : boolean
-    movementCost : number
-    tileType : string
-    elevation : number
-    modelUrl : Canvas2DTilesItemModelUrl
+    width : number!
+    height : number!
+    type : "ground" | "platform" | "hazard" | "goal"
   }
-  type Canvas2DTilesItemTerrainSprite = {
+  type Canvas2dPlayer = {
+    x : number!
+    y : number!
+    width : number
+    height : number
+    vx : number
+    vy : number
+    grounded : boolean
+    facingRight : boolean
+  }
+  type Canvas2dBackgroundImage = {
     url : asset!
     role : string
     category : string
@@ -32,98 +35,22 @@ orbital Canvas2DOrbital {
     name : string
     thumbnailUrl : string
   }
-  type Canvas2DTilesItemModelUrl = {
-    url : asset!
-    role : string
-    category : string
-    animations : [string]
-    style : string
-    dimension : string
-    aspect : string
-    name : string
-    thumbnailUrl : string
-  }
-  type Canvas2DUnitsItem = {
-    id : string!
-    position : Canvas2DUnitsItemPosition
-    x : number
-    y : number
-    z : number
-    sprite : Canvas2DUnitsItemSprite
-    spriteSheet : Canvas2DUnitsItemSpriteSheet
-    modelUrl : Canvas2DUnitsItemModelUrl
-    unitType : string
-    heroId : string
-    name : string
-    team : "player" | "enemy" | "neutral"
-    faction : "player" | "enemy" | "neutral"
-    health : number
-    maxHealth : number
-    traits : [Canvas2DUnitsItemTraitsItem]
-    previousPosition : Canvas2DUnitsItemPreviousPosition
-    elevation : number
-    animation : "idle" | "walk" | "attack" | "hit" | "death"
-    frame : number
-  }
-  type Canvas2DUnitsItemPosition = {
+  type Canvas2dValidMovesItem = {
     x : number!
     y : number!
   }
-  type Canvas2DUnitsItemSprite = {
-    url : asset!
-    role : string
-    category : string
-    animations : [string]
-    style : string
-    dimension : string
-    aspect : string
-    name : string
-    thumbnailUrl : string
-  }
-  type Canvas2DUnitsItemSpriteSheet = {
-    url : asset!
-    role : string
-    category : string
-    animations : [string]
-    style : string
-    dimension : string
-    aspect : string
-    name : string
-    thumbnailUrl : string
-  }
-  type Canvas2DUnitsItemModelUrl = {
-    url : asset!
-    role : string
-    category : string
-    animations : [string]
-    style : string
-    dimension : string
-    aspect : string
-    name : string
-    thumbnailUrl : string
-  }
-  type Canvas2DUnitsItemTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type Canvas2DUnitsItemPreviousPosition = {
+  type Canvas2dAttackTargetsItem = {
     x : number!
     y : number!
   }
-  type Canvas2DFeaturesItem = {
-    id : string
+  type Canvas2dHoveredTile = {
     x : number!
     y : number!
-    z : number
-    type : string!
-    sprite : Canvas2DFeaturesItemSprite
-    assetUrl : Canvas2DFeaturesItemAssetUrl
-    color : string
-    elevation : number
   }
-  type Canvas2DFeaturesItemSprite = {
+  type Canvas2dAnimate = {
+    fps : number!
+  }
+  type Canvas2dPlayerSprite = {
     url : asset!
     role : string
     category : string
@@ -134,7 +61,7 @@ orbital Canvas2DOrbital {
     name : string
     thumbnailUrl : string
   }
-  type Canvas2DFeaturesItemAssetUrl = {
+  type Canvas2dTileSpritesValue = {
     url : asset!
     role : string
     category : string
@@ -145,31 +72,13 @@ orbital Canvas2DOrbital {
     name : string
     thumbnailUrl : string
   }
-  type Canvas2DEffectsItem = {
-    key : string!
-    x : number!
-    y : number!
-    ttl : number!
+  type Canvas2dAssetManifest = {
+    terrains : Map string Canvas2dAssetManifestTerrainsValue
+    units : Map string Canvas2dAssetManifestUnitsValue
+    features : Map string Canvas2dAssetManifestFeaturesValue
+    effects : Map string Canvas2dAssetManifestEffectsValue
   }
-  type Canvas2DValidMovesItem = {
-    x : number!
-    y : number!
-  }
-  type Canvas2DAttackTargetsItem = {
-    x : number!
-    y : number!
-  }
-  type Canvas2DHoveredTile = {
-    x : number!
-    y : number!
-  }
-  type Canvas2DAssetManifest = {
-    terrains : Map string Canvas2DAssetManifestTerrainsValue
-    units : Map string Canvas2DAssetManifestUnitsValue
-    features : Map string Canvas2DAssetManifestFeaturesValue
-    effects : Map string Canvas2DAssetManifestEffectsValue
-  }
-  type Canvas2DAssetManifestTerrainsValue = {
+  type Canvas2dAssetManifestTerrainsValue = {
     url : asset!
     role : string
     category : string
@@ -180,7 +89,7 @@ orbital Canvas2DOrbital {
     name : string
     thumbnailUrl : string
   }
-  type Canvas2DAssetManifestUnitsValue = {
+  type Canvas2dAssetManifestUnitsValue = {
     url : asset!
     role : string
     category : string
@@ -191,7 +100,7 @@ orbital Canvas2DOrbital {
     name : string
     thumbnailUrl : string
   }
-  type Canvas2DAssetManifestFeaturesValue = {
+  type Canvas2dAssetManifestFeaturesValue = {
     url : asset!
     role : string
     category : string
@@ -202,7 +111,7 @@ orbital Canvas2DOrbital {
     name : string
     thumbnailUrl : string
   }
-  type Canvas2DAssetManifestEffectsValue = {
+  type Canvas2dAssetManifestEffectsValue = {
     url : asset!
     role : string
     category : string
@@ -214,11 +123,11 @@ orbital Canvas2DOrbital {
     thumbnailUrl : string
   }
 
-  entity Canvas2DItem [runtime] {
+  entity Canvas2dItem [runtime] {
     id : string!
   }
 
-  trait Canvas2DRender -> @rebindable Canvas2DItem [interaction, instance] {
+  trait Canvas2dRender -> @rebindable Canvas2dItem [interaction, instance] {
     initial: idle
 
     state idle {
@@ -227,36 +136,38 @@ orbital Canvas2DOrbital {
           className: @config.className
           isLoading: @config.isLoading
           error: @config.error
+          projection: @config.projection
           tiles: @config.tiles
           units: @config.units
           features: @config.features
           effects: @config.effects
+          platforms: @config.platforms
+          player: @config.player
+          backgroundImage: @config.backgroundImage
           selectedUnitId: @config.selectedUnitId
           validMoves: @config.validMoves
           attackTargets: @config.attackTargets
           hoveredTile: @config.hoveredTile
-          onTileClick: TILE_CLICK
-          onUnitClick: UNIT_CLICK
-          onTileHover: TILE_HOVER
-          onTileLeave: TILE_LEAVE
           tileClickEvent: TILE_CLICK
           unitClickEvent: UNIT_CLICK
           tileHoverEvent: TILE_HOVER
           tileLeaveEvent: TILE_LEAVE
-          projection: @config.projection
+          keyEvent: KEY
+          camera: @config.camera
           scale: @config.scale
-          debug: @config.debug
-          backgroundImage: @config.backgroundImage
-          showMinimap: @config.showMinimap
-          enableCamera: @config.enableCamera
           unitScale: @config.unitScale
+          showMinimap: @config.showMinimap
+          animate: @config.animate
+          debug: @config.debug
           spriteHeightRatio: @config.spriteHeightRatio
           spriteMaxWidthRatio: @config.spriteMaxWidthRatio
-          boardWidth: @config.boardWidth
-          boardHeight: @config.boardHeight
           diamondTopY: @config.diamondTopY
           effectSpriteUrls: @config.effectSpriteUrls
-          hasActiveEffects: @config.hasActiveEffects
+          playerSprite: @config.playerSprite
+          tileSprites: @config.tileSprites
+          bgColor: @config.bgColor
+          worldWidth: @config.worldWidth
+          worldHeight: @config.worldHeight
           assetManifest: @config.assetManifest
           type: canvas-2d
         })
@@ -264,101 +175,118 @@ orbital Canvas2DOrbital {
 
     emits {
       TILE_CLICK -> external {
-        x : number
-        y : number
+        x : number!
+        y : number!
       }
-        @description "--- Event handlers (legacy callbacks — prefer declarative event string props below) ---"
+        @description "--- Declarative events back to LOLO ---"
         @tier "essential"
       UNIT_CLICK -> external {
-        unitId : string
+        unitId : string!
       }
-        @description "onUnitClick prop"
+        @description "Emits UI:{unitClickEvent} with { unitId } on unit click"
         @tier "essential"
       TILE_HOVER -> external {
-        x : number
-        y : number
+        x : number!
+        y : number!
       }
-        @description "onTileHover prop"
+        @description "Emits UI:{tileHoverEvent} with { x, y } on tile hover"
         @tier "essential"
       TILE_LEAVE -> external {
         id : string
       }
-        @description "onTileLeave prop"
+        @description "Emits UI:{tileLeaveEvent} with {} on tile leave"
+        @tier "essential"
+      KEY -> external {
+        key : string!
+      }
+        @description "Emits UI:{keyEvent} with { key } on keydown — for side/free keyboard control"
         @tier "essential"
     }
 
     config {
       className : string = ""
         @label "Class Name"
-        @description "Additional CSS classes"
+        @description "--- Closed-circuit ---"
         @tier "presentation"
       isLoading : boolean = false
         @label "Is Loading"
         @description "Loading state indicator"
         @tier "presentation"
-      error : Canvas2DError
+      error : Canvas2dError
         @label "Error"
         @description "Error state"
         @tier "presentation"
-      tiles : [Canvas2DTilesItem] = [{ x: 0, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 2, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 3, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 4, y: 0, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 1, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 1, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { x: 2, y: 1, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 3, y: 1, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 4, y: 1, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 2, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 2, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 2, y: 2, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { x: 3, y: 2, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 4, y: 2, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 3, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 3, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 2, y: 3, terrain: "grass", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor.glb", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "grass", thumbnailUrl: "" } }, { x: 3, y: 3, terrain: "dirt", passable: true, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail.glb", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "dirt", thumbnailUrl: "" } }, { x: 4, y: 3, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 0, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 1, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 2, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 3, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, { x: 4, y: 4, terrain: "stone", passable: false, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/floor/template-floor-detail-a.glb", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }]
+      projection : "isometric" | "hex" | "flat" | "free" | "side" = isometric
+        @label "Projection"
+        @description "--- Projection ---"
+        @tier "presentation"
+      tiles : [json] = []
         @label "Tiles"
-        @description "--- Grid data ---"
+        @description "--- Layer data (each an optional render pass) ---"
         @tier "presentation"
-      units : [Canvas2DUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "worker", name: "Worker", team: player, health: 10, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/models/characters/pit_slave.glb", role: "npc", category: "worker", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "3d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }, { id: "u2", position: { x: 3, y: 3 }, unitType: "guardian", name: "Guardian", team: enemy, health: 8, maxHealth: 10, modelUrl: { url: "https://almadar-kflow-assets.web.app/shared/models/characters/shadow_legionnaire.glb", role: "npc", category: "guardian", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "3d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }]
+      units : [json] = []
         @label "Units"
-        @description "Array of units on the board"
+        @description "Units on the board"
         @tier "presentation"
-      features : [Canvas2DFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/medieval/props/barrels.glb", role: "decoration", category: "gold_mine", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" } }, { id: "f2", x: 3, y: 1, type: "portal", assetUrl: { url: "https://almadar-kflow-assets.web.app/shared/3d/dungeon/gates/gate-door.glb", role: "decoration", category: "portal", animations: ["static"], style: "", dimension: "3d", aspect: "1:1", name: "portal", thumbnailUrl: "" } }]
+      features : [json] = []
         @label "Features"
-        @description "Array of features (resources, portals, buildings, etc.)"
+        @description "Features (resources, portals, buildings, etc.)"
         @tier "presentation"
-      effects : [Canvas2DEffectsItem] = [{ key: "Key", x: 1, y: 1, ttl: 1 }, { key: "Key 2", x: 2, y: 2, ttl: 2 }]
+      effects : [json] = []
         @label "Effects"
-        @description "Active visual effects to draw after units. Sprite URLs resolved via assetManifest.effects[fx.key]."
+        @description "Active visual effects, drawn after units"
+        @tier "presentation"
+      platforms : [Canvas2dPlatformsItem] = [{ x: 1, y: 1, width: 1, height: 1, type: ground }, { x: 2, y: 2, width: 2, height: 2, type: platform }]
+        @label "Platforms"
+        @description "Side-view platforms (AABB). `projection:'side'` only."
+        @tier "presentation"
+      player : Canvas2dPlayer = { x: 1, y: 1, width: 1, height: 1, vx: 1, vy: 1, grounded: false, facingRight: false }
+        @label "Player"
+        @description "Side-view player. `projection:'side'` only."
+        @tier "presentation"
+      backgroundImage : Canvas2dBackgroundImage = { url: "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png", role: "decoration", category: "asset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }
+        @label "Background Image"
+        @description "Background image (tiled behind iso/hex/flat/free; stretched in side)."
         @tier "presentation"
       selectedUnitId : string = ""
         @label "Selected Unit Id"
-        @description "--- Interaction state ---"
+        @description "--- Interaction state (LOLO-owned, passed in) ---"
         @tier "presentation"
-      validMoves : [Canvas2DValidMovesItem] = [{ x: 1, y: 1 }, { x: 2, y: 2 }]
+      validMoves : [Canvas2dValidMovesItem] = [{ x: 1, y: 1 }, { x: 2, y: 2 }]
         @label "Valid Moves"
-        @description "Valid move positions (shown as pulsing green highlights)"
+        @description "Valid move positions (pulsing green highlights)"
         @tier "presentation"
-      attackTargets : [Canvas2DAttackTargetsItem] = [{ x: 1, y: 1 }, { x: 2, y: 2 }]
+      attackTargets : [Canvas2dAttackTargetsItem] = [{ x: 1, y: 1 }, { x: 2, y: 2 }]
         @label "Attack Targets"
-        @description "Attack target positions (shown as pulsing red highlights)"
+        @description "Attack target positions (pulsing red highlights)"
         @tier "presentation"
-      hoveredTile : Canvas2DHoveredTile = { x: 1, y: 1 }
+      hoveredTile : Canvas2dHoveredTile = { x: 1, y: 1 }
         @label "Hovered Tile"
         @description "Hovered tile position"
         @tier "presentation"
-      projection : "isometric" | "hex" | "flat" | "free" | "side" = isometric
-        @label "Projection"
-        @description "--- Rendering options ---"
+      camera : "pan-zoom" | "follow" | "fixed" = "pan-zoom"
+        @label "Camera"
+        @description "--- View config (pure render) ---"
         @tier "presentation"
       scale : number = 0.4
         @label "Scale"
-        @description "Render scale (0.4 = 40% zoom)"
-        @tier "presentation"
-      debug : boolean = false
-        @label "Debug"
-        @description "Show debug grid lines and coordinates"
-        @tier "presentation"
-      backgroundImage : asset = "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"
-        @label "Background Image"
-        @description "Background image URL tiled behind the isometric grid"
-        @tier "presentation"
-      showMinimap : boolean = true
-        @label "Show Minimap"
-        @description "Toggle minimap overlay"
-        @tier "presentation"
-      enableCamera : boolean = true
-        @label "Enable Camera"
-        @description "Enable camera pan/zoom controls"
+        @description "Render scale (0.4 = 40% zoom)."
         @tier "presentation"
       unitScale : number = 1
         @label "Unit Scale"
         @description "Extra scale multiplier for unit draw size. 1 = default."
+        @tier "presentation"
+      showMinimap : boolean = true
+        @label "Show Minimap"
+        @description "Toggle minimap overlay."
+        @tier "presentation"
+      animate : Canvas2dAnimate = { fps: 1 }
+        @label "Animate"
+        @description "Opt-in internal RAF clock. DEFAULT OFF — the LOLO state machine drives the clock."
+        @tier "presentation"
+      debug : boolean = false
+        @label "Debug"
+        @description "--- Tuning (iso/hex/flat/free) ---"
         @tier "presentation"
       spriteHeightRatio : number = 1.5
         @label "Sprite Height Ratio"
@@ -368,32 +296,40 @@ orbital Canvas2DOrbital {
         @label "Sprite Max Width Ratio"
         @description "Max unit draw width as a ratio of scaledTileWidth. Default 0.6."
         @tier "presentation"
-      boardWidth : number = 0
-        @label "Board Width"
-        @description "Board width in tiles (overrides tile-derived size)"
-        @tier "presentation"
-      boardHeight : number = 0
-        @label "Board Height"
-        @description "Board height in tiles (overrides tile-derived size)"
-        @tier "presentation"
       diamondTopY : number = 0
         @label "Diamond Top Y"
-        @description "Override for the diamond-top Y offset within the tile sprite (default: 374). This controls where the flat diamond face sits vertically inside the tile image."
+        @description "Override for the diamond-top Y offset within the tile sprite."
         @tier "presentation"
-      effectSpriteUrls : [asset] = []
+      effectSpriteUrls : [string] = []
         @label "Effect Sprite Urls"
         @description "Additional sprite URLs to preload (e.g., effect sprites)"
         @tier "presentation"
-      hasActiveEffects : boolean = false
-        @label "Has Active Effects"
-        @description "Whether there are active effects — keeps RAF loop alive"
+      playerSprite : Canvas2dPlayerSprite = { url: "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png", role: "decoration", category: "asset", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "asset", thumbnailUrl: "" }
+        @label "Player Sprite"
+        @description "--- Side-view sprite resolution (projection:'side') ---"
         @tier "presentation"
-      assetManifest : Canvas2DAssetManifest = { terrains: { grass: { url: "isometric-dungeon/Isometric/dirt_E.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, dirt: { url: "isometric-dungeon/Isometric/dirtTiles_E.png", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" }, stone: { url: "isometric-dungeon/Isometric/stoneInset_E.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, forest: { url: "isometric-dungeon/Isometric/planks_E.png", role: "tile", category: "forest", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "forest", thumbnailUrl: "" }, castle: { url: "isometric-dungeon/Isometric/stoneTile_E.png", role: "tile", category: "castle", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "castle", thumbnailUrl: "" } }, units: { worker: { url: "units/worker.png", role: "npc", category: "worker", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, guardian: { url: "units/guardian.png", role: "npc", category: "guardian", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, scrapper: { url: "units/scrapper.png", role: "npc", category: "scrapper", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "scrapper", thumbnailUrl: "" }, mender: { url: "units/mender.png", role: "npc", category: "mender", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "mender", thumbnailUrl: "" } }, features: { gold_mine: { url: "world-map/gold_mine.png", role: "decoration", category: "gold_mine", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" }, portal: { url: "world-map/portal_open.png", role: "decoration", category: "portal", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" }, castle: { url: "castle/resonator_citadel.png", role: "decoration", category: "castle", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "castle", thumbnailUrl: "" } }, effects: {} }
+      tileSprites : Map string Canvas2dTileSpritesValue = {}
+        @label "Tile Sprites"
+        @description "Platform-type → tile sprite URL map for `side`."
+        @tier "presentation"
+      bgColor : string = "#5c94fc"
+        @label "Bg Color"
+        @description "Background color for `side` (when no backgroundImage)."
+        @tier "presentation"
+      worldWidth : number = 800
+        @label "World Width"
+        @description "World dimensions for `side` follow-camera clamp."
+        @tier "presentation"
+      worldHeight : number = 400
+        @label "World Height"
+        @description "worldHeight prop"
+        @tier "presentation"
+      assetManifest : Canvas2dAssetManifest = { terrains: { grass: { url: "isometric-dungeon/Isometric/dirt_E.png", role: "tile", category: "grass", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, dirt: { url: "isometric-dungeon/Isometric/dirtTiles_E.png", role: "tile", category: "dirt", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" }, stone: { url: "isometric-dungeon/Isometric/stoneInset_E.png", role: "tile", category: "stone", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, forest: { url: "isometric-dungeon/Isometric/planks_E.png", role: "tile", category: "forest", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "forest", thumbnailUrl: "" }, castle: { url: "isometric-dungeon/Isometric/stoneTile_E.png", role: "tile", category: "castle", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "castle", thumbnailUrl: "" } }, units: { worker: { url: "units/worker.png", role: "npc", category: "worker", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" }, guardian: { url: "units/guardian.png", role: "npc", category: "guardian", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" }, scrapper: { url: "units/scrapper.png", role: "npc", category: "scrapper", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "scrapper", thumbnailUrl: "" }, mender: { url: "units/mender.png", role: "npc", category: "mender", animations: ["idle", "walk", "attack", "hit", "death"], style: "", dimension: "2d", aspect: "1:1", name: "mender", thumbnailUrl: "" } }, features: { gold_mine: { url: "world-map/gold_mine.png", role: "decoration", category: "gold_mine", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" }, portal: { url: "world-map/portal_open.png", role: "decoration", category: "portal", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" }, castle: { url: "castle/resonator_citadel.png", role: "decoration", category: "castle", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "castle", thumbnailUrl: "" } }, effects: {} }
         @label "Asset Manifest"
         @description "--- Remote asset loading ---"
         @tier "presentation"
     }
   }
 
-  page "/canvas-2d" as Canvas2DPage -> Canvas2DRender
+  page "/canvas-2d" as Canvas2dPage -> Canvas2dRender
 }

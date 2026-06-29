@@ -1,0 +1,1148 @@
+[
+  {
+    "organism": "ui-canvas-2d",
+    "orbital": "Canvas2dOrbital",
+    "tier": "molecules",
+    "factoryPath": "behaviors/functions/ui/game/2d/molecules/ui-canvas-2d.ts",
+    "entities": [
+      {
+        "name": "Canvas2dItem",
+        "fields": [],
+        "persistence": "runtime"
+      }
+    ],
+    "traits": [
+      {
+        "name": "Canvas2dRender",
+        "emittedEvents": [
+          "TILE_CLICK",
+          "UNIT_CLICK",
+          "TILE_HOVER",
+          "TILE_LEAVE",
+          "KEY"
+        ],
+        "listenedEvents": [],
+        "events": [
+          {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "--- Declarative events back to LOLO ---",
+            "tier": "essential"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+            "tier": "essential"
+          },
+          {
+            "name": "TILE_HOVER",
+            "direction": "emit",
+            "description": "Emits UI:{tileHoverEvent} with { x, y } on tile hover",
+            "tier": "essential"
+          },
+          {
+            "name": "TILE_LEAVE",
+            "direction": "emit",
+            "description": "Emits UI:{tileLeaveEvent} with {} on tile leave",
+            "tier": "essential"
+          },
+          {
+            "name": "KEY",
+            "direction": "emit",
+            "description": "Emits UI:{keyEvent} with { key } on keydown — for side/free keyboard control",
+            "tier": "essential"
+          },
+          {
+            "name": "INIT",
+            "direction": "listen"
+          }
+        ],
+        "overridableConfigKeys": [
+          {
+            "key": "animate",
+            "type": "Canvas2dAnimate",
+            "default": {
+              "fps": 1
+            },
+            "label": "Animate",
+            "description": "Opt-in internal RAF clock. DEFAULT OFF — the LOLO state machine drives the clock.",
+            "tier": "presentation",
+            "properties": {
+              "fps": {
+                "name": "fps",
+                "required": true,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "assetManifest",
+            "type": "Canvas2dAssetManifest",
+            "default": {
+              "effects": {},
+              "features": {
+                "castle": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "castle",
+                  "dimension": "2d",
+                  "name": "castle",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "castle/resonator_citadel.png"
+                },
+                "gold_mine": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "gold_mine",
+                  "dimension": "2d",
+                  "name": "gold_mine",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "world-map/gold_mine.png"
+                },
+                "portal": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "portal",
+                  "dimension": "2d",
+                  "name": "portal",
+                  "role": "decoration",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "world-map/portal_open.png"
+                }
+              },
+              "terrains": {
+                "castle": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "castle",
+                  "dimension": "2d",
+                  "name": "castle",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "isometric-dungeon/Isometric/stoneTile_E.png"
+                },
+                "dirt": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "dirt",
+                  "dimension": "2d",
+                  "name": "dirt",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "isometric-dungeon/Isometric/dirtTiles_E.png"
+                },
+                "forest": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "forest",
+                  "dimension": "2d",
+                  "name": "forest",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "isometric-dungeon/Isometric/planks_E.png"
+                },
+                "grass": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "grass",
+                  "dimension": "2d",
+                  "name": "grass",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "isometric-dungeon/Isometric/dirt_E.png"
+                },
+                "stone": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "1:1",
+                  "category": "stone",
+                  "dimension": "2d",
+                  "name": "stone",
+                  "role": "tile",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "isometric-dungeon/Isometric/stoneInset_E.png"
+                }
+              },
+              "units": {
+                "guardian": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "guardian",
+                  "dimension": "2d",
+                  "name": "guardian",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "units/guardian.png"
+                },
+                "mender": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "mender",
+                  "dimension": "2d",
+                  "name": "mender",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "units/mender.png"
+                },
+                "scrapper": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "scrapper",
+                  "dimension": "2d",
+                  "name": "scrapper",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "units/scrapper.png"
+                },
+                "worker": {
+                  "animations": [
+                    "idle",
+                    "walk",
+                    "attack",
+                    "hit",
+                    "death"
+                  ],
+                  "aspect": "1:1",
+                  "category": "worker",
+                  "dimension": "2d",
+                  "name": "worker",
+                  "role": "npc",
+                  "style": "",
+                  "thumbnailUrl": "",
+                  "url": "units/worker.png"
+                }
+              }
+            },
+            "label": "Asset Manifest",
+            "description": "--- Remote asset loading ---",
+            "tier": "presentation",
+            "properties": {
+              "effects": {
+                "name": "effects",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "features": {
+                "name": "features",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "terrains": {
+                "name": "terrains",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              },
+              "units": {
+                "name": "units",
+                "required": false,
+                "type": "object",
+                "items": {
+                  "properties": {
+                    "animations": {
+                      "name": "animations",
+                      "required": false,
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "aspect": {
+                      "name": "aspect",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "category": {
+                      "name": "category",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "dimension": {
+                      "name": "dimension",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "name": {
+                      "name": "name",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "role": {
+                      "name": "role",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "style": {
+                      "name": "style",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "thumbnailUrl": {
+                      "name": "thumbnailUrl",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "url": {
+                      "name": "url",
+                      "required": true,
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            }
+          },
+          {
+            "key": "attackTargets",
+            "type": "[Canvas2dAttackTargetsItem]",
+            "default": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 2,
+                "y": 2
+              }
+            ],
+            "label": "Attack Targets",
+            "description": "Attack target positions (pulsing red highlights)",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "backgroundImage",
+            "type": "Canvas2dBackgroundImage",
+            "default": {
+              "animations": [
+                "static"
+              ],
+              "aspect": "1:1",
+              "category": "asset",
+              "dimension": "2d",
+              "name": "asset",
+              "role": "decoration",
+              "style": "",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"
+            },
+            "label": "Background Image",
+            "description": "Background image (tiled behind iso/hex/flat/free; stretched in side).",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": true,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "bgColor",
+            "type": "string",
+            "default": "#5c94fc",
+            "label": "Bg Color",
+            "description": "Background color for `side` (when no backgroundImage).",
+            "tier": "presentation"
+          },
+          {
+            "key": "camera",
+            "type": "string",
+            "default": "pan-zoom",
+            "label": "Camera",
+            "description": "--- View config (pure render) ---",
+            "tier": "presentation",
+            "enumValues": [
+              "pan-zoom",
+              "follow",
+              "fixed"
+            ]
+          },
+          {
+            "key": "className",
+            "type": "string",
+            "default": "",
+            "label": "Class Name",
+            "description": "--- Closed-circuit ---",
+            "tier": "presentation"
+          },
+          {
+            "key": "debug",
+            "type": "boolean",
+            "default": false,
+            "label": "Debug",
+            "description": "--- Tuning (iso/hex/flat/free) ---",
+            "tier": "presentation"
+          },
+          {
+            "key": "diamondTopY",
+            "type": "number",
+            "default": 0,
+            "label": "Diamond Top Y",
+            "description": "Override for the diamond-top Y offset within the tile sprite.",
+            "tier": "presentation"
+          },
+          {
+            "key": "effectSpriteUrls",
+            "type": "[string]",
+            "default": [],
+            "label": "Effect Sprite Urls",
+            "description": "Additional sprite URLs to preload (e.g., effect sprites)",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "effects",
+            "type": "[json]",
+            "default": [],
+            "label": "Effects",
+            "description": "Active visual effects, drawn after units",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "error",
+            "type": "Canvas2dError",
+            "label": "Error",
+            "description": "Error state",
+            "tier": "presentation",
+            "properties": {
+              "code": {
+                "name": "code",
+                "required": false,
+                "type": "string"
+              },
+              "message": {
+                "name": "message",
+                "required": true,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "stack": {
+                "name": "stack",
+                "required": false,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "features",
+            "type": "[json]",
+            "default": [],
+            "label": "Features",
+            "description": "Features (resources, portals, buildings, etc.)",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "hoveredTile",
+            "type": "Canvas2dHoveredTile",
+            "default": {
+              "x": 1,
+              "y": 1
+            },
+            "label": "Hovered Tile",
+            "description": "Hovered tile position",
+            "tier": "presentation",
+            "properties": {
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "isLoading",
+            "type": "boolean",
+            "default": false,
+            "label": "Is Loading",
+            "description": "Loading state indicator",
+            "tier": "presentation"
+          },
+          {
+            "key": "platforms",
+            "type": "[Canvas2dPlatformsItem]",
+            "default": [
+              {
+                "height": 1,
+                "type": "ground",
+                "width": 1,
+                "x": 1,
+                "y": 1
+              },
+              {
+                "height": 2,
+                "type": "platform",
+                "width": 2,
+                "x": 2,
+                "y": 2
+              }
+            ],
+            "label": "Platforms",
+            "description": "Side-view platforms (AABB). `projection:'side'` only.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "height": {
+                  "name": "height",
+                  "required": true,
+                  "type": "number"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "ground",
+                    "platform",
+                    "hazard",
+                    "goal"
+                  ]
+                },
+                "width": {
+                  "name": "width",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "player",
+            "type": "Canvas2dPlayer",
+            "default": {
+              "facingRight": false,
+              "grounded": false,
+              "height": 1,
+              "vx": 1,
+              "vy": 1,
+              "width": 1,
+              "x": 1,
+              "y": 1
+            },
+            "label": "Player",
+            "description": "Side-view player. `projection:'side'` only.",
+            "tier": "presentation",
+            "properties": {
+              "facingRight": {
+                "name": "facingRight",
+                "required": false,
+                "type": "boolean"
+              },
+              "grounded": {
+                "name": "grounded",
+                "required": false,
+                "type": "boolean"
+              },
+              "height": {
+                "name": "height",
+                "required": false,
+                "type": "number"
+              },
+              "vx": {
+                "name": "vx",
+                "required": false,
+                "type": "number"
+              },
+              "vy": {
+                "name": "vy",
+                "required": false,
+                "type": "number"
+              },
+              "width": {
+                "name": "width",
+                "required": false,
+                "type": "number"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            }
+          },
+          {
+            "key": "playerSprite",
+            "type": "Canvas2dPlayerSprite",
+            "default": {
+              "animations": [
+                "static"
+              ],
+              "aspect": "1:1",
+              "category": "asset",
+              "dimension": "2d",
+              "name": "asset",
+              "role": "decoration",
+              "style": "",
+              "thumbnailUrl": "",
+              "url": "https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"
+            },
+            "label": "Player Sprite",
+            "description": "--- Side-view sprite resolution (projection:'side') ---",
+            "tier": "presentation",
+            "properties": {
+              "animations": {
+                "name": "animations",
+                "required": false,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "aspect": {
+                "name": "aspect",
+                "required": false,
+                "type": "string"
+              },
+              "category": {
+                "name": "category",
+                "required": false,
+                "type": "string"
+              },
+              "dimension": {
+                "name": "dimension",
+                "required": false,
+                "type": "string"
+              },
+              "name": {
+                "name": "name",
+                "required": false,
+                "type": "string"
+              },
+              "role": {
+                "name": "role",
+                "required": false,
+                "type": "string"
+              },
+              "style": {
+                "name": "style",
+                "required": false,
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "name": "thumbnailUrl",
+                "required": false,
+                "type": "string"
+              },
+              "url": {
+                "name": "url",
+                "required": true,
+                "type": "string"
+              }
+            }
+          },
+          {
+            "key": "projection",
+            "type": "string",
+            "default": "isometric",
+            "label": "Projection",
+            "description": "--- Projection ---",
+            "tier": "presentation",
+            "enumValues": [
+              "isometric",
+              "hex",
+              "flat",
+              "free",
+              "side"
+            ]
+          },
+          {
+            "key": "scale",
+            "type": "number",
+            "default": 0.4,
+            "label": "Scale",
+            "description": "Render scale (0.4 = 40% zoom).",
+            "tier": "presentation"
+          },
+          {
+            "key": "selectedUnitId",
+            "type": "string",
+            "default": "",
+            "label": "Selected Unit Id",
+            "description": "--- Interaction state (LOLO-owned, passed in) ---",
+            "tier": "presentation"
+          },
+          {
+            "key": "showMinimap",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Minimap",
+            "description": "Toggle minimap overlay.",
+            "tier": "presentation"
+          },
+          {
+            "key": "spriteHeightRatio",
+            "type": "number",
+            "default": 1.5,
+            "label": "Sprite Height Ratio",
+            "description": "Ratio of unit draw height to scaledFloorHeight. Default 1.5.",
+            "tier": "presentation"
+          },
+          {
+            "key": "spriteMaxWidthRatio",
+            "type": "number",
+            "default": 0.6,
+            "label": "Sprite Max Width Ratio",
+            "description": "Max unit draw width as a ratio of scaledTileWidth. Default 0.6.",
+            "tier": "presentation"
+          },
+          {
+            "key": "tileSprites",
+            "type": "Map<string,Canvas2dTileSpritesValue>",
+            "default": {},
+            "label": "Tile Sprites",
+            "description": "Platform-type → tile sprite URL map for `side`.",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "animations": {
+                  "name": "animations",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "aspect": {
+                  "name": "aspect",
+                  "required": false,
+                  "type": "string"
+                },
+                "category": {
+                  "name": "category",
+                  "required": false,
+                  "type": "string"
+                },
+                "dimension": {
+                  "name": "dimension",
+                  "required": false,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "role": {
+                  "name": "role",
+                  "required": false,
+                  "type": "string"
+                },
+                "style": {
+                  "name": "style",
+                  "required": false,
+                  "type": "string"
+                },
+                "thumbnailUrl": {
+                  "name": "thumbnailUrl",
+                  "required": false,
+                  "type": "string"
+                },
+                "url": {
+                  "name": "url",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "tiles",
+            "type": "[json]",
+            "default": [],
+            "label": "Tiles",
+            "description": "--- Layer data (each an optional render pass) ---",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "unitScale",
+            "type": "number",
+            "default": 1,
+            "label": "Unit Scale",
+            "description": "Extra scale multiplier for unit draw size. 1 = default.",
+            "tier": "presentation"
+          },
+          {
+            "key": "units",
+            "type": "[json]",
+            "default": [],
+            "label": "Units",
+            "description": "Units on the board",
+            "tier": "presentation",
+            "items": {
+              "type": "string"
+            }
+          },
+          {
+            "key": "validMoves",
+            "type": "[Canvas2dValidMovesItem]",
+            "default": [
+              {
+                "x": 1,
+                "y": 1
+              },
+              {
+                "x": 2,
+                "y": 2
+              }
+            ],
+            "label": "Valid Moves",
+            "description": "Valid move positions (pulsing green highlights)",
+            "tier": "presentation",
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "worldHeight",
+            "type": "number",
+            "default": 400,
+            "label": "World Height",
+            "description": "worldHeight prop",
+            "tier": "presentation"
+          },
+          {
+            "key": "worldWidth",
+            "type": "number",
+            "default": 800,
+            "label": "World Width",
+            "description": "World dimensions for `side` follow-camera clamp.",
+            "tier": "presentation"
+          }
+        ],
+        "capabilities": [],
+        "entityRebindable": true,
+        "entityContract": {
+          "requires": [],
+          "provides": []
+        }
+      }
+    ],
+    "pages": [
+      {
+        "name": "Canvas2dPage",
+        "defaultPath": "/canvas-2d",
+        "primaryEntity": "Canvas2dItem"
+      }
+    ],
+    "emittedEvents": [
+      "KEY",
+      "TILE_CLICK",
+      "TILE_HOVER",
+      "TILE_LEAVE",
+      "UNIT_CLICK"
+    ],
+    "listenedEvents": []
+  }
+]

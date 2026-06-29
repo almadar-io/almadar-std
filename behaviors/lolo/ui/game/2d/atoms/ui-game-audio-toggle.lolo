@@ -1,0 +1,50 @@
+app ui-game-audio-toggle "1.0.0"
+"GameAudioToggle — UI factory (1:1 with the @almadar/ui game-audio-toggle pattern)."
+orbital GameAudioToggleOrbital {
+  type GameAudioToggleError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+
+  entity GameAudioToggleItem [runtime] {
+    id : string!
+  }
+
+  trait GameAudioToggleRender -> @rebindable GameAudioToggleItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          size: @config.size
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          type: game-audio-toggle
+        })
+    }
+
+    config {
+      size : "sm" | "md" | "lg" = sm
+        @label "Size"
+        @description "Button size"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state (passed through)"
+        @tier "presentation"
+      error : GameAudioToggleError
+        @label "Error"
+        @description "Error state (passed through)"
+        @tier "presentation"
+    }
+  }
+
+  page "/game-audio-toggle" as GameAudioTogglePage -> GameAudioToggleRender
+}

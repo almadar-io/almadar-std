@@ -43,7 +43,6 @@ export interface StdUiSplitPaneConfig {
   className?: string;
   /** Default: `"horizontal"` */
   direction?: 'horizontal' | 'vertical';
-  left?: unknown;
   /** Default: `"Left Class Name"` */
   leftClassName?: string;
   /** Default: `100` */
@@ -52,7 +51,6 @@ export interface StdUiSplitPaneConfig {
   ratio?: number;
   /** Default: `true` */
   resizable?: boolean;
-  right?: unknown;
   /** Default: `"Right Class Name"` */
   rightClassName?: string;
 }
@@ -147,12 +145,6 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
               'vertical',
             ],
           },
-          'left': {
-            'description': 'Content for the left/top pane',
-            'label': 'Left',
-            'tier': 'presentation',
-            'type': 'node',
-          },
           'leftClassName': {
             'default': 'Left Class Name',
             'description': 'Class for left/top pane',
@@ -180,12 +172,6 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
             'label': 'Resizable',
             'tier': 'presentation',
             'type': 'boolean',
-          },
-          'right': {
-            'description': 'Content for the right/bottom pane',
-            'label': 'Right',
-            'tier': 'presentation',
-            'type': 'node',
           },
           'rightClassName': {
             'default': 'Right Class Name',
@@ -225,12 +211,22 @@ export function stdUiSplitPaneSplitPaneOrbital(params: StdUiSplitPaneSplitPaneOr
                   {
                     'className': '@config.className',
                     'direction': '@config.direction',
-                    'left': '@config.left',
+                    'left': [
+                      {
+                        'content': 'Left',
+                        'type': 'typography',
+                      },
+                    ],
                     'leftClassName': '@config.leftClassName',
                     'minSize': '@config.minSize',
                     'ratio': '@config.ratio',
                     'resizable': '@config.resizable',
-                    'right': '@config.right',
+                    'right': [
+                      {
+                        'content': 'Right',
+                        'type': 'typography',
+                      },
+                    ],
                     'rightClassName': '@config.rightClassName',
                     'type': 'split-pane',
                   },
