@@ -383,7 +383,6 @@ export * from './ui/marketing/organisms/ui-feature-grid-organism.js';
 export * from './ui/game/2d/organisms/ui-fishing-board.js';
 export * from './ui/core/organisms/ui-form.js';
 export * from './ui/core/organisms/ui-form-section.js';
-export * from './ui/game/2d/organisms/ui-game-audio-provider.js';
 export * from './ui/game/3d/organisms/ui-game-board-3d.js';
 export * from './ui/marketing/organisms/ui-hero-organism.js';
 export * from './ui/game/2d/organisms/ui-hex-strategy-board.js';

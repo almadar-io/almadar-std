@@ -299,11 +299,6 @@ import {
   isStdUiFormSectionFormSectionOrbitalParams,
 } from './ui/core/organisms/ui-form-section.js';
 import {
-  stdUiGameAudioProviderGameAudioProviderOrbital,
-  StdUiGameAudioProviderGameAudioProviderOrbitalManifest,
-  isStdUiGameAudioProviderGameAudioProviderOrbitalParams,
-} from './ui/game/2d/organisms/ui-game-audio-provider.js';
-import {
   stdUiGameBoard3dGameBoard3DOrbital,
   StdUiGameBoard3dGameBoard3DOrbitalManifest,
   isStdUiGameBoard3dGameBoard3DOrbitalParams,
@@ -1183,15 +1178,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiFormSectionFormSectionOrbital(p);
     },
     manifest: StdUiFormSectionFormSectionOrbitalManifest,
-  }],
-  ['ui-game-audio-provider::GameAudioProviderOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiGameAudioProviderGameAudioProviderOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-game-audio-provider::GameAudioProviderOrbital');
-      }
-      return stdUiGameAudioProviderGameAudioProviderOrbital(p);
-    },
-    manifest: StdUiGameAudioProviderGameAudioProviderOrbitalManifest,
   }],
   ['ui-game-board-3d::GameBoard3DOrbital', {
     factory: (p: object): OrbitalDefinition => {
