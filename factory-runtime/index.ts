@@ -1,36 +1,13 @@
 /**
- * `@almadar/std/factory-runtime` — pure data-driven equivalents of the
- * per-behavior TS factories that `scripts/regenerate-std-ts.mjs` emits.
+ * `@almadar/std/factory-runtime` — thin re-export of the canonical
+ * implementation in `@almadar/core/factory-runtime`.
  *
- * Used by:
- * - The codegen script itself (manifest computation goes through
- *   `extractManifest`, ensuring single-source-of-truth for the shape).
- * - The team-behavior promotion server: calls `extractManifest` at upload
- *   time and stores `manifests[]` alongside the resolved `.orb`.
- * - The team-behavior dispatch path: calls `applyParamsToOrb` so promoted
- *   behaviors flow through the same overlay as std behaviors.
+ * Callers that import `@almadar/std/factory-runtime` continue to work;
+ * the implementation is now owned by `@almadar/core`.
  *
  * Reference: `docs/Almadar_Studio_SDK.md` §7.4.
  *
  * @packageDocumentation
  */
 
-export { extractManifest } from './extract-manifest.js';
-export {
-  applyParamsToOrb,
-  rebindInlineTraitEntity,
-  validateOrbitalFactoryParams,
-} from './apply-params-to-orb.js';
-export { applyParamsToWholeOrb } from './apply-params-to-whole-orb.js';
-export type {
-  OrbitalFactoryParams,
-  OrbitalTraitOverride,
-  ParamValidationError,
-  ParamValidationResult,
-} from './types.js';
-// Re-export the canonical manifest types from their existing home so callers
-// have a single import surface.
-export type {
-  OrbitalParamsManifest,
-  ParamFieldDescriptor,
-} from '../behaviors/functions/dispatch.js';
+export * from '@almadar/core/factory-runtime';
