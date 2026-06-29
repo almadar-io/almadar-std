@@ -304,11 +304,6 @@ import {
   isStdUiGameAudioProviderGameAudioProviderOrbitalParams,
 } from './ui/game/2d/organisms/ui-game-audio-provider.js';
 import {
-  stdUiGameAudioToggleGameAudioToggleOrbital,
-  StdUiGameAudioToggleGameAudioToggleOrbitalManifest,
-  isStdUiGameAudioToggleGameAudioToggleOrbitalParams,
-} from './ui/game/2d/organisms/ui-game-audio-toggle.js';
-import {
   stdUiGameBoard3dGameBoard3DOrbital,
   StdUiGameBoard3dGameBoard3DOrbitalManifest,
   isStdUiGameBoard3dGameBoard3DOrbitalParams,
@@ -1197,15 +1192,6 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiGameAudioProviderGameAudioProviderOrbital(p);
     },
     manifest: StdUiGameAudioProviderGameAudioProviderOrbitalManifest,
-  }],
-  ['ui-game-audio-toggle::GameAudioToggleOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdUiGameAudioToggleGameAudioToggleOrbitalParams(p)) {
-        throw new TypeError('Invalid params for ui-game-audio-toggle::GameAudioToggleOrbital');
-      }
-      return stdUiGameAudioToggleGameAudioToggleOrbital(p);
-    },
-    manifest: StdUiGameAudioToggleGameAudioToggleOrbitalManifest,
   }],
   ['ui-game-board-3d::GameBoard3DOrbital', {
     factory: (p: object): OrbitalDefinition => {
