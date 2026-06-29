@@ -24,12 +24,16 @@ import type {
   OrbitalSchema,
   PageRefObject,
   SExpr,
+  CallSiteConfig,
+  CallSiteConfigEntry,
   Trait,
+  TraitConfigValue,
   TraitEventContract,
   TraitEventListener,
   TraitReference,
   TraitTick,
 } from '@almadar/core';
+import { isCallSiteConfigDeclaration } from '@almadar/core';
 import type {
   MakePageRefOpts,
   MakeTraitRefOpts,
@@ -627,7 +631,32 @@ export function applyParamsToOrb(
       if (!override) return t;
       const merged: TraitReference = { ...t };
       if (override.config !== undefined) {
-        merged.config = { ...(t.config ?? {}), ...override.config };
+        // Every entry in the emitted `config` must be a ConfigField (Rust's
+        // `HashMap<String, ConfigField>`). Normalize the base, then merge each
+        // override: fold a bare value over a declared field into its `default`,
+        // keep a full re-declaration, otherwise wrap bare/render values as
+        // `{ type: 'unknown', default }`. A render-ui value object (e.g.
+        // `{ type: 'tabs', items: '@entity.items' }`) is NOT a declaration — it
+        // has no `default` slot — so it gets wrapped, never dropped raw into the
+        // map where serde would parse its inner `items` as a FieldDefinition.
+        const base: CallSiteConfig = t.config ?? {};
+        const next: Record<string, CallSiteConfigEntry> = {};
+        for (const [k, entry] of Object.entries(base)) {
+          next[k] = isCallSiteConfigDeclaration(entry)
+            ? entry
+            : { type: 'unknown', default: entry };
+        }
+        for (const [k, v] of Object.entries(override.config)) {
+          if (isCallSiteConfigDeclaration(v)) {
+            next[k] = v;
+            continue;
+          }
+          const existing = base[k];
+          next[k] = existing !== undefined && isCallSiteConfigDeclaration(existing)
+            ? { ...existing, default: v }
+            : { type: 'unknown', default: v };
+        }
+        merged.config = next;
       }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) {
