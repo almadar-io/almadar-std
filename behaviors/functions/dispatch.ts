@@ -13,6 +13,8 @@
  */
 
 import type { OrbitalDefinition, TraitReference } from '@almadar/core/types';
+import { mergeCallSiteConfigOverrides } from '@almadar/core/factory-runtime';
+import type { OrbitalParamsManifest, ParamFieldDescriptor } from '@almadar/core/factory-runtime';
 
 import {
   stdAgentAssistantAssistantOrbital,
@@ -529,19 +531,7 @@ import {
   isStdUiWorldMapBoardWorldMapBoardOrbitalParams,
 } from './ui/game/2d/organisms/ui-world-map-board.js';
 
-export interface ParamFieldDescriptor {
-  name: string;
-  type: string;
-  description: string;
-}
-
-export interface OrbitalParamsManifest {
-  organism: string;
-  orbitalName: string;
-  paramFields: readonly ParamFieldDescriptor[];
-  traitNames: readonly string[];
-  inlineTraitNames: readonly string[];
-}
+export type { OrbitalParamsManifest, ParamFieldDescriptor };
 
 interface DispatchEntry {
   factory: (params: object) => OrbitalDefinition;
@@ -1733,7 +1723,7 @@ function mergeExtraTraitWithOverlay(
   const o = overlay as Partial<DispatchExtraTrait>;
   return {
     ...trait,
-    ...(o.config !== undefined ? { config: { ...(trait.config ?? {}), ...o.config } } : {}),
+    ...(o.config !== undefined ? { config: mergeCallSiteConfigOverrides(trait.config ?? {}, o.config) } : {}),
     ...(o.events !== undefined ? { events: { ...(trait.events ?? {}), ...o.events } } : {}),
     ...(o.listens !== undefined ? { listens: o.listens } : {}),
     ...(o.linkedEntity !== undefined ? { linkedEntity: o.linkedEntity } : {}),

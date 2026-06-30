@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity } from '../../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-visual-novel-board';
 const ALIAS = 'UiVisualNovelBoard';
@@ -36,7 +36,8 @@ export type StdUiVisualNovelBoardEventKey = 'ADVANCE' | 'CHOOSE' | 'INIT' | 'RES
  * Payload shape for the `CHOOSE` event.
  */
 export interface StdUiVisualNovelBoardChoosePayload {
-  choice?: EntityRow;
+  choiceIndex: number;
+  nextId: string;
 }
 
 /**
@@ -198,57 +199,6 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             'default': 'start',
             'name': 'currentNodeId',
             'type': 'string',
-          },
-          {
-            'name': 'currentNode',
-            'properties': {
-              'backgroundKey': {
-                'name': 'backgroundKey',
-                'required': false,
-                'type': 'string',
-              },
-              'choices': {
-                'items': {
-                  'properties': {
-                    'label': {
-                      'name': 'label',
-                      'required': true,
-                      'type': 'string',
-                    },
-                    'nextId': {
-                      'name': 'nextId',
-                      'required': true,
-                      'type': 'string',
-                    },
-                  },
-                  'type': 'object',
-                },
-                'name': 'choices',
-                'required': false,
-                'type': 'array',
-              },
-              'id': {
-                'name': 'id',
-                'required': true,
-                'type': 'string',
-              },
-              'portraitKey': {
-                'name': 'portraitKey',
-                'required': false,
-                'type': 'string',
-              },
-              'speaker': {
-                'name': 'speaker',
-                'required': true,
-                'type': 'string',
-              },
-              'text': {
-                'name': 'text',
-                'required': true,
-                'type': 'string',
-              },
-            },
-            'type': 'object',
           },
         ];
         const extras = params.fields ?? [];
@@ -583,19 +533,25 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
         },
         'emits': [
           {
-            'description': 'Emits UI:{choiceEvent} with {choice} when the player selects a branching choice',
+            'description': 'Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice',
             'event': 'CHOOSE',
             'payloadSchema': [
               {
-                'name': 'choice',
-                'type': 'object',
+                'name': 'choiceIndex',
+                'required': true,
+                'type': 'number',
+              },
+              {
+                'name': 'nextId',
+                'required': true,
+                'type': 'string',
               },
             ],
             'scope': 'external',
             'tier': 'essential',
           },
           {
-            'description': 'Emits UI:{advanceEvent} with {} to advance to the first choice\'s target node',
+            'description': 'Emits UI:{advanceEvent} with {} to advance to the next node',
             'event': 'ADVANCE',
             'payloadSchema': [
               {
@@ -621,7 +577,6 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
         ],
         'entityContract': {
           'provides': [
-            'currentNode',
             'currentNodeId',
             'nodes',
           ],
@@ -638,19 +593,25 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               'name': 'Initialize',
             },
             {
-              'description': 'Emits UI:{choiceEvent} with {choice} when the player selects a branching choice',
+              'description': 'Emits UI:{chooseEvent} with {choiceIndex} when the player selects a branching choice',
               'key': 'CHOOSE',
               'name': 'Choose',
               'payloadSchema': [
                 {
-                  'name': 'choice',
-                  'type': 'object',
+                  'name': 'choiceIndex',
+                  'required': true,
+                  'type': 'number',
+                },
+                {
+                  'name': 'nextId',
+                  'required': true,
+                  'type': 'string',
                 },
               ],
               'tier': 'essential',
             },
             {
-              'description': 'Emits UI:{advanceEvent} with {} to advance to the first choice\'s target node',
+              'description': 'Emits UI:{advanceEvent} with {} to advance to the next node',
               'key': 'ADVANCE',
               'name': 'Advance',
               'payloadSchema': [
@@ -694,60 +655,17 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   '@config.startNodeId',
                 ],
                 [
-                  'set',
-                  '@entity.currentNode',
-                  [
-                    'array/first',
-                    [
-                      'array/filter',
-                      '@entity.nodes',
-                      [
-                        'fn',
-                        'n',
-                        [
-                          '==',
-                          [
-                            'object/get',
-                            '@n',
-                            'id',
-                          ],
-                          '@entity.currentNodeId',
-                        ],
-                      ],
-                    ],
-                  ],
-                ],
-                [
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'portrait': '@config.portraitUrl',
-                        'position': 'bottom',
-                        'speaker': [
-                          'object/get',
-                          '@entity.currentNode',
-                          'speaker',
-                        ],
-                        'text': [
-                          'object/get',
-                          '@entity.currentNode',
-                          'text',
-                        ],
-                        'type': 'dialogue-bubble',
-                      },
-                    ],
-                    'hud': {
-                      'stats': [
-                        {
-                          'label': 'Chapter',
-                          'value': '@entity.currentNodeId',
-                        },
-                      ],
-                      'type': 'game-hud',
-                    },
-                    'type': 'game-shell',
+                    'advanceEvent': 'ADVANCE',
+                    'chooseEvent': 'CHOOSE',
+                    'currentNodeId': '@entity.currentNodeId',
+                    'nodes': '@entity.nodes',
+                    'portraitScale': '@config.portraitScale',
+                    'restartEvent': 'RESTART',
+                    'type': 'visual-novel-board',
+                    'typewriterSpeed': '@config.typewriterSpeed',
                   },
                 ],
               ],
@@ -760,220 +678,46 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                 [
                   'set',
                   '@entity.currentNodeId',
-                  [
-                    'object/get',
-                    '@payload.choice',
-                    'next',
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.currentNode',
-                  [
-                    'array/first',
-                    [
-                      'array/filter',
-                      '@entity.nodes',
-                      [
-                        'fn',
-                        'n',
-                        [
-                          '==',
-                          [
-                            'object/get',
-                            '@n',
-                            'id',
-                          ],
-                          '@entity.currentNodeId',
-                        ],
-                      ],
-                    ],
-                  ],
+                  '@payload.nextId',
                 ],
                 [
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'portrait': '@config.portraitUrl',
-                        'position': 'bottom',
-                        'speaker': [
-                          'object/get',
-                          '@entity.currentNode',
-                          'speaker',
-                        ],
-                        'text': [
-                          'object/get',
-                          '@entity.currentNode',
-                          'text',
-                        ],
-                        'type': 'dialogue-bubble',
-                      },
-                    ],
-                    'hud': {
-                      'stats': [
-                        {
-                          'label': 'Chapter',
-                          'value': '@entity.currentNodeId',
-                        },
-                      ],
-                      'type': 'game-hud',
-                    },
-                    'type': 'game-shell',
+                    'advanceEvent': 'ADVANCE',
+                    'chooseEvent': 'CHOOSE',
+                    'currentNodeId': '@entity.currentNodeId',
+                    'nodes': '@entity.nodes',
+                    'portraitScale': '@config.portraitScale',
+                    'restartEvent': 'RESTART',
+                    'type': 'visual-novel-board',
+                    'typewriterSpeed': '@config.typewriterSpeed',
                   },
                 ],
               ],
               'event': 'CHOOSE',
               'from': 'playing',
-              'guard': [
-                'and',
-                [
-                  '!=',
-                  '@payload.choice',
-                  null,
-                ],
-                [
-                  '!=',
-                  [
-                    'object/get',
-                    '@payload.choice',
-                    'next',
-                  ],
-                  '',
-                ],
-              ],
               'to': 'playing',
             },
             {
               'effects': [
                 [
-                  'set',
-                  '@entity.currentNodeId',
-                  [
-                    'object/get',
-                    [
-                      'array/nth',
-                      [
-                        'object/get',
-                        [
-                          'array/first',
-                          [
-                            'array/filter',
-                            '@entity.nodes',
-                            [
-                              'fn',
-                              'n',
-                              [
-                                '==',
-                                [
-                                  'object/get',
-                                  '@n',
-                                  'id',
-                                ],
-                                '@entity.currentNodeId',
-                              ],
-                            ],
-                          ],
-                        ],
-                        'choices',
-                      ],
-                      0,
-                    ],
-                    'nextId',
-                  ],
-                ],
-                [
-                  'set',
-                  '@entity.currentNode',
-                  [
-                    'array/first',
-                    [
-                      'array/filter',
-                      '@entity.nodes',
-                      [
-                        'fn',
-                        'n',
-                        [
-                          '==',
-                          [
-                            'object/get',
-                            '@n',
-                            'id',
-                          ],
-                          '@entity.currentNodeId',
-                        ],
-                      ],
-                    ],
-                  ],
-                ],
-                [
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'portrait': '@config.portraitUrl',
-                        'position': 'bottom',
-                        'speaker': [
-                          'object/get',
-                          '@entity.currentNode',
-                          'speaker',
-                        ],
-                        'text': [
-                          'object/get',
-                          '@entity.currentNode',
-                          'text',
-                        ],
-                        'type': 'dialogue-bubble',
-                      },
-                    ],
-                    'hud': {
-                      'stats': [
-                        {
-                          'label': 'Chapter',
-                          'value': '@entity.currentNodeId',
-                        },
-                      ],
-                      'type': 'game-hud',
-                    },
-                    'type': 'game-shell',
+                    'advanceEvent': 'ADVANCE',
+                    'chooseEvent': 'CHOOSE',
+                    'currentNodeId': '@entity.currentNodeId',
+                    'nodes': '@entity.nodes',
+                    'portraitScale': '@config.portraitScale',
+                    'restartEvent': 'RESTART',
+                    'type': 'visual-novel-board',
+                    'typewriterSpeed': '@config.typewriterSpeed',
                   },
                 ],
               ],
               'event': 'ADVANCE',
               'from': 'playing',
-              'guard': [
-                '>',
-                [
-                  'array/len',
-                  [
-                    'object/get',
-                    [
-                      'array/first',
-                      [
-                        'array/filter',
-                        '@entity.nodes',
-                        [
-                          'fn',
-                          'n',
-                          [
-                            '==',
-                            [
-                              'object/get',
-                              '@n',
-                              'id',
-                            ],
-                            '@entity.currentNodeId',
-                          ],
-                        ],
-                      ],
-                    ],
-                    'choices',
-                  ],
-                ],
-                0,
-              ],
               'to': 'playing',
             },
             {
@@ -984,60 +728,17 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   '@config.startNodeId',
                 ],
                 [
-                  'set',
-                  '@entity.currentNode',
-                  [
-                    'array/first',
-                    [
-                      'array/filter',
-                      '@entity.nodes',
-                      [
-                        'fn',
-                        'n',
-                        [
-                          '==',
-                          [
-                            'object/get',
-                            '@n',
-                            'id',
-                          ],
-                          '@entity.currentNodeId',
-                        ],
-                      ],
-                    ],
-                  ],
-                ],
-                [
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'portrait': '@config.portraitUrl',
-                        'position': 'bottom',
-                        'speaker': [
-                          'object/get',
-                          '@entity.currentNode',
-                          'speaker',
-                        ],
-                        'text': [
-                          'object/get',
-                          '@entity.currentNode',
-                          'text',
-                        ],
-                        'type': 'dialogue-bubble',
-                      },
-                    ],
-                    'hud': {
-                      'stats': [
-                        {
-                          'label': 'Chapter',
-                          'value': '@entity.currentNodeId',
-                        },
-                      ],
-                      'type': 'game-hud',
-                    },
-                    'type': 'game-shell',
+                    'advanceEvent': 'ADVANCE',
+                    'chooseEvent': 'CHOOSE',
+                    'currentNodeId': '@entity.currentNodeId',
+                    'nodes': '@entity.nodes',
+                    'portraitScale': '@config.portraitScale',
+                    'restartEvent': 'RESTART',
+                    'type': 'visual-novel-board',
+                    'typewriterSpeed': '@config.typewriterSpeed',
                   },
                 ],
               ],
@@ -1076,7 +777,9 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
       const override = overrides?.[tr.name];
       if (!override) return t;
       const merged: TraitReference = { ...tr };
-      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
       if (override.name !== undefined) merged.name = override.name;

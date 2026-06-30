@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity } from '../../../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/ui-card-battler-board';
 const ALIAS = 'UiCardBattlerBoard';
@@ -36,7 +36,6 @@ export type StdUiCardBattlerBoardEventKey = 'END_TURN' | 'GAME_END' | 'INIT' | '
  * Payload shape for the `PLAY_CARD` event.
  */
 export interface StdUiCardBattlerBoardPlayCardPayload {
-  id?: string;
   cardId: string;
 }
 
@@ -788,10 +787,6 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
             'event': 'PLAY_CARD',
             'payloadSchema': [
               {
-                'name': 'id',
-                'type': 'string',
-              },
-              {
                 'name': 'cardId',
                 'required': true,
                 'type': 'string',
@@ -865,10 +860,6 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
               'key': 'PLAY_CARD',
               'name': 'Play Card',
               'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
-                },
                 {
                   'name': 'cardId',
                   'required': true,
@@ -966,77 +957,19 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'children': [
-                          'array/map',
-                          '@entity.hand',
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'art': [
-                                'object/get',
-                                '@config.assetManifest.cards',
-                                [
-                                  'object/get',
-                                  '@c',
-                                  'iconKey',
-                                ],
-                              ],
-                              'attack': [
-                                'object/get',
-                                '@c',
-                                'attack',
-                              ],
-                              'clickEvent': 'PLAY_CARD',
-                              'cost': [
-                                'object/get',
-                                '@c',
-                                'cost',
-                              ],
-                              'defense': [
-                                'object/get',
-                                '@c',
-                                'defense',
-                              ],
-                              'disabled': false,
-                              'id': [
-                                'object/get',
-                                '@c',
-                                'id',
-                              ],
-                              'name': [
-                                'object/get',
-                                '@c',
-                                'title',
-                              ],
-                              'type': 'game-card',
-                            },
-                          ],
-                        ],
-                        'gap': 2,
-                        'type': 'hstack',
-                      },
-                    ],
-                    'hud': {
-                      'stats': [
-                        {
-                          'label': 'Mana',
-                          'value': '@entity.mana',
-                        },
-                        {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
-                        },
-                        {
-                          'label': 'Result',
-                          'value': '@entity.result',
-                        },
-                      ],
-                      'type': 'game-hud',
-                    },
-                    'type': 'game-shell',
+                    'assetManifest': '@config.assetManifest',
+                    'board': '@entity.board',
+                    'deck': '@entity.deck',
+                    'endTurnEvent': 'END_TURN',
+                    'gameEndEvent': 'GAME_END',
+                    'hand': '@entity.hand',
+                    'mana': '@entity.mana',
+                    'maxMana': '@entity.maxMana',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'playCardEvent': 'PLAY_CARD',
+                    'result': '@entity.result',
+                    'turn': '@entity.turn',
+                    'type': 'card-battler-board',
                   },
                 ],
               ],
@@ -1119,77 +1052,19 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'children': [
-                          'array/map',
-                          '@entity.hand',
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'art': [
-                                'object/get',
-                                '@config.assetManifest.cards',
-                                [
-                                  'object/get',
-                                  '@c',
-                                  'iconKey',
-                                ],
-                              ],
-                              'attack': [
-                                'object/get',
-                                '@c',
-                                'attack',
-                              ],
-                              'clickEvent': 'PLAY_CARD',
-                              'cost': [
-                                'object/get',
-                                '@c',
-                                'cost',
-                              ],
-                              'defense': [
-                                'object/get',
-                                '@c',
-                                'defense',
-                              ],
-                              'disabled': false,
-                              'id': [
-                                'object/get',
-                                '@c',
-                                'id',
-                              ],
-                              'name': [
-                                'object/get',
-                                '@c',
-                                'title',
-                              ],
-                              'type': 'game-card',
-                            },
-                          ],
-                        ],
-                        'gap': 2,
-                        'type': 'hstack',
-                      },
-                    ],
-                    'hud': {
-                      'stats': [
-                        {
-                          'label': 'Mana',
-                          'value': '@entity.mana',
-                        },
-                        {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
-                        },
-                        {
-                          'label': 'Result',
-                          'value': '@entity.result',
-                        },
-                      ],
-                      'type': 'game-hud',
-                    },
-                    'type': 'game-shell',
+                    'assetManifest': '@config.assetManifest',
+                    'board': '@entity.board',
+                    'deck': '@entity.deck',
+                    'endTurnEvent': 'END_TURN',
+                    'gameEndEvent': 'GAME_END',
+                    'hand': '@entity.hand',
+                    'mana': '@entity.mana',
+                    'maxMana': '@entity.maxMana',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'playCardEvent': 'PLAY_CARD',
+                    'result': '@entity.result',
+                    'turn': '@entity.turn',
+                    'type': 'card-battler-board',
                   },
                 ],
               ],
@@ -1311,77 +1186,19 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'children': [
-                          'array/map',
-                          '@entity.hand',
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'art': [
-                                'object/get',
-                                '@config.assetManifest.cards',
-                                [
-                                  'object/get',
-                                  '@c',
-                                  'iconKey',
-                                ],
-                              ],
-                              'attack': [
-                                'object/get',
-                                '@c',
-                                'attack',
-                              ],
-                              'clickEvent': 'PLAY_CARD',
-                              'cost': [
-                                'object/get',
-                                '@c',
-                                'cost',
-                              ],
-                              'defense': [
-                                'object/get',
-                                '@c',
-                                'defense',
-                              ],
-                              'disabled': false,
-                              'id': [
-                                'object/get',
-                                '@c',
-                                'id',
-                              ],
-                              'name': [
-                                'object/get',
-                                '@c',
-                                'title',
-                              ],
-                              'type': 'game-card',
-                            },
-                          ],
-                        ],
-                        'gap': 2,
-                        'type': 'hstack',
-                      },
-                    ],
-                    'hud': {
-                      'stats': [
-                        {
-                          'label': 'Mana',
-                          'value': '@entity.mana',
-                        },
-                        {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
-                        },
-                        {
-                          'label': 'Result',
-                          'value': '@entity.result',
-                        },
-                      ],
-                      'type': 'game-hud',
-                    },
-                    'type': 'game-shell',
+                    'assetManifest': '@config.assetManifest',
+                    'board': '@entity.board',
+                    'deck': '@entity.deck',
+                    'endTurnEvent': 'END_TURN',
+                    'gameEndEvent': 'GAME_END',
+                    'hand': '@entity.hand',
+                    'mana': '@entity.mana',
+                    'maxMana': '@entity.maxMana',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'playCardEvent': 'PLAY_CARD',
+                    'result': '@entity.result',
+                    'turn': '@entity.turn',
+                    'type': 'card-battler-board',
                   },
                 ],
               ],
@@ -1400,77 +1217,19 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'children': [
-                          'array/map',
-                          '@entity.hand',
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'art': [
-                                'object/get',
-                                '@config.assetManifest.cards',
-                                [
-                                  'object/get',
-                                  '@c',
-                                  'iconKey',
-                                ],
-                              ],
-                              'attack': [
-                                'object/get',
-                                '@c',
-                                'attack',
-                              ],
-                              'clickEvent': 'PLAY_CARD',
-                              'cost': [
-                                'object/get',
-                                '@c',
-                                'cost',
-                              ],
-                              'defense': [
-                                'object/get',
-                                '@c',
-                                'defense',
-                              ],
-                              'disabled': true,
-                              'id': [
-                                'object/get',
-                                '@c',
-                                'id',
-                              ],
-                              'name': [
-                                'object/get',
-                                '@c',
-                                'title',
-                              ],
-                              'type': 'game-card',
-                            },
-                          ],
-                        ],
-                        'gap': 2,
-                        'type': 'hstack',
-                      },
-                    ],
-                    'hud': {
-                      'stats': [
-                        {
-                          'label': 'Mana',
-                          'value': '@entity.mana',
-                        },
-                        {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
-                        },
-                        {
-                          'label': 'Result',
-                          'value': '@entity.result',
-                        },
-                      ],
-                      'type': 'game-hud',
-                    },
-                    'type': 'game-shell',
+                    'assetManifest': '@config.assetManifest',
+                    'board': '@entity.board',
+                    'deck': '@entity.deck',
+                    'endTurnEvent': 'END_TURN',
+                    'gameEndEvent': 'GAME_END',
+                    'hand': '@entity.hand',
+                    'mana': '@entity.mana',
+                    'maxMana': '@entity.maxMana',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'playCardEvent': 'PLAY_CARD',
+                    'result': '@entity.result',
+                    'turn': '@entity.turn',
+                    'type': 'card-battler-board',
                   },
                 ],
               ],
@@ -1532,77 +1291,19 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'render-ui',
                   'main',
                   {
-                    'children': [
-                      {
-                        'children': [
-                          'array/map',
-                          '@entity.hand',
-                          [
-                            'fn',
-                            'c',
-                            {
-                              'art': [
-                                'object/get',
-                                '@config.assetManifest.cards',
-                                [
-                                  'object/get',
-                                  '@c',
-                                  'iconKey',
-                                ],
-                              ],
-                              'attack': [
-                                'object/get',
-                                '@c',
-                                'attack',
-                              ],
-                              'clickEvent': 'PLAY_CARD',
-                              'cost': [
-                                'object/get',
-                                '@c',
-                                'cost',
-                              ],
-                              'defense': [
-                                'object/get',
-                                '@c',
-                                'defense',
-                              ],
-                              'disabled': false,
-                              'id': [
-                                'object/get',
-                                '@c',
-                                'id',
-                              ],
-                              'name': [
-                                'object/get',
-                                '@c',
-                                'title',
-                              ],
-                              'type': 'game-card',
-                            },
-                          ],
-                        ],
-                        'gap': 2,
-                        'type': 'hstack',
-                      },
-                    ],
-                    'hud': {
-                      'stats': [
-                        {
-                          'label': 'Mana',
-                          'value': '@entity.mana',
-                        },
-                        {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
-                        },
-                        {
-                          'label': 'Result',
-                          'value': '@entity.result',
-                        },
-                      ],
-                      'type': 'game-hud',
-                    },
-                    'type': 'game-shell',
+                    'assetManifest': '@config.assetManifest',
+                    'board': '@entity.board',
+                    'deck': '@entity.deck',
+                    'endTurnEvent': 'END_TURN',
+                    'gameEndEvent': 'GAME_END',
+                    'hand': '@entity.hand',
+                    'mana': '@entity.mana',
+                    'maxMana': '@entity.maxMana',
+                    'playAgainEvent': 'PLAY_AGAIN',
+                    'playCardEvent': 'PLAY_CARD',
+                    'result': '@entity.result',
+                    'turn': '@entity.turn',
+                    'type': 'card-battler-board',
                   },
                 ],
               ],
@@ -1641,7 +1342,9 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
       const override = overrides?.[tr.name];
       if (!override) return t;
       const merged: TraitReference = { ...tr };
-      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
       if (override.name !== undefined) merged.name = override.name;
