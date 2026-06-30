@@ -1,6 +1,8 @@
 app ui-hex-strategy-board "1.0.0"
 "HexStrategyBoard — game-shell composition with LOLO-driven sprite animation and hex combat effects."
 orbital HexStrategyBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
+
   type HexStrategyBoardError = {
     message : string!
     name : string
@@ -255,9 +257,7 @@ orbital HexStrategyBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Territory", value: @entity.territory }, { label: "Result", value: @entity.result } ] }, { type: status-effect, effects: @entity.unitEffects, label: "Unit Buffs" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
@@ -409,5 +409,9 @@ orbital HexStrategyBoardOrbital {
     }
   }
 
-  page "/hex-strategy-board" as HexStrategyBoardPage -> HexStrategyBoardRender
+  trait HexStrategyBoardAnimTick = AnimTick.traits.AnimTick -> HexStrategyBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/hex-strategy-board" as HexStrategyBoardPage -> HexStrategyBoardRender, HexStrategyBoardAnimTick
 }

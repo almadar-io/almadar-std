@@ -1,6 +1,7 @@
 app ui-world-map-board "1.0.0"
 "WorldMapBoard — game-shell composition with isometric canvas, overworld hero movement, battle encounters, and walk/idle animation ticks."
 orbital WorldMapBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
   type WorldMapBoardError = {
     message : string!
     name : string
@@ -241,9 +242,7 @@ orbital WorldMapBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }, { type: mini-map, tiles: @entity.tiles, units: @entity.units, width: @entity.gridWidth, height: @entity.gridHeight }, { type: waypoint-marker, waypoints: @entity.waypoints, path: @entity.validMoves }, { type: button, action: ADVANCE_TURN, label: "Pass Turn", icon: arrow-right, variant: secondary } ] }
@@ -356,5 +355,9 @@ orbital WorldMapBoardOrbital {
     }
   }
 
-  page "/world-map-board" as WorldMapBoardPage -> WorldMapBoardRender
+  trait WorldMapBoardAnimTick = AnimTick.traits.AnimTick -> WorldMapBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/world-map-board" as WorldMapBoardPage -> WorldMapBoardRender, WorldMapBoardAnimTick
 }

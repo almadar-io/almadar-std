@@ -1,6 +1,7 @@
 app ui-pinball-board "1.0.0"
 "PinballBoard — retro pinball: ball hits bumpers for points, paddles keep it alive. game-shell + canvas-2d with live input wiring (TILE_CLICK/UNIT_CLICK/BUMPER_HIT + selectedUnitId/validMoves) and a score/balls HUD."
 orbital PinballBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
   type PinballBoardError = {
     message : string!
     name : string
@@ -192,9 +193,7 @@ orbital PinballBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Balls", value: @entity.balls } ] }, { type: game-audio-toggle } ] }
@@ -286,5 +285,9 @@ orbital PinballBoardOrbital {
     }
   }
 
-  page "/pinball-board" as PinballBoardPage -> PinballBoardRender
+  trait PinballBoardAnimTick = AnimTick.traits.AnimTick -> PinballBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/pinball-board" as PinballBoardPage -> PinballBoardRender, PinballBoardAnimTick
 }

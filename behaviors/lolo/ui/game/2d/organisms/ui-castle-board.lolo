@@ -1,6 +1,8 @@
 app ui-castle-board "1.0.0"
 "CastleBoard — build-and-defend: game-shell + canvas-2d with LOLO-driven sprite animation and combat effects."
 orbital CastleBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
+
   type CastleBoardTilesItem = {
     id : string
     x : number!
@@ -307,9 +309,7 @@ orbital CastleBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
@@ -419,5 +419,9 @@ orbital CastleBoardOrbital {
     }
   }
 
-  page "/castle-board" as CastleBoardPage -> CastleBoardRender
+  trait CastleBoardAnimTick = AnimTick.traits.AnimTick -> CastleBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/castle-board" as CastleBoardPage -> CastleBoardRender, CastleBoardAnimTick
 }

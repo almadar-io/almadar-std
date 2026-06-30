@@ -1,6 +1,8 @@
 app ui-battle-board "1.0.0"
 "BattleBoard — reference game board: game-shell/game-hud/canvas-2d descriptor tree with live input wiring (TILE_CLICK/UNIT_CLICK + selectedUnitId/validMoves) and an END_TURN HUD control. The canonical atomic-composition contract for game boards (see docs/Almadar_Std_Game_UI_Lift.md)."
 orbital BattleBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
+
   type BattleBoardError = {
     message : string!
     name : string
@@ -259,14 +261,7 @@ orbital BattleBoardOrbital {
     }
 
     ticks {
-      ;; Animation clock — frame advance + effects aging + shell re-emit. The
-      ;; reusable extraction of this mutation is std-anim-tick (composed as a
-      ;; sibling trait via `uses` once baked; see the board-composition contract
-      ;; in docs/Almadar_Std_Game_UI_Lift.md). Kept inline here so the reference
-      ;; board validates against the currently-baked registry.
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
@@ -418,5 +413,9 @@ orbital BattleBoardOrbital {
     }
   }
 
-  page "/battle-board" as BattleBoardPage -> BattleBoardRender
+  trait BattleBoardAnimTick = AnimTick.traits.AnimTick -> BattleBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/battle-board" as BattleBoardPage -> BattleBoardRender, BattleBoardAnimTick
 }

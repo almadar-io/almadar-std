@@ -1,6 +1,8 @@
 app ui-tanks-board "1.0.0"
 "TanksBoard — sci-fi tank combat with TILE_CLICK/UNIT_CLICK/FIRE input wiring, END_TURN HUD control, and UI Pack - Sci-fi assets."
 orbital TanksBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
+
   type TanksBoardError = {
     message : string!
     name : string
@@ -253,9 +255,7 @@ orbital TanksBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives }, { label: "Turn", value: @entity.turn } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
@@ -356,5 +356,9 @@ orbital TanksBoardOrbital {
     }
   }
 
-  page "/tanks-board" as TanksBoardPage -> TanksBoardRender
+  trait TanksBoardAnimTick = AnimTick.traits.AnimTick -> TanksBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/tanks-board" as TanksBoardPage -> TanksBoardRender, TanksBoardAnimTick
 }

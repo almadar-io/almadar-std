@@ -1,6 +1,7 @@
 app ui-minigolf-board "1.0.0"
 "MinigolfBoard — click tiles to putt the ball across the fairway to the hole. game-shell + canvas-2d with live input wiring (TILE_CLICK + selectedUnitId/validMoves) and a NEXT_HOLE HUD control on completion."
 orbital MinigolfBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
   type MinigolfBoardError = {
     message : string!
     name : string
@@ -177,9 +178,7 @@ orbital MinigolfBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Hole", value: @entity.hole }, { label: "Strokes", value: @entity.strokes }, { type: timer-display, label: "Par", value: @entity.strokes } ] } ] }
@@ -252,5 +251,9 @@ orbital MinigolfBoardOrbital {
     }
   }
 
-  page "/minigolf-board" as MinigolfBoardPage -> MinigolfBoardRender
+  trait MinigolfBoardAnimTick = AnimTick.traits.AnimTick -> MinigolfBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/minigolf-board" as MinigolfBoardPage -> MinigolfBoardRender, MinigolfBoardAnimTick
 }

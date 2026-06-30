@@ -1,5 +1,5 @@
 {
-  "description": "UncontrolledBattleBoard \u2014 game-shell composition with LOLO-driven sprite animation and combat effects; self-resolving auto-battle.",
+  "description": "UncontrolledBattleBoard — game-shell composition with LOLO-driven sprite animation and combat effects; self-resolving auto-battle.",
   "name": "ui-uncontrolled-battle-board",
   "orbitals": [
     {
@@ -241,6 +241,9 @@
           "traits": [
             {
               "ref": "UncontrolledBattleBoardRender"
+            },
+            {
+              "ref": "UncontrolledBattleBoardAnimTick"
             }
           ]
         }
@@ -959,7 +962,7 @@
                   "unitType": "shadow"
                 }
               ],
-              "description": "Starting unit roster \u2014 each needs id, team (player|enemy), hp, atk, position.",
+              "description": "Starting unit roster — each needs id, team (player|enemy), hp, atk, position.",
               "items": {
                 "properties": {
                   "animation": {
@@ -1801,7 +1804,7 @@
           },
           "emits": [
             {
-              "description": "stepEvent prop \u2014 emitted each battle round with attack result",
+              "description": "stepEvent prop — emitted each battle round with attack result",
               "event": "STEP",
               "payloadSchema": [
                 {
@@ -1824,7 +1827,7 @@
               "tier": "domain"
             },
             {
-              "description": "playAgainEvent prop \u2014 reset + restart the battle",
+              "description": "playAgainEvent prop — reset + restart the battle",
               "event": "PLAY_AGAIN",
               "payloadSchema": [
                 {
@@ -1836,7 +1839,7 @@
               "tier": "domain"
             },
             {
-              "description": "tileClickEvent prop \u2014 emitted when a tile is clicked on the canvas",
+              "description": "tileClickEvent prop — emitted when a tile is clicked on the canvas",
               "event": "TILE_CLICK",
               "payloadSchema": [
                 {
@@ -1854,7 +1857,7 @@
               "tier": "domain"
             },
             {
-              "description": "unitClickEvent prop \u2014 emitted when a unit is clicked on the canvas",
+              "description": "unitClickEvent prop — emitted when a unit is clicked on the canvas",
               "event": "UNIT_CLICK",
               "payloadSchema": [
                 {
@@ -1895,7 +1898,19 @@
                 "name": "Initialize"
               },
               {
-                "description": "stepEvent prop \u2014 emitted each battle round with attack result",
+                "description": "playAgainEvent prop — reset + restart the battle",
+                "key": "PLAY_AGAIN",
+                "name": "Play Again",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "stepEvent prop — emitted each battle round with attack result",
                 "key": "STEP",
                 "name": "Step",
                 "payloadSchema": [
@@ -1918,19 +1933,7 @@
                 "tier": "domain"
               },
               {
-                "description": "playAgainEvent prop \u2014 reset + restart the battle",
-                "key": "PLAY_AGAIN",
-                "name": "Play Again",
-                "payloadSchema": [
-                  {
-                    "name": "id",
-                    "type": "string"
-                  }
-                ],
-                "tier": "domain"
-              },
-              {
-                "description": "tileClickEvent prop \u2014 emitted when a tile is clicked on the canvas",
+                "description": "tileClickEvent prop — emitted when a tile is clicked on the canvas",
                 "key": "TILE_CLICK",
                 "name": "Tile Click",
                 "payloadSchema": [
@@ -1948,7 +1951,7 @@
                 "tier": "domain"
               },
               {
-                "description": "unitClickEvent prop \u2014 emitted when a unit is clicked on the canvas",
+                "description": "unitClickEvent prop — emitted when a unit is clicked on the canvas",
                 "key": "UNIT_CLICK",
                 "name": "Unit Click",
                 "payloadSchema": [
@@ -2310,41 +2313,6 @@
                               }
                             ],
                             "type": "game-hud"
-                          },
-                          {
-                            "label": "Player",
-                            "src": [
-                              "object/get",
-                              [
-                                "array/first",
-                                [
-                                  "array/filter",
-                                  "@entity.units",
-                                  [
-                                    "fn",
-                                    "u",
-                                    [
-                                      "==",
-                                      [
-                                        "object/get",
-                                        "u",
-                                        "team"
-                                      ],
-                                      "player"
-                                    ]
-                                  ]
-                                ]
-                              ],
-                              "modelUrl"
-                            ],
-                            "type": "sprite"
-                          },
-                          {
-                            "type": "damage-number",
-                            "value": 0.0,
-                            "visible": false,
-                            "x": 0.0,
-                            "y": 0.0
                           }
                         ],
                         "direction": "horizontal",
@@ -2357,6 +2325,154 @@
                   ]
                 ],
                 "event": "INIT",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@config.initialUnits"
+                  ],
+                  [
+                    "set",
+                    "@entity.turn",
+                    1.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": "@config.features",
+                          "projection": "isometric",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "showMinimap": true,
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": "@config.tiles",
+                          "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Round",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "label": "Allies",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            "u",
+                                            "team"
+                                          ],
+                                          "player"
+                                        ],
+                                        [
+                                          ">",
+                                          [
+                                            "object/get",
+                                            "u",
+                                            "hp"
+                                          ],
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              },
+                              {
+                                "label": "Enemies",
+                                "value": [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            "u",
+                                            "team"
+                                          ],
+                                          "enemy"
+                                        ],
+                                        [
+                                          ">",
+                                          [
+                                            "object/get",
+                                            "u",
+                                            "hp"
+                                          ],
+                                          0.0
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              }
+                            ],
+                            "type": "game-hud"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
                 "from": "playing",
                 "to": "playing"
               },
@@ -3273,39 +3389,11 @@
                             "type": "game-hud"
                           },
                           {
-                            "label": "Player",
-                            "src": [
-                              "object/get",
-                              [
-                                "array/first",
-                                [
-                                  "array/filter",
-                                  "@entity.units",
-                                  [
-                                    "fn",
-                                    "u",
-                                    [
-                                      "==",
-                                      [
-                                        "object/get",
-                                        "u",
-                                        "team"
-                                      ],
-                                      "player"
-                                    ]
-                                  ]
-                                ]
-                              ],
-                              "modelUrl"
-                            ],
-                            "type": "sprite"
-                          },
-                          {
-                            "type": "damage-number",
-                            "value": 0.0,
-                            "visible": false,
-                            "x": 0.0,
-                            "y": 0.0
+                            "action": "PLAY_AGAIN",
+                            "icon": "refresh",
+                            "label": "Play Again",
+                            "type": "button",
+                            "variant": "primary"
                           }
                         ],
                         "direction": "horizontal",
@@ -3326,80 +3414,6 @@
           "ticks": [
             {
               "effects": [
-                [
-                  "set",
-                  "@entity.units",
-                  [
-                    "array/map",
-                    "@entity.units",
-                    [
-                      "fn",
-                      "u",
-                      [
-                        "object/merge",
-                        "u",
-                        {
-                          "frame": [
-                            "%",
-                            [
-                              "+",
-                              [
-                                "object/get",
-                                "u",
-                                "frame"
-                              ],
-                              1.0
-                            ],
-                            8.0
-                          ]
-                        }
-                      ]
-                    ]
-                  ]
-                ],
-                [
-                  "set",
-                  "@entity.effects",
-                  [
-                    "array/filter",
-                    [
-                      "array/map",
-                      "@entity.effects",
-                      [
-                        "fn",
-                        "e",
-                        [
-                          "object/merge",
-                          "e",
-                          {
-                            "ttl": [
-                              "-",
-                              [
-                                "object/get",
-                                "e",
-                                "ttl"
-                              ],
-                              1.0
-                            ]
-                          }
-                        ]
-                      ]
-                    ],
-                    [
-                      "fn",
-                      "e",
-                      [
-                        ">",
-                        [
-                          "object/get",
-                          "e",
-                          "ttl"
-                        ],
-                        0.0
-                      ]
-                    ]
-                  ]
-                ],
                 [
                   "render-ui",
                   "main",
@@ -3548,7 +3562,7 @@
                 ]
               ],
               "interval": 100.0,
-              "name": "animTick"
+              "name": "renderTick"
             },
             {
               "effects": [
@@ -3855,7 +3869,62 @@
                                         "u",
                                         "hp"
                                       ],
-                                      1.0
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          [
+                                            "array/filter",
+                                            "@entity.units",
+                                            [
+                                              "fn",
+                                              "e",
+                                              [
+                                                "and",
+                                                [
+                                                  "and",
+                                                  [
+                                                    "==",
+                                                    [
+                                                      "object/get",
+                                                      "e",
+                                                      "team"
+                                                    ],
+                                                    "enemy"
+                                                  ],
+                                                  [
+                                                    ">",
+                                                    [
+                                                      "object/get",
+                                                      "e",
+                                                      "hp"
+                                                    ],
+                                                    0.0
+                                                  ]
+                                                ],
+                                                [
+                                                  "==",
+                                                  [
+                                                    "grid/manhattan-distance",
+                                                    [
+                                                      "object/get",
+                                                      "e",
+                                                      "position"
+                                                    ],
+                                                    [
+                                                      "object/get",
+                                                      "u",
+                                                      "position"
+                                                    ]
+                                                  ],
+                                                  1.0
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ],
+                                        "atk"
+                                      ]
                                     ]
                                   ],
                                   0.0
@@ -3873,7 +3942,310 @@
                                     "u",
                                     "hp"
                                   ],
-                                  1.0
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/first",
+                                      [
+                                        "array/filter",
+                                        "@entity.units",
+                                        [
+                                          "fn",
+                                          "e",
+                                          [
+                                            "and",
+                                            [
+                                              "and",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "e",
+                                                  "team"
+                                                ],
+                                                "enemy"
+                                              ],
+                                              [
+                                                ">",
+                                                [
+                                                  "object/get",
+                                                  "e",
+                                                  "hp"
+                                                ],
+                                                0.0
+                                              ]
+                                            ],
+                                            [
+                                              "==",
+                                              [
+                                                "grid/manhattan-distance",
+                                                [
+                                                  "object/get",
+                                                  "e",
+                                                  "position"
+                                                ],
+                                                [
+                                                  "object/get",
+                                                  "u",
+                                                  "position"
+                                                ]
+                                              ],
+                                              1.0
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "atk"
+                                  ]
+                                ]
+                              ]
+                            }
+                          ],
+                          "u"
+                        ],
+                        "u"
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "if",
+                        [
+                          "and",
+                          [
+                            "==",
+                            [
+                              "object/get",
+                              "u",
+                              "team"
+                            ],
+                            "enemy"
+                          ],
+                          [
+                            ">",
+                            [
+                              "object/get",
+                              "u",
+                              "hp"
+                            ],
+                            0.0
+                          ]
+                        ],
+                        [
+                          "if",
+                          [
+                            ">",
+                            [
+                              "array/len",
+                              [
+                                "array/filter",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "p",
+                                  [
+                                    "and",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "p",
+                                          "team"
+                                        ],
+                                        "player"
+                                      ],
+                                      [
+                                        ">",
+                                        [
+                                          "object/get",
+                                          "p",
+                                          "hp"
+                                        ],
+                                        0.0
+                                      ]
+                                    ],
+                                    [
+                                      "==",
+                                      [
+                                        "grid/manhattan-distance",
+                                        [
+                                          "object/get",
+                                          "p",
+                                          "position"
+                                        ],
+                                        [
+                                          "object/get",
+                                          "u",
+                                          "position"
+                                        ]
+                                      ],
+                                      1.0
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            0.0
+                          ],
+                          [
+                            "object/merge",
+                            "u",
+                            {
+                              "animation": [
+                                "if",
+                                [
+                                  "<=",
+                                  [
+                                    "math/max",
+                                    0.0,
+                                    [
+                                      "-",
+                                      [
+                                        "object/get",
+                                        "u",
+                                        "hp"
+                                      ],
+                                      [
+                                        "object/get",
+                                        [
+                                          "array/first",
+                                          [
+                                            "array/filter",
+                                            "@entity.units",
+                                            [
+                                              "fn",
+                                              "p",
+                                              [
+                                                "and",
+                                                [
+                                                  "and",
+                                                  [
+                                                    "==",
+                                                    [
+                                                      "object/get",
+                                                      "p",
+                                                      "team"
+                                                    ],
+                                                    "player"
+                                                  ],
+                                                  [
+                                                    ">",
+                                                    [
+                                                      "object/get",
+                                                      "p",
+                                                      "hp"
+                                                    ],
+                                                    0.0
+                                                  ]
+                                                ],
+                                                [
+                                                  "==",
+                                                  [
+                                                    "grid/manhattan-distance",
+                                                    [
+                                                      "object/get",
+                                                      "p",
+                                                      "position"
+                                                    ],
+                                                    [
+                                                      "object/get",
+                                                      "u",
+                                                      "position"
+                                                    ]
+                                                  ],
+                                                  1.0
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ],
+                                        "atk"
+                                      ]
+                                    ]
+                                  ],
+                                  0.0
+                                ],
+                                "death",
+                                "hit"
+                              ],
+                              "hp": [
+                                "math/max",
+                                0.0,
+                                [
+                                  "-",
+                                  [
+                                    "object/get",
+                                    "u",
+                                    "hp"
+                                  ],
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/first",
+                                      [
+                                        "array/filter",
+                                        "@entity.units",
+                                        [
+                                          "fn",
+                                          "p",
+                                          [
+                                            "and",
+                                            [
+                                              "and",
+                                              [
+                                                "==",
+                                                [
+                                                  "object/get",
+                                                  "p",
+                                                  "team"
+                                                ],
+                                                "player"
+                                              ],
+                                              [
+                                                ">",
+                                                [
+                                                  "object/get",
+                                                  "p",
+                                                  "hp"
+                                                ],
+                                                0.0
+                                              ]
+                                            ],
+                                            [
+                                              "==",
+                                              [
+                                                "grid/manhattan-distance",
+                                                [
+                                                  "object/get",
+                                                  "p",
+                                                  "position"
+                                                ],
+                                                [
+                                                  "object/get",
+                                                  "u",
+                                                  "position"
+                                                ]
+                                              ],
+                                              1.0
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ],
+                                    "atk"
+                                  ]
                                 ]
                               ]
                             }
@@ -3900,35 +4272,7 @@
                           "object/get",
                           [
                             "array/first",
-                            [
-                              "array/filter",
-                              "@entity.units",
-                              [
-                                "fn",
-                                "u",
-                                [
-                                  "and",
-                                  [
-                                    "==",
-                                    [
-                                      "object/get",
-                                      "u",
-                                      "team"
-                                    ],
-                                    "player"
-                                  ],
-                                  [
-                                    ">",
-                                    [
-                                      "object/get",
-                                      "u",
-                                      "hp"
-                                    ],
-                                    0.0
-                                  ]
-                                ]
-                              ]
-                            ]
+                            "@entity.units"
                           ],
                           "position"
                         ],
@@ -3940,35 +4284,7 @@
                           "object/get",
                           [
                             "array/first",
-                            [
-                              "array/filter",
-                              "@entity.units",
-                              [
-                                "fn",
-                                "u",
-                                [
-                                  "and",
-                                  [
-                                    "==",
-                                    [
-                                      "object/get",
-                                      "u",
-                                      "team"
-                                    ],
-                                    "player"
-                                  ],
-                                  [
-                                    ">",
-                                    [
-                                      "object/get",
-                                      "u",
-                                      "hp"
-                                    ],
-                                    0.0
-                                  ]
-                                ]
-                              ]
-                            ]
+                            "@entity.units"
                           ],
                           "position"
                         ],
@@ -4178,45 +4494,10 @@
                           "type": "game-hud"
                         },
                         {
-                          "label": "Player",
-                          "src": [
-                            "object/get",
-                            [
-                              "array/first",
-                              [
-                                "array/filter",
-                                "@entity.units",
-                                [
-                                  "fn",
-                                  "u",
-                                  [
-                                    "==",
-                                    [
-                                      "object/get",
-                                      "u",
-                                      "team"
-                                    ],
-                                    "player"
-                                  ]
-                                ]
-                              ]
-                            ],
-                            "modelUrl"
-                          ],
-                          "type": "sprite"
-                        },
-                        {
-                          "type": "damage-number",
-                          "value": 0.0,
-                          "visible": false,
-                          "x": 0.0,
-                          "y": 0.0
-                        },
-                        {
-                          "type": "button",
                           "action": "PLAY_AGAIN",
-                          "label": "Play Again",
                           "icon": "refresh",
+                          "label": "Play Again",
+                          "type": "button",
                           "variant": "secondary"
                         }
                       ],
@@ -4313,6 +4594,23 @@
               "name": "autoBattleTick"
             }
           ]
+        },
+        {
+          "config": {
+            "frameCount": {
+              "default": 8.0,
+              "type": "unknown"
+            }
+          },
+          "linkedEntity": "UncontrolledBattleBoardItem",
+          "name": "UncontrolledBattleBoardAnimTick",
+          "ref": "AnimTick.traits.AnimTick"
+        }
+      ],
+      "uses": [
+        {
+          "as": "AnimTick",
+          "from": "std/behaviors/std-anim-tick"
         }
       ]
     }
