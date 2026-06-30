@@ -101,7 +101,7 @@ orbital HolidayRunnerBoardOrbital {
             { type: timer-display, value: @entity.distance, label: "Distance" },
             { type: button, action: JUMP, label: "Jump", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/ui/icon-jump.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "icon-jump", thumbnailUrl: "" }, variant: primary }
           ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, backgroundImage: @config.backgroundImage } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { Space: "JUMP", ArrowUp: "JUMP", KeyW: "JUMP" }, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, backgroundImage: @config.backgroundImage } ]
         })
 
       TILE_CLICK -> running
@@ -114,7 +114,7 @@ orbital HolidayRunnerBoardOrbital {
             { type: timer-display, value: @entity.distance, label: "Distance" },
             { type: button, action: JUMP, label: "Jump", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/ui/icon-jump.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "icon-jump", thumbnailUrl: "" }, variant: primary }
           ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, backgroundImage: @config.backgroundImage } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { Space: "JUMP", ArrowUp: "JUMP", KeyW: "JUMP" }, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, backgroundImage: @config.backgroundImage } ]
         })
 
       UNIT_CLICK -> running
@@ -128,10 +128,11 @@ orbital HolidayRunnerBoardOrbital {
             { type: timer-display, value: @entity.distance, label: "Distance" },
             { type: button, action: JUMP, label: "Jump", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/ui/icon-jump.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "icon-jump", thumbnailUrl: "" }, variant: primary }
           ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, backgroundImage: @config.backgroundImage } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { Space: "JUMP", ArrowUp: "JUMP", KeyW: "JUMP" }, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, backgroundImage: @config.backgroundImage } ]
         })
 
       JUMP -> running when (== @entity.result "none")
+        (set @entity.units (array/map @entity.units (fn u (if (== @u.unitType "runner") (object/merge @u { animation: "attack" }) @u))))
         (render-ui main {
           type: game-shell, backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }, hudBackgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [
@@ -140,7 +141,7 @@ orbital HolidayRunnerBoardOrbital {
             { type: timer-display, value: @entity.distance, label: "Distance" },
             { type: button, action: JUMP, label: "Jump", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/ui/icon-jump.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "icon-jump", thumbnailUrl: "" }, variant: primary }
           ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, backgroundImage: @config.backgroundImage } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { Space: "JUMP", ArrowUp: "JUMP", KeyW: "JUMP" }, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, backgroundImage: @config.backgroundImage } ]
         })
     }
 
@@ -157,7 +158,7 @@ orbital HolidayRunnerBoardOrbital {
             { type: timer-display, value: @entity.distance, label: "Distance" },
             { type: button, action: JUMP, label: "Jump", iconAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-holiday-runner-board/default/ui/icon-jump.png", role: "ui", category: "ui", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "icon-jump", thumbnailUrl: "" }, variant: primary }
           ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, backgroundImage: @config.backgroundImage } ]
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, keyMap: { Space: "JUMP", ArrowUp: "JUMP", KeyW: "JUMP" }, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, backgroundImage: @config.backgroundImage } ]
         })
     }
 
