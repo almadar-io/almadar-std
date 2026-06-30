@@ -97,7 +97,7 @@ export interface StdUiPlatformerBoardPlayAgainPayload {
  */
 export interface StdUiPlatformerBoardConfig {
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
-  assetBaseUrl?: EntityRow;
+  assetBaseUrl?: string;
   /** Default: `{"animations":["static"],"aspect":"16:9","category":"ground","dimension":"2d","name":"ground","role":"decoration","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png","variant":""}` */
   backgroundImage?: EntityRow;
   /** Default: `"#5c94fc"` */
@@ -122,9 +122,9 @@ export interface StdUiPlatformerBoardConfig {
   moveSpeed?: number;
   /** Default: `[{"height":32,"type":"ground","width":800,"x":0,"y":368},{"height":16,"type":"platform","width":160,"x":150,"y":280},{"height":16,"type":"platform","width":160,"x":420,"y":220},{"height":16,"type":"hazard","width":80,"x":580,"y":300},{"height":28,"type":"goal","width":64,"x":700,"y":340}]` */
   platforms?: EntityRow[];
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/units/player.png"` */
+  /** Default: `{"animations":["idle","walk","jump","hit","death"],"aspect":"1:1","category":"player","dimension":"2d","name":"player","role":"player","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/units/player.png","variant":""}` */
   playerSprite?: EntityRow;
-  /** Default: `{"goal":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/goal.png","ground":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png","hazard":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/hazard.png","platform":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/platform.png"}` */
+  /** Default: `{"goal":{"animations":["static"],"aspect":"1:1","category":"goal","dimension":"2d","name":"goal","role":"tile","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/goal.png","variant":""},"ground":{"animations":["static"],"aspect":"1:1","category":"ground","dimension":"2d","name":"ground","role":"tile","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png","variant":""},"hazard":{"animations":["static"],"aspect":"1:1","category":"hazard","dimension":"2d","name":"hazard","role":"tile","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/hazard.png","variant":""},"platform":{"animations":["static"],"aspect":"1:1","category":"platform","dimension":"2d","name":"platform","role":"tile","style":"pixel","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/platform.png","variant":""}}` */
   tileSprites?: Record<string, TraitConfig>;
   /** Default: `400` */
   worldHeight?: number;
@@ -411,63 +411,8 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
             'default': 'https://almadar-kflow-assets.web.app/shared/',
             'description': 'Base URL prefix for asset URLs',
             'label': 'Asset Base Url',
-            'properties': {
-              'animations': {
-                'items': {
-                  'type': 'string',
-                },
-                'name': 'animations',
-                'required': false,
-                'type': 'array',
-              },
-              'aspect': {
-                'name': 'aspect',
-                'required': false,
-                'type': 'string',
-              },
-              'category': {
-                'name': 'category',
-                'required': false,
-                'type': 'string',
-              },
-              'dimension': {
-                'name': 'dimension',
-                'required': false,
-                'type': 'string',
-              },
-              'name': {
-                'name': 'name',
-                'required': false,
-                'type': 'string',
-              },
-              'role': {
-                'name': 'role',
-                'required': false,
-                'type': 'string',
-              },
-              'style': {
-                'name': 'style',
-                'required': false,
-                'type': 'string',
-              },
-              'thumbnailUrl': {
-                'name': 'thumbnailUrl',
-                'required': false,
-                'type': 'string',
-              },
-              'url': {
-                'name': 'url',
-                'required': false,
-                'type': 'string',
-              },
-              'variant': {
-                'name': 'variant',
-                'required': false,
-                'type': 'string',
-              },
-            },
             'tier': 'presentation',
-            'type': 'Asset',
+            'type': 'string',
           },
           'backgroundImage': {
             'default': {
@@ -484,7 +429,7 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
               'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png',
               'variant': '',
             },
-            'description': 'Background image URL',
+            'description': 'Background image Asset',
             'label': 'Background Image',
             'properties': {
               'animations': {
@@ -694,8 +639,25 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
             'type': '[PlatformerBoardPlatformsItem]',
           },
           'playerSprite': {
-            'default': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/units/player.png',
-            'description': 'Player sprite image URL',
+            'default': {
+              'animations': [
+                'idle',
+                'walk',
+                'jump',
+                'hit',
+                'death',
+              ],
+              'aspect': '1:1',
+              'category': 'player',
+              'dimension': '2d',
+              'name': 'player',
+              'role': 'player',
+              'style': 'pixel',
+              'thumbnailUrl': '',
+              'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/units/player.png',
+              'variant': '',
+            },
+            'description': 'Player sprite Asset',
             'label': 'Player Sprite',
             'properties': {
               'animations': {
@@ -757,12 +719,64 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
           },
           'tileSprites': {
             'default': {
-              'goal': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/goal.png',
-              'ground': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png',
-              'hazard': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/hazard.png',
-              'platform': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/platform.png',
+              'goal': {
+                'animations': [
+                  'static',
+                ],
+                'aspect': '1:1',
+                'category': 'goal',
+                'dimension': '2d',
+                'name': 'goal',
+                'role': 'tile',
+                'style': 'pixel',
+                'thumbnailUrl': '',
+                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/goal.png',
+                'variant': '',
+              },
+              'ground': {
+                'animations': [
+                  'static',
+                ],
+                'aspect': '1:1',
+                'category': 'ground',
+                'dimension': '2d',
+                'name': 'ground',
+                'role': 'tile',
+                'style': 'pixel',
+                'thumbnailUrl': '',
+                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png',
+                'variant': '',
+              },
+              'hazard': {
+                'animations': [
+                  'static',
+                ],
+                'aspect': '1:1',
+                'category': 'hazard',
+                'dimension': '2d',
+                'name': 'hazard',
+                'role': 'tile',
+                'style': 'pixel',
+                'thumbnailUrl': '',
+                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/hazard.png',
+                'variant': '',
+              },
+              'platform': {
+                'animations': [
+                  'static',
+                ],
+                'aspect': '1:1',
+                'category': 'platform',
+                'dimension': '2d',
+                'name': 'platform',
+                'role': 'tile',
+                'style': 'pixel',
+                'thumbnailUrl': '',
+                'url': 'https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/platform.png',
+                'variant': '',
+              },
             },
-            'description': 'Map of platform type to tile sprite URL',
+            'description': 'Map of platform type to tile sprite Asset',
             'items': {
               'properties': {
                 'animations': {
@@ -1168,12 +1182,9 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   {
                     'children': [
                       {
-                        'assetBaseUrl': '@config.assetBaseUrl',
                         'backgroundImage': '@config.backgroundImage',
                         'bgColor': '@config.bgColor',
-                        'canvasHeight': '@config.canvasHeight',
-                        'canvasWidth': '@config.canvasWidth',
-                        'followCamera': '@config.followCamera',
+                        'camera': 'follow',
                         'platforms': '@config.platforms',
                         'player': '@entity.player',
                         'playerSprite': '@config.playerSprite',
@@ -1202,11 +1213,6 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                             },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'label': 'Score',
-                          'type': 'score-display',
-                          'value': '@entity.score',
                         },
                         {
                           'downAction': 'STOP',
@@ -1448,12 +1454,9 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   {
                     'children': [
                       {
-                        'assetBaseUrl': '@config.assetBaseUrl',
                         'backgroundImage': '@config.backgroundImage',
                         'bgColor': '@config.bgColor',
-                        'canvasHeight': '@config.canvasHeight',
-                        'canvasWidth': '@config.canvasWidth',
-                        'followCamera': '@config.followCamera',
+                        'camera': 'follow',
                         'platforms': '@config.platforms',
                         'player': '@entity.player',
                         'playerSprite': '@config.playerSprite',
@@ -1482,11 +1485,6 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                             },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'label': 'Score',
-                          'type': 'score-display',
-                          'value': '@entity.score',
                         },
                         {
                           'downAction': 'STOP',
@@ -1565,12 +1563,9 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                   {
                     'children': [
                       {
-                        'assetBaseUrl': '@config.assetBaseUrl',
                         'backgroundImage': '@config.backgroundImage',
                         'bgColor': '@config.bgColor',
-                        'canvasHeight': '@config.canvasHeight',
-                        'canvasWidth': '@config.canvasWidth',
-                        'followCamera': '@config.followCamera',
+                        'camera': 'follow',
                         'platforms': '@config.platforms',
                         'player': '@entity.player',
                         'playerSprite': '@config.playerSprite',
@@ -1599,11 +1594,6 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                             },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'label': 'Score',
-                          'type': 'score-display',
-                          'value': '@entity.score',
                         },
                         {
                           'downAction': 'STOP',
@@ -1710,12 +1700,9 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                 {
                   'children': [
                     {
-                      'assetBaseUrl': '@config.assetBaseUrl',
                       'backgroundImage': '@config.backgroundImage',
                       'bgColor': '@config.bgColor',
-                      'canvasHeight': '@config.canvasHeight',
-                      'canvasWidth': '@config.canvasWidth',
-                      'followCamera': '@config.followCamera',
+                      'camera': 'follow',
                       'platforms': '@config.platforms',
                       'player': '@entity.player',
                       'playerSprite': '@config.playerSprite',
@@ -1746,11 +1733,6 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
                         'type': 'game-hud',
                       },
                       {
-                        'label': 'Score',
-                        'type': 'score-display',
-                        'value': '@entity.score',
-                      },
-                      {
                         'downAction': 'STOP',
                         'leftAction': 'LEFT',
                         'rightAction': 'RIGHT',
@@ -1776,528 +1758,6 @@ export function stdUiPlatformerBoardPlatformerBoardOrbital(params: StdUiPlatform
             ],
             'interval': 100,
             'name': 'animTick',
-          },
-          {
-            'effects': [
-              [
-                'let',
-                [
-                  [
-                    'vy1',
-                    [
-                      'math/clamp',
-                      [
-                        '+',
-                        '@entity.player.vy',
-                        '@config.gravity',
-                      ],
-                      [
-                        '-',
-                        0,
-                        '@config.jumpStrength',
-                      ],
-                      '@config.maxFallSpeed',
-                    ],
-                  ],
-                  [
-                    'px1',
-                    [
-                      'math/clamp',
-                      [
-                        '+',
-                        '@entity.player.x',
-                        '@entity.player.vx',
-                      ],
-                      0,
-                      [
-                        '-',
-                        '@entity.worldWidth',
-                        '@entity.player.width',
-                      ],
-                    ],
-                  ],
-                  [
-                    'pw',
-                    '@entity.player.width',
-                  ],
-                  [
-                    'ph',
-                    '@entity.player.height',
-                  ],
-                  [
-                    'livesLeft',
-                    [
-                      '-',
-                      '@entity.lives',
-                      1,
-                    ],
-                  ],
-                ],
-                [
-                  'let',
-                  [
-                    [
-                      'py1',
-                      [
-                        '+',
-                        '@entity.player.y',
-                        '@vy1',
-                      ],
-                    ],
-                  ],
-                  [
-                    'let',
-                    [
-                      [
-                        'playerRect',
-                        {
-                          'h': '@ph',
-                          'w': '@pw',
-                          'x': '@px1',
-                          'y': '@py1',
-                        },
-                      ],
-                    ],
-                    [
-                      'let',
-                      [
-                        [
-                          'hit',
-                          [
-                            'array/find',
-                            '@config.platforms',
-                            [
-                              'fn',
-                              'p',
-                              [
-                                'and',
-                                [
-                                  '!=',
-                                  [
-                                    'object/get',
-                                    '@p',
-                                    'type',
-                                  ],
-                                  'goal',
-                                ],
-                                [
-                                  'geo/aabb-overlap',
-                                  '@playerRect',
-                                  {
-                                    'h': '@p.height',
-                                    'w': '@p.width',
-                                    'x': '@p.x',
-                                    'y': '@p.y',
-                                  },
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                      ],
-                      [
-                        'let',
-                        [
-                          [
-                            'hazardHit',
-                            [
-                              'array/find',
-                              '@config.platforms',
-                              [
-                                'fn',
-                                'p',
-                                [
-                                  'and',
-                                  [
-                                    '==',
-                                    [
-                                      'object/get',
-                                      '@p',
-                                      'type',
-                                    ],
-                                    'hazard',
-                                  ],
-                                  [
-                                    'geo/aabb-overlap',
-                                    '@playerRect',
-                                    {
-                                      'h': '@p.height',
-                                      'w': '@p.width',
-                                      'x': '@p.x',
-                                      'y': '@p.y',
-                                    },
-                                  ],
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                        [
-                          'let',
-                          [
-                            [
-                              'goalHit',
-                              [
-                                'array/find',
-                                '@config.platforms',
-                                [
-                                  'fn',
-                                  'p',
-                                  [
-                                    'and',
-                                    [
-                                      '==',
-                                      [
-                                        'object/get',
-                                        '@p',
-                                        'type',
-                                      ],
-                                      'goal',
-                                    ],
-                                    [
-                                      'geo/aabb-overlap',
-                                      '@playerRect',
-                                      {
-                                        'h': '@p.height',
-                                        'w': '@p.width',
-                                        'x': '@p.x',
-                                        'y': '@p.y',
-                                      },
-                                    ],
-                                  ],
-                                ],
-                              ],
-                            ],
-                          ],
-                          [
-                            'let',
-                            [
-                              [
-                                'hitY',
-                                [
-                                  'object/get',
-                                  '@hit',
-                                  'y',
-                                  '@entity.worldHeight',
-                                ],
-                              ],
-                              [
-                                'landed',
-                                [
-                                  'and',
-                                  [
-                                    '!=',
-                                    '@hit',
-                                    null,
-                                  ],
-                                  [
-                                    '>',
-                                    '@vy1',
-                                    0,
-                                  ],
-                                ],
-                              ],
-                            ],
-                            [
-                              'let',
-                              [
-                                [
-                                  'py2',
-                                  [
-                                    'if',
-                                    '@landed',
-                                    [
-                                      '-',
-                                      '@hitY',
-                                      '@ph',
-                                    ],
-                                    '@py1',
-                                  ],
-                                ],
-                                [
-                                  'vy2',
-                                  [
-                                    'if',
-                                    '@landed',
-                                    0,
-                                    '@vy1',
-                                  ],
-                                ],
-                              ],
-                              [
-                                'let',
-                                [
-                                  [
-                                    'atGround',
-                                    [
-                                      '>=',
-                                      [
-                                        '+',
-                                        '@py2',
-                                        '@ph',
-                                      ],
-                                      '@entity.worldHeight',
-                                    ],
-                                  ],
-                                ],
-                                [
-                                  'let',
-                                  [
-                                    [
-                                      'py3',
-                                      [
-                                        'if',
-                                        '@atGround',
-                                        [
-                                          '-',
-                                          '@entity.worldHeight',
-                                          '@ph',
-                                        ],
-                                        '@py2',
-                                      ],
-                                    ],
-                                    [
-                                      'vy3',
-                                      [
-                                        'if',
-                                        '@atGround',
-                                        0,
-                                        '@vy2',
-                                      ],
-                                    ],
-                                    [
-                                      'grounded',
-                                      [
-                                        'or',
-                                        '@landed',
-                                        '@atGround',
-                                      ],
-                                    ],
-                                  ],
-                                  [
-                                    'let',
-                                    [
-                                      [
-                                        'fell',
-                                        [
-                                          '>',
-                                          '@py3',
-                                          '@entity.worldHeight',
-                                        ],
-                                      ],
-                                    ],
-                                    [
-                                      'let',
-                                      [
-                                        [
-                                          'damaged',
-                                          [
-                                            'or',
-                                            [
-                                              '!=',
-                                              '@hazardHit',
-                                              null,
-                                            ],
-                                            '@fell',
-                                          ],
-                                        ],
-                                      ],
-                                      [
-                                        'do',
-                                        [
-                                          'set',
-                                          '@entity.player',
-                                          [
-                                            'object/merge',
-                                            '@entity.player',
-                                            {
-                                              'grounded': '@grounded',
-                                              'vy': '@vy3',
-                                              'x': '@px1',
-                                              'y': '@py3',
-                                            },
-                                          ],
-                                        ],
-                                        [
-                                          'set',
-                                          '@entity.result',
-                                          [
-                                            'if',
-                                            [
-                                              '!=',
-                                              '@goalHit',
-                                              null,
-                                            ],
-                                            'won',
-                                            [
-                                              'if',
-                                              [
-                                                'and',
-                                                '@damaged',
-                                                [
-                                                  '<=',
-                                                  '@livesLeft',
-                                                  0,
-                                                ],
-                                              ],
-                                              'lost',
-                                              'none',
-                                            ],
-                                          ],
-                                        ],
-                                        [
-                                          'set',
-                                          '@entity.score',
-                                          [
-                                            'if',
-                                            [
-                                              '!=',
-                                              '@goalHit',
-                                              null,
-                                            ],
-                                            [
-                                              '+',
-                                              '@entity.score',
-                                              100,
-                                            ],
-                                            '@entity.score',
-                                          ],
-                                        ],
-                                        [
-                                          'set',
-                                          '@entity.lives',
-                                          [
-                                            'if',
-                                            [
-                                              'and',
-                                              '@damaged',
-                                              [
-                                                '>',
-                                                '@entity.lives',
-                                                0,
-                                              ],
-                                              [
-                                                '==',
-                                                '@entity.result',
-                                                'none',
-                                              ],
-                                            ],
-                                            '@livesLeft',
-                                            '@entity.lives',
-                                          ],
-                                        ],
-                                        [
-                                          'set',
-                                          '@entity.player',
-                                          [
-                                            'if',
-                                            [
-                                              'and',
-                                              '@damaged',
-                                              [
-                                                '==',
-                                                '@entity.result',
-                                                'none',
-                                              ],
-                                            ],
-                                            {
-                                              'animation': 'idle',
-                                              'facingRight': true,
-                                              'frame': 0,
-                                              'grounded': false,
-                                              'height': 48,
-                                              'vx': 0,
-                                              'vy': 0,
-                                              'width': 32,
-                                              'x': 80,
-                                              'y': 320,
-                                            },
-                                            '@entity.player',
-                                          ],
-                                        ],
-                                        [
-                                          'render-ui',
-                                          'main',
-                                          {
-                                            'children': [
-                                              {
-                                                'assetBaseUrl': '@config.assetBaseUrl',
-                                                'backgroundImage': '@config.backgroundImage',
-                                                'bgColor': '@config.bgColor',
-                                                'canvasHeight': '@config.canvasHeight',
-                                                'canvasWidth': '@config.canvasWidth',
-                                                'followCamera': '@config.followCamera',
-                                                'platforms': '@config.platforms',
-                                                'player': '@entity.player',
-                                                'playerSprite': '@config.playerSprite',
-                                                'projection': 'side',
-                                                'selectedUnitId': '@entity.selectedUnitId',
-                                                'tileClickEvent': 'TILE_CLICK',
-                                                'tileSprites': '@config.tileSprites',
-                                                'type': 'canvas-2d',
-                                                'unitClickEvent': 'UNIT_CLICK',
-                                                'validMoves': '@entity.validMoves',
-                                                'worldHeight': '@entity.worldHeight',
-                                                'worldWidth': '@entity.worldWidth',
-                                              },
-                                            ],
-                                            'hud': {
-                                              'children': [
-                                                {
-                                                  'stats': [
-                                                    {
-                                                      'label': 'Score',
-                                                      'value': '@entity.score',
-                                                    },
-                                                    {
-                                                      'label': 'Lives',
-                                                      'value': '@entity.lives',
-                                                    },
-                                                  ],
-                                                  'type': 'game-hud',
-                                                },
-                                                {
-                                                  'label': 'Score',
-                                                  'type': 'score-display',
-                                                  'value': '@entity.score',
-                                                },
-                                                {
-                                                  'action': 'PLAY_AGAIN',
-                                                  'icon': 'refresh',
-                                                  'label': 'Restart',
-                                                  'type': 'button',
-                                                  'variant': 'secondary',
-                                                },
-                                              ],
-                                              'direction': 'horizontal',
-                                              'gap': 'md',
-                                              'justify': 'between',
-                                              'type': 'stack',
-                                            },
-                                            'type': 'game-shell',
-                                          },
-                                        ],
-                                      ],
-                                    ],
-                                  ],
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
-                      ],
-                    ],
-                  ],
-                ],
-              ],
-            ],
-            'guard': [
-              '==',
-              '@entity.result',
-              'none',
-            ],
-            'interval': 33,
-            'name': 'gameflowTick',
           },
         ],
       } as never, 'PlatformerBoardItem', canonicalName) as never,

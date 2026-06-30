@@ -179,7 +179,7 @@ export interface StdUiBattleBoardBattleBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'BattleBoardRender',
+    'BattleBoardAnimTick' | 'BattleBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -189,7 +189,12 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
   const canonicalName = params.entityName ?? 'BattleBoardItem';
   const built = makeOrbitalWithUses({
     name: 'BattleBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'AnimTick',
+        'from': 'std/behaviors/std-anim-tick',
+      },
+    ],
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
@@ -9255,80 +9260,6 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
           {
             'effects': [
               [
-                'set',
-                '@entity.units',
-                [
-                  'array/map',
-                  '@entity.units',
-                  [
-                    'fn',
-                    'u',
-                    [
-                      'object/merge',
-                      '@u',
-                      {
-                        'frame': [
-                          '%',
-                          [
-                            '+',
-                            [
-                              'object/get',
-                              '@u',
-                              'frame',
-                            ],
-                            1,
-                          ],
-                          8,
-                        ],
-                      },
-                    ],
-                  ],
-                ],
-              ],
-              [
-                'set',
-                '@entity.effects',
-                [
-                  'array/filter',
-                  [
-                    'array/map',
-                    '@entity.effects',
-                    [
-                      'fn',
-                      'e',
-                      [
-                        'object/merge',
-                        '@e',
-                        {
-                          'ttl': [
-                            '-',
-                            [
-                              'object/get',
-                              '@e',
-                              'ttl',
-                            ],
-                            1,
-                          ],
-                        },
-                      ],
-                    ],
-                  ],
-                  [
-                    'fn',
-                    'e',
-                    [
-                      '>',
-                      [
-                        'object/get',
-                        '@e',
-                        'ttl',
-                      ],
-                      0,
-                    ],
-                  ],
-                ],
-              ],
-              [
                 'render-ui',
                 'main',
                 {
@@ -9415,7 +9346,7 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
               ],
             ],
             'interval': 100,
-            'name': 'animTick',
+            'name': 'renderTick',
           },
           {
             'effects': [
@@ -10012,6 +9943,17 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
           },
         ],
       } as never, 'BattleBoardItem', canonicalName) as never,
+      makeTraitRef({
+        'config': {
+          'frameCount': {
+            'default': 8,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'BattleBoardAnimTick',
+        'ref': 'AnimTick.traits.AnimTick',
+      }),
     ],
     pages: [
       {
@@ -10020,6 +9962,9 @@ export function stdUiBattleBoardBattleBoardOrbital(params: StdUiBattleBoardBattl
         'traits': [
           {
             'ref': 'BattleBoardRender',
+          },
+          {
+            'ref': 'BattleBoardAnimTick',
           },
         ],
       } as never,
@@ -10076,6 +10021,7 @@ export const StdUiBattleBoardBattleBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'BattleBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'BattleBoardRender',

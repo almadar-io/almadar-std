@@ -147,7 +147,7 @@ export interface StdUiPinballBoardPinballBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'PinballBoardRender',
+    'PinballBoardAnimTick' | 'PinballBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -157,7 +157,12 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
   const canonicalName = params.entityName ?? 'PinballBoardItem';
   const built = makeOrbitalWithUses({
     name: 'PinballBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'AnimTick',
+        'from': 'std/behaviors/std-anim-tick',
+      },
+    ],
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
@@ -3016,20 +3021,16 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'stats': [
                             {
                               'label': 'Score',
-                              'type': 'score-display',
                               'value': '@entity.score',
                             },
                             {
                               'label': 'Balls',
-                              'type': 'item-slot',
                               'value': '@entity.balls',
                             },
                           ],
                           'type': 'game-hud',
                         },
                         {
-                          'action': 'TOGGLE_AUDIO',
-                          'enabled': '@entity.audioEnabled',
                           'type': 'game-audio-toggle',
                         },
                       ],
@@ -3075,20 +3076,16 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'stats': [
                             {
                               'label': 'Score',
-                              'type': 'score-display',
                               'value': '@entity.score',
                             },
                             {
                               'label': 'Balls',
-                              'type': 'item-slot',
                               'value': '@entity.balls',
                             },
                           ],
                           'type': 'game-hud',
                         },
                         {
-                          'action': 'TOGGLE_AUDIO',
-                          'enabled': '@entity.audioEnabled',
                           'type': 'game-audio-toggle',
                         },
                       ],
@@ -3134,20 +3131,16 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'stats': [
                             {
                               'label': 'Score',
-                              'type': 'score-display',
                               'value': '@entity.score',
                             },
                             {
                               'label': 'Balls',
-                              'type': 'item-slot',
                               'value': '@entity.balls',
                             },
                           ],
                           'type': 'game-hud',
                         },
                         {
-                          'action': 'TOGGLE_AUDIO',
-                          'enabled': '@entity.audioEnabled',
                           'type': 'game-audio-toggle',
                         },
                       ],
@@ -3216,20 +3209,16 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'stats': [
                             {
                               'label': 'Score',
-                              'type': 'score-display',
                               'value': '@entity.score',
                             },
                             {
                               'label': 'Balls',
-                              'type': 'item-slot',
                               'value': '@entity.balls',
                             },
                           ],
                           'type': 'game-hud',
                         },
                         {
-                          'action': 'TOGGLE_AUDIO',
-                          'enabled': '@entity.audioEnabled',
                           'type': 'game-audio-toggle',
                         },
                       ],
@@ -3284,20 +3273,16 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'stats': [
                             {
                               'label': 'Score',
-                              'type': 'score-display',
                               'value': '@entity.score',
                             },
                             {
                               'label': 'Balls',
-                              'type': 'item-slot',
                               'value': '@entity.balls',
                             },
                           ],
                           'type': 'game-hud',
                         },
                         {
-                          'action': 'TOGGLE_AUDIO',
-                          'enabled': '@entity.audioEnabled',
                           'type': 'game-audio-toggle',
                         },
                       ],
@@ -3353,20 +3338,16 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'stats': [
                             {
                               'label': 'Score',
-                              'type': 'score-display',
                               'value': '@entity.score',
                             },
                             {
                               'label': 'Balls',
-                              'type': 'item-slot',
                               'value': '@entity.balls',
                             },
                           ],
                           'type': 'game-hud',
                         },
                         {
-                          'action': 'TOGGLE_AUDIO',
-                          'enabled': '@entity.audioEnabled',
                           'type': 'game-audio-toggle',
                         },
                       ],
@@ -3425,20 +3406,16 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'stats': [
                             {
                               'label': 'Score',
-                              'type': 'score-display',
                               'value': '@entity.score',
                             },
                             {
                               'label': 'Balls',
-                              'type': 'item-slot',
                               'value': '@entity.balls',
                             },
                           ],
                           'type': 'game-hud',
                         },
                         {
-                          'action': 'TOGGLE_AUDIO',
-                          'enabled': '@entity.audioEnabled',
                           'type': 'game-audio-toggle',
                         },
                       ],
@@ -3519,20 +3496,16 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                           'stats': [
                             {
                               'label': 'Score',
-                              'type': 'score-display',
                               'value': '@entity.score',
                             },
                             {
                               'label': 'Balls',
-                              'type': 'item-slot',
                               'value': '@entity.balls',
                             },
                           ],
                           'type': 'game-hud',
                         },
                         {
-                          'action': 'TOGGLE_AUDIO',
-                          'enabled': '@entity.audioEnabled',
                           'type': 'game-audio-toggle',
                         },
                       ],
@@ -3554,80 +3527,6 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
         'ticks': [
           {
             'effects': [
-              [
-                'set',
-                '@entity.units',
-                [
-                  'array/map',
-                  '@entity.units',
-                  [
-                    'fn',
-                    'u',
-                    [
-                      'object/merge',
-                      '@u',
-                      {
-                        'frame': [
-                          '%',
-                          [
-                            '+',
-                            [
-                              'object/get',
-                              '@u',
-                              'frame',
-                            ],
-                            1,
-                          ],
-                          8,
-                        ],
-                      },
-                    ],
-                  ],
-                ],
-              ],
-              [
-                'set',
-                '@entity.effects',
-                [
-                  'array/filter',
-                  [
-                    'array/map',
-                    '@entity.effects',
-                    [
-                      'fn',
-                      'e',
-                      [
-                        'object/merge',
-                        '@e',
-                        {
-                          'ttl': [
-                            '-',
-                            [
-                              'object/get',
-                              '@e',
-                              'ttl',
-                            ],
-                            1,
-                          ],
-                        },
-                      ],
-                    ],
-                  ],
-                  [
-                    'fn',
-                    'e',
-                    [
-                      '>',
-                      [
-                        'object/get',
-                        '@e',
-                        'ttl',
-                      ],
-                      0,
-                    ],
-                  ],
-                ],
-              ],
               [
                 'render-ui',
                 'main',
@@ -3655,20 +3554,16 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
                         'stats': [
                           {
                             'label': 'Score',
-                            'type': 'score-display',
                             'value': '@entity.score',
                           },
                           {
                             'label': 'Balls',
-                            'type': 'item-slot',
                             'value': '@entity.balls',
                           },
                         ],
                         'type': 'game-hud',
                       },
                       {
-                        'action': 'TOGGLE_AUDIO',
-                        'enabled': '@entity.audioEnabled',
                         'type': 'game-audio-toggle',
                       },
                     ],
@@ -3682,10 +3577,21 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
               ],
             ],
             'interval': 100,
-            'name': 'animTick',
+            'name': 'renderTick',
           },
         ],
       } as never, 'PinballBoardItem', canonicalName) as never,
+      makeTraitRef({
+        'config': {
+          'frameCount': {
+            'default': 8,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'PinballBoardAnimTick',
+        'ref': 'AnimTick.traits.AnimTick',
+      }),
     ],
     pages: [
       {
@@ -3694,6 +3600,9 @@ export function stdUiPinballBoardPinballBoardOrbital(params: StdUiPinballBoardPi
         'traits': [
           {
             'ref': 'PinballBoardRender',
+          },
+          {
+            'ref': 'PinballBoardAnimTick',
           },
         ],
       } as never,
@@ -3750,6 +3659,7 @@ export const StdUiPinballBoardPinballBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'PinballBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'PinballBoardRender',

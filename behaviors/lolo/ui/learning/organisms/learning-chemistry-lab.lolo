@@ -1,0 +1,159 @@
+app learning-chemistry-lab "1.0.0"
+"Chemistry lab organism — molecules, reactions, atoms, bonds, and arrows on a chemistry-canvas."
+orbital ChemistryLabOrbital {
+  type ChemistryLabAtom = {
+    id : string
+    x : number!
+    y : number!
+    element : string
+    radius : number
+    color : string
+  }
+  type ChemistryLabBond = {
+    from : string!
+    to : string!
+    type : "single" | "double" | "triple"
+    color : string
+  }
+  type ChemistryLabArrow = {
+    x : number!
+    y : number!
+    angle : number
+    length : number
+    color : string
+    label : string
+  }
+  type ChemistryLabShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [ChemistryLabShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type ChemistryLabShapePoint = {
+    x : number!
+    y : number!
+  }
+
+  entity ChemistryLabItem [runtime] {
+    id : string!
+    title : string
+    atoms : [ChemistryLabAtom]
+    bonds : [ChemistryLabBond]
+    arrows : [ChemistryLabArrow]
+    shapes : [ChemistryLabShape]
+  }
+
+  trait ChemistryLabRender -> @rebindable ChemistryLabItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.title @config.title)
+        (set @entity.atoms @config.atoms)
+        (set @entity.bonds @config.bonds)
+        (set @entity.arrows @config.arrows)
+        (set @entity.shapes @config.shapes)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: md
+          padding: md
+          children: [
+            { type: typography, variant: h4, content: @entity.title },
+            { type: chemistry-canvas,
+              width: @config.width,
+              height: @config.height,
+              backgroundColor: @config.backgroundColor,
+              atoms: @entity.atoms,
+              bonds: @entity.bonds,
+              arrows: @entity.arrows,
+              shapes: @entity.shapes,
+              interactive: @config.interactive,
+              animate: @config.animate
+            }
+          ]
+        })
+    }
+
+    config {
+      mode : "molecule" | "reaction" = molecule
+        @label "Mode"
+        @description "What kind of chemistry visualization to render."
+        @synonyms "molecule, atom, bond, ball and stick, formula, reaction, reactant, product, arrow, mechanism"
+        @tier "domain"
+      title : string = "Chemistry Lab"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      backgroundColor : string = "#fafafa"
+        @label "Background Color"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      atoms : [ChemistryLabAtom] = [
+        { id: "C", x: 300, y: 200, element: "C", radius: 22, color: "#374151" },
+        { id: "O", x: 380, y: 160, element: "O", radius: 20, color: "#dc2626" },
+        { id: "H1", x: 240, y: 160, element: "H", radius: 14, color: "#2563eb" },
+        { id: "H2", x: 260, y: 270, element: "H", radius: 14, color: "#2563eb" },
+        { id: "H3", x: 340, y: 270, element: "H", radius: 14, color: "#2563eb" }
+      ]
+        @label "Atoms"
+        @description "Atoms to render."
+        @tier "domain"
+      bonds : [ChemistryLabBond] = [
+        { from: "C", to: "O", type: double, color: "#374151" },
+        { from: "C", to: "H1", type: single, color: "#374151" },
+        { from: "C", to: "H2", type: single, color: "#374151" },
+        { from: "C", to: "H3", type: single, color: "#374151" }
+      ]
+        @label "Bonds"
+        @description "Bonds between atoms."
+        @tier "domain"
+      arrows : [ChemistryLabArrow] = []
+        @label "Arrows"
+        @description "Reaction arrows or directional annotations."
+        @tier "domain"
+      shapes : [ChemistryLabShape] = []
+        @label "Shapes"
+        @description "Extra declarative shapes such as electron orbitals or brackets."
+        @tier "domain"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+    }
+  }
+
+  page "/learning/chemistry-lab" as ChemistryLabPage -> ChemistryLabRender
+}

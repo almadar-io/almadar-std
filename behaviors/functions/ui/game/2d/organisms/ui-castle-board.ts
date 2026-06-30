@@ -152,7 +152,7 @@ export interface StdUiCastleBoardCastleBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'CastleBoardRender',
+    'CastleBoardAnimTick' | 'CastleBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -162,7 +162,12 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
   const canonicalName = params.entityName ?? 'CastleBoardItem';
   const built = makeOrbitalWithUses({
     name: 'CastleBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'AnimTick',
+        'from': 'std/behaviors/std-anim-tick',
+      },
+    ],
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
@@ -6146,80 +6151,6 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           {
             'effects': [
               [
-                'set',
-                '@entity.units',
-                [
-                  'array/map',
-                  '@entity.units',
-                  [
-                    'fn',
-                    'u',
-                    [
-                      'object/merge',
-                      '@u',
-                      {
-                        'frame': [
-                          '%',
-                          [
-                            '+',
-                            [
-                              'object/get',
-                              '@u',
-                              'frame',
-                            ],
-                            1,
-                          ],
-                          8,
-                        ],
-                      },
-                    ],
-                  ],
-                ],
-              ],
-              [
-                'set',
-                '@entity.effects',
-                [
-                  'array/filter',
-                  [
-                    'array/map',
-                    '@entity.effects',
-                    [
-                      'fn',
-                      'e',
-                      [
-                        'object/merge',
-                        '@e',
-                        {
-                          'ttl': [
-                            '-',
-                            [
-                              'object/get',
-                              '@e',
-                              'ttl',
-                            ],
-                            1,
-                          ],
-                        },
-                      ],
-                    ],
-                  ],
-                  [
-                    'fn',
-                    'e',
-                    [
-                      '>',
-                      [
-                        'object/get',
-                        '@e',
-                        'ttl',
-                      ],
-                      0,
-                    ],
-                  ],
-                ],
-              ],
-              [
                 'render-ui',
                 'main',
                 {
@@ -6262,7 +6193,7 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
               ],
             ],
             'interval': 100,
-            'name': 'animTick',
+            'name': 'renderTick',
           },
           {
             'effects': [
@@ -6594,6 +6525,17 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
           },
         ],
       } as never, 'CastleBoardItem', canonicalName) as never,
+      makeTraitRef({
+        'config': {
+          'frameCount': {
+            'default': 8,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'CastleBoardAnimTick',
+        'ref': 'AnimTick.traits.AnimTick',
+      }),
     ],
     pages: [
       {
@@ -6602,6 +6544,9 @@ export function stdUiCastleBoardCastleBoardOrbital(params: StdUiCastleBoardCastl
         'traits': [
           {
             'ref': 'CastleBoardRender',
+          },
+          {
+            'ref': 'CastleBoardAnimTick',
           },
         ],
       } as never,
@@ -6658,6 +6603,7 @@ export const StdUiCastleBoardCastleBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'CastleBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'CastleBoardRender',

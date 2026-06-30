@@ -61,7 +61,7 @@ export interface StdUiVisualNovelBoardRestartPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiVisualNovelBoardConfig {
-  /** Default: `{"animations":["static"],"aspect":"16:9","category":"corridor","dimension":"2d","name":"corridor","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png","variant":""}` */
+  /** Default: `{"animations":["static"],"aspect":"16:9","category":"corridor","dimension":"2d","name":"corridor","role":"decoration","style":"","thumbnailUrl":"","url":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='100%25' height='100%25' fill='%231a1a2e'/%3E%3Cline x1='0' y1='450' x2='1600' y2='450' stroke='%23333355' stroke-width='2'/%3E%3C/svg%3E","variant":""}` */
   backgroundImage?: EntityRow;
   /** Default: `""` */
   className?: string;
@@ -72,12 +72,18 @@ export interface StdUiVisualNovelBoardConfig {
   nodes?: EntityRow[];
   /** Default: `1` */
   portraitScale?: number;
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"guide","dimension":"2d","name":"guide","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png","variant":""}` */
+  /** Default: `{"url":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='400'%3E%3Crect width='100%25' height='100%25' fill='%23334' rx='8'/%3E%3Ccircle cx='100' cy='100' r='60' fill='%23556'/%3E%3Crect x='40' y='170' width='120' height='180' rx='10' fill='%23445'/%3E%3C/svg%3E","role":"npc","category":"guide","animations":["static"],"style":"","variant":"","dimension":"2d","aspect":"1:2","name":"guide","thumbnailUrl":""}` */
   portraitUrl?: EntityRow;
   /** Default: `"start"` */
   startNodeId?: string;
   /** Default: `30` */
   typewriterSpeed?: number;
+  /** Default: `{"url":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='100%25' height='100%25' fill='%231a1a2e'/%3E%3Cline x1='0' y1='450' x2='1600' y2='450' stroke='%23333355' stroke-width='2'/%3E%3C/svg%3E","role":"decoration","category":"corridor","animations":["static"],"style":"","variant":"","dimension":"2d","aspect":"16:9","name":"corridor","thumbnailUrl":""}` */
+  corridorBg?: EntityRow;
+  /** Default: `{"url":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='100%25' height='100%25' fill='%232e1a0a'/%3E%3Cline x1='0' y1='450' x2='1600' y2='450' stroke='%23553322' stroke-width='2'/%3E%3C/svg%3E","role":"decoration","category":"forge","animations":["static"],"style":"","variant":"","dimension":"2d","aspect":"16:9","name":"forge","thumbnailUrl":""}` */
+  forgeBg?: EntityRow;
+  /** Default: `{"url":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='900'%3E%3Crect width='100%25' height='100%25' fill='%230a1e2e'/%3E%3Cline x1='0' y1='450' x2='1600' y2='450' stroke='%23224455' stroke-width='2'/%3E%3C/svg%3E","role":"decoration","category":"core","animations":["static"],"style":"","variant":"","dimension":"2d","aspect":"16:9","name":"core","thumbnailUrl":""}` */
+  coreBg?: EntityRow;
 }
 
 /**
@@ -253,7 +259,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               'role': 'decoration',
               'style': '',
               'thumbnailUrl': '',
-              'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png',
+              'url': 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%231a1a2e\'/%3E%3Cline x1=\'0\' y1=\'450\' x2=\'1600\' y2=\'450\' stroke=\'%23333355\' stroke-width=\'2\'/%3E%3C/svg%3E',
               'variant': '',
             },
             'description': 'Full-frame scene background rendered behind the dialogue box.',
@@ -485,18 +491,18 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
           },
           'portraitUrl': {
             'default': {
+              'url': 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'400\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%23334\' rx=\'8\'/%3E%3Ccircle cx=\'100\' cy=\'100\' r=\'60\' fill=\'%23556\'/%3E%3Crect x=\'40\' y=\'170\' width=\'120\' height=\'180\' rx=\'10\' fill=\'%23445\'/%3E%3C/svg%3E',
+              'role': 'npc',
+              'category': 'guide',
               'animations': [
                 'static',
               ],
-              'aspect': '1:1',
-              'category': 'guide',
-              'dimension': '2d',
-              'name': 'guide',
-              'role': 'npc',
               'style': '',
-              'thumbnailUrl': '',
-              'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png',
               'variant': '',
+              'dimension': '2d',
+              'aspect': '1:2',
+              'name': 'guide',
+              'thumbnailUrl': '',
             },
             'description': 'Large character portrait rendered standing over the scene.',
             'label': 'Portrait Url',
@@ -571,6 +577,66 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             'label': 'Typewriter Speed',
             'tier': 'presentation',
             'type': 'number',
+          },
+          'corridorBg': {
+            'default': {
+              'url': 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%231a1a2e\'/%3E%3Cline x1=\'0\' y1=\'450\' x2=\'1600\' y2=\'450\' stroke=\'%23333355\' stroke-width=\'2\'/%3E%3C/svg%3E',
+              'role': 'decoration',
+              'category': 'corridor',
+              'animations': [
+                'static',
+              ],
+              'style': '',
+              'variant': '',
+              'dimension': '2d',
+              'aspect': '16:9',
+              'name': 'corridor',
+              'thumbnailUrl': '',
+            },
+            'description': 'Stone corridor scene background.',
+            'label': 'Corridor Background',
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
+          'forgeBg': {
+            'default': {
+              'url': 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%232e1a0a\'/%3E%3Cline x1=\'0\' y1=\'450\' x2=\'1600\' y2=\'450\' stroke=\'%23553322\' stroke-width=\'2\'/%3E%3C/svg%3E',
+              'role': 'decoration',
+              'category': 'forge',
+              'animations': [
+                'static',
+              ],
+              'style': '',
+              'variant': '',
+              'dimension': '2d',
+              'aspect': '16:9',
+              'name': 'forge',
+              'thumbnailUrl': '',
+            },
+            'description': 'Forge room scene background.',
+            'label': 'Forge Background',
+            'tier': 'presentation',
+            'type': 'Asset',
+          },
+          'coreBg': {
+            'default': {
+              'url': 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'1600\' height=\'900\'%3E%3Crect width=\'100%25\' height=\'100%25\' fill=\'%230a1e2e\'/%3E%3Cline x1=\'0\' y1=\'450\' x2=\'1600\' y2=\'450\' stroke=\'%23224455\' stroke-width=\'2\'/%3E%3C/svg%3E',
+              'role': 'decoration',
+              'category': 'core',
+              'animations': [
+                'static',
+              ],
+              'style': '',
+              'variant': '',
+              'dimension': '2d',
+              'aspect': '16:9',
+              'name': 'core',
+              'thumbnailUrl': '',
+            },
+            'description': 'Ancient core scene background.',
+            'label': 'Core Background',
+            'tier': 'presentation',
+            'type': 'Asset',
           },
         },
         'emits': [
@@ -776,18 +842,19 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'main',
                   {
                     'advanceEvent': 'ADVANCE',
-                    'choiceButton': {
-                      'choices': '@entity.currentChoices',
-                      'chooseEvent': 'CHOOSE',
-                      'type': 'choice-button',
+                    'assetManifest': {
+                      'backgrounds': {
+                        'corridor': '@config.corridorBg',
+                        'forge': '@config.forgeBg',
+                        'core': '@config.coreBg',
+                      },
+                      'portraits': {
+                        'guide': '@config.portraitUrl',
+                        'rival': '@config.portraitUrl',
+                      },
                     },
                     'chooseEvent': 'CHOOSE',
                     'currentNodeId': '@entity.currentNodeId',
-                    'dialogueBubble': {
-                      'speaker': '@entity.currentSpeaker',
-                      'text': '@entity.currentText',
-                      'type': 'dialogue-bubble',
-                    },
                     'nodes': '@entity.nodes',
                     'portraitScale': '@config.portraitScale',
                     'restartEvent': 'RESTART',
@@ -884,18 +951,19 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'main',
                   {
                     'advanceEvent': 'ADVANCE',
-                    'choiceButton': {
-                      'choices': '@entity.currentChoices',
-                      'chooseEvent': 'CHOOSE',
-                      'type': 'choice-button',
+                    'assetManifest': {
+                      'backgrounds': {
+                        'corridor': '@config.corridorBg',
+                        'forge': '@config.forgeBg',
+                        'core': '@config.coreBg',
+                      },
+                      'portraits': {
+                        'guide': '@config.portraitUrl',
+                        'rival': '@config.portraitUrl',
+                      },
                     },
                     'chooseEvent': 'CHOOSE',
                     'currentNodeId': '@entity.currentNodeId',
-                    'dialogueBubble': {
-                      'speaker': '@entity.currentSpeaker',
-                      'text': '@entity.currentText',
-                      'type': 'dialogue-bubble',
-                    },
                     'nodes': '@entity.nodes',
                     'portraitScale': '@config.portraitScale',
                     'restartEvent': 'RESTART',
@@ -915,18 +983,19 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'main',
                   {
                     'advanceEvent': 'ADVANCE',
-                    'choiceButton': {
-                      'choices': '@entity.currentChoices',
-                      'chooseEvent': 'CHOOSE',
-                      'type': 'choice-button',
+                    'assetManifest': {
+                      'backgrounds': {
+                        'corridor': '@config.corridorBg',
+                        'forge': '@config.forgeBg',
+                        'core': '@config.coreBg',
+                      },
+                      'portraits': {
+                        'guide': '@config.portraitUrl',
+                        'rival': '@config.portraitUrl',
+                      },
                     },
                     'chooseEvent': 'CHOOSE',
                     'currentNodeId': '@entity.currentNodeId',
-                    'dialogueBubble': {
-                      'speaker': '@entity.currentSpeaker',
-                      'text': '@entity.currentText',
-                      'type': 'dialogue-bubble',
-                    },
                     'nodes': '@entity.nodes',
                     'portraitScale': '@config.portraitScale',
                     'restartEvent': 'RESTART',
@@ -1023,18 +1092,19 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'main',
                   {
                     'advanceEvent': 'ADVANCE',
-                    'choiceButton': {
-                      'choices': '@entity.currentChoices',
-                      'chooseEvent': 'CHOOSE',
-                      'type': 'choice-button',
+                    'assetManifest': {
+                      'backgrounds': {
+                        'corridor': '@config.corridorBg',
+                        'forge': '@config.forgeBg',
+                        'core': '@config.coreBg',
+                      },
+                      'portraits': {
+                        'guide': '@config.portraitUrl',
+                        'rival': '@config.portraitUrl',
+                      },
                     },
                     'chooseEvent': 'CHOOSE',
                     'currentNodeId': '@entity.currentNodeId',
-                    'dialogueBubble': {
-                      'speaker': '@entity.currentSpeaker',
-                      'text': '@entity.currentText',
-                      'type': 'dialogue-bubble',
-                    },
                     'nodes': '@entity.nodes',
                     'portraitScale': '@config.portraitScale',
                     'restartEvent': 'RESTART',

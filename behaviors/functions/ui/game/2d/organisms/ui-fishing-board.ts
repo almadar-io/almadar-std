@@ -138,7 +138,7 @@ export interface StdUiFishingBoardFishingBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'FishingBoardRender',
+    'FishingBoardAnimTick' | 'FishingBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -148,7 +148,12 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
   const canonicalName = params.entityName ?? 'FishingBoardItem';
   const built = makeOrbitalWithUses({
     name: 'FishingBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'AnimTick',
+        'from': 'std/behaviors/std-anim-tick',
+      },
+    ],
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
@@ -3010,80 +3015,6 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
           {
             'effects': [
               [
-                'set',
-                '@entity.units',
-                [
-                  'array/map',
-                  '@entity.units',
-                  [
-                    'fn',
-                    'u',
-                    [
-                      'object/merge',
-                      '@u',
-                      {
-                        'frame': [
-                          '%',
-                          [
-                            '+',
-                            [
-                              'object/get',
-                              '@u',
-                              'frame',
-                            ],
-                            1,
-                          ],
-                          8,
-                        ],
-                      },
-                    ],
-                  ],
-                ],
-              ],
-              [
-                'set',
-                '@entity.effects',
-                [
-                  'array/filter',
-                  [
-                    'array/map',
-                    '@entity.effects',
-                    [
-                      'fn',
-                      'e',
-                      [
-                        'object/merge',
-                        '@e',
-                        {
-                          'ttl': [
-                            '-',
-                            [
-                              'object/get',
-                              '@e',
-                              'ttl',
-                            ],
-                            1,
-                          ],
-                        },
-                      ],
-                    ],
-                  ],
-                  [
-                    'fn',
-                    'e',
-                    [
-                      '>',
-                      [
-                        'object/get',
-                        '@e',
-                        'ttl',
-                      ],
-                      0,
-                    ],
-                  ],
-                ],
-              ],
-              [
                 'render-ui',
                 'main',
                 {
@@ -3136,10 +3067,21 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
               ],
             ],
             'interval': 100,
-            'name': 'animTick',
+            'name': 'renderTick',
           },
         ],
       } as never, 'FishingBoardItem', canonicalName) as never,
+      makeTraitRef({
+        'config': {
+          'frameCount': {
+            'default': 8,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'FishingBoardAnimTick',
+        'ref': 'AnimTick.traits.AnimTick',
+      }),
     ],
     pages: [
       {
@@ -3148,6 +3090,9 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
         'traits': [
           {
             'ref': 'FishingBoardRender',
+          },
+          {
+            'ref': 'FishingBoardAnimTick',
           },
         ],
       } as never,
@@ -3204,6 +3149,7 @@ export const StdUiFishingBoardFishingBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'FishingBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'FishingBoardRender',

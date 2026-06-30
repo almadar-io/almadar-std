@@ -76,7 +76,7 @@ export interface StdUiUncontrolledBattleBoardConfig {
   description?: string;
   /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"barrels","dimension":"3d","name":"barrels","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/barrels.png","variant":""},"id":"f1","type":"barrels","x":0,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"chest","dimension":"3d","name":"chest","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/chest.png","variant":""},"id":"f2","type":"chest","x":4,"y":2}]` */
   features?: EntityRow[];
-  /** Default: `[{"animation":"idle","atk":5,"def":2,"frame":0,"hp":20,"id":"u1","maxHp":20,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"mender","dimension":"3d","name":"mender","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png","variant":""},"name":"Mender","position":{"x":1,"y":2},"team":"player","unitType":"mender"},{"animation":"idle","atk":4,"def":1,"frame":0,"hp":15,"id":"u2","maxHp":15,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"shadow","dimension":"3d","name":"shadow","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png","variant":""},"name":"Shadow Legion","position":{"x":3,"y":2},"team":"enemy","unitType":"shadow"}]` */
+  /** Default: `[{"animation":"idle","atk":5,"def":2,"frame":0,"hp":20,"id":"u1","maxHp":20,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"mender","dimension":"3d","name":"mender","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png","variant":""},"name":"Mender","position":{"x":1,"y":2},"team":"player","unitType":"mender"},{"animation":"idle","atk":4,"def":1,"frame":0,"hp":15,"id":"u2","maxHp":15,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"shadow","dimension":"3d","name":"shadow","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png","variant":""},"name":"Shadow Legion","position":{"x":2,"y":2},"team":"enemy","unitType":"shadow"}]` */
   initialUnits?: EntityRow[];
   /** Default: `0.25` */
   scale?: number;
@@ -126,7 +126,7 @@ export interface StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalParam
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'UncontrolledBattleBoardRender',
+    'UncontrolledBattleBoardAnimTick' | 'UncontrolledBattleBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -136,7 +136,12 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
   const canonicalName = params.entityName ?? 'UncontrolledBattleBoardItem';
   const built = makeOrbitalWithUses({
     name: 'UncontrolledBattleBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'AnimTick',
+        'from': 'std/behaviors/std-anim-tick',
+      },
+    ],
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
@@ -1080,7 +1085,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                 },
                 'name': 'Shadow Legion',
                 'position': {
-                  'x': 3,
+                  'x': 2,
                   'y': 2,
                 },
                 'team': 'enemy',
@@ -2023,6 +2028,18 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
               'name': 'Initialize',
             },
             {
+              'description': 'playAgainEvent prop — reset + restart the battle',
+              'key': 'PLAY_AGAIN',
+              'name': 'Play Again',
+              'payloadSchema': [
+                {
+                  'name': 'id',
+                  'type': 'string',
+                },
+              ],
+              'tier': 'domain',
+            },
+            {
               'description': 'stepEvent prop — emitted each battle round with attack result',
               'key': 'STEP',
               'name': 'Step',
@@ -2041,18 +2058,6 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'name': 'damage',
                   'required': true,
                   'type': 'number',
-                },
-              ],
-              'tier': 'domain',
-            },
-            {
-              'description': 'playAgainEvent prop — reset + restart the battle',
-              'key': 'PLAY_AGAIN',
-              'name': 'Play Again',
-              'payloadSchema': [
-                {
-                  'name': 'id',
-                  'type': 'string',
                 },
               ],
               'tier': 'domain',
@@ -2439,41 +2444,6 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                           ],
                           'type': 'game-hud',
                         },
-                        {
-                          'label': 'Player',
-                          'src': [
-                            'object/get',
-                            [
-                              'array/first',
-                              [
-                                'array/filter',
-                                '@entity.units',
-                                [
-                                  'fn',
-                                  'u',
-                                  [
-                                    '==',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'team',
-                                    ],
-                                    'player',
-                                  ],
-                                ],
-                              ],
-                            ],
-                            'modelUrl',
-                          ],
-                          'type': 'sprite',
-                        },
-                        {
-                          'type': 'damage-number',
-                          'value': 0,
-                          'visible': false,
-                          'x': 0,
-                          'y': 0,
-                        },
                       ],
                       'direction': 'horizontal',
                       'gap': 'md',
@@ -2485,6 +2455,154 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                 ],
               ],
               'event': 'INIT',
+              'from': 'playing',
+              'to': 'playing',
+            },
+            {
+              'effects': [
+                [
+                  'set',
+                  '@entity.units',
+                  '@config.initialUnits',
+                ],
+                [
+                  'set',
+                  '@entity.turn',
+                  1,
+                ],
+                [
+                  'set',
+                  '@entity.result',
+                  'none',
+                ],
+                [
+                  'set',
+                  '@entity.effects',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'render-ui',
+                  'main',
+                  {
+                    'children': [
+                      {
+                        'assetManifest': '@config.assetManifest',
+                        'effects': '@entity.effects',
+                        'features': '@config.features',
+                        'projection': 'isometric',
+                        'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
+                        'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
+                        'tiles': '@config.tiles',
+                        'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
+                        'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
+                      },
+                    ],
+                    'hud': {
+                      'children': [
+                        {
+                          'stats': [
+                            {
+                              'label': 'Round',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Allies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'player',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                            {
+                              'label': 'Enemies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'enemy',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                          ],
+                          'type': 'game-hud',
+                        },
+                      ],
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
+                    },
+                    'type': 'game-shell',
+                  },
+                ],
+              ],
+              'event': 'PLAY_AGAIN',
               'from': 'playing',
               'to': 'playing',
             },
@@ -3401,39 +3519,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                           'type': 'game-hud',
                         },
                         {
-                          'label': 'Player',
-                          'src': [
-                            'object/get',
-                            [
-                              'array/first',
-                              [
-                                'array/filter',
-                                '@entity.units',
-                                [
-                                  'fn',
-                                  'u',
-                                  [
-                                    '==',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'team',
-                                    ],
-                                    'player',
-                                  ],
-                                ],
-                              ],
-                            ],
-                            'modelUrl',
-                          ],
-                          'type': 'sprite',
-                        },
-                        {
-                          'type': 'damage-number',
-                          'value': 0,
-                          'visible': false,
-                          'x': 0,
-                          'y': 0,
+                          'action': 'PLAY_AGAIN',
+                          'icon': 'refresh',
+                          'label': 'Play Again',
+                          'type': 'button',
+                          'variant': 'primary',
                         },
                       ],
                       'direction': 'horizontal',
@@ -3454,80 +3544,6 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
         'ticks': [
           {
             'effects': [
-              [
-                'set',
-                '@entity.units',
-                [
-                  'array/map',
-                  '@entity.units',
-                  [
-                    'fn',
-                    'u',
-                    [
-                      'object/merge',
-                      'u',
-                      {
-                        'frame': [
-                          '%',
-                          [
-                            '+',
-                            [
-                              'object/get',
-                              'u',
-                              'frame',
-                            ],
-                            1,
-                          ],
-                          8,
-                        ],
-                      },
-                    ],
-                  ],
-                ],
-              ],
-              [
-                'set',
-                '@entity.effects',
-                [
-                  'array/filter',
-                  [
-                    'array/map',
-                    '@entity.effects',
-                    [
-                      'fn',
-                      'e',
-                      [
-                        'object/merge',
-                        'e',
-                        {
-                          'ttl': [
-                            '-',
-                            [
-                              'object/get',
-                              'e',
-                              'ttl',
-                            ],
-                            1,
-                          ],
-                        },
-                      ],
-                    ],
-                  ],
-                  [
-                    'fn',
-                    'e',
-                    [
-                      '>',
-                      [
-                        'object/get',
-                        'e',
-                        'ttl',
-                      ],
-                      0,
-                    ],
-                  ],
-                ],
-              ],
               [
                 'render-ui',
                 'main',
@@ -3676,7 +3692,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
               ],
             ],
             'interval': 100,
-            'name': 'animTick',
+            'name': 'renderTick',
           },
           {
             'effects': [
@@ -3983,7 +3999,62 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                       'u',
                                       'hp',
                                     ],
-                                    1,
+                                    [
+                                      'object/get',
+                                      [
+                                        'array/first',
+                                        [
+                                          'array/filter',
+                                          '@entity.units',
+                                          [
+                                            'fn',
+                                            'e',
+                                            [
+                                              'and',
+                                              [
+                                                'and',
+                                                [
+                                                  '==',
+                                                  [
+                                                    'object/get',
+                                                    'e',
+                                                    'team',
+                                                  ],
+                                                  'enemy',
+                                                ],
+                                                [
+                                                  '>',
+                                                  [
+                                                    'object/get',
+                                                    'e',
+                                                    'hp',
+                                                  ],
+                                                  0,
+                                                ],
+                                              ],
+                                              [
+                                                '==',
+                                                [
+                                                  'grid/manhattan-distance',
+                                                  [
+                                                    'object/get',
+                                                    'e',
+                                                    'position',
+                                                  ],
+                                                  [
+                                                    'object/get',
+                                                    'u',
+                                                    'position',
+                                                  ],
+                                                ],
+                                                1,
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                      'atk',
+                                    ],
                                   ],
                                 ],
                                 0,
@@ -4001,7 +4072,310 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                   'u',
                                   'hp',
                                 ],
-                                1,
+                                [
+                                  'object/get',
+                                  [
+                                    'array/first',
+                                    [
+                                      'array/filter',
+                                      '@entity.units',
+                                      [
+                                        'fn',
+                                        'e',
+                                        [
+                                          'and',
+                                          [
+                                            'and',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                'e',
+                                                'team',
+                                              ],
+                                              'enemy',
+                                            ],
+                                            [
+                                              '>',
+                                              [
+                                                'object/get',
+                                                'e',
+                                                'hp',
+                                              ],
+                                              0,
+                                            ],
+                                          ],
+                                          [
+                                            '==',
+                                            [
+                                              'grid/manhattan-distance',
+                                              [
+                                                'object/get',
+                                                'e',
+                                                'position',
+                                              ],
+                                              [
+                                                'object/get',
+                                                'u',
+                                                'position',
+                                              ],
+                                            ],
+                                            1,
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                  'atk',
+                                ],
+                              ],
+                            ],
+                          },
+                        ],
+                        'u',
+                      ],
+                      'u',
+                    ],
+                  ],
+                ],
+              ],
+              [
+                'set',
+                '@entity.units',
+                [
+                  'array/map',
+                  '@entity.units',
+                  [
+                    'fn',
+                    'u',
+                    [
+                      'if',
+                      [
+                        'and',
+                        [
+                          '==',
+                          [
+                            'object/get',
+                            'u',
+                            'team',
+                          ],
+                          'enemy',
+                        ],
+                        [
+                          '>',
+                          [
+                            'object/get',
+                            'u',
+                            'hp',
+                          ],
+                          0,
+                        ],
+                      ],
+                      [
+                        'if',
+                        [
+                          '>',
+                          [
+                            'array/len',
+                            [
+                              'array/filter',
+                              '@entity.units',
+                              [
+                                'fn',
+                                'p',
+                                [
+                                  'and',
+                                  [
+                                    'and',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        'p',
+                                        'team',
+                                      ],
+                                      'player',
+                                    ],
+                                    [
+                                      '>',
+                                      [
+                                        'object/get',
+                                        'p',
+                                        'hp',
+                                      ],
+                                      0,
+                                    ],
+                                  ],
+                                  [
+                                    '==',
+                                    [
+                                      'grid/manhattan-distance',
+                                      [
+                                        'object/get',
+                                        'p',
+                                        'position',
+                                      ],
+                                      [
+                                        'object/get',
+                                        'u',
+                                        'position',
+                                      ],
+                                    ],
+                                    1,
+                                  ],
+                                ],
+                              ],
+                            ],
+                          ],
+                          0,
+                        ],
+                        [
+                          'object/merge',
+                          'u',
+                          {
+                            'animation': [
+                              'if',
+                              [
+                                '<=',
+                                [
+                                  'math/max',
+                                  0,
+                                  [
+                                    '-',
+                                    [
+                                      'object/get',
+                                      'u',
+                                      'hp',
+                                    ],
+                                    [
+                                      'object/get',
+                                      [
+                                        'array/first',
+                                        [
+                                          'array/filter',
+                                          '@entity.units',
+                                          [
+                                            'fn',
+                                            'p',
+                                            [
+                                              'and',
+                                              [
+                                                'and',
+                                                [
+                                                  '==',
+                                                  [
+                                                    'object/get',
+                                                    'p',
+                                                    'team',
+                                                  ],
+                                                  'player',
+                                                ],
+                                                [
+                                                  '>',
+                                                  [
+                                                    'object/get',
+                                                    'p',
+                                                    'hp',
+                                                  ],
+                                                  0,
+                                                ],
+                                              ],
+                                              [
+                                                '==',
+                                                [
+                                                  'grid/manhattan-distance',
+                                                  [
+                                                    'object/get',
+                                                    'p',
+                                                    'position',
+                                                  ],
+                                                  [
+                                                    'object/get',
+                                                    'u',
+                                                    'position',
+                                                  ],
+                                                ],
+                                                1,
+                                              ],
+                                            ],
+                                          ],
+                                        ],
+                                      ],
+                                      'atk',
+                                    ],
+                                  ],
+                                ],
+                                0,
+                              ],
+                              'death',
+                              'hit',
+                            ],
+                            'hp': [
+                              'math/max',
+                              0,
+                              [
+                                '-',
+                                [
+                                  'object/get',
+                                  'u',
+                                  'hp',
+                                ],
+                                [
+                                  'object/get',
+                                  [
+                                    'array/first',
+                                    [
+                                      'array/filter',
+                                      '@entity.units',
+                                      [
+                                        'fn',
+                                        'p',
+                                        [
+                                          'and',
+                                          [
+                                            'and',
+                                            [
+                                              '==',
+                                              [
+                                                'object/get',
+                                                'p',
+                                                'team',
+                                              ],
+                                              'player',
+                                            ],
+                                            [
+                                              '>',
+                                              [
+                                                'object/get',
+                                                'p',
+                                                'hp',
+                                              ],
+                                              0,
+                                            ],
+                                          ],
+                                          [
+                                            '==',
+                                            [
+                                              'grid/manhattan-distance',
+                                              [
+                                                'object/get',
+                                                'p',
+                                                'position',
+                                              ],
+                                              [
+                                                'object/get',
+                                                'u',
+                                                'position',
+                                              ],
+                                            ],
+                                            1,
+                                          ],
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                  'atk',
+                                ],
                               ],
                             ],
                           },
@@ -4028,35 +4402,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         'object/get',
                         [
                           'array/first',
-                          [
-                            'array/filter',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                'and',
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    'u',
-                                    'team',
-                                  ],
-                                  'player',
-                                ],
-                                [
-                                  '>',
-                                  [
-                                    'object/get',
-                                    'u',
-                                    'hp',
-                                  ],
-                                  0,
-                                ],
-                              ],
-                            ],
-                          ],
+                          '@entity.units',
                         ],
                         'position',
                       ],
@@ -4068,35 +4414,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         'object/get',
                         [
                           'array/first',
-                          [
-                            'array/filter',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                'and',
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    'u',
-                                    'team',
-                                  ],
-                                  'player',
-                                ],
-                                [
-                                  '>',
-                                  [
-                                    'object/get',
-                                    'u',
-                                    'hp',
-                                  ],
-                                  0,
-                                ],
-                              ],
-                            ],
-                          ],
+                          '@entity.units',
                         ],
                         'position',
                       ],
@@ -4298,43 +4616,19 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                               ],
                             ],
                           },
+                          {
+                            'label': 'Turns Played',
+                            'value': '@entity.turn',
+                          },
                         ],
                         'type': 'game-hud',
                       },
                       {
-                        'label': 'Player',
-                        'src': [
-                          'object/get',
-                          [
-                            'array/first',
-                            [
-                              'array/filter',
-                              '@entity.units',
-                              [
-                                'fn',
-                                'u',
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    'u',
-                                    'team',
-                                  ],
-                                  'player',
-                                ],
-                              ],
-                            ],
-                          ],
-                          'modelUrl',
-                        ],
-                        'type': 'sprite',
-                      },
-                      {
-                        'type': 'damage-number',
-                        'value': 0,
-                        'visible': false,
-                        'x': 0,
-                        'y': 0,
+                        'action': 'PLAY_AGAIN',
+                        'icon': 'refresh',
+                        'label': 'Play Again',
+                        'type': 'button',
+                        'variant': 'secondary',
                       },
                     ],
                     'direction': 'horizontal',
@@ -4426,11 +4720,22 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                 0,
               ],
             ],
-            'interval': 1000,
+            'interval': 2000,
             'name': 'autoBattleTick',
           },
         ],
       } as never, 'UncontrolledBattleBoardItem', canonicalName) as never,
+      makeTraitRef({
+        'config': {
+          'frameCount': {
+            'default': 8,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'UncontrolledBattleBoardAnimTick',
+        'ref': 'AnimTick.traits.AnimTick',
+      }),
     ],
     pages: [
       {
@@ -4439,6 +4744,9 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
         'traits': [
           {
             'ref': 'UncontrolledBattleBoardRender',
+          },
+          {
+            'ref': 'UncontrolledBattleBoardAnimTick',
           },
         ],
       } as never,
@@ -4495,6 +4803,7 @@ export const StdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbitalManifest 
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'UncontrolledBattleBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'UncontrolledBattleBoardRender',

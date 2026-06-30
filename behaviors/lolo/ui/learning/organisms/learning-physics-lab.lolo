@@ -1,0 +1,157 @@
+app learning-physics-lab "1.0.0"
+"Physics lab organism — waves, fields, ray diagrams, pendulums, and circuits on a physics-canvas."
+orbital PhysicsLabOrbital {
+  type PhysicsLabBody = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    vx : number
+    vy : number
+    fx : number
+    fy : number
+  }
+  type PhysicsLabConstraint = {
+    from : string!
+    to : string!
+    color : string
+  }
+  type PhysicsLabShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [PhysicsLabShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type PhysicsLabShapePoint = {
+    x : number!
+    y : number!
+  }
+
+  entity PhysicsLabItem [runtime] {
+    id : string!
+    title : string
+    bodies : [PhysicsLabBody]
+    constraints : [PhysicsLabConstraint]
+    shapes : [PhysicsLabShape]
+  }
+
+  trait PhysicsLabRender -> @rebindable PhysicsLabItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.title @config.title)
+        (set @entity.bodies @config.bodies)
+        (set @entity.constraints @config.constraints)
+        (set @entity.shapes @config.shapes)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: md
+          padding: md
+          children: [
+            { type: typography, variant: h4, content: @entity.title },
+            { type: physics-canvas,
+              width: @config.width,
+              height: @config.height,
+              backgroundColor: @config.backgroundColor,
+              bodies: @entity.bodies,
+              constraints: @entity.constraints,
+              shapes: @entity.shapes,
+              showVelocity: @config.showVelocity,
+              showForces: @config.showForces,
+              velocityScale: @config.velocityScale,
+              forceScale: @config.forceScale,
+              interactive: @config.interactive,
+              animate: @config.animate
+            }
+          ]
+        })
+    }
+
+    config {
+      mode : "wave" | "field" | "ray-diagram" | "pendulum" | "circuit" = wave
+        @label "Mode"
+        @description "What kind of physics visualization to render."
+        @synonyms "oscillation, sine wave, sound wave, light, electric field, magnetic field, gravitational field, force, ray, lens, mirror, pendulum, swing, circuit, resistor, battery, current"
+        @tier "domain"
+      title : string = "Physics Lab"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      backgroundColor : string = "#f8fafc"
+        @label "Background Color"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      bodies : [PhysicsLabBody] = [
+        { id: "source", x: 80, y: 200, radius: 12, color: "#2563eb", label: "source", vx: 0, vy: 0 },
+        { id: "point", x: 300, y: 200, radius: 8, color: "#16a34a", label: "point", vx: 0, vy: 0 }
+      ]
+        @label "Bodies"
+        @description "Bodies or particles to render."
+        @tier "domain"
+      constraints : [PhysicsLabConstraint] = []
+        @label "Constraints"
+        @description "Links between bodies."
+        @tier "domain"
+      shapes : [PhysicsLabShape] = []
+        @label "Shapes"
+        @description "Extra declarative shapes such as field lines, rays, or circuit wires."
+        @tier "domain"
+      showVelocity : boolean = false
+        @label "Show Velocity"
+        @description "Render velocity arrows for each body."
+        @tier "presentation"
+      showForces : boolean = false
+        @label "Show Forces"
+        @description "Render force arrows for each body."
+        @tier "presentation"
+      velocityScale : number = 25
+        @label "Velocity Scale"
+        @tier "presentation"
+      forceScale : number = 30
+        @label "Force Scale"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+    }
+  }
+
+  page "/learning/physics-lab" as PhysicsLabPage -> PhysicsLabRender
+}
