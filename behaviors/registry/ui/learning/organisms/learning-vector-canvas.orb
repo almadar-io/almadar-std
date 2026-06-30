@@ -1,5 +1,5 @@
 {
-  "description": "Vector canvas organism — plots coordinate axes and a set of vectors on a math-canvas.",
+  "description": "Vector canvas organism — plots entity-provided vectors on a math-canvas.",
   "name": "learning-vector-canvas",
   "orbitals": [
     {
@@ -9,6 +9,49 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": true,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "vectors",
+            "type": "array"
           }
         ],
         "name": "VectorCanvasItem",
@@ -30,11 +73,43 @@
         {
           "category": "interaction",
           "config": {
+            "animate": {
+              "default": false,
+              "description": "Enable continuous redraw loop.",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "gridStep": {
+              "default": 1.0,
+              "label": "Grid Step",
+              "tier": "presentation",
+              "type": "number"
+            },
             "height": {
               "default": 400.0,
               "label": "Height",
               "tier": "presentation",
               "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showAxes": {
+              "default": true,
+              "label": "Show Axes",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showGrid": {
+              "default": true,
+              "label": "Show Grid",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "title": {
               "default": "Vector Canvas",
@@ -42,6 +117,73 @@
               "label": "Title",
               "tier": "domain",
               "type": "string"
+            },
+            "vectors": {
+              "default": [
+                {
+                  "color": "#2563eb",
+                  "label": "u",
+                  "vx": 3.0,
+                  "vy": 2.0,
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#dc2626",
+                  "label": "v",
+                  "vx": -2.0,
+                  "vy": 3.0,
+                  "x": 0.0,
+                  "y": 0.0
+                },
+                {
+                  "color": "#16a34a",
+                  "label": "w",
+                  "vx": 1.0,
+                  "vy": 5.0,
+                  "x": 0.0,
+                  "y": 0.0
+                }
+              ],
+              "description": "Vectors to plot (origin + components).",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "vx": {
+                    "name": "vx",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "vy": {
+                    "name": "vy",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Vectors",
+              "tier": "domain",
+              "type": "[VectorCanvasVector]"
             },
             "width": {
               "default": 600.0,
@@ -75,7 +217,10 @@
             }
           },
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "title",
+              "vectors"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -99,47 +244,34 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.vectors",
+                    "@config.vectors"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": [
                         {
-                          "content": "@config.title",
+                          "content": "@entity.title",
                           "type": "typography",
                           "variant": "h4"
                         },
                         {
-                          "gridStep": 1.0,
+                          "animate": "@config.animate",
+                          "gridStep": "@config.gridStep",
                           "height": "@config.height",
-                          "showAxes": true,
-                          "showGrid": true,
+                          "interactive": "@config.interactive",
+                          "showAxes": "@config.showAxes",
+                          "showGrid": "@config.showGrid",
                           "type": "math-canvas",
-                          "vectors": [
-                            {
-                              "color": "#2563eb",
-                              "label": "u",
-                              "vx": 3.0,
-                              "vy": 2.0,
-                              "x": 0.0,
-                              "y": 0.0
-                            },
-                            {
-                              "color": "#dc2626",
-                              "label": "v",
-                              "vx": -2.0,
-                              "vy": 3.0,
-                              "x": 0.0,
-                              "y": 0.0
-                            },
-                            {
-                              "color": "#16a34a",
-                              "label": "w",
-                              "vx": 1.0,
-                              "vy": 5.0,
-                              "x": 0.0,
-                              "y": 0.0
-                            }
-                          ],
+                          "vectors": "@entity.vectors",
                           "width": "@config.width",
                           "xMax": "@config.xMax",
                           "xMin": "@config.xMin",

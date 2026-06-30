@@ -1,8 +1,24 @@
 app learning-coordinate-plane "1.0.0"
-"Coordinate plane organism — a math-canvas with a sample curve and scatter points, wrapped in a card with a title."
+"Coordinate plane organism — a math-canvas bound to entity curves and points."
 orbital CoordinatePlaneOrbital {
+  type CoordinatePlanePoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+  type CoordinatePlaneCurve = {
+    label : string
+    color : string
+    samples : [CoordinatePlanePoint]
+  }
+
   entity CoordinatePlaneItem [runtime] {
     id : string!
+    title : string
+    curves : [CoordinatePlaneCurve]
+    points : [CoordinatePlanePoint]
   }
 
   trait CoordinatePlaneRender -> @rebindable CoordinatePlaneItem [interaction, instance] {
@@ -10,13 +26,16 @@ orbital CoordinatePlaneOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.title @config.title)
+        (set @entity.curves @config.curves)
+        (set @entity.points @config.points)
         (render-ui main {
           type: stack
           direction: vertical
           gap: md
           padding: md
           children: [
-            { type: typography, variant: h4, content: @config.title },
+            { type: typography, variant: h4, content: @entity.title },
             { type: math-canvas,
               width: @config.width,
               height: @config.height,
@@ -24,21 +43,13 @@ orbital CoordinatePlaneOrbital {
               xMax: @config.xMax,
               yMin: @config.yMin,
               yMax: @config.yMax,
-              showAxes: true,
-              showGrid: true,
-              gridStep: 1,
-              curves: [
-                { label: "y = x²", color: "#2563eb",
-                  samples: [
-                    { x: -3, y: 9 }, { x: -2, y: 4 }, { x: -1, y: 1 },
-                    { x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 4 }, { x: 3, y: 9 }
-                  ]
-                }
-              ],
-              points: [
-                { x: -2, y: 4, label: "A", color: "#dc2626" },
-                { x: 1, y: 1, label: "B", color: "#16a34a" }
-              ]
+              showAxes: @config.showAxes,
+              showGrid: @config.showGrid,
+              gridStep: @config.gridStep,
+              curves: @entity.curves,
+              points: @entity.points,
+              interactive: @config.interactive,
+              animate: @config.animate
             }
           ]
         })
@@ -48,6 +59,24 @@ orbital CoordinatePlaneOrbital {
       title : string = "Coordinate Plane"
         @label "Title"
         @description "Title shown above the plane."
+        @tier "domain"
+      curves : [CoordinatePlaneCurve] = [
+        { label: "y = x²", color: "#2563eb",
+          samples: [
+            { x: -3, y: 9 }, { x: -2, y: 4 }, { x: -1, y: 1 },
+            { x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 4 }, { x: 3, y: 9 }
+          ]
+        }
+      ]
+        @label "Curves"
+        @description "Sampled curves to plot."
+        @tier "domain"
+      points : [CoordinatePlanePoint] = [
+        { x: -2, y: 4, label: "A", color: "#dc2626", radius: 4 },
+        { x: 1, y: 1, label: "B", color: "#16a34a", radius: 4 }
+      ]
+        @label "Points"
+        @description "Scatter points to highlight."
         @tier "domain"
       width : number = 600
         @label "Width"
@@ -73,6 +102,23 @@ orbital CoordinatePlaneOrbital {
         @label "Y Max"
         @description "Maximum y value."
         @tier "domain"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
     }
   }
 

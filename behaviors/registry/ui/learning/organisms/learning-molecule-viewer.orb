@@ -1,5 +1,5 @@
 {
-  "description": "Molecule viewer organism — a chemistry-canvas showing atoms and bonds for a simple molecule.",
+  "description": "Molecule viewer organism — a chemistry-canvas bound to entity data.",
   "name": "learning-molecule-viewer",
   "orbitals": [
     {
@@ -9,6 +9,126 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "backgroundColor",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "element": {
+                  "name": "element",
+                  "required": false,
+                  "type": "string"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "atoms",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                },
+                "type": {
+                  "name": "type",
+                  "required": false,
+                  "type": "string",
+                  "values": [
+                    "single",
+                    "double",
+                    "triple"
+                  ]
+                }
+              },
+              "type": "object"
+            },
+            "name": "bonds",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "angle": {
+                  "name": "angle",
+                  "required": false,
+                  "type": "number"
+                },
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "length": {
+                  "name": "length",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "arrows",
+            "type": "array"
           }
         ],
         "name": "MoleculeViewerItem",
@@ -30,11 +150,214 @@
         {
           "category": "interaction",
           "config": {
+            "animate": {
+              "default": false,
+              "description": "Enable continuous redraw loop.",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "arrows": {
+              "default": [],
+              "description": "Reaction arrows.",
+              "items": {
+                "properties": {
+                  "angle": {
+                    "name": "angle",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "length": {
+                    "name": "length",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Arrows",
+              "tier": "domain",
+              "type": "[MoleculeViewerArrow]"
+            },
+            "atoms": {
+              "default": [
+                {
+                  "color": "#374151",
+                  "element": "C",
+                  "id": "C",
+                  "radius": 22.0,
+                  "x": 300.0,
+                  "y": 200.0
+                },
+                {
+                  "color": "#dc2626",
+                  "element": "O",
+                  "id": "O",
+                  "radius": 20.0,
+                  "x": 380.0,
+                  "y": 160.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "H",
+                  "id": "H1",
+                  "radius": 14.0,
+                  "x": 240.0,
+                  "y": 160.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "H",
+                  "id": "H2",
+                  "radius": 14.0,
+                  "x": 260.0,
+                  "y": 270.0
+                },
+                {
+                  "color": "#2563eb",
+                  "element": "H",
+                  "id": "H3",
+                  "radius": 14.0,
+                  "x": 340.0,
+                  "y": 270.0
+                }
+              ],
+              "description": "Atoms to render.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "element": {
+                    "name": "element",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Atoms",
+              "tier": "domain",
+              "type": "[MoleculeViewerAtom]"
+            },
+            "backgroundColor": {
+              "default": "#fafafa",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bonds": {
+              "default": [
+                {
+                  "from": "C",
+                  "to": "O",
+                  "type": "double"
+                },
+                {
+                  "from": "C",
+                  "to": "H1",
+                  "type": "single"
+                },
+                {
+                  "from": "C",
+                  "to": "H2",
+                  "type": "single"
+                },
+                {
+                  "from": "C",
+                  "to": "H3",
+                  "type": "single"
+                }
+              ],
+              "description": "Bonds between atoms.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "single",
+                      "double",
+                      "triple"
+                    ]
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bonds",
+              "tier": "domain",
+              "type": "[MoleculeViewerBond]"
+            },
             "height": {
               "default": 400.0,
               "label": "Height",
               "tier": "presentation",
               "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "title": {
               "default": "Molecule Viewer",
@@ -51,7 +374,13 @@
             }
           },
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "arrows",
+              "atoms",
+              "backgroundColor",
+              "bonds",
+              "title"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -75,82 +404,48 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.backgroundColor",
+                    "@config.backgroundColor"
+                  ],
+                  [
+                    "set",
+                    "@entity.atoms",
+                    "@config.atoms"
+                  ],
+                  [
+                    "set",
+                    "@entity.bonds",
+                    "@config.bonds"
+                  ],
+                  [
+                    "set",
+                    "@entity.arrows",
+                    "@config.arrows"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": [
                         {
-                          "content": "@config.title",
+                          "content": "@entity.title",
                           "type": "typography",
                           "variant": "h4"
                         },
                         {
-                          "atoms": [
-                            {
-                              "color": "#374151",
-                              "element": "C",
-                              "id": "C",
-                              "radius": 22.0,
-                              "x": 300.0,
-                              "y": 200.0
-                            },
-                            {
-                              "color": "#dc2626",
-                              "element": "O",
-                              "id": "O",
-                              "radius": 20.0,
-                              "x": 380.0,
-                              "y": 160.0
-                            },
-                            {
-                              "color": "#2563eb",
-                              "element": "H",
-                              "id": "H1",
-                              "radius": 14.0,
-                              "x": 240.0,
-                              "y": 160.0
-                            },
-                            {
-                              "color": "#2563eb",
-                              "element": "H",
-                              "id": "H2",
-                              "radius": 14.0,
-                              "x": 260.0,
-                              "y": 270.0
-                            },
-                            {
-                              "color": "#2563eb",
-                              "element": "H",
-                              "id": "H3",
-                              "radius": 14.0,
-                              "x": 340.0,
-                              "y": 270.0
-                            }
-                          ],
-                          "backgroundColor": "#fafafa",
-                          "bonds": [
-                            {
-                              "from": "C",
-                              "to": "O",
-                              "type": "double"
-                            },
-                            {
-                              "from": "C",
-                              "to": "H1",
-                              "type": "single"
-                            },
-                            {
-                              "from": "C",
-                              "to": "H2",
-                              "type": "single"
-                            },
-                            {
-                              "from": "C",
-                              "to": "H3",
-                              "type": "single"
-                            }
-                          ],
+                          "animate": "@config.animate",
+                          "arrows": "@entity.arrows",
+                          "atoms": "@entity.atoms",
+                          "backgroundColor": "@entity.backgroundColor",
+                          "bonds": "@entity.bonds",
                           "height": "@config.height",
+                          "interactive": "@config.interactive",
                           "type": "chemistry-canvas",
                           "width": "@config.width"
                         }

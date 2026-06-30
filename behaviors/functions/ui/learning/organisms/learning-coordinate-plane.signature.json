@@ -7,7 +7,23 @@
     "entities": [
       {
         "name": "CoordinatePlaneItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "curves",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "points",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -24,11 +40,194 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "curves",
+            "type": "[CoordinatePlaneCurve]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "label": "y = x²",
+                "samples": [
+                  {
+                    "x": -3,
+                    "y": 9
+                  },
+                  {
+                    "x": -2,
+                    "y": 4
+                  },
+                  {
+                    "x": -1,
+                    "y": 1
+                  },
+                  {
+                    "x": 0,
+                    "y": 0
+                  },
+                  {
+                    "x": 1,
+                    "y": 1
+                  },
+                  {
+                    "x": 2,
+                    "y": 4
+                  },
+                  {
+                    "x": 3,
+                    "y": 9
+                  }
+                ]
+              }
+            ],
+            "label": "Curves",
+            "description": "Sampled curves to plot.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "samples": {
+                  "name": "samples",
+                  "required": false,
+                  "type": "array",
+                  "items": {
+                    "properties": {
+                      "color": {
+                        "name": "color",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "radius": {
+                        "name": "radius",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  }
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 1,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
             "key": "height",
             "type": "number",
             "default": 400,
             "label": "Height",
             "description": "Canvas height in pixels.",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "points",
+            "type": "[CoordinatePlanePoint]",
+            "default": [
+              {
+                "color": "#dc2626",
+                "label": "A",
+                "radius": 4,
+                "x": -2,
+                "y": 4
+              },
+              {
+                "color": "#16a34a",
+                "label": "B",
+                "radius": 4,
+                "x": 1,
+                "y": 1
+              }
+            ],
+            "label": "Points",
+            "description": "Scatter points to highlight.",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
+          },
+          {
+            "key": "showAxes",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Axes",
+            "tier": "presentation"
+          },
+          {
+            "key": "showGrid",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Grid",
             "tier": "presentation"
           },
           {
@@ -84,7 +283,11 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "curves",
+            "points",
+            "title"
+          ]
         }
       }
     ],
