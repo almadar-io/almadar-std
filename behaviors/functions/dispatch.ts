@@ -481,6 +481,11 @@ import {
   isStdUiSportsBoardSportsBoardOrbitalParams,
 } from './ui/game/2d/organisms/ui-sports-board.js';
 import {
+  stdUiStatCardStatCardOrbital,
+  StdUiStatCardStatCardOrbitalManifest,
+  isStdUiStatCardStatCardOrbitalParams,
+} from './ui/core/organisms/ui-stat-card.js';
+import {
   stdUiStateArchitectBoardStateArchitectBoardOrbital,
   StdUiStateArchitectBoardStateArchitectBoardOrbitalManifest,
   isStdUiStateArchitectBoardStateArchitectBoardOrbitalParams,
@@ -1527,6 +1532,15 @@ const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEnt
       return stdUiSportsBoardSportsBoardOrbital(p);
     },
     manifest: StdUiSportsBoardSportsBoardOrbitalManifest,
+  }],
+  ['ui-stat-card::StatCardOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdUiStatCardStatCardOrbitalParams(p)) {
+        throw new TypeError('Invalid params for ui-stat-card::StatCardOrbital');
+      }
+      return stdUiStatCardStatCardOrbital(p);
+    },
+    manifest: StdUiStatCardStatCardOrbitalManifest,
   }],
   ['ui-state-architect-board::StateArchitectBoardOrbital', {
     factory: (p: object): OrbitalDefinition => {

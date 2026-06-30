@@ -1,0 +1,43 @@
+app ui-marketing-stat-card "1.0.0"
+"MarketingStatCard — UI factory (1:1 with the @almadar/ui marketing-stat-card pattern)."
+orbital MarketingStatCardOrbital {
+  entity MarketingStatCardItem [runtime] {
+    id : string!
+  }
+
+  trait MarketingStatCardRender -> @rebindable MarketingStatCardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          value: @config.value
+          label: @config.label
+          size: @config.size
+          className: @config.className
+          type: marketing-stat-card
+        })
+    }
+
+    config {
+      value : string = "Value"
+        @label "Value"
+        @description "The stat value to display prominently"
+        @tier "presentation"
+      label : string = "Label"
+        @label "Label"
+        @description "Label describing the value"
+        @tier "presentation"
+      size : "sm" | "md" | "lg" = md
+        @label "Size"
+        @description "Size of the value text"
+        @tier "presentation"
+      className : string = ""
+        @label "Class Name"
+        @description "Additional class names"
+        @tier "presentation"
+    }
+  }
+
+  page "/marketing-stat-card" as MarketingStatCardPage -> MarketingStatCardRender
+}

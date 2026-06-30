@@ -1,0 +1,220 @@
+app ui-stat-card "1.0.0"
+"StatCard — UI factory (1:1 with the @almadar/ui stat-card pattern)."
+orbital StatCardOrbital {
+    type StatCardLoaded = Event { data : [StatCardItem] } "StatCard rows finished loading; payload.data holds the collection"
+  type StatCardError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type StatCardAction = {
+    label : string!
+    event : string
+    navigatesTo : string
+  }
+  type StatCardMetricsItem = {
+    field : string
+    label : string!
+    value : string
+    icon : icon
+    format : "currency" | "percent" | "number"
+  }
+
+  entity StatCardItem [runtime] {
+    id : string!
+  }
+
+  trait StatCardRender -> @rebindable StatCardItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (fetch StatCardItem { emit: { success: StatCardLoaded } })
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @entity
+          label: @config.label
+          title: @config.title
+          value: @config.value
+          previousValue: @config.previousValue
+          currentValue: @config.currentValue
+          trend: @config.trend
+          trendDirection: @config.trendDirection
+          invertTrend: @config.invertTrend
+          icon: @config.icon
+          iconBg: @config.iconBg
+          iconColor: @config.iconColor
+          subtitle: @config.subtitle
+          action: @config.action
+          metrics: @config.metrics
+          compact: @config.compact
+          sparklineData: @config.sparklineData
+          type: stat-card
+        })
+      StatCardLoaded -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          entity: @payload.data
+          label: @config.label
+          title: @config.title
+          value: @config.value
+          previousValue: @config.previousValue
+          currentValue: @config.currentValue
+          trend: @config.trend
+          trendDirection: @config.trendDirection
+          invertTrend: @config.invertTrend
+          icon: @config.icon
+          iconBg: @config.iconBg
+          iconColor: @config.iconColor
+          subtitle: @config.subtitle
+          action: @config.action
+          metrics: @config.metrics
+          compact: @config.compact
+          sparklineData: @config.sparklineData
+          type: stat-card
+        })
+    }
+
+    emits {
+      StatCardLoaded
+        @description "StatCard rows finished loading; payload.data holds the collection."
+        @synonyms "loaded, fetched, retrieved"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : StatCardError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json = {}
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      label : string = "Label"
+        @label "Label"
+        @description "Main label"
+        @tier "presentation"
+      title : string = "Title"
+        @label "Title"
+        @description "Title (alias for label)"
+        @tier "presentation"
+      value : [string] = []
+        @label "Value"
+        @description "Primary value - accepts array from generated code (will use first element or length)"
+        @tier "presentation"
+      previousValue : number = 0
+        @label "Previous Value"
+        @description "Previous value for comparison"
+        @tier "presentation"
+      currentValue : number = 0
+        @label "Current Value"
+        @description "Current value as number for trend calculation"
+        @tier "presentation"
+      trend : number = 0
+        @label "Trend"
+        @description "Manual trend percentage (overrides calculation)"
+        @tier "presentation"
+      trendDirection : "up" | "down" | "neutral" = up
+        @label "Trend Direction"
+        @description "Trend direction (overrides calculation)"
+        @tier "presentation"
+      invertTrend : boolean = false
+        @label "Invert Trend"
+        @description "Whether up is good (green) or bad (red)"
+        @tier "presentation"
+      icon : icon = "circle"
+        @label "Icon"
+        @description "Icon to display (Lucide component or icon name string)"
+        @tier "presentation"
+      iconBg : string = "bg-muted"
+        @label "Icon Bg"
+        @description "Icon background color"
+        @tier "presentation"
+      iconColor : string = "text-foreground"
+        @label "Icon Color"
+        @description "Icon color"
+        @tier "presentation"
+      subtitle : string = "Subtitle"
+        @label "Subtitle"
+        @description "Subtitle or description"
+        @tier "presentation"
+      action : StatCardAction = { label: "Label", navigatesTo: "Navigates To" }
+        @label "Action"
+        @description "Action button"
+        @tier "presentation"
+      metrics : [StatCardMetricsItem] = [{ field: "Field", label: "Label", value: "Value", icon: "circle", format: currency }, { field: "Field 2", label: "Label 2", value: "Value 2", icon: "circle", format: percent }]
+        @label "Metrics"
+        @description "Metrics to display (schema format) - accepts readonly for compatibility with generated const arrays"
+        @tier "presentation"
+      compact : boolean = false
+        @label "Compact"
+        @description "Compact display mode"
+        @tier "presentation"
+      sparklineData : [number] = []
+        @label "Sparkline Data"
+        @description "Sparkline data points for an inline trend chart"
+        @tier "presentation"
+    }
+  }
+
+  page "/stat-card" as StatCardPage -> StatCardRender
+}
