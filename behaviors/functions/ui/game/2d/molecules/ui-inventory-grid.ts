@@ -50,7 +50,7 @@ export interface StdUiInventoryGridConfig {
   className?: string;
   /** Default: `4` */
   columns?: number;
-  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"icon":"circle","id":"Id","label":"Label","quantity":1,"rarity":"common"},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"},"icon":"circle","id":"Id 2","label":"Label 2","quantity":2,"rarity":"uncommon"}]` */
+  /** Default: `[{"assetUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"assetUrl","dimension":"2d","name":"assetUrl","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"icon":"circle","id":"Id","label":"Label","quantity":1,"rarity":"common"},{"assetUrl":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"assetUrl","dimension":"2d","name":"assetUrl","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"},"icon":"circle","id":"Id 2","label":"Label 2","quantity":2,"rarity":"uncommon"}]` */
   items?: EntityRow[];
   /** Default: `"Selected Id"` */
   selectedId?: string;

@@ -489,7 +489,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{assignEvent} with { itemId, categoryId } when an item is dropped into a category',
@@ -507,7 +507,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{checkEvent} with {} when the player submits their assignments',
@@ -519,7 +519,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -531,7 +531,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -576,7 +576,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{checkEvent} with {} when the player submits their assignments',
@@ -588,7 +588,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -600,7 +600,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'completeEvent prop',
@@ -618,7 +618,7 @@ export function stdUiClassifierBoardClassifierBoardOrbital(params: StdUiClassifi
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [

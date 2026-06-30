@@ -41,7 +41,7 @@ export type StdUiDialogueBubbleEventKey = 'INIT';
 export interface StdUiDialogueBubbleConfig {
   /** Default: `""` */
   className?: string;
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"portrait","dimension":"2d","name":"portrait","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png"}` */
   portrait?: EntityRow;
   /** Default: `"bottom"` */
   position?: 'top' | 'bottom';

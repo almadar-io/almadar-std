@@ -45,7 +45,7 @@ export interface StdUiSplitSectionConfig {
   bullets?: string[];
   /** Default: `""` */
   className?: string;
-  /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
+  /** Default: `{"alt":"Alt","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   image?: EntityRow;
   /** Default: `"right"` */
   imagePosition?: 'left' | 'right';

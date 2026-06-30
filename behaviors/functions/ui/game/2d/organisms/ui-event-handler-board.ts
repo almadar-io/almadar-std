@@ -663,7 +663,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Player hits Play; component runs the animated simulation and fires COMPLETE.',
@@ -675,7 +675,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Player saves a WHEN/THEN rule set for one object.',
@@ -692,7 +692,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Reset to menu after completing the puzzle.',
@@ -704,7 +704,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -750,7 +750,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                   'type': '[EventHandlerBoardRule]',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Player hits Play; component runs the animated simulation and fires COMPLETE.',
@@ -762,7 +762,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Reset to menu after completing the puzzle.',
@@ -774,7 +774,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emitted by the component when the animated chain resolves (success or failure).',
@@ -787,7 +787,7 @@ export function stdUiEventHandlerBoardEventHandlerBoardOrbital(params: StdUiEven
                   'type': 'boolean',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [

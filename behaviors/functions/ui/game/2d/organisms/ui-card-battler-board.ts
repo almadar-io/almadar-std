@@ -67,16 +67,16 @@ export interface StdUiCardBattlerBoardPlayAgainPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiCardBattlerBoardConfig {
-  /** Default: `{"cards":{"bear":{"animations":["static"],"aspect":"5:7","category":"bear","dimension":"2d","name":"bear","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/bear.png"},"elephant":{"animations":["static"],"aspect":"5:7","category":"elephant","dimension":"2d","name":"elephant","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/elephant.png"},"frog":{"animations":["static"],"aspect":"5:7","category":"frog","dimension":"2d","name":"frog","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/frog.png"},"gorilla":{"animations":["static"],"aspect":"5:7","category":"gorilla","dimension":"2d","name":"gorilla","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/gorilla.png"},"monkey":{"animations":["static"],"aspect":"5:7","category":"monkey","dimension":"2d","name":"monkey","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/monkey.png"},"owl":{"animations":["static"],"aspect":"5:7","category":"owl","dimension":"2d","name":"owl","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/owl.png"},"panda":{"animations":["static"],"aspect":"5:7","category":"panda","dimension":"2d","name":"panda","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/panda.png"},"parrot":{"animations":["static"],"aspect":"5:7","category":"parrot","dimension":"2d","name":"parrot","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/parrot.png"},"penguin":{"animations":["static"],"aspect":"5:7","category":"penguin","dimension":"2d","name":"penguin","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/penguin.png"},"rhino":{"animations":["static"],"aspect":"5:7","category":"rhino","dimension":"2d","name":"rhino","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/rhino.png"},"snake":{"animations":["static"],"aspect":"5:7","category":"snake","dimension":"2d","name":"snake","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/snake.png"},"whale":{"animations":["static"],"aspect":"5:7","category":"whale","dimension":"2d","name":"whale","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/whale.png"}}}` */
+  /** Default: `{"cards":{"bear":{"animations":["static"],"aspect":"5:7","category":"bear","dimension":"2d","name":"bear","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/bear.png","variant":""},"elephant":{"animations":["static"],"aspect":"5:7","category":"elephant","dimension":"2d","name":"elephant","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/elephant.png","variant":""},"frog":{"animations":["static"],"aspect":"5:7","category":"frog","dimension":"2d","name":"frog","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/frog.png","variant":""},"gorilla":{"animations":["static"],"aspect":"5:7","category":"gorilla","dimension":"2d","name":"gorilla","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/gorilla.png","variant":""},"monkey":{"animations":["static"],"aspect":"5:7","category":"monkey","dimension":"2d","name":"monkey","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/monkey.png","variant":""},"owl":{"animations":["static"],"aspect":"5:7","category":"owl","dimension":"2d","name":"owl","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/owl.png","variant":""},"panda":{"animations":["static"],"aspect":"5:7","category":"panda","dimension":"2d","name":"panda","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/panda.png","variant":""},"parrot":{"animations":["static"],"aspect":"5:7","category":"parrot","dimension":"2d","name":"parrot","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/parrot.png","variant":""},"penguin":{"animations":["static"],"aspect":"5:7","category":"penguin","dimension":"2d","name":"penguin","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/penguin.png","variant":""},"rhino":{"animations":["static"],"aspect":"5:7","category":"rhino","dimension":"2d","name":"rhino","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/rhino.png","variant":""},"snake":{"animations":["static"],"aspect":"5:7","category":"snake","dimension":"2d","name":"snake","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/snake.png","variant":""},"whale":{"animations":["static"],"aspect":"5:7","category":"whale","dimension":"2d","name":"whale","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/whale.png","variant":""}}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"attack":4,"cost":3,"defense":5,"iconKey":"rhino","id":"d1","title":"Rhino"},{"attack":7,"cost":5,"defense":6,"iconKey":"whale","id":"d2","title":"Whale"},{"attack":3,"cost":2,"defense":2,"iconKey":"parrot","id":"d3","title":"Parrot"},{"attack":2,"cost":2,"defense":4,"iconKey":"panda","id":"d4","title":"Panda"},{"attack":2,"cost":1,"defense":1,"iconKey":"monkey","id":"d5","title":"Monkey"},{"attack":1,"cost":1,"defense":2,"iconKey":"penguin","id":"d6","title":"Penguin"},{"attack":5,"cost":4,"defense":6,"iconKey":"elephant","id":"d7","title":"Elephant"}]` */
+  /** Default: `[{"attack":4,"cost":3,"defense":5,"iconKey":"rhino","id":"d1","sprite":{"animations":["static"],"aspect":"5:7","category":"rhino","dimension":"2d","name":"rhino","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/rhino.png","variant":""},"title":"Rhino"},{"attack":7,"cost":5,"defense":6,"iconKey":"whale","id":"d2","sprite":{"animations":["static"],"aspect":"5:7","category":"whale","dimension":"2d","name":"whale","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/whale.png","variant":""},"title":"Whale"},{"attack":3,"cost":2,"defense":2,"iconKey":"parrot","id":"d3","sprite":{"animations":["static"],"aspect":"5:7","category":"parrot","dimension":"2d","name":"parrot","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/parrot.png","variant":""},"title":"Parrot"},{"attack":2,"cost":2,"defense":4,"iconKey":"panda","id":"d4","sprite":{"animations":["static"],"aspect":"5:7","category":"panda","dimension":"2d","name":"panda","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/panda.png","variant":""},"title":"Panda"},{"attack":2,"cost":1,"defense":1,"iconKey":"monkey","id":"d5","sprite":{"animations":["static"],"aspect":"5:7","category":"monkey","dimension":"2d","name":"monkey","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/monkey.png","variant":""},"title":"Monkey"},{"attack":1,"cost":1,"defense":2,"iconKey":"penguin","id":"d6","sprite":{"animations":["static"],"aspect":"5:7","category":"penguin","dimension":"2d","name":"penguin","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/penguin.png","variant":""},"title":"Penguin"},{"attack":5,"cost":4,"defense":6,"iconKey":"elephant","id":"d7","sprite":{"animations":["static"],"aspect":"5:7","category":"elephant","dimension":"2d","name":"elephant","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/elephant.png","variant":""},"title":"Elephant"}]` */
   deck?: EntityRow[];
   /** Default: `1` */
   drawPerTurn?: number;
   error?: EntityRow;
-  /** Default: `[{"attack":5,"cost":3,"defense":4,"iconKey":"bear","id":"c1","title":"Bear"},{"attack":2,"cost":1,"defense":1,"iconKey":"owl","id":"c2","title":"Owl"},{"attack":6,"cost":4,"defense":5,"iconKey":"gorilla","id":"c3","title":"Gorilla"},{"attack":1,"cost":1,"defense":2,"iconKey":"frog","id":"c4","title":"Frog"},{"attack":4,"cost":2,"defense":1,"iconKey":"snake","id":"c5","title":"Snake"}]` */
+  /** Default: `[{"attack":5,"cost":3,"defense":4,"iconKey":"bear","id":"c1","sprite":{"animations":["static"],"aspect":"5:7","category":"bear","dimension":"2d","name":"bear","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/bear.png","variant":""},"title":"Bear"},{"attack":2,"cost":1,"defense":1,"iconKey":"owl","id":"c2","sprite":{"animations":["static"],"aspect":"5:7","category":"owl","dimension":"2d","name":"owl","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/owl.png","variant":""},"title":"Owl"},{"attack":6,"cost":4,"defense":5,"iconKey":"gorilla","id":"c3","sprite":{"animations":["static"],"aspect":"5:7","category":"gorilla","dimension":"2d","name":"gorilla","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/gorilla.png","variant":""},"title":"Gorilla"},{"attack":1,"cost":1,"defense":2,"iconKey":"frog","id":"c4","sprite":{"animations":["static"],"aspect":"5:7","category":"frog","dimension":"2d","name":"frog","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/frog.png","variant":""},"title":"Frog"},{"attack":4,"cost":2,"defense":1,"iconKey":"snake","id":"c5","sprite":{"animations":["static"],"aspect":"5:7","category":"snake","dimension":"2d","name":"snake","role":"item","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/snake.png","variant":""},"title":"Snake"}]` */
   hand?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
@@ -177,6 +177,66 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'required': true,
                   'type': 'string',
                 },
+                'sprite': {
+                  'name': 'sprite',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
                 'title': {
                   'name': 'title',
                   'required': false,
@@ -216,6 +276,66 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'required': true,
                   'type': 'string',
                 },
+                'sprite': {
+                  'name': 'sprite',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
+                },
                 'title': {
                   'name': 'title',
                   'required': false,
@@ -254,6 +374,66 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'name': 'id',
                   'required': true,
                   'type': 'string',
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
                 },
                 'title': {
                   'name': 'title',
@@ -317,6 +497,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/bear.png',
+                  'variant': '',
                 },
                 'elephant': {
                   'animations': [
@@ -330,6 +511,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/elephant.png',
+                  'variant': '',
                 },
                 'frog': {
                   'animations': [
@@ -343,6 +525,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/frog.png',
+                  'variant': '',
                 },
                 'gorilla': {
                   'animations': [
@@ -356,6 +539,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/gorilla.png',
+                  'variant': '',
                 },
                 'monkey': {
                   'animations': [
@@ -369,6 +553,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/monkey.png',
+                  'variant': '',
                 },
                 'owl': {
                   'animations': [
@@ -382,6 +567,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/owl.png',
+                  'variant': '',
                 },
                 'panda': {
                   'animations': [
@@ -395,6 +581,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/panda.png',
+                  'variant': '',
                 },
                 'parrot': {
                   'animations': [
@@ -408,6 +595,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/parrot.png',
+                  'variant': '',
                 },
                 'penguin': {
                   'animations': [
@@ -421,6 +609,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/penguin.png',
+                  'variant': '',
                 },
                 'rhino': {
                   'animations': [
@@ -434,6 +623,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/rhino.png',
+                  'variant': '',
                 },
                 'snake': {
                   'animations': [
@@ -447,6 +637,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/snake.png',
+                  'variant': '',
                 },
                 'whale': {
                   'animations': [
@@ -460,6 +651,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/whale.png',
+                  'variant': '',
                 },
               },
             },
@@ -517,6 +709,11 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'type': 'object',
                 },
@@ -543,6 +740,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 5,
                 'iconKey': 'rhino',
                 'id': 'd1',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'rhino',
+                  'dimension': '2d',
+                  'name': 'rhino',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/rhino.png',
+                  'variant': '',
+                },
                 'title': 'Rhino',
               },
               {
@@ -551,6 +762,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 6,
                 'iconKey': 'whale',
                 'id': 'd2',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'whale',
+                  'dimension': '2d',
+                  'name': 'whale',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/whale.png',
+                  'variant': '',
+                },
                 'title': 'Whale',
               },
               {
@@ -559,6 +784,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 2,
                 'iconKey': 'parrot',
                 'id': 'd3',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'parrot',
+                  'dimension': '2d',
+                  'name': 'parrot',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/parrot.png',
+                  'variant': '',
+                },
                 'title': 'Parrot',
               },
               {
@@ -567,6 +806,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 4,
                 'iconKey': 'panda',
                 'id': 'd4',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'panda',
+                  'dimension': '2d',
+                  'name': 'panda',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/panda.png',
+                  'variant': '',
+                },
                 'title': 'Panda',
               },
               {
@@ -575,6 +828,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 1,
                 'iconKey': 'monkey',
                 'id': 'd5',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'monkey',
+                  'dimension': '2d',
+                  'name': 'monkey',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/monkey.png',
+                  'variant': '',
+                },
                 'title': 'Monkey',
               },
               {
@@ -583,6 +850,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 2,
                 'iconKey': 'penguin',
                 'id': 'd6',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'penguin',
+                  'dimension': '2d',
+                  'name': 'penguin',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/penguin.png',
+                  'variant': '',
+                },
                 'title': 'Penguin',
               },
               {
@@ -591,6 +872,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 6,
                 'iconKey': 'elephant',
                 'id': 'd7',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'elephant',
+                  'dimension': '2d',
+                  'name': 'elephant',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/elephant.png',
+                  'variant': '',
+                },
                 'title': 'Elephant',
               },
             ],
@@ -621,6 +916,66 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'name': 'id',
                   'required': true,
                   'type': 'string',
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
                 },
                 'title': {
                   'name': 'title',
@@ -677,6 +1032,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 4,
                 'iconKey': 'bear',
                 'id': 'c1',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'bear',
+                  'dimension': '2d',
+                  'name': 'bear',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/bear.png',
+                  'variant': '',
+                },
                 'title': 'Bear',
               },
               {
@@ -685,6 +1054,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 1,
                 'iconKey': 'owl',
                 'id': 'c2',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'owl',
+                  'dimension': '2d',
+                  'name': 'owl',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/owl.png',
+                  'variant': '',
+                },
                 'title': 'Owl',
               },
               {
@@ -693,6 +1076,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 5,
                 'iconKey': 'gorilla',
                 'id': 'c3',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'gorilla',
+                  'dimension': '2d',
+                  'name': 'gorilla',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/gorilla.png',
+                  'variant': '',
+                },
                 'title': 'Gorilla',
               },
               {
@@ -701,6 +1098,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 2,
                 'iconKey': 'frog',
                 'id': 'c4',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'frog',
+                  'dimension': '2d',
+                  'name': 'frog',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/frog.png',
+                  'variant': '',
+                },
                 'title': 'Frog',
               },
               {
@@ -709,6 +1120,20 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                 'defense': 1,
                 'iconKey': 'snake',
                 'id': 'c5',
+                'sprite': {
+                  'animations': [
+                    'static',
+                  ],
+                  'aspect': '5:7',
+                  'category': 'snake',
+                  'dimension': '2d',
+                  'name': 'snake',
+                  'role': 'item',
+                  'style': '',
+                  'thumbnailUrl': '',
+                  'url': 'https://almadar-kflow-assets.web.app/shared/ui-card-battler-board/default/cards/snake.png',
+                  'variant': '',
+                },
                 'title': 'Snake',
               },
             ],
@@ -739,6 +1164,66 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'name': 'id',
                   'required': true,
                   'type': 'string',
+                },
+                'sprite': {
+                  'name': 'sprite',
+                  'properties': {
+                    'animations': {
+                      'items': {
+                        'type': 'string',
+                      },
+                      'name': 'animations',
+                      'required': false,
+                      'type': 'array',
+                    },
+                    'aspect': {
+                      'name': 'aspect',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'category': {
+                      'name': 'category',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'dimension': {
+                      'name': 'dimension',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'name': {
+                      'name': 'name',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'role': {
+                      'name': 'role',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'style': {
+                      'name': 'style',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'thumbnailUrl': {
+                      'name': 'thumbnailUrl',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'url': {
+                      'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
+                  },
+                  'required': false,
+                  'type': 'object',
                 },
                 'title': {
                   'name': 'title',
@@ -793,7 +1278,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{endTurnEvent} with {} when the player ends the turn',
@@ -805,7 +1290,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{gameEndEvent} with {result} when the match reaches won or lost',
@@ -818,7 +1303,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -830,7 +1315,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -866,7 +1351,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{endTurnEvent} with {} when the player ends the turn',
@@ -878,7 +1363,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{gameEndEvent} with {result} when the match reaches won or lost',
@@ -891,7 +1376,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -903,7 +1388,7 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -963,6 +1448,24 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                     'endTurnEvent': 'END_TURN',
                     'gameEndEvent': 'GAME_END',
                     'hand': '@entity.hand',
+                    'handItems': [
+                      'array/map',
+                      '@entity.hand',
+                      [
+                        'fn',
+                        'c',
+                        {
+                          'attack': '@c.attack',
+                          'cost': '@c.cost',
+                          'defense': '@c.defense',
+                          'id': '@c.id',
+                          'playEvent': 'PLAY_CARD',
+                          'sprite': '@c.sprite',
+                          'title': '@c.title',
+                          'type': 'game-card',
+                        },
+                      ],
+                    ],
                     'mana': '@entity.mana',
                     'maxMana': '@entity.maxMana',
                     'playAgainEvent': 'PLAY_AGAIN',
@@ -1058,6 +1561,24 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                     'endTurnEvent': 'END_TURN',
                     'gameEndEvent': 'GAME_END',
                     'hand': '@entity.hand',
+                    'handItems': [
+                      'array/map',
+                      '@entity.hand',
+                      [
+                        'fn',
+                        'c',
+                        {
+                          'attack': '@c.attack',
+                          'cost': '@c.cost',
+                          'defense': '@c.defense',
+                          'id': '@c.id',
+                          'playEvent': 'PLAY_CARD',
+                          'sprite': '@c.sprite',
+                          'title': '@c.title',
+                          'type': 'game-card',
+                        },
+                      ],
+                    ],
                     'mana': '@entity.mana',
                     'maxMana': '@entity.maxMana',
                     'playAgainEvent': 'PLAY_AGAIN',
@@ -1192,6 +1713,24 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                     'endTurnEvent': 'END_TURN',
                     'gameEndEvent': 'GAME_END',
                     'hand': '@entity.hand',
+                    'handItems': [
+                      'array/map',
+                      '@entity.hand',
+                      [
+                        'fn',
+                        'c',
+                        {
+                          'attack': '@c.attack',
+                          'cost': '@c.cost',
+                          'defense': '@c.defense',
+                          'id': '@c.id',
+                          'playEvent': 'PLAY_CARD',
+                          'sprite': '@c.sprite',
+                          'title': '@c.title',
+                          'type': 'game-card',
+                        },
+                      ],
+                    ],
                     'mana': '@entity.mana',
                     'maxMana': '@entity.maxMana',
                     'playAgainEvent': 'PLAY_AGAIN',
@@ -1223,6 +1762,24 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                     'endTurnEvent': 'END_TURN',
                     'gameEndEvent': 'GAME_END',
                     'hand': '@entity.hand',
+                    'handItems': [
+                      'array/map',
+                      '@entity.hand',
+                      [
+                        'fn',
+                        'c',
+                        {
+                          'attack': '@c.attack',
+                          'cost': '@c.cost',
+                          'defense': '@c.defense',
+                          'id': '@c.id',
+                          'playEvent': 'PLAY_CARD',
+                          'sprite': '@c.sprite',
+                          'title': '@c.title',
+                          'type': 'game-card',
+                        },
+                      ],
+                    ],
                     'mana': '@entity.mana',
                     'maxMana': '@entity.maxMana',
                     'playAgainEvent': 'PLAY_AGAIN',
@@ -1297,6 +1854,24 @@ export function stdUiCardBattlerBoardCardBattlerBoardOrbital(params: StdUiCardBa
                     'endTurnEvent': 'END_TURN',
                     'gameEndEvent': 'GAME_END',
                     'hand': '@entity.hand',
+                    'handItems': [
+                      'array/map',
+                      '@entity.hand',
+                      [
+                        'fn',
+                        'c',
+                        {
+                          'attack': '@c.attack',
+                          'cost': '@c.cost',
+                          'defense': '@c.defense',
+                          'id': '@c.id',
+                          'playEvent': 'PLAY_CARD',
+                          'sprite': '@c.sprite',
+                          'title': '@c.title',
+                          'type': 'game-card',
+                        },
+                      ],
+                    ],
                     'mana': '@entity.mana',
                     'maxMana': '@entity.maxMana',
                     'playAgainEvent': 'PLAY_AGAIN',

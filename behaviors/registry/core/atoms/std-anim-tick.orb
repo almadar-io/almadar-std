@@ -1,0 +1,228 @@
+{
+  "description": "std-anim-tick — sprite/effects animation clock atom. Advances every unit's frame (mod frameCount) and ages @entity.effects (decrement ttl, drop expired) every tick. Boards compose it via `uses` + a sibling trait-ref rebound (linkedEntity) to a board entity that carries `units` + `effects`, replacing the inlined animTick that was duplicated across 8+ game boards.",
+  "name": "std-anim-tick",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "units",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "key": {
+                  "name": "key",
+                  "required": true,
+                  "type": "string"
+                },
+                "ttl": {
+                  "name": "ttl",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "effects",
+            "type": "array"
+          }
+        ],
+        "name": "AnimTickItem",
+        "persistence": "runtime"
+      },
+      "name": "AnimTickOrbital",
+      "pages": [
+        {
+          "name": "AnimTickPage",
+          "path": "/anim-tick",
+          "traits": [
+            {
+              "ref": "AnimTick"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "game-core",
+          "config": {
+            "frameCount": {
+              "default": 8.0,
+              "description": "Number of sprite frames a unit cycles through before the animation loops.",
+              "label": "Frame count",
+              "synonyms": "frames, sheet length, animation length",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [
+              "effects",
+              "units"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "AnimTickItem",
+          "name": "AnimTick",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "running"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.units",
+                    "@entity.units"
+                  ],
+                  [
+                    "set",
+                    "@entity.effects",
+                    "@entity.effects"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "running",
+                "to": "running"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "set",
+                  "@entity.units",
+                  [
+                    "array/map",
+                    "@entity.units",
+                    [
+                      "fn",
+                      "u",
+                      [
+                        "object/merge",
+                        "@u",
+                        {
+                          "frame": [
+                            "%",
+                            [
+                              "+",
+                              [
+                                "object/get",
+                                "@u",
+                                "frame"
+                              ],
+                              1.0
+                            ],
+                            "@config.frameCount"
+                          ]
+                        }
+                      ]
+                    ]
+                  ]
+                ],
+                [
+                  "set",
+                  "@entity.effects",
+                  [
+                    "array/filter",
+                    [
+                      "array/map",
+                      "@entity.effects",
+                      [
+                        "fn",
+                        "e",
+                        [
+                          "object/merge",
+                          "@e",
+                          {
+                            "ttl": [
+                              "-",
+                              [
+                                "object/get",
+                                "@e",
+                                "ttl"
+                              ],
+                              1.0
+                            ]
+                          }
+                        ]
+                      ]
+                    ],
+                    [
+                      "fn",
+                      "e",
+                      [
+                        ">",
+                        [
+                          "object/get",
+                          "@e",
+                          "ttl"
+                        ],
+                        0.0
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "interval": 100.0,
+              "name": "animTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

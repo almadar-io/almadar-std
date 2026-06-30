@@ -1,5 +1,5 @@
 app ui-battle-board "1.0.0"
-"BattleBoard — game-shell composition with LOLO-driven sprite animation and combat effects."
+"BattleBoard — reference game board: game-shell/game-hud/canvas-2d descriptor tree with live input wiring (TILE_CLICK/UNIT_CLICK + selectedUnitId/validMoves) and an END_TURN HUD control. The canonical atomic-composition contract for game boards (see docs/Almadar_Std_Game_UI_Lift.md)."
 orbital BattleBoardOrbital {
   type BattleBoardError = {
     message : string!
@@ -7,12 +7,17 @@ orbital BattleBoardOrbital {
     code : string
     stack : string
   }
+  ;; Mirrors @almadar/core's Asset (extends SemanticAssetRef): url + role +
+  ;; category + animations? + style? + variant? + dimension? + aspect? + name? +
+  ;; thumbnailUrl?. LOLO has no cross-package type import, so the shape is mirrored
+  ;; structurally; `url : asset` is the LOLO asset scalar.
   type Asset = {
       url : asset
       role : string
       category : string
       animations : [string]
       style : string
+      variant : string
       dimension : string
       aspect : string
       name : string
@@ -99,6 +104,7 @@ orbital BattleBoardOrbital {
     id : string!
     units : [BattleBoardUnitsItem]
     selectedUnitId : string
+    validMoves : [BattleBoardUnitsItemPosition] = []
     turn : number = 0
     result : "none" | "victory" | "defeat" = none
     phase : string = "observation"
@@ -107,6 +113,10 @@ orbital BattleBoardOrbital {
     movementRange : number = 2
     enemyTurn : boolean = false
     effects : [BattleBoardEffectItem] = []
+    xp : number = 0
+    xpToNext : number = 100
+    inventory : [string] = []
+    selectedUnitEffects : [string] = []
   }
 
   trait BattleBoardRender -> @rebindable BattleBoardItem [interaction, instance] {
@@ -116,15 +126,20 @@ orbital BattleBoardOrbital {
       START -> playing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
         (set @entity.turn 0)
         (set @entity.result "none")
         (set @entity.phase "observation")
         (set @entity.enemyTurn false)
         (set @entity.effects [])
+        (set @entity.xp 0)
+        (set @entity.xpToNext 100)
+        (set @entity.inventory [])
+        (set @entity.selectedUnitEffects [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
     }
 
@@ -132,44 +147,53 @@ orbital BattleBoardOrbital {
       INIT -> playing
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
         (set @entity.turn 0)
         (set @entity.result "none")
         (set @entity.phase "observation")
         (set @entity.enemyTurn false)
         (set @entity.effects [])
+        (set @entity.xp 0)
+        (set @entity.xpToNext 100)
+        (set @entity.inventory [])
+        (set @entity.selectedUnitEffects [])
         (set @entity.gridWidth 16)
         (set @entity.gridHeight 16)
         (set @entity.movementRange 2)
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
       UNIT_CLICK -> playing when (and (== @entity.selectedUnitId ?unitId) (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player"))
         (set @entity.phase "action")
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
 
       UNIT_CLICK -> playing when (== (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) team) "player")
         (set @entity.selectedUnitId ?unitId)
+        (set @entity.selectedUnitEffects [])
+        (set @entity.validMoves (array/map (array/filter @config.tiles (fn t (and (grid/in-bounds { x: (object/get @t x), y: (object/get @t y) } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id ?unitId))) position) { x: (object/get @t x), y: (object/get @t y) }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) (object/get @t x)) (== (object/get (object/get @u position) y) (object/get @t y)))))) 0))))) (fn t { x: (object/get @t x), y: (object/get @t y) })))
         (set @entity.phase "movement")
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
 
       TILE_CLICK -> playing when (and (!= @entity.selectedUnitId "") (and (grid/in-bounds { x: ?x, y: ?y } @entity.gridWidth @entity.gridHeight) (and (<= (grid/manhattan-distance (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) position) { x: ?x, y: ?y }) @entity.movementRange) (== (array/len (array/filter @entity.units (fn u (and (== (object/get (object/get @u position) x) ?x) (== (object/get (object/get @u position) y) ?y))))) 0))))
         (set @entity.units (array/map @entity.units (fn u (if (== @u.id @entity.selectedUnitId) (object/merge @u { position: { x: ?x, y: ?y } }) @u))))
         (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.xp (+ @entity.xp 10))
         (set @entity.phase "observation")
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
 
       ATTACK -> playing when (let ((ap (object/get (array/find @entity.units (fn u (== @u.id ?attackerId))) position)) (tp (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position))) (and (<= (math/abs (- (object/get @ap x) (object/get @tp x))) 1) (and (<= (math/abs (- (object/get @ap y) (object/get @tp y))) 1) (!= @ap @tp))))
@@ -177,31 +201,34 @@ orbital BattleBoardOrbital {
         (set @entity.effects (array/append @entity.effects { key: "slash", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 4 }))
         (if (<= (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) health) 0) (set @entity.effects (array/append @entity.effects { key: "explosion", x: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) x), y: (object/get (object/get (array/find @entity.units (fn u (== @u.id ?targetId))) position) y), ttl: 5 })) null)
         (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
         (set @entity.phase "observation")
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
 
       END_TURN -> playing when (== @entity.result "none")
         (set @entity.turn (+ @entity.turn 1))
         (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
         (set @entity.enemyTurn true)
         (set @entity.phase "enemy_turn")
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
 
       CANCEL -> playing when (!= @entity.selectedUnitId "")
         (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
         (set @entity.phase "observation")
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
 
       GAME_END -> gameover when (or (== (array/len (array/filter @entity.units (fn u (and (== @u.team "enemy") (> (object/get @u health) 0))))) 0) (== (array/len (array/filter @entity.units (fn u (and (== @u.team "player") (> (object/get @u health) 0))))) 0))
@@ -209,8 +236,8 @@ orbital BattleBoardOrbital {
         (set @entity.phase "game_over")
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
     }
 
@@ -218,6 +245,7 @@ orbital BattleBoardOrbital {
       PLAY_AGAIN -> menu
         (set @entity.units @config.units)
         (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
         (set @entity.turn 0)
         (set @entity.result "none")
         (set @entity.phase "observation")
@@ -225,19 +253,24 @@ orbital BattleBoardOrbital {
         (set @entity.effects [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
     }
 
     ticks {
+      ;; Animation clock — frame advance + effects aging + shell re-emit. The
+      ;; reusable extraction of this mutation is std-anim-tick (composed as a
+      ;; sibling trait via `uses` once baked; see the board-composition contract
+      ;; in docs/Almadar_Std_Game_UI_Lift.md). Kept inline here so the reference
+      ;; board validates against the currently-baked registry.
       animTick every 100ms
         (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
         (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
 
       enemyAiTick every 1s
@@ -250,8 +283,8 @@ orbital BattleBoardOrbital {
         (set @entity.phase (if (!= @entity.result "none") "game_over" "observation"))
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Turn", value: @entity.turn }, { label: "Result", value: @entity.result } ] }, { type: sprite, src: (object/get (array/find @entity.units (fn u (== @u.id @entity.selectedUnitId))) sprite), label: "Selected Unit" }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: END_TURN, label: "End Turn", icon: flag, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.units, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, damageNumbers: @entity.effects, statusEffects: @entity.selectedUnitEffects } ]
         })
     }
 

@@ -77,7 +77,7 @@ export interface StdUiSpriteConfig {
   rotation?: number;
   /** Default: `1` */
   scale?: number;
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"spritesheet","dimension":"2d","name":"spritesheet","role":"player","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   spritesheet?: EntityRow;
   /** Default: `0` */
   x?: number;

@@ -1,6 +1,24 @@
 app ui-roguelike-template "1.0.0"
-"RoguelikeTemplate — thin: composes roguelike-board with isometric dungeon assets."
+"RoguelikeTemplate — thin playable shell; renders game-shell + isometric canvas-2d matching ui-roguelike-board."
 orbital RoguelikeTemplateOrbital {
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type RoguelikeTemplateAssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+    effects : Map string Asset
+  }
   type RoguelikeTemplateTilesItem = {
     id : string
     x : number!
@@ -10,12 +28,18 @@ orbital RoguelikeTemplateOrbital {
     passable : boolean
     tileType : string
   }
+  type RoguelikeTemplatePlayerPos = {
+    x : number!
+    y : number!
+  }
   type RoguelikeTemplateEnemiesItem = {
     id : string!
     x : number!
     y : number!
     hp : number!
     attack : number!
+    animation : string
+    frame : number
   }
   type RoguelikeTemplateItemsItem = {
     id : string!
@@ -23,30 +47,102 @@ orbital RoguelikeTemplateOrbital {
     y : number!
     kind : "health_potion" | "sword" | "shield"
   }
+  type RoguelikeTemplateEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
+  }
 
   entity RoguelikeTemplateItem [runtime] {
     id : string!
+    tiles : [RoguelikeTemplateTilesItem]
+    player : RoguelikeTemplatePlayerPos = { x: 2, y: 2 }
+    playerHp : number = 10
+    playerMaxHp : number = 10
+    playerAnimation : string = "idle"
+    playerFrame : number = 0
+    enemies : [RoguelikeTemplateEnemiesItem]
+    items : [RoguelikeTemplateItemsItem]
+    depth : number = 1
+    result : "none" | "won" | "lost" = none
+    effects : [RoguelikeTemplateEffectItem] = []
+    xp : number = 0
+    xpToNext : number = 50
+    inventory : [string] = []
+    selectedUnitId : string = ""
+    validMoves : [RoguelikeTemplatePlayerPos] = []
   }
 
   trait RoguelikeTemplateRender -> @rebindable RoguelikeTemplateItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
-        (fetch RoguelikeTemplateItem {})
+    state playing {
+      INIT -> playing
+        (set @entity.tiles @config.tiles)
+        (set @entity.enemies (array/map @config.enemies (fn e (object/merge @e { animation: "idle", frame: 0 }))))
+        (set @entity.items @config.items)
+        (set @entity.player { x: 2, y: 2 })
+        (set @entity.playerHp 10)
+        (set @entity.playerMaxHp 10)
+        (set @entity.playerAnimation "idle")
+        (set @entity.playerFrame 0)
+        (set @entity.depth 1)
+        (set @entity.result none)
+        (set @entity.effects [])
+        (set @entity.xp 0)
+        (set @entity.xpToNext 50)
+        (set @entity.inventory [])
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
         (render-ui main {
-          entity: @entity
-          className: @config.className
-          scale: @config.scale
-          unitScale: @config.unitScale
-          tiles: @config.tiles
-          enemies: @config.enemies
-          items: @config.items
-          stairsX: @config.stairsX
-          stairsY: @config.stairsY
-          gameEndEvent: GAME_END
-          type: roguelike-template
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "HP", value: @entity.playerHp }, { label: "Floor", value: @entity.depth }, { label: "Gold", value: (array/len @entity.enemies) } ] }, { type: health-bar, current: @entity.playerHp, max: @entity.playerMaxHp }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: PLAY_AGAIN, label: "New Run", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: (array/append (array/map @entity.enemies (fn e (object/merge { id: @e.id, x: @e.x, y: @e.y, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png", role: "npc", category: "enemy", animations: ["idle","walk","attack","hit","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "enemy", thumbnailUrl: "" }, team: "enemy", health: @e.hp, maxHealth: 5, animation: @e.animation, frame: @e.frame } {}))) { id: "player", x: (object/get @entity.player x), y: (object/get @entity.player y), sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "player", animations: ["idle","walk","attack","hit","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "player", thumbnailUrl: "" }, team: "player", health: @entity.playerHp, maxHealth: @entity.playerMaxHp, animation: @entity.playerAnimation, frame: @entity.playerFrame }), features: (array/map @entity.items (fn i { id: @i.id, x: @i.x, y: @i.y, type: @i.kind, sprite: (if (== @i.kind "health_potion") (object/get (object/get @config.assetManifest features) health_potion) (if (== @i.kind "sword") (object/get (object/get @config.assetManifest features) sword) (object/get (object/get @config.assetManifest features) shield))) })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, scale: @config.scale } ]
         })
+      TILE_CLICK -> playing
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "HP", value: @entity.playerHp }, { label: "Floor", value: @entity.depth }, { label: "Gold", value: (array/len @entity.enemies) } ] }, { type: health-bar, current: @entity.playerHp, max: @entity.playerMaxHp }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: PLAY_AGAIN, label: "New Run", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: (array/append (array/map @entity.enemies (fn e (object/merge { id: @e.id, x: @e.x, y: @e.y, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png", role: "npc", category: "enemy", animations: ["idle","walk","attack","hit","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "enemy", thumbnailUrl: "" }, team: "enemy", health: @e.hp, maxHealth: 5, animation: @e.animation, frame: @e.frame } {}))) { id: "player", x: (object/get @entity.player x), y: (object/get @entity.player y), sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "player", animations: ["idle","walk","attack","hit","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "player", thumbnailUrl: "" }, team: "player", health: @entity.playerHp, maxHealth: @entity.playerMaxHp, animation: @entity.playerAnimation, frame: @entity.playerFrame }), features: (array/map @entity.items (fn i { id: @i.id, x: @i.x, y: @i.y, type: @i.kind, sprite: (if (== @i.kind "health_potion") (object/get (object/get @config.assetManifest features) health_potion) (if (== @i.kind "sword") (object/get (object/get @config.assetManifest features) sword) (object/get (object/get @config.assetManifest features) shield))) })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, scale: @config.scale } ]
+        })
+      UNIT_CLICK -> playing
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "HP", value: @entity.playerHp }, { label: "Floor", value: @entity.depth }, { label: "Gold", value: (array/len @entity.enemies) } ] }, { type: health-bar, current: @entity.playerHp, max: @entity.playerMaxHp }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: PLAY_AGAIN, label: "New Run", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: (array/append (array/map @entity.enemies (fn e (object/merge { id: @e.id, x: @e.x, y: @e.y, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png", role: "npc", category: "enemy", animations: ["idle","walk","attack","hit","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "enemy", thumbnailUrl: "" }, team: "enemy", health: @e.hp, maxHealth: 5, animation: @e.animation, frame: @e.frame } {}))) { id: "player", x: (object/get @entity.player x), y: (object/get @entity.player y), sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "player", animations: ["idle","walk","attack","hit","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "player", thumbnailUrl: "" }, team: "player", health: @entity.playerHp, maxHealth: @entity.playerMaxHp, animation: @entity.playerAnimation, frame: @entity.playerFrame }), features: (array/map @entity.items (fn i { id: @i.id, x: @i.x, y: @i.y, type: @i.kind, sprite: (if (== @i.kind "health_potion") (object/get (object/get @config.assetManifest features) health_potion) (if (== @i.kind "sword") (object/get (object/get @config.assetManifest features) sword) (object/get (object/get @config.assetManifest features) shield))) })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, scale: @config.scale } ]
+        })
+      PLAY_AGAIN -> playing
+        (set @entity.tiles @config.tiles)
+        (set @entity.enemies (array/map @config.enemies (fn e (object/merge @e { animation: "idle", frame: 0 }))))
+        (set @entity.items @config.items)
+        (set @entity.player { x: 2, y: 2 })
+        (set @entity.playerHp 10)
+        (set @entity.playerMaxHp 10)
+        (set @entity.playerAnimation "idle")
+        (set @entity.playerFrame 0)
+        (set @entity.depth 1)
+        (set @entity.result none)
+        (set @entity.effects [])
+        (set @entity.xp 0)
+        (set @entity.xpToNext 50)
+        (set @entity.inventory [])
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "HP", value: @entity.playerHp }, { label: "Floor", value: @entity.depth }, { label: "Gold", value: (array/len @entity.enemies) } ] }, { type: health-bar, current: @entity.playerHp, max: @entity.playerMaxHp }, { type: xp-bar, current: @entity.xp, max: @entity.xpToNext, label: "XP" }, { type: inventory-grid, items: @entity.inventory }, { type: button, action: PLAY_AGAIN, label: "New Run", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: (array/append (array/map @entity.enemies (fn e (object/merge { id: @e.id, x: @e.x, y: @e.y, sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png", role: "npc", category: "enemy", animations: ["idle","walk","attack","hit","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "enemy", thumbnailUrl: "" }, team: "enemy", health: @e.hp, maxHealth: 5, animation: @e.animation, frame: @e.frame } {}))) { id: "player", x: (object/get @entity.player x), y: (object/get @entity.player y), sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "npc", category: "player", animations: ["idle","walk","attack","hit","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "player", thumbnailUrl: "" }, team: "player", health: @entity.playerHp, maxHealth: @entity.playerMaxHp, animation: @entity.playerAnimation, frame: @entity.playerFrame }), features: (array/map @entity.items (fn i { id: @i.id, x: @i.x, y: @i.y, type: @i.kind, sprite: (if (== @i.kind "health_potion") (object/get (object/get @config.assetManifest features) health_potion) (if (== @i.kind "sword") (object/get (object/get @config.assetManifest features) sword) (object/get (object/get @config.assetManifest features) shield))) })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves, scale: @config.scale } ]
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external { x, y }
+      UNIT_CLICK -> external { unitId }
     }
 
     config {
@@ -62,11 +158,15 @@ orbital RoguelikeTemplateOrbital {
         @label "Unit Scale"
         @description "Unit draw-size multiplier"
         @tier "presentation"
+      playerAttack : number = 3
+        @label "Player Attack"
+        @description "Damage the player deals per attack"
+        @tier "presentation"
       tiles : [RoguelikeTemplateTilesItem] = [{ x: 0, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 1, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 2, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 3, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 4, y: 0, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 0, y: 1, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 1, y: 1, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/floor.png" }, { x: 2, y: 1, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/floor.png" }, { x: 3, y: 1, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/floor.png" }, { x: 4, y: 1, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 0, y: 2, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 1, y: 2, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/floor.png" }, { x: 2, y: 2, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/floor.png" }, { x: 3, y: 2, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/floor.png" }, { x: 4, y: 2, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 0, y: 3, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 1, y: 3, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/floor.png" }, { x: 2, y: 3, terrain: "floor", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/floor.png" }, { x: 3, y: 3, terrain: "stairs", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/stairs.png" }, { x: 4, y: 3, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 0, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 1, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 2, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 3, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }, { x: 4, y: 4, terrain: "wall", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png" }]
         @label "Tiles"
         @description "Dungeon tile grid — forwarded to RoguelikeBoard."
         @tier "presentation"
-      enemies : [RoguelikeTemplateEnemiesItem] = [{ id: "e1", x: 3, y: 1, hp: 5, attack: 2 }, { id: "e2", x: 1, y: 3, hp: 4, attack: 1 }]
+      enemies : [RoguelikeTemplateEnemiesItem] = [{ id: "e1", x: 3, y: 1, hp: 5, attack: 2, animation: "idle", frame: 0 }, { id: "e2", x: 1, y: 3, hp: 4, attack: 1, animation: "idle", frame: 0 }]
         @label "Enemies"
         @description "Initial enemies — forwarded to RoguelikeBoard."
         @tier "presentation"
@@ -81,6 +181,10 @@ orbital RoguelikeTemplateOrbital {
       stairsY : number = 3
         @label "Stairs Y"
         @description "Stairs tile Y — forwarded to RoguelikeBoard."
+        @tier "presentation"
+      assetManifest : RoguelikeTemplateAssetManifest = { terrains: { wall: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/wall.png", role: "terrain", category: "wall", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" }, floor: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/floor.png", role: "terrain", category: "floor", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "floor", thumbnailUrl: "" }, stairs: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/terrain/stairs.png", role: "terrain", category: "stairs", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "stairs", thumbnailUrl: "" } }, units: { player: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png", role: "unit", category: "player", animations: ["idle","walk"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "player", thumbnailUrl: "" }, enemy: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/enemy.png", role: "unit", category: "enemy", animations: ["idle","walk"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "enemy", thumbnailUrl: "" } }, features: { health_potion: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/health_potion.png", role: "pickup", category: "item", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "health_potion", thumbnailUrl: "" }, sword: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/sword.png", role: "pickup", category: "item", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "sword", thumbnailUrl: "" }, shield: { url: "https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/features/shield.png", role: "pickup", category: "item", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "shield", thumbnailUrl: "" } }, effects: {} }
+        @label "Asset Manifest"
+        @description "Terrain/unit/feature/effect sprite maps."
         @tier "presentation"
     }
   }

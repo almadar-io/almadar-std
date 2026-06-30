@@ -1,0 +1,174 @@
+{
+  "description": "Wave canvas organism — a sampled sine wave rendered on a math-canvas, useful for teaching periodic motion.",
+  "name": "learning-wave-canvas",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "WaveCanvasItem",
+        "persistence": "runtime"
+      },
+      "name": "WaveCanvasOrbital",
+      "pages": [
+        {
+          "name": "WaveCanvasPage",
+          "path": "/learning/wave-canvas",
+          "traits": [
+            {
+              "ref": "WaveCanvasRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "height": {
+              "default": 300.0,
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "title": {
+              "default": "Wave Canvas",
+              "description": "Title shown above the wave.",
+              "label": "Title",
+              "tier": "domain",
+              "type": "string"
+            },
+            "width": {
+              "default": 600.0,
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "xMax": {
+              "default": 7.0,
+              "label": "X Max",
+              "tier": "domain",
+              "type": "number"
+            },
+            "xMin": {
+              "default": 0.0,
+              "label": "X Min",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "WaveCanvasItem",
+          "name": "WaveCanvasRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "@config.title",
+                          "type": "typography",
+                          "variant": "h4"
+                        },
+                        {
+                          "curves": [
+                            {
+                              "color": "#7c3aed",
+                              "label": "y = sin(x)",
+                              "samples": [
+                                {
+                                  "x": 0.0,
+                                  "y": 0.0
+                                },
+                                {
+                                  "x": 0.79,
+                                  "y": 0.71
+                                },
+                                {
+                                  "x": 1.57,
+                                  "y": 1.0
+                                },
+                                {
+                                  "x": 2.36,
+                                  "y": 0.71
+                                },
+                                {
+                                  "x": 3.14,
+                                  "y": 0.0
+                                },
+                                {
+                                  "x": 3.93,
+                                  "y": -0.71
+                                },
+                                {
+                                  "x": 4.71,
+                                  "y": -1.0
+                                },
+                                {
+                                  "x": 5.5,
+                                  "y": -0.71
+                                },
+                                {
+                                  "x": 6.28,
+                                  "y": 0.0
+                                }
+                              ]
+                            }
+                          ],
+                          "gridStep": 1.0,
+                          "height": "@config.height",
+                          "showAxes": true,
+                          "showGrid": true,
+                          "type": "math-canvas",
+                          "width": "@config.width",
+                          "xMax": "@config.xMax",
+                          "xMin": "@config.xMin",
+                          "yMax": 1.5,
+                          "yMin": -1.5
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "padding": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

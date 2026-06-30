@@ -1,5 +1,5 @@
 app ui-platformer-board "1.0.0"
-"PlatformerBoard — game-shell composition with HUD (Score/Lives) over canvas-2d; animTick advances frame and ages effects."
+"PlatformerBoard — game-shell with keyboard input (LEFT/RIGHT/JUMP/STOP) and physics tick; HUD shows Score/Lives with PLAY_AGAIN control."
 orbital PlatformerBoardOrbital {
   type PlatformerBoardPlayer = {
     x : number!
@@ -19,6 +19,7 @@ orbital PlatformerBoardOrbital {
       category : string
       animations : [string]
       style : string
+      variant : string
       dimension : string
       aspect : string
       name : string
@@ -55,6 +56,8 @@ orbital PlatformerBoardOrbital {
     worldWidth : number = 800
     worldHeight : number = 400
     effects : [PlatformerEffectItem] = []
+    selectedUnitId : string = ""
+    validMoves : [PlatformerBoardPlayer] = []
   }
 
   trait PlatformerBoardRender -> @rebindable PlatformerBoardItem [interaction, instance] {
@@ -71,10 +74,12 @@ orbital PlatformerBoardOrbital {
         (set @entity.goalX @config.goalX)
         (set @entity.worldWidth @config.worldWidth)
         (set @entity.worldHeight @config.worldHeight)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
-          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: d-pad, leftAction: LEFT, rightAction: RIGHT, upAction: JUMP, downAction: STOP }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
       LEFT -> playing when (== @entity.result "none")
@@ -89,6 +94,14 @@ orbital PlatformerBoardOrbital {
       STOP -> playing when (== @entity.result "none")
         (set @entity.player (object/merge @entity.player { vx: 0, animation: "idle" }))
 
+      TILE_CLICK -> playing
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+
+      UNIT_CLICK -> playing
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.validMoves [])
+
       GAME_END -> won when (== @entity.result "won")
 
       GAME_END -> lost when (== @entity.result "lost")
@@ -102,8 +115,8 @@ orbital PlatformerBoardOrbital {
         (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 })
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
-          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: d-pad, leftAction: LEFT, rightAction: RIGHT, upAction: JUMP, downAction: STOP }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
     }
 
@@ -117,8 +130,8 @@ orbital PlatformerBoardOrbital {
         (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 })
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
-          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: d-pad, leftAction: LEFT, rightAction: RIGHT, upAction: JUMP, downAction: STOP }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
     }
 
@@ -128,16 +141,27 @@ orbital PlatformerBoardOrbital {
         (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
         (render-ui main {
           type: game-shell
-          hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }
-          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: d-pad, leftAction: LEFT, rightAction: RIGHT, upAction: JUMP, downAction: STOP }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
       gameflowTick every 33ms
         when (== @entity.result "none")
-        (let ((vy1 (math/clamp (+ @entity.player.vy @config.gravity) (- 0 @config.jumpStrength) @config.maxFallSpeed)) (px1 (math/clamp (+ @entity.player.x @entity.player.vx) 0 (- @entity.worldWidth @entity.player.width))) (pw @entity.player.width) (ph @entity.player.height) (livesLeft (- @entity.lives 1))) (let ((py1 (+ @entity.player.y @vy1))) (let ((playerRect { x: @px1, y: @py1, w: @pw, h: @ph })) (let ((hit (array/find @config.platforms (fn p (and (!= (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hazardHit (array/find @config.platforms (fn p (and (== (object/get @p type) "hazard") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((goalHit (array/find @config.platforms (fn p (and (== (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hitY (object/get @hit "y" @entity.worldHeight)) (landed (and (!= @hit null) (> @vy1 0)))) (let ((py2 (if @landed (- @hitY @ph) @py1)) (vy2 (if @landed 0 @vy1))) (let ((atGround (>= (+ @py2 @ph) @entity.worldHeight))) (let ((py3 (if @atGround (- @entity.worldHeight @ph) @py2)) (vy3 (if @atGround 0 @vy2)) (grounded (or @landed @atGround))) (let ((fell (> @py3 @entity.worldHeight))) (let ((damaged (or (!= @hazardHit null) @fell))) (do (set @entity.player (object/merge @entity.player { x: @px1, y: @py3, vy: @vy3, grounded: @grounded })) (set @entity.result (if (!= @goalHit null) "won" (if (and @damaged (<= @livesLeft 0)) "lost" "none"))) (set @entity.score (if (!= @goalHit null) (+ @entity.score 100) @entity.score)) (set @entity.lives (if (and @damaged (> @entity.lives 0) (== @entity.result "none")) @livesLeft @entity.lives)) (set @entity.player (if (and @damaged (== @entity.result "none")) { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 } @entity.player)) (render-ui main { type: game-shell, hud: { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl } ] }))))))))))))))
+        (let ((vy1 (math/clamp (+ @entity.player.vy @config.gravity) (- 0 @config.jumpStrength) @config.maxFallSpeed)) (px1 (math/clamp (+ @entity.player.x @entity.player.vx) 0 (- @entity.worldWidth @entity.player.width))) (pw @entity.player.width) (ph @entity.player.height) (livesLeft (- @entity.lives 1))) (let ((py1 (+ @entity.player.y @vy1))) (let ((playerRect { x: @px1, y: @py1, w: @pw, h: @ph })) (let ((hit (array/find @config.platforms (fn p (and (!= (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hazardHit (array/find @config.platforms (fn p (and (== (object/get @p type) "hazard") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((goalHit (array/find @config.platforms (fn p (and (== (object/get @p type) "goal") (geo/aabb-overlap @playerRect { x: @p.x, y: @p.y, w: @p.width, h: @p.height })))))) (let ((hitY (object/get @hit "y" @entity.worldHeight)) (landed (and (!= @hit null) (> @vy1 0)))) (let ((py2 (if @landed (- @hitY @ph) @py1)) (vy2 (if @landed 0 @vy1))) (let ((atGround (>= (+ @py2 @ph) @entity.worldHeight))) (let ((py3 (if @atGround (- @entity.worldHeight @ph) @py2)) (vy3 (if @atGround 0 @vy2)) (grounded (or @landed @atGround))) (let ((fell (> @py3 @entity.worldHeight))) (let ((damaged (or (!= @hazardHit null) @fell))) (do (set @entity.player (object/merge @entity.player { x: @px1, y: @py3, vy: @vy3, grounded: @grounded })) (set @entity.result (if (!= @goalHit null) "won" (if (and @damaged (<= @livesLeft 0)) "lost" "none"))) (set @entity.score (if (!= @goalHit null) (+ @entity.score 100) @entity.score)) (set @entity.lives (if (and @damaged (> @entity.lives 0) (== @entity.result "none")) @livesLeft @entity.lives)) (set @entity.player (if (and @damaged (== @entity.result "none")) { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 } @entity.player)) (render-ui main { type: game-shell, hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }, children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ] }))))))))))))))
     }
 
     emits {
+      TILE_CLICK -> external {
+        x : number!
+        y : number!
+      }
+        @description "Tile click passthrough — platformer is keyboard-driven; click coordinates for jump target"
+        @tier "domain"
+      UNIT_CLICK -> external {
+        unitId : string!
+      }
+        @description "Unit click passthrough"
+        @tier "domain"
       GAME_END -> external {
         result : string!
       }
@@ -227,7 +251,7 @@ orbital PlatformerBoardOrbital {
         @label "Tile Sprites"
         @description "Map of platform type to tile sprite URL"
         @tier "presentation"
-      backgroundImage : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png", role: "decoration", category: "ground", animations: ["static"], style: "", dimension: "2d", aspect: "16:9", name: "ground", thumbnailUrl: "" }
+      backgroundImage : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png", role: "decoration", category: "ground", animations: ["static"], style: "pixel", variant: "", dimension: "2d", aspect: "16:9", name: "ground", thumbnailUrl: "" }
         @label "Background Image"
         @description "Background image URL"
         @tier "presentation"

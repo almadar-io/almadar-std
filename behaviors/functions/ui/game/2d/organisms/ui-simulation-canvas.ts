@@ -632,7 +632,7 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Resume simulation',
@@ -644,7 +644,7 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Reset bodies to initial config',
@@ -656,7 +656,7 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -686,7 +686,7 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Resume simulation',
@@ -698,7 +698,7 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Reset bodies to initial config',
@@ -710,7 +710,7 @@ export function stdUiSimulationCanvasSimulationCanvasOrbital(params: StdUiSimula
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [

@@ -1,0 +1,198 @@
+{
+  "description": "Coordinate plane organism — a math-canvas with a sample curve and scatter points, wrapped in a card with a title.",
+  "name": "learning-coordinate-plane",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "CoordinatePlaneItem",
+        "persistence": "runtime"
+      },
+      "name": "CoordinatePlaneOrbital",
+      "pages": [
+        {
+          "name": "CoordinatePlanePage",
+          "path": "/learning/coordinate-plane",
+          "traits": [
+            {
+              "ref": "CoordinatePlaneRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "height": {
+              "default": 400.0,
+              "description": "Canvas height in pixels.",
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "title": {
+              "default": "Coordinate Plane",
+              "description": "Title shown above the plane.",
+              "label": "Title",
+              "tier": "domain",
+              "type": "string"
+            },
+            "width": {
+              "default": 600.0,
+              "description": "Canvas width in pixels.",
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "xMax": {
+              "default": 5.0,
+              "description": "Maximum x value.",
+              "label": "X Max",
+              "tier": "domain",
+              "type": "number"
+            },
+            "xMin": {
+              "default": -5.0,
+              "description": "Minimum x value.",
+              "label": "X Min",
+              "tier": "domain",
+              "type": "number"
+            },
+            "yMax": {
+              "default": 10.0,
+              "description": "Maximum y value.",
+              "label": "Y Max",
+              "tier": "domain",
+              "type": "number"
+            },
+            "yMin": {
+              "default": -2.0,
+              "description": "Minimum y value.",
+              "label": "Y Min",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "CoordinatePlaneItem",
+          "name": "CoordinatePlaneRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "@config.title",
+                          "type": "typography",
+                          "variant": "h4"
+                        },
+                        {
+                          "curves": [
+                            {
+                              "color": "#2563eb",
+                              "label": "y = x²",
+                              "samples": [
+                                {
+                                  "x": -3.0,
+                                  "y": 9.0
+                                },
+                                {
+                                  "x": -2.0,
+                                  "y": 4.0
+                                },
+                                {
+                                  "x": -1.0,
+                                  "y": 1.0
+                                },
+                                {
+                                  "x": 0.0,
+                                  "y": 0.0
+                                },
+                                {
+                                  "x": 1.0,
+                                  "y": 1.0
+                                },
+                                {
+                                  "x": 2.0,
+                                  "y": 4.0
+                                },
+                                {
+                                  "x": 3.0,
+                                  "y": 9.0
+                                }
+                              ]
+                            }
+                          ],
+                          "gridStep": 1.0,
+                          "height": "@config.height",
+                          "points": [
+                            {
+                              "color": "#dc2626",
+                              "label": "A",
+                              "x": -2.0,
+                              "y": 4.0
+                            },
+                            {
+                              "color": "#16a34a",
+                              "label": "B",
+                              "x": 1.0,
+                              "y": 1.0
+                            }
+                          ],
+                          "showAxes": true,
+                          "showGrid": true,
+                          "type": "math-canvas",
+                          "width": "@config.width",
+                          "xMax": "@config.xMax",
+                          "xMin": "@config.xMin",
+                          "yMax": "@config.yMax",
+                          "yMin": "@config.yMin"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "padding": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

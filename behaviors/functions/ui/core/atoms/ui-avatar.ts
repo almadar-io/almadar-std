@@ -69,7 +69,7 @@ export interface StdUiAvatarConfig {
   name?: string;
   /** Default: `"md"` */
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   src?: unknown;
   /** Default: `"online"` */
   status?: 'online' | 'offline' | 'away' | 'busy';

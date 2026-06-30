@@ -1,6 +1,23 @@
 app ui-city-builder-template "1.0.0"
-"CityBuilderTemplate — isometric build-and-manage city; composes CityBuilderBoard with HUD (gold/wood/population)."
+"CityBuilderTemplate — thin playable shell; renders game-shell + isometric canvas-2d matching ui-city-builder-board."
 orbital CityBuilderTemplateOrbital {
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type CityBuilderTemplateAssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+  }
   type CityBuilderTemplateTilesItem = {
     id : string
     x : number!
@@ -20,40 +37,107 @@ orbital CityBuilderTemplateOrbital {
     label : string!
     cost : number!
   }
+  type CityBuilderTemplateCitizenItem = {
+    id : string!
+    x : number!
+    y : number!
+    type : string
+  }
+  type CityBuilderTemplateFeaturesItem = {
+    id : string!
+    x : number!
+    y : number!
+    type : string!
+    sprite : Asset
+  }
+  type CityBuilderTemplateEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
+  }
+  type CityBuilderTemplateValidMoveItem = {
+    x : number!
+    y : number!
+  }
 
   entity CityBuilderTemplateItem [runtime] {
     id : string!
+    citizens : [CityBuilderTemplateCitizenItem] = []
+    features : [CityBuilderTemplateFeaturesItem]
+    effects : [CityBuilderTemplateEffectItem] = []
+    population : number = 0
+    gold : number = 100
+    wood : number = 80
+    pendingBuildType : string = "house"
+    selectedUnitId : string = ""
+    validMoves : [CityBuilderTemplateValidMoveItem] = []
+    result : "none" | "won" | "lost" = none
   }
 
   trait CityBuilderTemplateRender -> @rebindable CityBuilderTemplateItem [interaction, instance] {
-    initial: idle
+    initial: building
 
-    state idle {
-      INIT -> idle
-        (fetch CityBuilderTemplateItem {})
+    state building {
+      INIT -> building
+        (set @entity.features (array/map @config.buildings (fn b { id: @b.id, x: @b.x, y: @b.y, type: @b.type, sprite: (object/get @config.featureSprites @b.type) })))
+        (set @entity.gold @config.gold)
+        (set @entity.wood @config.wood)
+        (set @entity.pendingBuildType @config.pendingBuildType)
+        (set @entity.citizens [])
+        (set @entity.effects [])
+        (set @entity.population 0)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.result none)
         (render-ui main {
-          entity: @entity
-          className: @config.className
-          title: @config.title
-          tiles: @config.tiles
-          buildings: @config.buildings
-          buildTypes: @config.buildTypes
-          gold: @config.gold
-          wood: @config.wood
-          targetPopulation: @config.targetPopulation
-          populationPerBuilding: @config.populationPerBuilding
-          goldPerBuilding: @config.goldPerBuilding
-          woodPerBuilding: @config.woodPerBuilding
-          pendingBuildType: @config.pendingBuildType
-          scale: @config.scale
-          unitScale: @config.unitScale
-          gridWidth: @config.gridWidth
-          gridHeight: @config.gridHeight
-          selectBuildTypeEvent: SELECT_BUILD_TYPE
-          placeBuildingEvent: PLACE_BUILDING
-          gameEndEvent: GAME_END
-          type: city-builder-template
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold }, { label: "Wood", value: @entity.wood }, { type: resource-counter, label: "Build", value: @entity.pendingBuildType } ] }, { type: stat-badge, label: "Gold", value: @entity.gold, icon: "coins" }, { type: stat-badge, label: "Wood", value: @entity.wood, icon: "tree" }, { type: control-grid, items: @config.buildTypes, action: SELECT_BUILD_TYPE, labelKey: "label", valueKey: "type", selected: @entity.pendingBuildType } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_BUILDING, unitClickEvent: SELECT_BUILD_TYPE, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
+      SELECT_BUILD_TYPE -> building
+        (set @entity.pendingBuildType ?type)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold }, { label: "Wood", value: @entity.wood }, { type: resource-counter, label: "Build", value: @entity.pendingBuildType } ] }, { type: stat-badge, label: "Gold", value: @entity.gold, icon: "coins" }, { type: stat-badge, label: "Wood", value: @entity.wood, icon: "tree" }, { type: control-grid, items: @config.buildTypes, action: SELECT_BUILD_TYPE, labelKey: "label", valueKey: "type", selected: @entity.pendingBuildType } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_BUILDING, unitClickEvent: SELECT_BUILD_TYPE, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      PLACE_BUILDING -> building
+        (set @entity.features (array/concat @entity.features [{ id: (str/concat "bld-" (array/len @entity.features)), x: ?x, y: ?y, type: @entity.pendingBuildType, sprite: (object/get @config.featureSprites @entity.pendingBuildType) }]))
+        (set @entity.population (+ @entity.population @config.populationPerBuilding))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold }, { label: "Wood", value: @entity.wood }, { type: resource-counter, label: "Build", value: @entity.pendingBuildType } ] }, { type: stat-badge, label: "Gold", value: @entity.gold, icon: "coins" }, { type: stat-badge, label: "Wood", value: @entity.wood, icon: "tree" }, { type: control-grid, items: @config.buildTypes, action: SELECT_BUILD_TYPE, labelKey: "label", valueKey: "type", selected: @entity.pendingBuildType } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_BUILDING, unitClickEvent: SELECT_BUILD_TYPE, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      PLAY_AGAIN -> building
+        (set @entity.features (array/map @config.buildings (fn b { id: @b.id, x: @b.x, y: @b.y, type: @b.type, sprite: (object/get @config.featureSprites @b.type) })))
+        (set @entity.gold @config.gold)
+        (set @entity.wood @config.wood)
+        (set @entity.pendingBuildType @config.pendingBuildType)
+        (set @entity.citizens [])
+        (set @entity.effects [])
+        (set @entity.population 0)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.result none)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold }, { label: "Wood", value: @entity.wood }, { type: resource-counter, label: "Build", value: @entity.pendingBuildType } ] }, { type: stat-badge, label: "Gold", value: @entity.gold, icon: "coins" }, { type: stat-badge, label: "Wood", value: @entity.wood, icon: "tree" }, { type: control-grid, items: @config.buildTypes, action: SELECT_BUILD_TYPE, labelKey: "label", valueKey: "type", selected: @entity.pendingBuildType } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_BUILDING, unitClickEvent: SELECT_BUILD_TYPE, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      GAME_END -> building
+        (set @entity.result won)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Population", value: @entity.population }, { label: "Gold", value: @entity.gold }, { label: "Wood", value: @entity.wood }, { type: resource-counter, label: "Build", value: @entity.pendingBuildType } ] }, { type: stat-badge, label: "Gold", value: @entity.gold, icon: "coins" }, { type: stat-badge, label: "Wood", value: @entity.wood, icon: "tree" }, { type: control-grid, items: @config.buildTypes, action: SELECT_BUILD_TYPE, labelKey: "label", valueKey: "type", selected: @entity.pendingBuildType } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.citizens, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_BUILDING, unitClickEvent: SELECT_BUILD_TYPE, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+    }
+
+    emits {
+      PLACE_BUILDING -> external { x, y }
+      SELECT_BUILD_TYPE -> external { type }
     }
 
     config {
@@ -120,6 +204,14 @@ orbital CityBuilderTemplateOrbital {
       tiles : [CityBuilderTemplateTilesItem] = [{ x: 0, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 1, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 0, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 3, y: 0, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 0, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 0, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 1, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 3, y: 1, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 4, y: 1, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 0, y: 2, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 1, y: 2, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 2, terrain: "water", passable: false, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png" }, { x: 3, y: 2, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 2, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 0, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 1, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 3, y: 3, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 3, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }, { x: 0, y: 4, terrain: "stone", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png" }, { x: 1, y: 4, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 2, y: 4, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 3, y: 4, terrain: "grass", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png" }, { x: 4, y: 4, terrain: "dirt", passable: true, terrainSprite: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png" }]
         @label "Tiles"
         @description "Tile grid forwarded to CityBuilderBoard."
+        @tier "presentation"
+      featureSprites : Map string Asset = { house: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png", role: "building", category: "house", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "house", thumbnailUrl: "" }, farm: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/farm.png", role: "building", category: "farm", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "farm", thumbnailUrl: "" }, barracks: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/barracks.png", role: "building", category: "barracks", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "barracks", thumbnailUrl: "" }, library: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/library.png", role: "building", category: "library", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "library", thumbnailUrl: "" } }
+        @label "Feature Sprites"
+        @description "Building type to Asset lookup for PLACE_BUILDING."
+        @tier "presentation"
+      assetManifest : CityBuilderTemplateAssetManifest = { terrains: { grass: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/grass.png", role: "terrain", category: "grass", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, stone: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/stone.png", role: "terrain", category: "stone", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" }, dirt: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/dirt.png", role: "terrain", category: "dirt", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "dirt", thumbnailUrl: "" }, water: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/terrain/water.png", role: "terrain", category: "water", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "water", thumbnailUrl: "" } }, units: {}, features: { house: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/house.png", role: "building", category: "house", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "house", thumbnailUrl: "" }, farm: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/farm.png", role: "building", category: "farm", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "farm", thumbnailUrl: "" }, barracks: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/barracks.png", role: "building", category: "barracks", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "barracks", thumbnailUrl: "" }, library: { url: "https://almadar-kflow-assets.web.app/shared/ui-city-builder-board/default/features/library.png", role: "building", category: "library", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "library", thumbnailUrl: "" } } }
+        @label "Asset Manifest"
+        @description "Terrain/unit/feature sprite maps."
         @tier "presentation"
     }
   }

@@ -718,7 +718,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'removeEvent prop — emitted when player removes an action from a slot',
@@ -731,7 +731,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'playEvent prop — emitted with the current slot sequence on playback start',
@@ -744,7 +744,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Advances playback one step; entity.currentStep increments until maxSlots-1 then returns to building',
@@ -757,7 +757,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'checkEvent prop — emitted when player submits the sequence for validation',
@@ -770,7 +770,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'playAgainEvent prop — reset slots and restart',
@@ -782,7 +782,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -833,7 +833,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'removeEvent prop — emitted when player removes an action from a slot',
@@ -846,7 +846,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'playEvent prop — emitted with the current slot sequence on playback start',
@@ -859,7 +859,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'type': '[string]',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'checkEvent prop — emitted when player submits the sequence for validation',
@@ -872,7 +872,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'type': '[string]',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Advances playback one step; entity.currentStep increments until maxSlots-1 then returns to building',
@@ -885,7 +885,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'playAgainEvent prop — reset slots and restart',
@@ -897,7 +897,7 @@ export function stdUiSequencerBoardSequencerBoardOrbital(params: StdUiSequencerB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [

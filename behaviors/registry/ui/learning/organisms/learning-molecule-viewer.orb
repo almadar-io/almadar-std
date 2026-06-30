@@ -1,0 +1,176 @@
+{
+  "description": "Molecule viewer organism — a chemistry-canvas showing atoms and bonds for a simple molecule.",
+  "name": "learning-molecule-viewer",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "MoleculeViewerItem",
+        "persistence": "runtime"
+      },
+      "name": "MoleculeViewerOrbital",
+      "pages": [
+        {
+          "name": "MoleculeViewerPage",
+          "path": "/learning/molecule-viewer",
+          "traits": [
+            {
+              "ref": "MoleculeViewerRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "height": {
+              "default": 400.0,
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "title": {
+              "default": "Molecule Viewer",
+              "description": "Title shown above the molecule.",
+              "label": "Title",
+              "tier": "domain",
+              "type": "string"
+            },
+            "width": {
+              "default": 600.0,
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "MoleculeViewerItem",
+          "name": "MoleculeViewerRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "@config.title",
+                          "type": "typography",
+                          "variant": "h4"
+                        },
+                        {
+                          "atoms": [
+                            {
+                              "color": "#374151",
+                              "element": "C",
+                              "id": "C",
+                              "radius": 22.0,
+                              "x": 300.0,
+                              "y": 200.0
+                            },
+                            {
+                              "color": "#dc2626",
+                              "element": "O",
+                              "id": "O",
+                              "radius": 20.0,
+                              "x": 380.0,
+                              "y": 160.0
+                            },
+                            {
+                              "color": "#2563eb",
+                              "element": "H",
+                              "id": "H1",
+                              "radius": 14.0,
+                              "x": 240.0,
+                              "y": 160.0
+                            },
+                            {
+                              "color": "#2563eb",
+                              "element": "H",
+                              "id": "H2",
+                              "radius": 14.0,
+                              "x": 260.0,
+                              "y": 270.0
+                            },
+                            {
+                              "color": "#2563eb",
+                              "element": "H",
+                              "id": "H3",
+                              "radius": 14.0,
+                              "x": 340.0,
+                              "y": 270.0
+                            }
+                          ],
+                          "backgroundColor": "#fafafa",
+                          "bonds": [
+                            {
+                              "from": "C",
+                              "to": "O",
+                              "type": "double"
+                            },
+                            {
+                              "from": "C",
+                              "to": "H1",
+                              "type": "single"
+                            },
+                            {
+                              "from": "C",
+                              "to": "H2",
+                              "type": "single"
+                            },
+                            {
+                              "from": "C",
+                              "to": "H3",
+                              "type": "single"
+                            }
+                          ],
+                          "height": "@config.height",
+                          "type": "chemistry-canvas",
+                          "width": "@config.width"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "padding": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

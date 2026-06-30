@@ -654,7 +654,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Player triggers the test runner; component evaluates each test case and fires COMPLETE.',
@@ -666,7 +666,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Player wires a new transition in the graph editor.',
@@ -694,7 +694,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Player removes a transition from the graph.',
@@ -707,7 +707,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Reset the puzzle back to the menu.',
@@ -719,7 +719,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -781,7 +781,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Player removes a transition from the graph.',
@@ -794,7 +794,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Player triggers the test runner; component evaluates each test case and fires COMPLETE.',
@@ -806,7 +806,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emitted by the component when test-run completes; carries pass count.',
@@ -824,7 +824,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Reset the puzzle back to the menu.',
@@ -836,7 +836,7 @@ export function stdUiStateArchitectBoardStateArchitectBoardOrbital(params: StdUi
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [

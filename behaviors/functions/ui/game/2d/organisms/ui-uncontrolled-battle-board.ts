@@ -30,7 +30,7 @@ const ALIAS = 'UiUncontrolledBattleBoard';
  * (transition triggers + emit names). Use as the key type
  * when passing an `events:` rename map at the call site.
  */
-export type StdUiUncontrolledBattleBoardEventKey = 'INIT' | 'PLAY_AGAIN' | 'START' | 'STEP';
+export type StdUiUncontrolledBattleBoardEventKey = 'INIT' | 'PLAY_AGAIN' | 'START' | 'STEP' | 'TILE_CLICK' | 'UNIT_CLICK';
 
 /**
  * Payload shape for the `STEP` event.
@@ -49,23 +49,38 @@ export interface StdUiUncontrolledBattleBoardPlayAgainPayload {
 }
 
 /**
+ * Payload shape for the `TILE_CLICK` event.
+ */
+export interface StdUiUncontrolledBattleBoardTileClickPayload {
+  x: number;
+  y: number;
+}
+
+/**
+ * Payload shape for the `UNIT_CLICK` event.
+ */
+export interface StdUiUncontrolledBattleBoardUnitClickPayload {
+  unitId: string;
+}
+
+/**
  * Typed call-site config block for this trait — every
  * field maps to a `config { ... }` entry in the source
  * .lolo. The agent fills these to specialise the trait
  * without modifying its state-machine topology.
  */
 export interface StdUiUncontrolledBattleBoardConfig {
-  /** Default: `{"effects":{"explosion":{"animations":["static"],"aspect":"8:1","category":"explosion","dimension":"2d","name":"explosion","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/effects/pixelExplosion07.png"},"slash":{"animations":["static"],"aspect":"8:1","category":"slash","dimension":"2d","name":"slash","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/effects/slash_03.png"}},"features":{"barrels":{"animations":["static"],"aspect":"1:1","category":"barrels","dimension":"2d","name":"barrels","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/barrels.png"},"chest":{"animations":["static"],"aspect":"1:1","category":"chest","dimension":"2d","name":"chest","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/chest.png"}},"terrains":{"dirt":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png"},"grass":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png"},"planks":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png"},"stairs":{"animations":["static"],"aspect":"1:1","category":"stairs","dimension":"2d","name":"stairs","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stairs.png"},"stone":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png"}},"units":{"mender":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"mender","dimension":"2d","name":"mender","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png"},"shadow":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"shadow","dimension":"2d","name":"shadow","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png"}}}` */
+  /** Default: `{"effects":{"explosion":{"animations":["static"],"aspect":"8:1","category":"explosion","dimension":"2d","name":"explosion","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/effects/pixelExplosion07.png","variant":""},"slash":{"animations":["static"],"aspect":"8:1","category":"slash","dimension":"2d","name":"slash","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/effects/slash_03.png","variant":""}},"features":{"barrels":{"animations":["static"],"aspect":"1:1","category":"barrels","dimension":"2d","name":"barrels","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/barrels.png","variant":""},"chest":{"animations":["static"],"aspect":"1:1","category":"chest","dimension":"2d","name":"chest","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/chest.png","variant":""}},"terrains":{"dirt":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png","variant":""},"grass":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png","variant":""},"planks":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png","variant":""},"stairs":{"animations":["static"],"aspect":"1:1","category":"stairs","dimension":"2d","name":"stairs","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stairs.png","variant":""},"stone":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png","variant":""}},"units":{"mender":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"mender","dimension":"2d","name":"mender","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png","variant":""},"shadow":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"shadow","dimension":"2d","name":"shadow","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png","variant":""}}}` */
   assetManifest?: EntityRow;
   /** Default: `"Watch the units battle to the last one standing."` */
   description?: string;
-  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"barrels","dimension":"3d","name":"barrels","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/barrels.png"},"id":"f1","type":"barrels","x":0,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"chest","dimension":"3d","name":"chest","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/chest.png"},"id":"f2","type":"chest","x":4,"y":2}]` */
+  /** Default: `[{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"barrels","dimension":"3d","name":"barrels","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/barrels.png","variant":""},"id":"f1","type":"barrels","x":0,"y":2},{"assetUrl":{"animations":["static"],"aspect":"1:1","category":"chest","dimension":"3d","name":"chest","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/chest.png","variant":""},"id":"f2","type":"chest","x":4,"y":2}]` */
   features?: EntityRow[];
-  /** Default: `[{"animation":"idle","atk":5,"def":2,"frame":0,"hp":20,"id":"u1","maxHp":20,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"mender","dimension":"3d","name":"mender","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png"},"name":"Mender","position":{"x":1,"y":2},"team":"player","unitType":"mender"},{"animation":"idle","atk":4,"def":1,"frame":0,"hp":15,"id":"u2","maxHp":15,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"shadow","dimension":"3d","name":"shadow","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png"},"name":"Shadow Legion","position":{"x":3,"y":2},"team":"enemy","unitType":"shadow"}]` */
+  /** Default: `[{"animation":"idle","atk":5,"def":2,"frame":0,"hp":20,"id":"u1","maxHp":20,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"mender","dimension":"3d","name":"mender","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png","variant":""},"name":"Mender","position":{"x":1,"y":2},"team":"player","unitType":"mender"},{"animation":"idle","atk":4,"def":1,"frame":0,"hp":15,"id":"u2","maxHp":15,"modelUrl":{"animations":["static"],"aspect":"1:1","category":"shadow","dimension":"3d","name":"shadow","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png","variant":""},"name":"Shadow Legion","position":{"x":3,"y":2},"team":"enemy","unitType":"shadow"}]` */
   initialUnits?: EntityRow[];
   /** Default: `0.25` */
   scale?: number;
-  /** Default: `[{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png"},"x":0,"y":0},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png"},"x":1,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png"},"x":2,"y":0},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png"},"x":3,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png"},"x":4,"y":0},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png"},"x":0,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png"},"x":1,"y":1},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png"},"x":2,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png"},"x":3,"y":1},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png"},"x":4,"y":1},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png"},"x":0,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png"},"x":1,"y":2},{"passable":true,"terrain":"stairs","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stairs","dimension":"2d","name":"stairs","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stairs.png"},"x":2,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png"},"x":3,"y":2},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png"},"x":4,"y":2},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png"},"x":0,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png"},"x":1,"y":3},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png"},"x":2,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png"},"x":3,"y":3},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png"},"x":4,"y":3},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png"},"x":0,"y":4},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png"},"x":1,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png"},"x":2,"y":4},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png"},"x":3,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png"},"x":4,"y":4}]` */
+  /** Default: `[{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png","variant":""},"x":0,"y":0},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png","variant":""},"x":1,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png","variant":""},"x":2,"y":0},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png","variant":""},"x":3,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png","variant":""},"x":4,"y":0},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png","variant":""},"x":0,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png","variant":""},"x":1,"y":1},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png","variant":""},"x":2,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png","variant":""},"x":3,"y":1},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png","variant":""},"x":4,"y":1},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png","variant":""},"x":0,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png","variant":""},"x":1,"y":2},{"passable":true,"terrain":"stairs","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stairs","dimension":"2d","name":"stairs","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stairs.png","variant":""},"x":2,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png","variant":""},"x":3,"y":2},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png","variant":""},"x":4,"y":2},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png","variant":""},"x":0,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png","variant":""},"x":1,"y":3},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png","variant":""},"x":2,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png","variant":""},"x":3,"y":3},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png","variant":""},"x":4,"y":3},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png","variant":""},"x":0,"y":4},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png","variant":""},"x":1,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png","variant":""},"x":2,"y":4},{"passable":true,"terrain":"planks","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"planks","dimension":"2d","name":"planks","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png","variant":""},"x":3,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png","variant":""},"x":4,"y":4}]` */
   tiles?: EntityRow[];
   /** Default: `"Auto Battle"` */
   title?: string;
@@ -221,6 +236,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -266,6 +286,31 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
               'type': 'object',
             },
             'name': 'units',
+            'type': 'array',
+          },
+          {
+            'default': '',
+            'name': 'selectedUnitId',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'validMoves',
             'type': 'array',
           },
           {
@@ -347,6 +392,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/effects/pixelExplosion07.png',
+                  'variant': '',
                 },
                 'slash': {
                   'animations': [
@@ -360,6 +406,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/effects/slash_03.png',
+                  'variant': '',
                 },
               },
               'features': {
@@ -375,6 +422,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/barrels.png',
+                  'variant': '',
                 },
                 'chest': {
                   'animations': [
@@ -388,6 +436,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/chest.png',
+                  'variant': '',
                 },
               },
               'terrains': {
@@ -403,6 +452,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png',
+                  'variant': '',
                 },
                 'grass': {
                   'animations': [
@@ -416,6 +466,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'planks': {
                   'animations': [
@@ -429,6 +480,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png',
+                  'variant': '',
                 },
                 'stairs': {
                   'animations': [
@@ -442,6 +494,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stairs.png',
+                  'variant': '',
                 },
                 'stone': {
                   'animations': [
@@ -455,6 +508,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png',
+                  'variant': '',
                 },
               },
               'units': {
@@ -474,6 +528,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png',
+                  'variant': '',
                 },
                 'shadow': {
                   'animations': [
@@ -491,6 +546,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png',
+                  'variant': '',
                 },
               },
             },
@@ -545,6 +601,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -606,6 +667,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'type': 'object',
                 },
@@ -661,6 +727,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -722,6 +793,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'type': 'object',
                 },
@@ -755,6 +831,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/barrels.png',
+                  'variant': '',
                 },
                 'id': 'f1',
                 'type': 'barrels',
@@ -774,6 +851,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/features/chest.png',
+                  'variant': '',
                 },
                 'id': 'f2',
                 'type': 'chest',
@@ -832,6 +910,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -905,6 +988,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -958,6 +1046,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/mender.png',
+                  'variant': '',
                 },
                 'name': 'Mender',
                 'position': {
@@ -987,6 +1076,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/units/shadow.png',
+                  'variant': '',
                 },
                 'name': 'Shadow Legion',
                 'position': {
@@ -1086,6 +1176,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -1158,6 +1253,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 0,
@@ -1177,6 +1273,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 0,
@@ -1196,6 +1293,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 0,
@@ -1215,6 +1313,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 0,
@@ -1234,6 +1333,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 0,
@@ -1253,6 +1353,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 1,
@@ -1272,6 +1373,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 1,
@@ -1291,6 +1393,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 1,
@@ -1310,6 +1413,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 1,
@@ -1329,6 +1433,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 1,
@@ -1348,6 +1453,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 2,
@@ -1367,6 +1473,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 2,
@@ -1386,6 +1493,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stairs.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 2,
@@ -1405,6 +1513,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 2,
@@ -1424,6 +1533,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 2,
@@ -1443,6 +1553,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 3,
@@ -1462,6 +1573,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 3,
@@ -1481,6 +1593,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 3,
@@ -1500,6 +1613,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 3,
@@ -1519,6 +1633,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/dirt.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 3,
@@ -1538,6 +1653,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 4,
@@ -1557,6 +1673,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 4,
@@ -1576,6 +1693,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 4,
@@ -1595,6 +1713,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/planks.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 4,
@@ -1614,6 +1733,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-uncontrolled-battle-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 4,
@@ -1680,6 +1800,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -1753,6 +1878,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -1819,7 +1949,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'playAgainEvent prop — reset + restart the battle',
@@ -1831,7 +1961,38 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
+          },
+          {
+            'description': 'tileClickEvent prop — emitted when a tile is clicked on the canvas',
+            'event': 'TILE_CLICK',
+            'payloadSchema': [
+              {
+                'name': 'x',
+                'required': true,
+                'type': 'number',
+              },
+              {
+                'name': 'y',
+                'required': true,
+                'type': 'number',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'domain',
+          },
+          {
+            'description': 'unitClickEvent prop — emitted when a unit is clicked on the canvas',
+            'event': 'UNIT_CLICK',
+            'payloadSchema': [
+              {
+                'name': 'unitId',
+                'required': true,
+                'type': 'string',
+              },
+            ],
+            'scope': 'external',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -1839,9 +2000,11 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
             'description',
             'effects',
             'result',
+            'selectedUnitId',
             'title',
             'turn',
             'units',
+            'validMoves',
           ],
           'requires': [],
         },
@@ -1880,7 +2043,7 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'playAgainEvent prop — reset + restart the battle',
@@ -1892,7 +2055,38 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
+            },
+            {
+              'description': 'tileClickEvent prop — emitted when a tile is clicked on the canvas',
+              'key': 'TILE_CLICK',
+              'name': 'Tile Click',
+              'payloadSchema': [
+                {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              ],
+              'tier': 'domain',
+            },
+            {
+              'description': 'unitClickEvent prop — emitted when a unit is clicked on the canvas',
+              'key': 'UNIT_CLICK',
+              'name': 'Unit Click',
+              'payloadSchema': [
+                {
+                  'name': 'unitId',
+                  'required': true,
+                  'type': 'string',
+                },
+              ],
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -1941,6 +2135,16 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   [],
                 ],
                 [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -1951,30 +2155,109 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Round',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Round',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Allies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'player',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                            {
+                              'label': 'Enemies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'enemy',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Allies',
-                          'value': [
-                            'array/len',
+                          'label': 'Player',
+                          'src': [
+                            'object/get',
                             [
-                              'array/filter',
-                              '@entity.units',
+                              'array/first',
                               [
-                                'fn',
-                                'u',
+                                'array/filter',
+                                '@entity.units',
                                 [
-                                  'and',
+                                  'fn',
+                                  'u',
                                   [
                                     '==',
                                     [
@@ -1984,57 +2267,25 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     ],
                                     'player',
                                   ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
                                 ],
                               ],
                             ],
+                            'modelUrl',
                           ],
+                          'type': 'sprite',
                         },
                         {
-                          'label': 'Enemies',
-                          'value': [
-                            'array/len',
-                            [
-                              'array/filter',
-                              '@entity.units',
-                              [
-                                'fn',
-                                'u',
-                                [
-                                  'and',
-                                  [
-                                    '==',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'team',
-                                    ],
-                                    'enemy',
-                                  ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
-                                ],
-                              ],
-                            ],
-                          ],
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2077,6 +2328,16 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                   [],
                 ],
                 [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -2087,30 +2348,109 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Round',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Round',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Allies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'player',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                            {
+                              'label': 'Enemies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'enemy',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Allies',
-                          'value': [
-                            'array/len',
+                          'label': 'Player',
+                          'src': [
+                            'object/get',
                             [
-                              'array/filter',
-                              '@entity.units',
+                              'array/first',
                               [
-                                'fn',
-                                'u',
+                                'array/filter',
+                                '@entity.units',
                                 [
-                                  'and',
+                                  'fn',
+                                  'u',
                                   [
                                     '==',
                                     [
@@ -2120,57 +2460,25 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     ],
                                     'player',
                                   ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
                                 ],
                               ],
                             ],
+                            'modelUrl',
                           ],
+                          'type': 'sprite',
                         },
                         {
-                          'label': 'Enemies',
-                          'value': [
-                            'array/len',
-                            [
-                              'array/filter',
-                              '@entity.units',
-                              [
-                                'fn',
-                                'u',
-                                [
-                                  'and',
-                                  [
-                                    '==',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'team',
-                                    ],
-                                    'enemy',
-                                  ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
-                                ],
-                              ],
-                            ],
-                          ],
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2198,30 +2506,109 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Round',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Round',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Allies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'player',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                            {
+                              'label': 'Enemies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'enemy',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Allies',
-                          'value': [
-                            'array/len',
+                          'label': 'Player',
+                          'src': [
+                            'object/get',
                             [
-                              'array/filter',
-                              '@entity.units',
+                              'array/first',
                               [
-                                'fn',
-                                'u',
+                                'array/filter',
+                                '@entity.units',
                                 [
-                                  'and',
+                                  'fn',
+                                  'u',
                                   [
                                     '==',
                                     [
@@ -2231,57 +2618,25 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     ],
                                     'player',
                                   ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
                                 ],
                               ],
                             ],
+                            'modelUrl',
                           ],
+                          'type': 'sprite',
                         },
                         {
-                          'label': 'Enemies',
-                          'value': [
-                            'array/len',
-                            [
-                              'array/filter',
-                              '@entity.units',
-                              [
-                                'fn',
-                                'u',
-                                [
-                                  'and',
-                                  [
-                                    '==',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'team',
-                                    ],
-                                    'enemy',
-                                  ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
-                                ],
-                              ],
-                            ],
-                          ],
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2345,30 +2700,109 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Round',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Round',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Allies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'player',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                            {
+                              'label': 'Enemies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'enemy',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Allies',
-                          'value': [
-                            'array/len',
+                          'label': 'Player',
+                          'src': [
+                            'object/get',
                             [
-                              'array/filter',
-                              '@entity.units',
+                              'array/first',
                               [
-                                'fn',
-                                'u',
+                                'array/filter',
+                                '@entity.units',
                                 [
-                                  'and',
+                                  'fn',
+                                  'u',
                                   [
                                     '==',
                                     [
@@ -2378,57 +2812,25 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     ],
                                     'player',
                                   ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
                                 ],
                               ],
                             ],
+                            'modelUrl',
                           ],
+                          'type': 'sprite',
                         },
                         {
-                          'label': 'Enemies',
-                          'value': [
-                            'array/len',
-                            [
-                              'array/filter',
-                              '@entity.units',
-                              [
-                                'fn',
-                                'u',
-                                [
-                                  'and',
-                                  [
-                                    '==',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'team',
-                                    ],
-                                    'enemy',
-                                  ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
-                                ],
-                              ],
-                            ],
-                          ],
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2734,30 +3136,109 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Round',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Round',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Allies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'player',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                            {
+                              'label': 'Enemies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'enemy',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Allies',
-                          'value': [
-                            'array/len',
+                          'label': 'Player',
+                          'src': [
+                            'object/get',
                             [
-                              'array/filter',
-                              '@entity.units',
+                              'array/first',
                               [
-                                'fn',
-                                'u',
+                                'array/filter',
+                                '@entity.units',
                                 [
-                                  'and',
+                                  'fn',
+                                  'u',
                                   [
                                     '==',
                                     [
@@ -2767,57 +3248,25 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     ],
                                     'player',
                                   ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
                                 ],
                               ],
                             ],
+                            'modelUrl',
                           ],
+                          'type': 'sprite',
                         },
                         {
-                          'label': 'Enemies',
-                          'value': [
-                            'array/len',
-                            [
-                              'array/filter',
-                              '@entity.units',
-                              [
-                                'fn',
-                                'u',
-                                [
-                                  'and',
-                                  [
-                                    '==',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'team',
-                                    ],
-                                    'enemy',
-                                  ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
-                                ],
-                              ],
-                            ],
-                          ],
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2860,30 +3309,109 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                         'features': '@config.features',
                         'projection': 'isometric',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Round',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Round',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Allies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'player',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                            {
+                              'label': 'Enemies',
+                              'value': [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'team',
+                                        ],
+                                        'enemy',
+                                      ],
+                                      [
+                                        '>',
+                                        [
+                                          'object/get',
+                                          'u',
+                                          'hp',
+                                        ],
+                                        0,
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Allies',
-                          'value': [
-                            'array/len',
+                          'label': 'Player',
+                          'src': [
+                            'object/get',
                             [
-                              'array/filter',
-                              '@entity.units',
+                              'array/first',
                               [
-                                'fn',
-                                'u',
+                                'array/filter',
+                                '@entity.units',
                                 [
-                                  'and',
+                                  'fn',
+                                  'u',
                                   [
                                     '==',
                                     [
@@ -2893,57 +3421,25 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                     ],
                                     'player',
                                   ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
                                 ],
                               ],
                             ],
+                            'modelUrl',
                           ],
+                          'type': 'sprite',
                         },
                         {
-                          'label': 'Enemies',
-                          'value': [
-                            'array/len',
-                            [
-                              'array/filter',
-                              '@entity.units',
-                              [
-                                'fn',
-                                'u',
-                                [
-                                  'and',
-                                  [
-                                    '==',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'team',
-                                    ],
-                                    'enemy',
-                                  ],
-                                  [
-                                    '>',
-                                    [
-                                      'object/get',
-                                      'u',
-                                      'hp',
-                                    ],
-                                    0,
-                                  ],
-                                ],
-                              ],
-                            ],
-                          ],
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -3043,30 +3539,109 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'features': '@config.features',
                       'projection': 'isometric',
                       'scale': '@config.scale',
+                      'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': true,
+                      'tileClickEvent': 'TILE_CLICK',
                       'tiles': '@config.tiles',
                       'type': 'canvas-2d',
+                      'unitClickEvent': 'UNIT_CLICK',
                       'units': '@entity.units',
+                      'validMoves': '@entity.validMoves',
                     },
                   ],
                   'hud': {
-                    'stats': [
+                    'children': [
                       {
-                        'label': 'Round',
-                        'value': '@entity.turn',
+                        'stats': [
+                          {
+                            'label': 'Round',
+                            'value': '@entity.turn',
+                          },
+                          {
+                            'label': 'Allies',
+                            'value': [
+                              'array/len',
+                              [
+                                'array/filter',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    'and',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        'u',
+                                        'team',
+                                      ],
+                                      'player',
+                                    ],
+                                    [
+                                      '>',
+                                      [
+                                        'object/get',
+                                        'u',
+                                        'hp',
+                                      ],
+                                      0,
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                          },
+                          {
+                            'label': 'Enemies',
+                            'value': [
+                              'array/len',
+                              [
+                                'array/filter',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    'and',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        'u',
+                                        'team',
+                                      ],
+                                      'enemy',
+                                    ],
+                                    [
+                                      '>',
+                                      [
+                                        'object/get',
+                                        'u',
+                                        'hp',
+                                      ],
+                                      0,
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'game-hud',
                       },
                       {
-                        'label': 'Allies',
-                        'value': [
-                          'array/len',
+                        'label': 'Player',
+                        'src': [
+                          'object/get',
                           [
-                            'array/filter',
-                            '@entity.units',
+                            'array/first',
                             [
-                              'fn',
-                              'u',
+                              'array/filter',
+                              '@entity.units',
                               [
-                                'and',
+                                'fn',
+                                'u',
                                 [
                                   '==',
                                   [
@@ -3076,57 +3651,25 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                   ],
                                   'player',
                                 ],
-                                [
-                                  '>',
-                                  [
-                                    'object/get',
-                                    'u',
-                                    'hp',
-                                  ],
-                                  0,
-                                ],
                               ],
                             ],
                           ],
+                          'modelUrl',
                         ],
+                        'type': 'sprite',
                       },
                       {
-                        'label': 'Enemies',
-                        'value': [
-                          'array/len',
-                          [
-                            'array/filter',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                'and',
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    'u',
-                                    'team',
-                                  ],
-                                  'enemy',
-                                ],
-                                [
-                                  '>',
-                                  [
-                                    'object/get',
-                                    'u',
-                                    'hp',
-                                  ],
-                                  0,
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
+                        'type': 'damage-number',
+                        'value': 0,
+                        'visible': false,
+                        'x': 0,
+                        'y': 0,
                       },
                     ],
-                    'type': 'game-hud',
+                    'direction': 'horizontal',
+                    'gap': 'md',
+                    'justify': 'between',
+                    'type': 'stack',
                   },
                   'type': 'game-shell',
                 },
@@ -3667,30 +4210,109 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                       'features': '@config.features',
                       'projection': 'isometric',
                       'scale': '@config.scale',
+                      'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': true,
+                      'tileClickEvent': 'TILE_CLICK',
                       'tiles': '@config.tiles',
                       'type': 'canvas-2d',
+                      'unitClickEvent': 'UNIT_CLICK',
                       'units': '@entity.units',
+                      'validMoves': '@entity.validMoves',
                     },
                   ],
                   'hud': {
-                    'stats': [
+                    'children': [
                       {
-                        'label': 'Round',
-                        'value': '@entity.turn',
+                        'stats': [
+                          {
+                            'label': 'Round',
+                            'value': '@entity.turn',
+                          },
+                          {
+                            'label': 'Allies',
+                            'value': [
+                              'array/len',
+                              [
+                                'array/filter',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    'and',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        'u',
+                                        'team',
+                                      ],
+                                      'player',
+                                    ],
+                                    [
+                                      '>',
+                                      [
+                                        'object/get',
+                                        'u',
+                                        'hp',
+                                      ],
+                                      0,
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                          },
+                          {
+                            'label': 'Enemies',
+                            'value': [
+                              'array/len',
+                              [
+                                'array/filter',
+                                '@entity.units',
+                                [
+                                  'fn',
+                                  'u',
+                                  [
+                                    'and',
+                                    [
+                                      '==',
+                                      [
+                                        'object/get',
+                                        'u',
+                                        'team',
+                                      ],
+                                      'enemy',
+                                    ],
+                                    [
+                                      '>',
+                                      [
+                                        'object/get',
+                                        'u',
+                                        'hp',
+                                      ],
+                                      0,
+                                    ],
+                                  ],
+                                ],
+                              ],
+                            ],
+                          },
+                        ],
+                        'type': 'game-hud',
                       },
                       {
-                        'label': 'Allies',
-                        'value': [
-                          'array/len',
+                        'label': 'Player',
+                        'src': [
+                          'object/get',
                           [
-                            'array/filter',
-                            '@entity.units',
+                            'array/first',
                             [
-                              'fn',
-                              'u',
+                              'array/filter',
+                              '@entity.units',
                               [
-                                'and',
+                                'fn',
+                                'u',
                                 [
                                   '==',
                                   [
@@ -3700,57 +4322,25 @@ export function stdUiUncontrolledBattleBoardUncontrolledBattleBoardOrbital(param
                                   ],
                                   'player',
                                 ],
-                                [
-                                  '>',
-                                  [
-                                    'object/get',
-                                    'u',
-                                    'hp',
-                                  ],
-                                  0,
-                                ],
                               ],
                             ],
                           ],
+                          'modelUrl',
                         ],
+                        'type': 'sprite',
                       },
                       {
-                        'label': 'Enemies',
-                        'value': [
-                          'array/len',
-                          [
-                            'array/filter',
-                            '@entity.units',
-                            [
-                              'fn',
-                              'u',
-                              [
-                                'and',
-                                [
-                                  '==',
-                                  [
-                                    'object/get',
-                                    'u',
-                                    'team',
-                                  ],
-                                  'enemy',
-                                ],
-                                [
-                                  '>',
-                                  [
-                                    'object/get',
-                                    'u',
-                                    'hp',
-                                  ],
-                                  0,
-                                ],
-                              ],
-                            ],
-                          ],
-                        ],
+                        'type': 'damage-number',
+                        'value': 0,
+                        'visible': false,
+                        'x': 0,
+                        'y': 0,
                       },
                     ],
-                    'type': 'game-hud',
+                    'direction': 'horizontal',
+                    'gap': 'md',
+                    'justify': 'between',
+                    'type': 'stack',
                   },
                   'type': 'game-shell',
                 },

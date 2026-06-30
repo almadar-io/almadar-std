@@ -1,0 +1,750 @@
+{
+  "description": "std-platformer-physics — side-view gravity + AABB collision integration atom. Each 33ms tick it applies gravity to @entity.player.vy, integrates x/y against @config.platforms (geo/aabb-overlap), resolves landing/ground/hazard/goal, and writes player/result/score/lives. Boards compose it via `uses` + a sibling trait-ref rebound (linkedEntity) to a board entity carrying player/lives/score/result/worldWidth/worldHeight, replacing the gravity/collision tick inlined across platformer/racing/tanks/space-shmup/holiday-runner. Render stays the board's job — this atom owns only the simulation step.",
+  "name": "std-platformer-physics",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "default": {
+              "animation": "idle",
+              "facingRight": true,
+              "frame": 0.0,
+              "grounded": false,
+              "height": 48.0,
+              "vx": 0.0,
+              "vy": 0.0,
+              "width": 32.0,
+              "x": 80.0,
+              "y": 320.0
+            },
+            "name": "player",
+            "properties": {
+              "animation": {
+                "name": "animation",
+                "required": false,
+                "type": "string"
+              },
+              "facingRight": {
+                "name": "facingRight",
+                "required": false,
+                "type": "boolean"
+              },
+              "frame": {
+                "name": "frame",
+                "required": false,
+                "type": "number"
+              },
+              "grounded": {
+                "name": "grounded",
+                "required": false,
+                "type": "boolean"
+              },
+              "height": {
+                "name": "height",
+                "required": false,
+                "type": "number"
+              },
+              "vx": {
+                "name": "vx",
+                "required": false,
+                "type": "number"
+              },
+              "vy": {
+                "name": "vy",
+                "required": false,
+                "type": "number"
+              },
+              "width": {
+                "name": "width",
+                "required": false,
+                "type": "number"
+              },
+              "x": {
+                "name": "x",
+                "required": true,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": true,
+                "type": "number"
+              }
+            },
+            "type": "object"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "won",
+              "lost"
+            ]
+          },
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "default": 3.0,
+            "name": "lives",
+            "type": "number"
+          },
+          {
+            "default": 800.0,
+            "name": "worldWidth",
+            "type": "number"
+          },
+          {
+            "default": 400.0,
+            "name": "worldHeight",
+            "type": "number"
+          }
+        ],
+        "name": "PlatformerPhysicsItem",
+        "persistence": "runtime"
+      },
+      "name": "PlatformerPhysicsOrbital",
+      "pages": [
+        {
+          "name": "PlatformerPhysicsPage",
+          "path": "/platformer-physics",
+          "traits": [
+            {
+              "ref": "PlatformerPhysics"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "game-core",
+          "config": {
+            "gravity": {
+              "default": 0.6,
+              "description": "vy delta added each 33ms physics tick.",
+              "label": "Gravity",
+              "synonyms": "fall acceleration, weight",
+              "tier": "domain",
+              "type": "number"
+            },
+            "jumpStrength": {
+              "default": 12.0,
+              "description": "Upward vy magnitude; also the vy clamp ceiling.",
+              "label": "Jump strength",
+              "synonyms": "jump force, leap power",
+              "tier": "domain",
+              "type": "number"
+            },
+            "maxFallSpeed": {
+              "default": 16.0,
+              "description": "Terminal vy clamp so falls stay integrable.",
+              "label": "Max fall speed",
+              "synonyms": "terminal velocity, fall cap",
+              "tier": "domain",
+              "type": "number"
+            },
+            "platforms": {
+              "default": [
+                {
+                  "height": 20.0,
+                  "type": "ground",
+                  "width": 800.0,
+                  "x": 0.0,
+                  "y": 380.0
+                },
+                {
+                  "height": 40.0,
+                  "type": "goal",
+                  "width": 40.0,
+                  "x": 720.0,
+                  "y": 340.0
+                }
+              ],
+              "description": "AABB platform list integrated against each tick (ground/platform/hazard/goal).",
+              "items": {
+                "properties": {
+                  "height": {
+                    "name": "height",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "name": "type",
+                    "required": false,
+                    "type": "string",
+                    "values": [
+                      "ground",
+                      "platform",
+                      "hazard",
+                      "goal"
+                    ]
+                  },
+                  "width": {
+                    "name": "width",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Platforms",
+              "synonyms": "level geometry, collision boxes, tiles",
+              "tier": "domain",
+              "type": "[PlatformerPhysicsPlatform]"
+            }
+          },
+          "entityContract": {
+            "provides": [
+              "lives",
+              "player",
+              "result",
+              "score",
+              "worldHeight",
+              "worldWidth"
+            ],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "PlatformerPhysicsItem",
+          "name": "PlatformerPhysics",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "running"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    "@entity.player"
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "@entity.result"
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    "@entity.score"
+                  ],
+                  [
+                    "set",
+                    "@entity.lives",
+                    "@entity.lives"
+                  ],
+                  [
+                    "set",
+                    "@entity.worldWidth",
+                    "@entity.worldWidth"
+                  ],
+                  [
+                    "set",
+                    "@entity.worldHeight",
+                    "@entity.worldHeight"
+                  ]
+                ],
+                "event": "INIT",
+                "from": "running",
+                "to": "running"
+              }
+            ]
+          },
+          "ticks": [
+            {
+              "effects": [
+                [
+                  "let",
+                  [
+                    [
+                      "vy1",
+                      [
+                        "math/clamp",
+                        [
+                          "+",
+                          "@entity.player.vy",
+                          "@config.gravity"
+                        ],
+                        [
+                          "-",
+                          0.0,
+                          "@config.jumpStrength"
+                        ],
+                        "@config.maxFallSpeed"
+                      ]
+                    ],
+                    [
+                      "px1",
+                      [
+                        "math/clamp",
+                        [
+                          "+",
+                          "@entity.player.x",
+                          "@entity.player.vx"
+                        ],
+                        0.0,
+                        [
+                          "-",
+                          "@entity.worldWidth",
+                          "@entity.player.width"
+                        ]
+                      ]
+                    ],
+                    [
+                      "pw",
+                      "@entity.player.width"
+                    ],
+                    [
+                      "ph",
+                      "@entity.player.height"
+                    ],
+                    [
+                      "livesLeft",
+                      [
+                        "-",
+                        "@entity.lives",
+                        1.0
+                      ]
+                    ]
+                  ],
+                  [
+                    "let",
+                    [
+                      [
+                        "py1",
+                        [
+                          "+",
+                          "@entity.player.y",
+                          "@vy1"
+                        ]
+                      ]
+                    ],
+                    [
+                      "let",
+                      [
+                        [
+                          "playerRect",
+                          {
+                            "h": "@ph",
+                            "w": "@pw",
+                            "x": "@px1",
+                            "y": "@py1"
+                          }
+                        ]
+                      ],
+                      [
+                        "let",
+                        [
+                          [
+                            "hit",
+                            [
+                              "array/find",
+                              "@config.platforms",
+                              [
+                                "fn",
+                                "p",
+                                [
+                                  "and",
+                                  [
+                                    "!=",
+                                    [
+                                      "object/get",
+                                      "@p",
+                                      "type"
+                                    ],
+                                    "goal"
+                                  ],
+                                  [
+                                    "geo/aabb-overlap",
+                                    "@playerRect",
+                                    {
+                                      "h": "@p.height",
+                                      "w": "@p.width",
+                                      "x": "@p.x",
+                                      "y": "@p.y"
+                                    }
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ],
+                        [
+                          "let",
+                          [
+                            [
+                              "hazardHit",
+                              [
+                                "array/find",
+                                "@config.platforms",
+                                [
+                                  "fn",
+                                  "p",
+                                  [
+                                    "and",
+                                    [
+                                      "==",
+                                      [
+                                        "object/get",
+                                        "@p",
+                                        "type"
+                                      ],
+                                      "hazard"
+                                    ],
+                                    [
+                                      "geo/aabb-overlap",
+                                      "@playerRect",
+                                      {
+                                        "h": "@p.height",
+                                        "w": "@p.width",
+                                        "x": "@p.x",
+                                        "y": "@p.y"
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ],
+                          [
+                            "let",
+                            [
+                              [
+                                "goalHit",
+                                [
+                                  "array/find",
+                                  "@config.platforms",
+                                  [
+                                    "fn",
+                                    "p",
+                                    [
+                                      "and",
+                                      [
+                                        "==",
+                                        [
+                                          "object/get",
+                                          "@p",
+                                          "type"
+                                        ],
+                                        "goal"
+                                      ],
+                                      [
+                                        "geo/aabb-overlap",
+                                        "@playerRect",
+                                        {
+                                          "h": "@p.height",
+                                          "w": "@p.width",
+                                          "x": "@p.x",
+                                          "y": "@p.y"
+                                        }
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ],
+                            [
+                              "let",
+                              [
+                                [
+                                  "hitY",
+                                  [
+                                    "object/get",
+                                    "@hit",
+                                    "y",
+                                    "@entity.worldHeight"
+                                  ]
+                                ],
+                                [
+                                  "landed",
+                                  [
+                                    "and",
+                                    [
+                                      "!=",
+                                      "@hit",
+                                      null
+                                    ],
+                                    [
+                                      ">",
+                                      "@vy1",
+                                      0.0
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                "let",
+                                [
+                                  [
+                                    "py2",
+                                    [
+                                      "if",
+                                      "@landed",
+                                      [
+                                        "-",
+                                        "@hitY",
+                                        "@ph"
+                                      ],
+                                      "@py1"
+                                    ]
+                                  ],
+                                  [
+                                    "vy2",
+                                    [
+                                      "if",
+                                      "@landed",
+                                      0.0,
+                                      "@vy1"
+                                    ]
+                                  ]
+                                ],
+                                [
+                                  "let",
+                                  [
+                                    [
+                                      "atGround",
+                                      [
+                                        ">=",
+                                        [
+                                          "+",
+                                          "@py2",
+                                          "@ph"
+                                        ],
+                                        "@entity.worldHeight"
+                                      ]
+                                    ]
+                                  ],
+                                  [
+                                    "let",
+                                    [
+                                      [
+                                        "py3",
+                                        [
+                                          "if",
+                                          "@atGround",
+                                          [
+                                            "-",
+                                            "@entity.worldHeight",
+                                            "@ph"
+                                          ],
+                                          "@py2"
+                                        ]
+                                      ],
+                                      [
+                                        "vy3",
+                                        [
+                                          "if",
+                                          "@atGround",
+                                          0.0,
+                                          "@vy2"
+                                        ]
+                                      ],
+                                      [
+                                        "grounded",
+                                        [
+                                          "or",
+                                          "@landed",
+                                          "@atGround"
+                                        ]
+                                      ]
+                                    ],
+                                    [
+                                      "let",
+                                      [
+                                        [
+                                          "fell",
+                                          [
+                                            ">",
+                                            "@py3",
+                                            "@entity.worldHeight"
+                                          ]
+                                        ]
+                                      ],
+                                      [
+                                        "let",
+                                        [
+                                          [
+                                            "damaged",
+                                            [
+                                              "or",
+                                              [
+                                                "!=",
+                                                "@hazardHit",
+                                                null
+                                              ],
+                                              "@fell"
+                                            ]
+                                          ]
+                                        ],
+                                        [
+                                          "do",
+                                          [
+                                            "set",
+                                            "@entity.player",
+                                            [
+                                              "object/merge",
+                                              "@entity.player",
+                                              {
+                                                "grounded": "@grounded",
+                                                "vy": "@vy3",
+                                                "x": "@px1",
+                                                "y": "@py3"
+                                              }
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.result",
+                                            [
+                                              "if",
+                                              [
+                                                "!=",
+                                                "@goalHit",
+                                                null
+                                              ],
+                                              "won",
+                                              [
+                                                "if",
+                                                [
+                                                  "and",
+                                                  "@damaged",
+                                                  [
+                                                    "<=",
+                                                    "@livesLeft",
+                                                    0.0
+                                                  ]
+                                                ],
+                                                "lost",
+                                                "none"
+                                              ]
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.score",
+                                            [
+                                              "if",
+                                              [
+                                                "!=",
+                                                "@goalHit",
+                                                null
+                                              ],
+                                              [
+                                                "+",
+                                                "@entity.score",
+                                                100.0
+                                              ],
+                                              "@entity.score"
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.lives",
+                                            [
+                                              "if",
+                                              [
+                                                "and",
+                                                "@damaged",
+                                                [
+                                                  ">",
+                                                  "@entity.lives",
+                                                  0.0
+                                                ],
+                                                [
+                                                  "==",
+                                                  "@entity.result",
+                                                  "none"
+                                                ]
+                                              ],
+                                              "@livesLeft",
+                                              "@entity.lives"
+                                            ]
+                                          ],
+                                          [
+                                            "set",
+                                            "@entity.player",
+                                            [
+                                              "if",
+                                              [
+                                                "and",
+                                                "@damaged",
+                                                [
+                                                  "==",
+                                                  "@entity.result",
+                                                  "none"
+                                                ]
+                                              ],
+                                              {
+                                                "animation": "idle",
+                                                "facingRight": true,
+                                                "frame": 0.0,
+                                                "grounded": false,
+                                                "height": 48.0,
+                                                "vx": 0.0,
+                                                "vy": 0.0,
+                                                "width": 32.0,
+                                                "x": 80.0,
+                                                "y": 320.0
+                                              },
+                                              "@entity.player"
+                                            ]
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ],
+              "guard": [
+                "==",
+                "@entity.result",
+                "none"
+              ],
+              "interval": 33.0,
+              "name": "physicsTick"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

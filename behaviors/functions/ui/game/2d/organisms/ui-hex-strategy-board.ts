@@ -104,14 +104,14 @@ export interface StdUiHexStrategyBoardConfig {
   activeFilters?: unknown;
   /** Default: `"https://almadar-kflow-assets.web.app/shared/"` */
   assetBaseUrl?: EntityRow;
-  /** Default: `{"effects":{"explosion":{"animations":["static"],"aspect":"8:1","category":"explosion","dimension":"2d","name":"explosion","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png"},"slash":{"animations":["static"],"aspect":"8:1","category":"slash","dimension":"2d","name":"slash","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/slash_03.png"}},"features":{"outpost":{"animations":["static"],"aspect":"1:1","category":"outpost","dimension":"2d","name":"outpost","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png"},"resource":{"animations":["static"],"aspect":"1:1","category":"resource","dimension":"2d","name":"resource","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png"}},"terrains":{"dirt":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png"},"grass":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"},"sand":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"2d","name":"sand","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png"},"stone":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"}},"units":{"guardian":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"guardian","dimension":"2d","name":"guardian","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png"},"ranger":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"ranger","dimension":"2d","name":"ranger","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png"},"worker":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"worker","dimension":"2d","name":"worker","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png"}}}` */
+  /** Default: `{"effects":{"explosion":{"animations":["static"],"aspect":"8:1","category":"explosion","dimension":"2d","name":"explosion","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png","variant":""},"slash":{"animations":["static"],"aspect":"8:1","category":"slash","dimension":"2d","name":"slash","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/slash_03.png","variant":""}},"features":{"outpost":{"animations":["static"],"aspect":"1:1","category":"outpost","dimension":"2d","name":"outpost","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png","variant":""},"resource":{"animations":["static"],"aspect":"1:1","category":"resource","dimension":"2d","name":"resource","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png","variant":""}},"terrains":{"dirt":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png","variant":""},"grass":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png","variant":""},"sand":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"2d","name":"sand","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png","variant":""},"stone":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""}},"units":{"guardian":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"guardian","dimension":"2d","name":"guardian","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png","variant":""},"ranger":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"ranger","dimension":"2d","name":"ranger","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png","variant":""},"worker":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"worker","dimension":"2d","name":"worker","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png","variant":""}}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `true` */
   enableCamera?: boolean;
   error?: EntityRow;
-  /** Default: `[{"id":"f1","sprite":{"animations":["static"],"aspect":"1:1","category":"resource","dimension":"2d","name":"resource","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png"},"type":"resource","x":3,"y":1},{"id":"f2","sprite":{"animations":["static"],"aspect":"1:1","category":"outpost","dimension":"2d","name":"outpost","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png"},"type":"outpost","x":1,"y":3}]` */
+  /** Default: `[{"id":"f1","sprite":{"animations":["static"],"aspect":"1:1","category":"resource","dimension":"2d","name":"resource","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png","variant":""},"type":"resource","x":3,"y":1},{"id":"f2","sprite":{"animations":["static"],"aspect":"1:1","category":"outpost","dimension":"2d","name":"outpost","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png","variant":""},"type":"outpost","x":1,"y":3}]` */
   features?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
@@ -131,11 +131,11 @@ export interface StdUiHexStrategyBoardConfig {
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `[{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":0,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":1,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":2,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":3,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":4,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":5,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":0,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"},"x":1,"y":1},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png"},"x":2,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"},"x":3,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"},"x":4,"y":1},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":5,"y":1},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":0,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"},"x":1,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"},"x":2,"y":2},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png"},"x":3,"y":2},{"passable":true,"terrain":"sand","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"2d","name":"sand","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png"},"x":4,"y":2},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":5,"y":2},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":0,"y":3},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png"},"x":1,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"},"x":2,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"},"x":3,"y":3},{"passable":true,"terrain":"sand","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"2d","name":"sand","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png"},"x":4,"y":3},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":5,"y":3},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":0,"y":4},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"},"x":1,"y":4},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png"},"x":2,"y":4},{"passable":true,"terrain":"sand","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"2d","name":"sand","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png"},"x":3,"y":4},{"passable":true,"terrain":"sand","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"2d","name":"sand","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png"},"x":4,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":5,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":0,"y":5},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":1,"y":5},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":2,"y":5},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":3,"y":5},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":4,"y":5},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png"},"x":5,"y":5}]` */
+  /** Default: `[{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":0,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":1,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":2,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":3,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":4,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":5,"y":0},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":0,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png","variant":""},"x":1,"y":1},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png","variant":""},"x":2,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png","variant":""},"x":3,"y":1},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png","variant":""},"x":4,"y":1},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":5,"y":1},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":0,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png","variant":""},"x":1,"y":2},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png","variant":""},"x":2,"y":2},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png","variant":""},"x":3,"y":2},{"passable":true,"terrain":"sand","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"2d","name":"sand","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png","variant":""},"x":4,"y":2},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":5,"y":2},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":0,"y":3},{"passable":true,"terrain":"dirt","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dirt","dimension":"2d","name":"dirt","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png","variant":""},"x":1,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png","variant":""},"x":2,"y":3},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png","variant":""},"x":3,"y":3},{"passable":true,"terrain":"sand","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"2d","name":"sand","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png","variant":""},"x":4,"y":3},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":5,"y":3},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":0,"y":4},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png","variant":""},"x":1,"y":4},{"passable":true,"terrain":"grass","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"grass","dimension":"2d","name":"grass","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png","variant":""},"x":2,"y":4},{"passable":true,"terrain":"sand","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"2d","name":"sand","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png","variant":""},"x":3,"y":4},{"passable":true,"terrain":"sand","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"sand","dimension":"2d","name":"sand","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png","variant":""},"x":4,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":5,"y":4},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":0,"y":5},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":1,"y":5},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":2,"y":5},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":3,"y":5},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":4,"y":5},{"passable":false,"terrain":"stone","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"stone","dimension":"2d","name":"stone","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png","variant":""},"x":5,"y":5}]` */
   tiles?: EntityRow[];
   /** Default: `0` */
   totalCount?: number;
-  /** Default: `[{"animation":"idle","faction":"player","frame":0,"health":10,"id":"u1","maxHealth":10,"name":"Miner","position":{"x":3,"y":2},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"worker","dimension":"2d","name":"worker","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png"},"team":"player","unitType":"worker"},{"animation":"idle","faction":"player","frame":0,"health":8,"id":"u2","maxHealth":10,"name":"Thornbow","position":{"x":2,"y":3},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"ranger","dimension":"2d","name":"ranger","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png"},"team":"player","unitType":"ranger"},{"animation":"idle","faction":"player","frame":0,"health":12,"id":"u3","maxHealth":12,"name":"Ironwall","position":{"x":2,"y":4},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"guardian","dimension":"2d","name":"guardian","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png"},"team":"player","unitType":"guardian"},{"animation":"idle","faction":"enemy","frame":0,"health":8,"id":"e1","maxHealth":8,"name":"Foe","position":{"x":4,"y":1},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"ranger","dimension":"2d","name":"ranger","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png"},"team":"enemy","unitType":"ranger"},{"animation":"idle","faction":"enemy","frame":0,"health":10,"id":"e2","maxHealth":10,"name":"Foe","position":{"x":3,"y":1},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"guardian","dimension":"2d","name":"guardian","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png"},"team":"enemy","unitType":"guardian"}]` */
+  /** Default: `[{"animation":"idle","faction":"player","frame":0,"health":10,"id":"u1","maxHealth":10,"name":"Miner","position":{"x":3,"y":2},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"worker","dimension":"2d","name":"worker","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png","variant":""},"team":"player","unitType":"worker"},{"animation":"idle","faction":"player","frame":0,"health":8,"id":"u2","maxHealth":10,"name":"Thornbow","position":{"x":2,"y":3},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"ranger","dimension":"2d","name":"ranger","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png","variant":""},"team":"player","unitType":"ranger"},{"animation":"idle","faction":"player","frame":0,"health":12,"id":"u3","maxHealth":12,"name":"Ironwall","position":{"x":2,"y":4},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"guardian","dimension":"2d","name":"guardian","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png","variant":""},"team":"player","unitType":"guardian"},{"animation":"idle","faction":"enemy","frame":0,"health":8,"id":"e1","maxHealth":8,"name":"Foe","position":{"x":4,"y":1},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"ranger","dimension":"2d","name":"ranger","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png","variant":""},"team":"enemy","unitType":"ranger"},{"animation":"idle","faction":"enemy","frame":0,"health":10,"id":"e2","maxHealth":10,"name":"Foe","position":{"x":3,"y":1},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"guardian","dimension":"2d","name":"guardian","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png","variant":""},"team":"enemy","unitType":"guardian"}]` */
   units?: EntityRow[];
 }
 
@@ -299,6 +299,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -393,6 +398,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -445,6 +455,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -526,6 +541,26 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
             'type': 'string',
           },
           {
+            'default': [],
+            'items': {
+              'properties': {
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'validMoves',
+            'type': 'array',
+          },
+          {
             'default': 0,
             'name': 'turn',
             'type': 'number',
@@ -600,6 +635,14 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
             'name': 'effects',
             'type': 'array',
           },
+          {
+            'default': [],
+            'items': {
+              'type': 'string',
+            },
+            'name': 'unitEffects',
+            'type': 'array',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -670,6 +713,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                 'required': false,
                 'type': 'string',
               },
+              'variant': {
+                'name': 'variant',
+                'required': false,
+                'type': 'string',
+              },
             },
             'tier': 'presentation',
             'type': 'Asset',
@@ -689,6 +737,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png',
+                  'variant': '',
                 },
                 'slash': {
                   'animations': [
@@ -702,6 +751,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/slash_03.png',
+                  'variant': '',
                 },
               },
               'features': {
@@ -717,6 +767,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png',
+                  'variant': '',
                 },
                 'resource': {
                   'animations': [
@@ -730,6 +781,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png',
+                  'variant': '',
                 },
               },
               'terrains': {
@@ -745,6 +797,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png',
+                  'variant': '',
                 },
                 'grass': {
                   'animations': [
@@ -758,6 +811,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'sand': {
                   'animations': [
@@ -771,6 +825,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png',
+                  'variant': '',
                 },
                 'stone': {
                   'animations': [
@@ -784,6 +839,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
               },
               'units': {
@@ -803,6 +859,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png',
+                  'variant': '',
                 },
                 'ranger': {
                   'animations': [
@@ -820,6 +877,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png',
+                  'variant': '',
                 },
                 'worker': {
                   'animations': [
@@ -837,6 +895,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png',
+                  'variant': '',
                 },
               },
             },
@@ -891,6 +950,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -952,6 +1016,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'type': 'object',
                 },
@@ -1010,6 +1079,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'type': 'object',
                 },
@@ -1065,6 +1139,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -1137,6 +1216,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/resource.png',
+                  'variant': '',
                 },
                 'type': 'resource',
                 'x': 3,
@@ -1156,6 +1236,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/features/outpost.png',
+                  'variant': '',
                 },
                 'type': 'outpost',
                 'x': 1,
@@ -1213,6 +1294,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -1283,6 +1369,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -1405,6 +1496,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 0,
@@ -1424,6 +1516,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 0,
@@ -1443,6 +1536,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 0,
@@ -1462,6 +1556,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 0,
@@ -1481,6 +1576,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 0,
@@ -1500,6 +1596,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 5,
                 'y': 0,
@@ -1519,6 +1616,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 1,
@@ -1538,6 +1636,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 1,
@@ -1557,6 +1656,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 1,
@@ -1576,6 +1676,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 1,
@@ -1595,6 +1696,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 1,
@@ -1614,6 +1716,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 5,
                 'y': 1,
@@ -1633,6 +1736,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 2,
@@ -1652,6 +1756,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 2,
@@ -1671,6 +1776,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 2,
@@ -1690,6 +1796,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 2,
@@ -1709,6 +1816,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 2,
@@ -1728,6 +1836,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 5,
                 'y': 2,
@@ -1747,6 +1856,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 3,
@@ -1766,6 +1876,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/dirt.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 3,
@@ -1785,6 +1896,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 3,
@@ -1804,6 +1916,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 3,
@@ -1823,6 +1936,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 3,
@@ -1842,6 +1956,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 5,
                 'y': 3,
@@ -1861,6 +1976,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 4,
@@ -1880,6 +1996,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 4,
@@ -1899,6 +2016,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/grass.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 4,
@@ -1918,6 +2036,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 4,
@@ -1937,6 +2056,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/sand.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 4,
@@ -1956,6 +2076,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 5,
                 'y': 4,
@@ -1975,6 +2096,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 5,
@@ -1994,6 +2116,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 5,
@@ -2013,6 +2136,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 5,
@@ -2032,6 +2156,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 5,
@@ -2051,6 +2176,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 5,
@@ -2070,6 +2196,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/terrain/stone.png',
+                  'variant': '',
                 },
                 'x': 5,
                 'y': 5,
@@ -2136,6 +2263,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -2206,6 +2338,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -2282,6 +2419,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/worker.png',
+                  'variant': '',
                 },
                 'team': 'player',
                 'unitType': 'worker',
@@ -2314,6 +2452,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png',
+                  'variant': '',
                 },
                 'team': 'player',
                 'unitType': 'ranger',
@@ -2346,6 +2485,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png',
+                  'variant': '',
                 },
                 'team': 'player',
                 'unitType': 'guardian',
@@ -2378,6 +2518,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/ranger.png',
+                  'variant': '',
                 },
                 'team': 'enemy',
                 'unitType': 'ranger',
@@ -2410,6 +2551,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-hex-strategy-board/default/units/guardian.png',
+                  'variant': '',
                 },
                 'team': 'enemy',
                 'unitType': 'guardian',
@@ -2514,6 +2656,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -2608,6 +2755,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -2660,6 +2812,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -2767,7 +2924,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Called when strategy game ends',
@@ -2779,7 +2936,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Called after a unit moves to a new hex',
@@ -2807,7 +2964,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': '-- Declarative event props --',
@@ -2825,7 +2982,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
@@ -2838,7 +2995,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{endTurnEvent} with {} on end turn',
@@ -2850,7 +3007,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{cancelEvent} with {} on cancel',
@@ -2862,7 +3019,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -2874,7 +3031,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -2889,7 +3046,9 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
             'selectedUnitId',
             'territory',
             'turn',
+            'unitEffects',
             'units',
+            'validMoves',
           ],
           'requires': [],
         },
@@ -2918,7 +3077,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': '-- Declarative event props --',
@@ -2936,7 +3095,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': '-- Callbacks --',
@@ -2966,7 +3125,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{endTurnEvent} with {} on end turn',
@@ -2978,7 +3137,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{cancelEvent} with {} on cancel',
@@ -2990,7 +3149,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Called when strategy game ends',
@@ -3002,7 +3161,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -3014,7 +3173,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Called after a unit moves to a new hex',
@@ -3042,7 +3201,7 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'type': 'object',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -3072,6 +3231,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                 ],
                 [
                   'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
                   '@entity.turn',
                   0,
                 ],
@@ -3101,6 +3265,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   [],
                 ],
                 [
+                  'set',
+                  '@entity.unitEffects',
+                  [],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -3109,30 +3278,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'miniMap': {
+                          'height': '@entity.gridHeight',
+                          'tiles': '@config.tiles',
+                          'type': 'mini-map',
+                          'units': '@entity.units',
+                          'width': '@entity.gridWidth',
+                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Territory',
+                              'value': '@entity.territory',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Territory',
-                          'value': '@entity.territory',
+                          'effects': '@entity.unitEffects',
+                          'label': 'Unit Buffs',
+                          'type': 'status-effect',
                         },
                         {
-                          'label': 'Result',
-                          'value': '@entity.result',
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
+                        },
+                        {
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -3153,6 +3360,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   'set',
                   '@entity.selectedUnitId',
                   '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
                 ],
                 [
                   'set',
@@ -3182,6 +3394,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                 [
                   'set',
                   '@entity.effects',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.unitEffects',
                   [],
                 ],
                 [
@@ -3208,30 +3425,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'miniMap': {
+                          'height': '@entity.gridHeight',
+                          'tiles': '@config.tiles',
+                          'type': 'mini-map',
+                          'units': '@entity.units',
+                          'width': '@entity.gridWidth',
+                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Territory',
+                              'value': '@entity.territory',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Territory',
-                          'value': '@entity.territory',
+                          'effects': '@entity.unitEffects',
+                          'label': 'Unit Buffs',
+                          'type': 'status-effect',
                         },
                         {
-                          'label': 'Result',
-                          'value': '@entity.result',
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
+                        },
+                        {
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -3257,30 +3512,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'miniMap': {
+                          'height': '@entity.gridHeight',
+                          'tiles': '@config.tiles',
+                          'type': 'mini-map',
+                          'units': '@entity.units',
+                          'width': '@entity.gridWidth',
+                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Territory',
+                              'value': '@entity.territory',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Territory',
-                          'value': '@entity.territory',
+                          'effects': '@entity.unitEffects',
+                          'label': 'Unit Buffs',
+                          'type': 'status-effect',
                         },
                         {
-                          'label': 'Result',
-                          'value': '@entity.result',
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
+                        },
+                        {
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -3328,6 +3621,153 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                 ],
                 [
                   'set',
+                  '@entity.unitEffects',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [
+                    'array/map',
+                    [
+                      'array/filter',
+                      '@config.tiles',
+                      [
+                        'fn',
+                        't',
+                        [
+                          'and',
+                          [
+                            'grid/in-bounds',
+                            {
+                              'x': [
+                                'object/get',
+                                '@t',
+                                'x',
+                              ],
+                              'y': [
+                                'object/get',
+                                '@t',
+                                'y',
+                              ],
+                            },
+                            '@entity.gridWidth',
+                            '@entity.gridHeight',
+                          ],
+                          [
+                            'and',
+                            [
+                              '<=',
+                              [
+                                'grid/manhattan-distance',
+                                [
+                                  'object/get',
+                                  [
+                                    'array/find',
+                                    '@entity.units',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        '==',
+                                        '@u.id',
+                                        '@payload.unitId',
+                                      ],
+                                    ],
+                                  ],
+                                  'position',
+                                ],
+                                {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                              ],
+                              '@entity.movementRange',
+                            ],
+                            [
+                              '==',
+                              [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.units',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'position',
+                                          ],
+                                          'x',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@t',
+                                          'x',
+                                        ],
+                                      ],
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'position',
+                                          ],
+                                          'y',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@t',
+                                          'y',
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              0,
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                    [
+                      'fn',
+                      't',
+                      {
+                        'x': [
+                          'object/get',
+                          '@t',
+                          'x',
+                        ],
+                        'y': [
+                          'object/get',
+                          '@t',
+                          'y',
+                        ],
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'set',
                   '@entity.phase',
                   'movement',
                 ],
@@ -3340,30 +3780,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'miniMap': {
+                          'height': '@entity.gridHeight',
+                          'tiles': '@config.tiles',
+                          'type': 'mini-map',
+                          'units': '@entity.units',
+                          'width': '@entity.gridWidth',
+                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Territory',
+                              'value': '@entity.territory',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Territory',
-                          'value': '@entity.territory',
+                          'effects': '@entity.unitEffects',
+                          'label': 'Unit Buffs',
+                          'type': 'status-effect',
                         },
                         {
-                          'label': 'Result',
-                          'value': '@entity.result',
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
+                        },
+                        {
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -3435,6 +3913,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                 ],
                 [
                   'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
                   '@entity.phase',
                   'observation',
                 ],
@@ -3447,30 +3930,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'miniMap': {
+                          'height': '@entity.gridHeight',
+                          'tiles': '@config.tiles',
+                          'type': 'mini-map',
+                          'units': '@entity.units',
+                          'width': '@entity.gridWidth',
+                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Territory',
+                              'value': '@entity.territory',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Territory',
-                          'value': '@entity.territory',
+                          'effects': '@entity.unitEffects',
+                          'label': 'Unit Buffs',
+                          'type': 'status-effect',
                         },
                         {
-                          'label': 'Result',
-                          'value': '@entity.result',
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
+                        },
+                        {
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -3794,6 +4315,16 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                 ],
                 [
                   'set',
+                  '@entity.unitEffects',
+                  [],
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
                   '@entity.phase',
                   'observation',
                 ],
@@ -3806,30 +4337,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'miniMap': {
+                          'height': '@entity.gridHeight',
+                          'tiles': '@config.tiles',
+                          'type': 'mini-map',
+                          'units': '@entity.units',
+                          'width': '@entity.gridWidth',
+                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Territory',
+                              'value': '@entity.territory',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Territory',
-                          'value': '@entity.territory',
+                          'effects': '@entity.unitEffects',
+                          'label': 'Unit Buffs',
+                          'type': 'status-effect',
                         },
                         {
-                          'label': 'Result',
-                          'value': '@entity.result',
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
+                        },
+                        {
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -3953,6 +4522,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                 ],
                 [
                   'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
                   '@entity.enemyTurn',
                   true,
                 ],
@@ -3970,30 +4544,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'miniMap': {
+                          'height': '@entity.gridHeight',
+                          'tiles': '@config.tiles',
+                          'type': 'mini-map',
+                          'units': '@entity.units',
+                          'width': '@entity.gridWidth',
+                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Territory',
+                              'value': '@entity.territory',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Territory',
-                          'value': '@entity.territory',
+                          'effects': '@entity.unitEffects',
+                          'label': 'Unit Buffs',
+                          'type': 'status-effect',
                         },
                         {
-                          'label': 'Result',
-                          'value': '@entity.result',
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
+                        },
+                        {
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -4017,6 +4629,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                 ],
                 [
                   'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
                   '@entity.phase',
                   'observation',
                 ],
@@ -4029,30 +4646,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'miniMap': {
+                          'height': '@entity.gridHeight',
+                          'tiles': '@config.tiles',
+                          'type': 'mini-map',
+                          'units': '@entity.units',
+                          'width': '@entity.gridWidth',
+                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Territory',
+                              'value': '@entity.territory',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Territory',
-                          'value': '@entity.territory',
+                          'effects': '@entity.unitEffects',
+                          'label': 'Unit Buffs',
+                          'type': 'status-effect',
                         },
                         {
-                          'label': 'Result',
-                          'value': '@entity.result',
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
+                        },
+                        {
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -4112,6 +4767,16 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                 ],
                 [
                   'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
                   '@entity.phase',
                   'game_over',
                 ],
@@ -4124,30 +4789,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'miniMap': {
+                          'height': '@entity.gridHeight',
+                          'tiles': '@config.tiles',
+                          'type': 'mini-map',
+                          'units': '@entity.units',
+                          'width': '@entity.gridWidth',
+                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Territory',
+                              'value': '@entity.territory',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Territory',
-                          'value': '@entity.territory',
+                          'effects': '@entity.unitEffects',
+                          'label': 'Unit Buffs',
+                          'type': 'status-effect',
                         },
                         {
-                          'label': 'Result',
-                          'value': '@entity.result',
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
+                        },
+                        {
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -4238,6 +4941,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                 ],
                 [
                   'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
                   '@entity.turn',
                   0,
                 ],
@@ -4267,6 +4975,11 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                   [],
                 ],
                 [
+                  'set',
+                  '@entity.unitEffects',
+                  [],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -4275,30 +4988,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
                         'features': '@config.features',
+                        'miniMap': {
+                          'height': '@entity.gridHeight',
+                          'tiles': '@config.tiles',
+                          'type': 'mini-map',
+                          'units': '@entity.units',
+                          'width': '@entity.gridWidth',
+                        },
                         'projection': 'hex',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': true,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Territory',
+                              'value': '@entity.territory',
+                            },
+                            {
+                              'label': 'Result',
+                              'value': '@entity.result',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Territory',
-                          'value': '@entity.territory',
+                          'effects': '@entity.unitEffects',
+                          'label': 'Unit Buffs',
+                          'type': 'status-effect',
                         },
                         {
-                          'label': 'Result',
-                          'value': '@entity.result',
+                          'type': 'damage-number',
+                          'value': 0,
+                          'visible': false,
+                          'x': 0,
+                          'y': 0,
+                        },
+                        {
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -4396,30 +5147,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                       'assetManifest': '@config.assetManifest',
                       'effects': '@entity.effects',
                       'features': '@config.features',
+                      'miniMap': {
+                        'height': '@entity.gridHeight',
+                        'tiles': '@config.tiles',
+                        'type': 'mini-map',
+                        'units': '@entity.units',
+                        'width': '@entity.gridWidth',
+                      },
                       'projection': 'hex',
                       'scale': '@config.scale',
+                      'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': true,
+                      'tileClickEvent': 'TILE_CLICK',
                       'tiles': '@config.tiles',
                       'type': 'canvas-2d',
+                      'unitClickEvent': 'UNIT_CLICK',
                       'units': '@entity.units',
+                      'validMoves': '@entity.validMoves',
                     },
                   ],
                   'hud': {
-                    'stats': [
+                    'children': [
                       {
-                        'label': 'Turn',
-                        'value': '@entity.turn',
+                        'stats': [
+                          {
+                            'label': 'Turn',
+                            'value': '@entity.turn',
+                          },
+                          {
+                            'label': 'Territory',
+                            'value': '@entity.territory',
+                          },
+                          {
+                            'label': 'Result',
+                            'value': '@entity.result',
+                          },
+                        ],
+                        'type': 'game-hud',
                       },
                       {
-                        'label': 'Territory',
-                        'value': '@entity.territory',
+                        'effects': '@entity.unitEffects',
+                        'label': 'Unit Buffs',
+                        'type': 'status-effect',
                       },
                       {
-                        'label': 'Result',
-                        'value': '@entity.result',
+                        'type': 'damage-number',
+                        'value': 0,
+                        'visible': false,
+                        'x': 0,
+                        'y': 0,
+                      },
+                      {
+                        'action': 'END_TURN',
+                        'icon': 'flag',
+                        'label': 'End Turn',
+                        'type': 'button',
+                        'variant': 'secondary',
                       },
                     ],
-                    'type': 'game-hud',
+                    'direction': 'horizontal',
+                    'gap': 'md',
+                    'justify': 'between',
+                    'type': 'stack',
                   },
                   'type': 'game-shell',
                 },
@@ -4928,30 +5717,68 @@ export function stdUiHexStrategyBoardHexStrategyBoardOrbital(params: StdUiHexStr
                       'assetManifest': '@config.assetManifest',
                       'effects': '@entity.effects',
                       'features': '@config.features',
+                      'miniMap': {
+                        'height': '@entity.gridHeight',
+                        'tiles': '@config.tiles',
+                        'type': 'mini-map',
+                        'units': '@entity.units',
+                        'width': '@entity.gridWidth',
+                      },
                       'projection': 'hex',
                       'scale': '@config.scale',
+                      'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': true,
+                      'tileClickEvent': 'TILE_CLICK',
                       'tiles': '@config.tiles',
                       'type': 'canvas-2d',
+                      'unitClickEvent': 'UNIT_CLICK',
                       'units': '@entity.units',
+                      'validMoves': '@entity.validMoves',
                     },
                   ],
                   'hud': {
-                    'stats': [
+                    'children': [
                       {
-                        'label': 'Turn',
-                        'value': '@entity.turn',
+                        'stats': [
+                          {
+                            'label': 'Turn',
+                            'value': '@entity.turn',
+                          },
+                          {
+                            'label': 'Territory',
+                            'value': '@entity.territory',
+                          },
+                          {
+                            'label': 'Result',
+                            'value': '@entity.result',
+                          },
+                        ],
+                        'type': 'game-hud',
                       },
                       {
-                        'label': 'Territory',
-                        'value': '@entity.territory',
+                        'effects': '@entity.unitEffects',
+                        'label': 'Unit Buffs',
+                        'type': 'status-effect',
                       },
                       {
-                        'label': 'Result',
-                        'value': '@entity.result',
+                        'type': 'damage-number',
+                        'value': 0,
+                        'visible': false,
+                        'x': 0,
+                        'y': 0,
+                      },
+                      {
+                        'action': 'END_TURN',
+                        'icon': 'flag',
+                        'label': 'End Turn',
+                        'type': 'button',
+                        'variant': 'secondary',
                       },
                     ],
-                    'type': 'game-hud',
+                    'direction': 'horizontal',
+                    'gap': 'md',
+                    'justify': 'between',
+                    'type': 'stack',
                   },
                   'type': 'game-shell',
                 },

@@ -67,12 +67,12 @@ export interface StdUiFishingBoardCastPayload {
 export interface StdUiFishingBoardConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
-  /** Default: `{"effects":{"splash":{"animations":["static"],"aspect":"8:1","category":"splash","dimension":"2d","name":"splash","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png"}},"features":{"fish":{"animations":["static"],"aspect":"1:1","category":"fish","dimension":"2d","name":"fish","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png"},"seaweed":{"animations":["static"],"aspect":"1:1","category":"seaweed","dimension":"2d","name":"seaweed","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png"}},"terrains":{"seabed":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"water":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"}},"units":{"boat":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"boat","dimension":"2d","name":"boat","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png"},"hook":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"hook","dimension":"2d","name":"hook","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png"}}}` */
+  /** Default: `{"effects":{"splash":{"animations":["static"],"aspect":"8:1","category":"splash","dimension":"2d","name":"splash","role":"effect","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png","variant":""}},"features":{"fish":{"animations":["static"],"aspect":"1:1","category":"fish","dimension":"2d","name":"fish","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png","variant":""},"seaweed":{"animations":["static"],"aspect":"1:1","category":"seaweed","dimension":"2d","name":"seaweed","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png","variant":""}},"terrains":{"seabed":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"water":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png","variant":""}},"units":{"boat":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"boat","dimension":"2d","name":"boat","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png","variant":""},"hook":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"hook","dimension":"2d","name":"hook","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png","variant":""}}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
   error?: EntityRow;
-  /** Default: `[{"id":"f1","sprite":{"animations":["static"],"aspect":"1:1","category":"seaweed","dimension":"2d","name":"seaweed","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png"},"type":"seaweed","x":0,"y":2},{"id":"f2","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-blue","dimension":"2d","name":"fish-blue","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png"},"type":"fish","x":1,"y":2},{"id":"f3","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-orange","dimension":"2d","name":"fish-orange","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png"},"type":"fish","x":3,"y":2},{"id":"f4","sprite":{"animations":["static"],"aspect":"1:1","category":"seaweed","dimension":"2d","name":"seaweed","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png"},"type":"seaweed","x":4,"y":2},{"id":"f5","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-green","dimension":"2d","name":"fish-green","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png"},"type":"fish","x":0,"y":3},{"id":"f6","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-blue","dimension":"2d","name":"fish-blue","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png"},"type":"fish","x":2,"y":3},{"id":"f7","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-orange","dimension":"2d","name":"fish-orange","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png"},"type":"fish","x":4,"y":3},{"id":"f8","sprite":{"animations":["static"],"aspect":"1:1","category":"seaweed","dimension":"2d","name":"seaweed","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png"},"type":"seaweed","x":1,"y":4},{"id":"f9","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-green","dimension":"2d","name":"fish-green","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png"},"type":"fish","x":2,"y":4},{"id":"f10","sprite":{"animations":["static"],"aspect":"1:1","category":"seaweed","dimension":"2d","name":"seaweed","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png"},"type":"seaweed","x":3,"y":4}]` */
+  /** Default: `[{"id":"f1","sprite":{"animations":["static"],"aspect":"1:1","category":"seaweed","dimension":"2d","name":"seaweed","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png","variant":""},"type":"seaweed","x":0,"y":2},{"id":"f2","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-blue","dimension":"2d","name":"fish-blue","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png","variant":""},"type":"fish","x":1,"y":2},{"id":"f3","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-orange","dimension":"2d","name":"fish-orange","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png","variant":""},"type":"fish","x":3,"y":2},{"id":"f4","sprite":{"animations":["static"],"aspect":"1:1","category":"seaweed","dimension":"2d","name":"seaweed","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png","variant":""},"type":"seaweed","x":4,"y":2},{"id":"f5","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-green","dimension":"2d","name":"fish-green","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png","variant":""},"type":"fish","x":0,"y":3},{"id":"f6","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-blue","dimension":"2d","name":"fish-blue","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png","variant":""},"type":"fish","x":2,"y":3},{"id":"f7","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-orange","dimension":"2d","name":"fish-orange","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png","variant":""},"type":"fish","x":4,"y":3},{"id":"f8","sprite":{"animations":["static"],"aspect":"1:1","category":"seaweed","dimension":"2d","name":"seaweed","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png","variant":""},"type":"seaweed","x":1,"y":4},{"id":"f9","sprite":{"animations":["static"],"aspect":"1:1","category":"fish-green","dimension":"2d","name":"fish-green","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png","variant":""},"type":"fish","x":2,"y":4},{"id":"f10","sprite":{"animations":["static"],"aspect":"1:1","category":"seaweed","dimension":"2d","name":"seaweed","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png","variant":""},"type":"seaweed","x":3,"y":4}]` */
   features?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
@@ -90,11 +90,11 @@ export interface StdUiFishingBoardConfig {
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `[{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"},"x":0,"y":0},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"},"x":1,"y":0},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"},"x":2,"y":0},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"},"x":3,"y":0},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"},"x":4,"y":0},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"},"x":0,"y":1},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"},"x":1,"y":1},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"},"x":2,"y":1},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"},"x":3,"y":1},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png"},"x":4,"y":1},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":0,"y":2},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":1,"y":2},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":2,"y":2},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":3,"y":2},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":4,"y":2},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":0,"y":3},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":1,"y":3},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":2,"y":3},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":3,"y":3},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":4,"y":3},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":0,"y":4},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":1,"y":4},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":2,"y":4},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":3,"y":4},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png"},"x":4,"y":4}]` */
+  /** Default: `[{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png","variant":""},"x":0,"y":0},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png","variant":""},"x":1,"y":0},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png","variant":""},"x":2,"y":0},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png","variant":""},"x":3,"y":0},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png","variant":""},"x":4,"y":0},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png","variant":""},"x":0,"y":1},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png","variant":""},"x":1,"y":1},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png","variant":""},"x":2,"y":1},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png","variant":""},"x":3,"y":1},{"passable":true,"terrain":"water","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"water","dimension":"2d","name":"water","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png","variant":""},"x":4,"y":1},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":0,"y":2},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":1,"y":2},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":2,"y":2},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":3,"y":2},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":4,"y":2},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":0,"y":3},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":1,"y":3},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":2,"y":3},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":3,"y":3},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":4,"y":3},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":0,"y":4},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":1,"y":4},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":2,"y":4},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":3,"y":4},{"passable":true,"terrain":"seabed","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"seabed","dimension":"2d","name":"seabed","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png","variant":""},"x":4,"y":4}]` */
   tiles?: EntityRow[];
   /** Default: `0` */
   totalCount?: number;
-  /** Default: `[{"animation":"idle","frame":0,"health":10,"id":"u1","maxHealth":10,"name":"Fishing Boat","position":{"x":2,"y":0},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"boat","dimension":"2d","name":"boat","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png"},"team":"player","unitType":"boat"},{"animation":"idle","frame":0,"health":10,"id":"u2","maxHealth":10,"name":"Hook","position":{"x":2,"y":2},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"hook","dimension":"2d","name":"hook","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png"},"team":"player","unitType":"hook"}]` */
+  /** Default: `[{"animation":"idle","frame":0,"health":10,"id":"u1","maxHealth":10,"name":"Fishing Boat","position":{"x":2,"y":0},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"boat","dimension":"2d","name":"boat","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png","variant":""},"team":"player","unitType":"boat"},{"animation":"idle","frame":0,"health":10,"id":"u2","maxHealth":10,"name":"Hook","position":{"x":2,"y":2},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"hook","dimension":"2d","name":"hook","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png","variant":""},"team":"player","unitType":"hook"}]` */
   units?: EntityRow[];
 }
 
@@ -258,6 +258,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -352,6 +357,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -404,6 +414,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -481,6 +496,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
             'type': 'array',
           },
           {
+            'default': '',
+            'name': 'selectedUnitId',
+            'type': 'string',
+          },
+          {
             'default': 0,
             'name': 'catchCount',
             'type': 'number',
@@ -553,6 +573,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png',
+                  'variant': '',
                 },
               },
               'features': {
@@ -568,6 +589,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png',
+                  'variant': '',
                 },
                 'seaweed': {
                   'animations': [
@@ -581,6 +603,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png',
+                  'variant': '',
                 },
               },
               'terrains': {
@@ -596,6 +619,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'water': {
                   'animations': [
@@ -609,6 +633,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png',
+                  'variant': '',
                 },
               },
               'units': {
@@ -628,6 +653,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png',
+                  'variant': '',
                 },
                 'hook': {
                   'animations': [
@@ -645,6 +671,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png',
+                  'variant': '',
                 },
               },
             },
@@ -699,6 +726,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -760,6 +792,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'type': 'object',
                 },
@@ -818,6 +855,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'type': 'object',
                 },
@@ -873,6 +915,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -938,6 +985,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png',
+                  'variant': '',
                 },
                 'type': 'seaweed',
                 'x': 0,
@@ -957,6 +1005,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png',
+                  'variant': '',
                 },
                 'type': 'fish',
                 'x': 1,
@@ -976,6 +1025,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png',
+                  'variant': '',
                 },
                 'type': 'fish',
                 'x': 3,
@@ -995,6 +1045,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png',
+                  'variant': '',
                 },
                 'type': 'seaweed',
                 'x': 4,
@@ -1014,6 +1065,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png',
+                  'variant': '',
                 },
                 'type': 'fish',
                 'x': 0,
@@ -1033,6 +1085,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-blue.png',
+                  'variant': '',
                 },
                 'type': 'fish',
                 'x': 2,
@@ -1052,6 +1105,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-orange.png',
+                  'variant': '',
                 },
                 'type': 'fish',
                 'x': 4,
@@ -1071,6 +1125,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png',
+                  'variant': '',
                 },
                 'type': 'seaweed',
                 'x': 1,
@@ -1090,6 +1145,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/fish-green.png',
+                  'variant': '',
                 },
                 'type': 'fish',
                 'x': 2,
@@ -1109,6 +1165,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/features/seaweed.png',
+                  'variant': '',
                 },
                 'type': 'seaweed',
                 'x': 3,
@@ -1166,6 +1223,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -1236,6 +1298,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -1351,6 +1418,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 0,
@@ -1370,6 +1438,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 0,
@@ -1389,6 +1458,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 0,
@@ -1408,6 +1478,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 0,
@@ -1427,6 +1498,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 0,
@@ -1446,6 +1518,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 1,
@@ -1465,6 +1538,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 1,
@@ -1484,6 +1558,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 1,
@@ -1503,6 +1578,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 1,
@@ -1522,6 +1598,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/water.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 1,
@@ -1541,6 +1618,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 2,
@@ -1560,6 +1638,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 2,
@@ -1579,6 +1658,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 2,
@@ -1598,6 +1678,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 2,
@@ -1617,6 +1698,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 2,
@@ -1636,6 +1718,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 3,
@@ -1655,6 +1738,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 3,
@@ -1674,6 +1758,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 3,
@@ -1693,6 +1778,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 3,
@@ -1712,6 +1798,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 3,
@@ -1731,6 +1818,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 4,
@@ -1750,6 +1838,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 4,
@@ -1769,6 +1858,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 4,
@@ -1788,6 +1878,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 4,
@@ -1807,6 +1898,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/terrain/seabed.png',
+                  'variant': '',
                 },
                 'x': 4,
                 'y': 4,
@@ -1873,6 +1965,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -1943,6 +2040,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -2018,6 +2120,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/boat.png',
+                  'variant': '',
                 },
                 'team': 'player',
                 'unitType': 'boat',
@@ -2049,6 +2152,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-fishing-board/default/units/hook.png',
+                  'variant': '',
                 },
                 'team': 'player',
                 'unitType': 'hook',
@@ -2153,6 +2257,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -2247,6 +2356,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -2299,6 +2413,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -2394,7 +2513,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
@@ -2407,7 +2526,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits when a cast action is triggered',
@@ -2438,7 +2557,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -2446,6 +2565,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
             'catchCount',
             'effects',
             'score',
+            'selectedUnitId',
             'units',
           ],
           'requires': [],
@@ -2476,7 +2596,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
@@ -2489,7 +2609,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits when a cast action is triggered',
@@ -2520,7 +2640,7 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -2536,6 +2656,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                   'set',
                   '@entity.units',
                   '@config.units',
+                ],
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
                 ],
                 [
                   'set',
@@ -2563,24 +2688,42 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                         'features': '@config.features',
                         'projection': 'flat',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': [],
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Catch',
-                          'value': '@entity.catchCount',
+                          'stats': [
+                            {
+                              'label': 'Catch',
+                              'value': '@entity.catchCount',
+                            },
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Score',
-                          'value': '@entity.score',
+                          'action': 'CAST',
+                          'icon': 'anchor',
+                          'label': 'Cast',
+                          'type': 'action-button',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2603,24 +2746,42 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                         'features': '@config.features',
                         'projection': 'flat',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': [],
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Catch',
-                          'value': '@entity.catchCount',
+                          'stats': [
+                            {
+                              'label': 'Catch',
+                              'value': '@entity.catchCount',
+                            },
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Score',
-                          'value': '@entity.score',
+                          'action': 'CAST',
+                          'icon': 'anchor',
+                          'label': 'Cast',
+                          'type': 'action-button',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2633,6 +2794,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
             {
               'effects': [
                 [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '@payload.unitId',
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -2643,24 +2809,42 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                         'features': '@config.features',
                         'projection': 'flat',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': [],
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Catch',
-                          'value': '@entity.catchCount',
+                          'stats': [
+                            {
+                              'label': 'Catch',
+                              'value': '@entity.catchCount',
+                            },
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Score',
-                          'value': '@entity.score',
+                          'action': 'CAST',
+                          'icon': 'anchor',
+                          'label': 'Cast',
+                          'type': 'action-button',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2672,6 +2856,11 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
             },
             {
               'effects': [
+                [
+                  'set',
+                  '@entity.selectedUnitId',
+                  '',
+                ],
                 [
                   'set',
                   '@entity.units',
@@ -2770,24 +2959,42 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                         'features': '@config.features',
                         'projection': 'flat',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedUnitId',
                         'showMinimap': false,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.units',
+                        'validMoves': [],
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Catch',
-                          'value': '@entity.catchCount',
+                          'stats': [
+                            {
+                              'label': 'Catch',
+                              'value': '@entity.catchCount',
+                            },
+                            {
+                              'label': 'Score',
+                              'value': '@entity.score',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Score',
-                          'value': '@entity.score',
+                          'action': 'CAST',
+                          'icon': 'anchor',
+                          'label': 'Cast',
+                          'type': 'action-button',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2887,24 +3094,42 @@ export function stdUiFishingBoardFishingBoardOrbital(params: StdUiFishingBoardFi
                       'features': '@config.features',
                       'projection': 'flat',
                       'scale': '@config.scale',
+                      'selectedUnitId': '@entity.selectedUnitId',
                       'showMinimap': false,
+                      'tileClickEvent': 'TILE_CLICK',
                       'tiles': '@config.tiles',
                       'type': 'canvas-2d',
+                      'unitClickEvent': 'UNIT_CLICK',
                       'units': '@entity.units',
+                      'validMoves': [],
                     },
                   ],
                   'hud': {
-                    'stats': [
+                    'children': [
                       {
-                        'label': 'Catch',
-                        'value': '@entity.catchCount',
+                        'stats': [
+                          {
+                            'label': 'Catch',
+                            'value': '@entity.catchCount',
+                          },
+                          {
+                            'label': 'Score',
+                            'value': '@entity.score',
+                          },
+                        ],
+                        'type': 'game-hud',
                       },
                       {
-                        'label': 'Score',
-                        'value': '@entity.score',
+                        'action': 'CAST',
+                        'icon': 'anchor',
+                        'label': 'Cast',
+                        'type': 'action-button',
                       },
                     ],
-                    'type': 'game-hud',
+                    'direction': 'horizontal',
+                    'gap': 'md',
+                    'justify': 'between',
+                    'type': 'stack',
                   },
                   'type': 'game-shell',
                 },

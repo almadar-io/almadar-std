@@ -61,7 +61,7 @@ export interface StdUiVisualNovelBoardRestartPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiVisualNovelBoardConfig {
-  /** Default: `{"animations":["static"],"aspect":"16:9","category":"corridor","dimension":"2d","name":"corridor","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"}` */
+  /** Default: `{"animations":["static"],"aspect":"16:9","category":"corridor","dimension":"2d","name":"corridor","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png","variant":""}` */
   backgroundImage?: EntityRow;
   /** Default: `""` */
   className?: string;
@@ -72,7 +72,7 @@ export interface StdUiVisualNovelBoardConfig {
   nodes?: EntityRow[];
   /** Default: `1` */
   portraitScale?: number;
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"guide","dimension":"2d","name":"guide","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png"}` */
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"guide","dimension":"2d","name":"guide","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png","variant":""}` */
   portraitUrl?: EntityRow;
   /** Default: `"start"` */
   startNodeId?: string;
@@ -200,6 +200,36 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
             'name': 'currentNodeId',
             'type': 'string',
           },
+          {
+            'default': '',
+            'name': 'currentSpeaker',
+            'type': 'string',
+          },
+          {
+            'default': '',
+            'name': 'currentText',
+            'type': 'string',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'label': {
+                  'name': 'label',
+                  'required': true,
+                  'type': 'string',
+                },
+                'nextId': {
+                  'name': 'nextId',
+                  'required': true,
+                  'type': 'string',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'currentChoices',
+            'type': 'array',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -224,6 +254,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               'style': '',
               'thumbnailUrl': '',
               'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png',
+              'variant': '',
             },
             'description': 'Full-frame scene background rendered behind the dialogue box.',
             'label': 'Background Image',
@@ -273,6 +304,11 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               },
               'url': {
                 'name': 'url',
+                'required': false,
+                'type': 'string',
+              },
+              'variant': {
+                'name': 'variant',
                 'required': false,
                 'type': 'string',
               },
@@ -460,6 +496,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               'style': '',
               'thumbnailUrl': '',
               'url': 'https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png',
+              'variant': '',
             },
             'description': 'Large character portrait rendered standing over the scene.',
             'label': 'Portrait Url',
@@ -512,6 +549,11 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                 'required': false,
                 'type': 'string',
               },
+              'variant': {
+                'name': 'variant',
+                'required': false,
+                'type': 'string',
+              },
             },
             'tier': 'presentation',
             'type': 'Asset',
@@ -548,7 +590,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{advanceEvent} with {} to advance to the next node',
@@ -560,7 +602,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{restartEvent} with {} to reset the scene to the start node',
@@ -572,12 +614,15 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
           'provides': [
+            'currentChoices',
             'currentNodeId',
+            'currentSpeaker',
+            'currentText',
             'nodes',
           ],
           'requires': [],
@@ -608,7 +653,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{advanceEvent} with {} to advance to the next node',
@@ -620,7 +665,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{restartEvent} with {} to reset the scene to the start node',
@@ -632,7 +677,7 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -655,12 +700,94 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   '@config.startNodeId',
                 ],
                 [
+                  'set',
+                  '@entity.currentSpeaker',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      [
+                        'array/filter',
+                        '@entity.nodes',
+                        [
+                          'fn',
+                          'n',
+                          [
+                            '==',
+                            '@n.id',
+                            '@entity.currentNodeId',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'speaker',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentText',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      [
+                        'array/filter',
+                        '@entity.nodes',
+                        [
+                          'fn',
+                          'n',
+                          [
+                            '==',
+                            '@n.id',
+                            '@entity.currentNodeId',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'text',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentChoices',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      [
+                        'array/filter',
+                        '@entity.nodes',
+                        [
+                          'fn',
+                          'n',
+                          [
+                            '==',
+                            '@n.id',
+                            '@entity.currentNodeId',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'choices',
+                  ],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
                     'advanceEvent': 'ADVANCE',
+                    'choiceButton': {
+                      'choices': '@entity.currentChoices',
+                      'chooseEvent': 'CHOOSE',
+                      'type': 'choice-button',
+                    },
                     'chooseEvent': 'CHOOSE',
                     'currentNodeId': '@entity.currentNodeId',
+                    'dialogueBubble': {
+                      'speaker': '@entity.currentSpeaker',
+                      'text': '@entity.currentText',
+                      'type': 'dialogue-bubble',
+                    },
                     'nodes': '@entity.nodes',
                     'portraitScale': '@config.portraitScale',
                     'restartEvent': 'RESTART',
@@ -681,12 +808,94 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   '@payload.nextId',
                 ],
                 [
+                  'set',
+                  '@entity.currentSpeaker',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      [
+                        'array/filter',
+                        '@entity.nodes',
+                        [
+                          'fn',
+                          'n',
+                          [
+                            '==',
+                            '@n.id',
+                            '@entity.currentNodeId',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'speaker',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentText',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      [
+                        'array/filter',
+                        '@entity.nodes',
+                        [
+                          'fn',
+                          'n',
+                          [
+                            '==',
+                            '@n.id',
+                            '@entity.currentNodeId',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'text',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentChoices',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      [
+                        'array/filter',
+                        '@entity.nodes',
+                        [
+                          'fn',
+                          'n',
+                          [
+                            '==',
+                            '@n.id',
+                            '@entity.currentNodeId',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'choices',
+                  ],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
                     'advanceEvent': 'ADVANCE',
+                    'choiceButton': {
+                      'choices': '@entity.currentChoices',
+                      'chooseEvent': 'CHOOSE',
+                      'type': 'choice-button',
+                    },
                     'chooseEvent': 'CHOOSE',
                     'currentNodeId': '@entity.currentNodeId',
+                    'dialogueBubble': {
+                      'speaker': '@entity.currentSpeaker',
+                      'text': '@entity.currentText',
+                      'type': 'dialogue-bubble',
+                    },
                     'nodes': '@entity.nodes',
                     'portraitScale': '@config.portraitScale',
                     'restartEvent': 'RESTART',
@@ -706,8 +915,18 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   'main',
                   {
                     'advanceEvent': 'ADVANCE',
+                    'choiceButton': {
+                      'choices': '@entity.currentChoices',
+                      'chooseEvent': 'CHOOSE',
+                      'type': 'choice-button',
+                    },
                     'chooseEvent': 'CHOOSE',
                     'currentNodeId': '@entity.currentNodeId',
+                    'dialogueBubble': {
+                      'speaker': '@entity.currentSpeaker',
+                      'text': '@entity.currentText',
+                      'type': 'dialogue-bubble',
+                    },
                     'nodes': '@entity.nodes',
                     'portraitScale': '@config.portraitScale',
                     'restartEvent': 'RESTART',
@@ -728,12 +947,94 @@ export function stdUiVisualNovelBoardVisualNovelBoardOrbital(params: StdUiVisual
                   '@config.startNodeId',
                 ],
                 [
+                  'set',
+                  '@entity.currentSpeaker',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      [
+                        'array/filter',
+                        '@entity.nodes',
+                        [
+                          'fn',
+                          'n',
+                          [
+                            '==',
+                            '@n.id',
+                            '@entity.currentNodeId',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'speaker',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentText',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      [
+                        'array/filter',
+                        '@entity.nodes',
+                        [
+                          'fn',
+                          'n',
+                          [
+                            '==',
+                            '@n.id',
+                            '@entity.currentNodeId',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'text',
+                  ],
+                ],
+                [
+                  'set',
+                  '@entity.currentChoices',
+                  [
+                    'object/get',
+                    [
+                      'array/first',
+                      [
+                        'array/filter',
+                        '@entity.nodes',
+                        [
+                          'fn',
+                          'n',
+                          [
+                            '==',
+                            '@n.id',
+                            '@entity.currentNodeId',
+                          ],
+                        ],
+                      ],
+                    ],
+                    'choices',
+                  ],
+                ],
+                [
                   'render-ui',
                   'main',
                   {
                     'advanceEvent': 'ADVANCE',
+                    'choiceButton': {
+                      'choices': '@entity.currentChoices',
+                      'chooseEvent': 'CHOOSE',
+                      'type': 'choice-button',
+                    },
                     'chooseEvent': 'CHOOSE',
                     'currentNodeId': '@entity.currentNodeId',
+                    'dialogueBubble': {
+                      'speaker': '@entity.currentSpeaker',
+                      'text': '@entity.currentText',
+                      'type': 'dialogue-bubble',
+                    },
                     'nodes': '@entity.nodes',
                     'portraitScale': '@config.portraitScale',
                     'restartEvent': 'RESTART',

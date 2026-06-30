@@ -14,6 +14,16 @@
             "required": false
           },
           {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "score",
             "type": "number",
             "required": false
@@ -46,7 +56,9 @@
           "SHOOT",
           "PLAYER_HIT",
           "GAME_END",
-          "PLAY_AGAIN"
+          "PLAY_AGAIN",
+          "PAUSE",
+          "RESUME"
         ],
         "listenedEvents": [],
         "events": [
@@ -54,37 +66,49 @@
             "name": "TILE_CLICK",
             "direction": "emit",
             "description": "Fires on tile click with grid coordinates",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "UNIT_CLICK",
             "direction": "emit",
             "description": "Fires on unit click with unit id",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "SHOOT",
             "direction": "emit",
             "description": "Player fires at an enemy unit",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "PLAYER_HIT",
             "direction": "emit",
             "description": "Player ship takes a hit",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "GAME_END",
             "direction": "emit",
             "description": "Fires when all enemies are destroyed or lives reach zero",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "PLAY_AGAIN",
             "direction": "emit",
             "description": "Reset and restart the game",
-            "tier": "essential"
+            "tier": "domain"
+          },
+          {
+            "name": "PAUSE",
+            "direction": "emit",
+            "description": "Pause the game and show the pause menu",
+            "tier": "domain"
+          },
+          {
+            "name": "RESUME",
+            "direction": "emit",
+            "description": "Resume play from the pause menu",
+            "tier": "domain"
           },
           {
             "name": "START",
@@ -96,14 +120,6 @@
           }
         ],
         "overridableConfigKeys": [
-          {
-            "key": "activeFilters",
-            "type": "json",
-            "default": {},
-            "label": "Active Filters",
-            "description": "Active filters",
-            "tier": "presentation"
-          },
           {
             "key": "assetManifest",
             "type": "SpaceShmupBoardAssetManifest",
@@ -118,9 +134,10 @@
                   "dimension": "2d",
                   "name": "explosion",
                   "role": "effect",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png",
+                  "variant": ""
                 }
               },
               "features": {},
@@ -134,9 +151,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 }
               },
               "units": {
@@ -153,9 +171,10 @@
                   "dimension": "2d",
                   "name": "enemy",
                   "role": "npc",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png",
+                  "variant": ""
                 },
                 "ship": {
                   "animations": [
@@ -170,9 +189,10 @@
                   "dimension": "2d",
                   "name": "ship",
                   "role": "npc",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png",
+                  "variant": ""
                 }
               }
             },
@@ -233,6 +253,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -289,6 +314,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -349,6 +379,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -405,6 +440,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -511,6 +551,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -581,6 +626,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -618,68 +668,12 @@
             "tier": "presentation"
           },
           {
-            "key": "pageProp",
-            "type": "number",
-            "default": 0,
-            "label": "Page",
-            "description": "Current page number",
-            "synonyms": "page",
-            "tier": "presentation"
-          },
-          {
-            "key": "pageSize",
-            "type": "number",
-            "default": 0,
-            "label": "Page Size",
-            "description": "Number of items per page",
-            "tier": "presentation"
-          },
-          {
             "key": "scale",
             "type": "number",
             "default": 0.45,
             "label": "Scale",
             "description": "Render scale",
             "tier": "presentation"
-          },
-          {
-            "key": "searchValue",
-            "type": "string",
-            "default": "Search Value",
-            "label": "Search Value",
-            "description": "Current search query value",
-            "tier": "presentation"
-          },
-          {
-            "key": "selectedIds",
-            "type": "[string]",
-            "default": [],
-            "label": "Selected Ids",
-            "description": "Currently selected item IDs",
-            "tier": "presentation",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
-            "key": "sortBy",
-            "type": "string",
-            "default": "Sort By",
-            "label": "Sort By",
-            "description": "Current sort field",
-            "tier": "presentation"
-          },
-          {
-            "key": "sortDirection",
-            "type": "string",
-            "default": "asc",
-            "label": "Sort Direction",
-            "description": "Current sort direction",
-            "tier": "presentation",
-            "enumValues": [
-              "asc",
-              "desc"
-            ]
           },
           {
             "key": "tiles",
@@ -697,9 +691,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 0
@@ -716,9 +711,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 0
@@ -735,9 +731,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 0
@@ -754,9 +751,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 0
@@ -773,9 +771,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 0
@@ -792,9 +791,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 0
@@ -811,9 +811,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 1
@@ -830,9 +831,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 1
@@ -849,9 +851,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 1
@@ -868,9 +871,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 1
@@ -887,9 +891,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 1
@@ -906,9 +911,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 1
@@ -925,9 +931,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 2
@@ -944,9 +951,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 2
@@ -963,9 +971,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 2
@@ -982,9 +991,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 2
@@ -1001,9 +1011,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 2
@@ -1020,9 +1031,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 2
@@ -1039,9 +1051,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 3
@@ -1058,9 +1071,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 3
@@ -1077,9 +1091,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 3
@@ -1096,9 +1111,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 3
@@ -1115,9 +1131,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 3
@@ -1134,9 +1151,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 3
@@ -1153,9 +1171,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 4
@@ -1172,9 +1191,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 4
@@ -1191,9 +1211,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 4
@@ -1210,9 +1231,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 4
@@ -1229,9 +1251,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 4
@@ -1248,9 +1271,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 4
@@ -1267,9 +1291,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 5
@@ -1286,9 +1311,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 5
@@ -1305,9 +1331,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 5
@@ -1324,9 +1351,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 5
@@ -1343,9 +1371,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 5
@@ -1362,9 +1391,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 5
@@ -1381,9 +1411,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 6
@@ -1400,9 +1431,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 6
@@ -1419,9 +1451,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 6
@@ -1438,9 +1471,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 6
@@ -1457,9 +1491,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 6
@@ -1476,9 +1511,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 6
@@ -1495,9 +1531,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 7
@@ -1514,9 +1551,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 7
@@ -1533,9 +1571,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 7
@@ -1552,9 +1591,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 7
@@ -1571,9 +1611,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 7
@@ -1590,9 +1631,10 @@
                   "dimension": "2d",
                   "name": "space",
                   "role": "tile",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/terrain/space.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 7
@@ -1662,6 +1704,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -1734,6 +1781,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -1768,14 +1820,6 @@
             }
           },
           {
-            "key": "totalCount",
-            "type": "number",
-            "default": 0,
-            "label": "Total Count",
-            "description": "Total number of items",
-            "tier": "presentation"
-          },
-          {
             "key": "units",
             "type": "[SpaceShmupBoardUnitsItem]",
             "default": [
@@ -1803,9 +1847,10 @@
                   "dimension": "2d",
                   "name": "enemy",
                   "role": "npc",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png",
+                  "variant": ""
                 },
                 "team": "enemy",
                 "unitType": "ship"
@@ -1834,9 +1879,10 @@
                   "dimension": "2d",
                   "name": "enemy",
                   "role": "npc",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png",
+                  "variant": ""
                 },
                 "team": "enemy",
                 "unitType": "ship"
@@ -1865,9 +1911,10 @@
                   "dimension": "2d",
                   "name": "enemy",
                   "role": "npc",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png",
+                  "variant": ""
                 },
                 "team": "enemy",
                 "unitType": "ship"
@@ -1896,9 +1943,10 @@
                   "dimension": "2d",
                   "name": "enemy",
                   "role": "npc",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/enemy.png",
+                  "variant": ""
                 },
                 "team": "enemy",
                 "unitType": "ship"
@@ -1927,9 +1975,10 @@
                   "dimension": "2d",
                   "name": "ship",
                   "role": "npc",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-space-shmup-board/default/units/ship.png",
+                  "variant": ""
                 },
                 "team": "player",
                 "unitType": "ship"
@@ -2036,6 +2085,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -2130,6 +2184,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -2183,6 +2242,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -2266,7 +2330,9 @@
             "lives",
             "result",
             "score",
-            "units"
+            "selectedUnitId",
+            "units",
+            "validMoves"
           ]
         }
       }
@@ -2280,8 +2346,10 @@
     ],
     "emittedEvents": [
       "GAME_END",
+      "PAUSE",
       "PLAYER_HIT",
       "PLAY_AGAIN",
+      "RESUME",
       "SHOOT",
       "TILE_CLICK",
       "UNIT_CLICK"

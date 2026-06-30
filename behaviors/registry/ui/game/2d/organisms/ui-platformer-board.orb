@@ -1,5 +1,5 @@
 {
-  "description": "PlatformerBoard — game-shell composition with HUD (Score/Lives) over canvas-2d; animTick advances frame and ages effects.",
+  "description": "PlatformerBoard — game-shell with keyboard input (LEFT/RIGHT/JUMP/STOP) and physics tick; HUD shows Score/Lives with PLAY_AGAIN control.",
   "name": "ui-platformer-board",
   "orbitals": [
     {
@@ -147,6 +147,71 @@
             },
             "name": "effects",
             "type": "array"
+          },
+          {
+            "default": "",
+            "name": "selectedUnitId",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "animation": {
+                  "name": "animation",
+                  "required": false,
+                  "type": "string"
+                },
+                "facingRight": {
+                  "name": "facingRight",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "frame": {
+                  "name": "frame",
+                  "required": false,
+                  "type": "number"
+                },
+                "grounded": {
+                  "name": "grounded",
+                  "required": false,
+                  "type": "boolean"
+                },
+                "height": {
+                  "name": "height",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "width": {
+                  "name": "width",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "validMoves",
+            "type": "array"
           }
         ],
         "name": "PlatformerBoardItem",
@@ -220,6 +285,11 @@
                   "name": "url",
                   "required": false,
                   "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "tier": "presentation",
@@ -235,9 +305,10 @@
                 "dimension": "2d",
                 "name": "ground",
                 "role": "decoration",
-                "style": "",
+                "style": "pixel",
                 "thumbnailUrl": "",
-                "url": "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png"
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png",
+                "variant": ""
               },
               "description": "Background image URL",
               "label": "Background Image",
@@ -287,6 +358,11 @@
                 },
                 "url": {
                   "name": "url",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
@@ -495,6 +571,11 @@
                   "name": "url",
                   "required": false,
                   "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "tier": "presentation",
@@ -557,6 +638,11 @@
                     "name": "url",
                     "required": false,
                     "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -581,6 +667,37 @@
             }
           },
           "emits": [
+            {
+              "description": "Tile click passthrough — platformer is keyboard-driven; click coordinates for jump target",
+              "event": "TILE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Unit click passthrough",
+              "event": "UNIT_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
             {
               "description": "Emitted when result becomes won or lost",
               "event": "GAME_END",
@@ -666,6 +783,8 @@
               "player",
               "result",
               "score",
+              "selectedUnitId",
+              "validMoves",
               "worldHeight",
               "worldWidth"
             ],
@@ -726,6 +845,37 @@
                 "payloadSchema": [
                   {
                     "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Tile click passthrough — platformer is keyboard-driven; click coordinates for jump target",
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Unit click passthrough",
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
                     "type": "string"
                   }
                 ],
@@ -829,6 +979,16 @@
                     "@config.worldHeight"
                   ],
                   [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
@@ -844,24 +1004,55 @@
                           "player": "@entity.player",
                           "playerSprite": "@config.playerSprite",
                           "projection": "side",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
                           "tileSprites": "@config.tileSprites",
                           "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "validMoves": "@entity.validMoves",
                           "worldHeight": "@entity.worldHeight",
                           "worldWidth": "@entity.worldWidth"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
                           {
                             "label": "Score",
+                            "type": "score-display",
                             "value": "@entity.score"
                           },
                           {
-                            "label": "Lives",
-                            "value": "@entity.lives"
+                            "downAction": "STOP",
+                            "leftAction": "LEFT",
+                            "rightAction": "RIGHT",
+                            "type": "d-pad",
+                            "upAction": "JUMP"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "icon": "refresh",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -987,6 +1178,40 @@
                 "to": "playing"
               },
               {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ]
+                ],
+                "event": "TILE_CLICK",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    "@payload.unitId"
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
                 "event": "GAME_END",
                 "from": "playing",
                 "guard": [
@@ -1059,24 +1284,55 @@
                           "player": "@entity.player",
                           "playerSprite": "@config.playerSprite",
                           "projection": "side",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
                           "tileSprites": "@config.tileSprites",
                           "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "validMoves": "@entity.validMoves",
                           "worldHeight": "@entity.worldHeight",
                           "worldWidth": "@entity.worldWidth"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
                           {
                             "label": "Score",
+                            "type": "score-display",
                             "value": "@entity.score"
                           },
                           {
-                            "label": "Lives",
-                            "value": "@entity.lives"
+                            "downAction": "STOP",
+                            "leftAction": "LEFT",
+                            "rightAction": "RIGHT",
+                            "type": "d-pad",
+                            "upAction": "JUMP"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "icon": "refresh",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -1145,24 +1401,55 @@
                           "player": "@entity.player",
                           "playerSprite": "@config.playerSprite",
                           "projection": "side",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
                           "tileSprites": "@config.tileSprites",
                           "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "validMoves": "@entity.validMoves",
                           "worldHeight": "@entity.worldHeight",
                           "worldWidth": "@entity.worldWidth"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
                           {
                             "label": "Score",
+                            "type": "score-display",
                             "value": "@entity.score"
                           },
                           {
-                            "label": "Lives",
-                            "value": "@entity.lives"
+                            "downAction": "STOP",
+                            "leftAction": "LEFT",
+                            "rightAction": "RIGHT",
+                            "type": "d-pad",
+                            "upAction": "JUMP"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "icon": "refresh",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -1259,24 +1546,55 @@
                         "player": "@entity.player",
                         "playerSprite": "@config.playerSprite",
                         "projection": "side",
+                        "selectedUnitId": "@entity.selectedUnitId",
+                        "tileClickEvent": "TILE_CLICK",
                         "tileSprites": "@config.tileSprites",
                         "type": "canvas-2d",
+                        "unitClickEvent": "UNIT_CLICK",
+                        "validMoves": "@entity.validMoves",
                         "worldHeight": "@entity.worldHeight",
                         "worldWidth": "@entity.worldWidth"
                       }
                     ],
                     "hud": {
-                      "stats": [
+                      "children": [
+                        {
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": "@entity.score"
+                            },
+                            {
+                              "label": "Lives",
+                              "value": "@entity.lives"
+                            }
+                          ],
+                          "type": "game-hud"
+                        },
                         {
                           "label": "Score",
+                          "type": "score-display",
                           "value": "@entity.score"
                         },
                         {
-                          "label": "Lives",
-                          "value": "@entity.lives"
+                          "downAction": "STOP",
+                          "leftAction": "LEFT",
+                          "rightAction": "RIGHT",
+                          "type": "d-pad",
+                          "upAction": "JUMP"
+                        },
+                        {
+                          "action": "PLAY_AGAIN",
+                          "icon": "refresh",
+                          "label": "Restart",
+                          "type": "button",
+                          "variant": "secondary"
                         }
                       ],
-                      "type": "game-hud"
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
                     },
                     "type": "game-shell"
                   }
@@ -1739,24 +2057,48 @@
                                                   "player": "@entity.player",
                                                   "playerSprite": "@config.playerSprite",
                                                   "projection": "side",
+                                                  "selectedUnitId": "@entity.selectedUnitId",
+                                                  "tileClickEvent": "TILE_CLICK",
                                                   "tileSprites": "@config.tileSprites",
                                                   "type": "canvas-2d",
+                                                  "unitClickEvent": "UNIT_CLICK",
+                                                  "validMoves": "@entity.validMoves",
                                                   "worldHeight": "@entity.worldHeight",
                                                   "worldWidth": "@entity.worldWidth"
                                                 }
                                               ],
                                               "hud": {
-                                                "stats": [
+                                                "children": [
+                                                  {
+                                                    "stats": [
+                                                      {
+                                                        "label": "Score",
+                                                        "value": "@entity.score"
+                                                      },
+                                                      {
+                                                        "label": "Lives",
+                                                        "value": "@entity.lives"
+                                                      }
+                                                    ],
+                                                    "type": "game-hud"
+                                                  },
                                                   {
                                                     "label": "Score",
+                                                    "type": "score-display",
                                                     "value": "@entity.score"
                                                   },
                                                   {
-                                                    "label": "Lives",
-                                                    "value": "@entity.lives"
+                                                    "action": "PLAY_AGAIN",
+                                                    "icon": "refresh",
+                                                    "label": "Restart",
+                                                    "type": "button",
+                                                    "variant": "secondary"
                                                   }
                                                 ],
-                                                "type": "game-hud"
+                                                "direction": "horizontal",
+                                                "gap": "md",
+                                                "justify": "between",
+                                                "type": "stack"
                                               },
                                               "type": "game-shell"
                                             }

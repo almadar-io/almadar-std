@@ -1,0 +1,47 @@
+app std-anim-tick "1.0.0"
+"std-anim-tick — sprite/effects animation clock atom. Advances every unit's frame (mod frameCount) and ages @entity.effects (decrement ttl, drop expired) every tick. Boards compose it via `uses` + a sibling trait-ref rebound (linkedEntity) to a board entity that carries `units` + `effects`, replacing the inlined animTick that was duplicated across 8+ game boards."
+orbital AnimTickOrbital {
+  type AnimTickUnit = {
+    id : string!
+    frame : number
+    animation : string
+  }
+  type AnimTickEffect = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
+  }
+
+  entity AnimTickItem [runtime] {
+    id : string!
+    units : [AnimTickUnit] = []
+    effects : [AnimTickEffect] = []
+  }
+
+  trait AnimTick -> @rebindable AnimTickItem [game-core, instance] {
+    initial: running
+
+    state running {
+      INIT -> running
+        (set @entity.units @entity.units)
+        (set @entity.effects @entity.effects)
+    }
+
+    ticks {
+      animTick every 100ms
+        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) @config.frameCount) }))))
+        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+    }
+
+    config {
+      frameCount : number = 8
+        @label "Frame count"
+        @description "Number of sprite frames a unit cycles through before the animation loops."
+        @synonyms "frames, sheet length, animation length"
+        @tier "domain"
+    }
+  }
+
+  page "/anim-tick" as AnimTickPage -> AnimTick
+}

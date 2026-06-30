@@ -1,5 +1,5 @@
 {
-  "description": "SportsBoard — game-shell composition with sprite animation and score HUD.",
+  "description": "SportsBoard — top-down soccer/sports game: select units, move them to tiles, score goals. game-shell + canvas-2d with live input wiring (TILE_CLICK/UNIT_CLICK + selectedUnitId/validMoves) and a RESET HUD control.",
   "name": "ui-sports-board",
   "orbitals": [
     {
@@ -108,6 +108,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "required": false,
@@ -202,6 +207,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "required": false,
@@ -255,6 +265,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -332,8 +347,29 @@
             "type": "array"
           },
           {
+            "default": "",
             "name": "selectedUnitId",
             "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "validMoves",
+            "type": "array"
           },
           {
             "default": 0.0,
@@ -400,69 +436,12 @@
         {
           "category": "interaction",
           "config": {
-            "activeFilters": {
-              "default": {},
-              "description": "Active filters",
-              "label": "Active Filters",
-              "tier": "presentation",
-              "type": "json"
-            },
             "assetBaseUrl": {
               "default": "https://almadar-kflow-assets.web.app/shared/",
               "description": "Base URL prepended to asset paths",
               "label": "Asset Base Url",
-              "properties": {
-                "animations": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "name": "animations",
-                  "required": false,
-                  "type": "array"
-                },
-                "aspect": {
-                  "name": "aspect",
-                  "required": false,
-                  "type": "string"
-                },
-                "category": {
-                  "name": "category",
-                  "required": false,
-                  "type": "string"
-                },
-                "dimension": {
-                  "name": "dimension",
-                  "required": false,
-                  "type": "string"
-                },
-                "name": {
-                  "name": "name",
-                  "required": false,
-                  "type": "string"
-                },
-                "role": {
-                  "name": "role",
-                  "required": false,
-                  "type": "string"
-                },
-                "style": {
-                  "name": "style",
-                  "required": false,
-                  "type": "string"
-                },
-                "thumbnailUrl": {
-                  "name": "thumbnailUrl",
-                  "required": false,
-                  "type": "string"
-                },
-                "url": {
-                  "name": "url",
-                  "required": false,
-                  "type": "string"
-                }
-              },
               "tier": "presentation",
-              "type": "Asset"
+              "type": "string"
             },
             "assetManifest": {
               "default": {
@@ -479,7 +458,8 @@
                     "role": "decoration",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/ball_soccer.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/ball_soccer.png",
+                    "variant": ""
                   },
                   "goal": {
                     "animations": [
@@ -492,7 +472,8 @@
                     "role": "decoration",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                    "variant": ""
                   }
                 },
                 "terrains": {
@@ -507,7 +488,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   }
                 },
                 "units": {
@@ -526,7 +508,8 @@
                     "role": "npc",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png",
+                    "variant": ""
                   },
                   "characterGreen": {
                     "animations": [
@@ -543,7 +526,8 @@
                     "role": "npc",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png",
+                    "variant": ""
                   }
                 }
               },
@@ -598,6 +582,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -658,6 +647,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "type": "object"
@@ -716,6 +710,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "type": "object"
@@ -772,6 +771,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -836,7 +840,8 @@
                     "role": "decoration",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                    "variant": ""
                   },
                   "type": "goal",
                   "x": 0.0,
@@ -855,7 +860,8 @@
                     "role": "decoration",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                    "variant": ""
                   },
                   "type": "goal",
                   "x": 0.0,
@@ -874,7 +880,8 @@
                     "role": "decoration",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                    "variant": ""
                   },
                   "type": "goal",
                   "x": 0.0,
@@ -893,7 +900,8 @@
                     "role": "decoration",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                    "variant": ""
                   },
                   "type": "goal",
                   "x": 7.0,
@@ -912,7 +920,8 @@
                     "role": "decoration",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                    "variant": ""
                   },
                   "type": "goal",
                   "x": 7.0,
@@ -931,7 +940,8 @@
                     "role": "decoration",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/goal_net.png",
+                    "variant": ""
                   },
                   "type": "goal",
                   "x": 7.0,
@@ -950,7 +960,8 @@
                     "role": "decoration",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/ball_soccer.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/features/ball_soccer.png",
+                    "variant": ""
                   },
                   "type": "ball",
                   "x": 3.0,
@@ -1008,6 +1019,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -1080,6 +1096,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "required": false,
@@ -1119,62 +1140,12 @@
               "tier": "presentation",
               "type": "boolean"
             },
-            "pageProp": {
-              "default": 0.0,
-              "description": "Current page number",
-              "label": "Page",
-              "synonyms": "page",
-              "tier": "presentation",
-              "type": "number"
-            },
-            "pageSize": {
-              "default": 0.0,
-              "description": "Number of items per page",
-              "label": "Page Size",
-              "tier": "presentation",
-              "type": "number"
-            },
             "scale": {
               "default": 0.45,
               "description": "Render scale",
               "label": "Scale",
               "tier": "presentation",
               "type": "number"
-            },
-            "searchValue": {
-              "default": "Search Value",
-              "description": "Current search query value",
-              "label": "Search Value",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "selectedIds": {
-              "default": [],
-              "description": "Currently selected item IDs",
-              "items": {
-                "type": "string"
-              },
-              "label": "Selected Ids",
-              "tier": "presentation",
-              "type": "[string]"
-            },
-            "sortBy": {
-              "default": "Sort By",
-              "description": "Current sort field",
-              "label": "Sort By",
-              "tier": "presentation",
-              "type": "string"
-            },
-            "sortDirection": {
-              "default": "asc",
-              "description": "Current sort direction",
-              "label": "Sort Direction",
-              "tier": "presentation",
-              "type": "string",
-              "values": [
-                "asc",
-                "desc"
-              ]
             },
             "tiles": {
               "default": [
@@ -1192,7 +1163,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 0.0,
                   "y": 0.0
@@ -1211,7 +1183,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 1.0,
                   "y": 0.0
@@ -1230,7 +1203,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 2.0,
                   "y": 0.0
@@ -1249,7 +1223,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 3.0,
                   "y": 0.0
@@ -1268,7 +1243,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 4.0,
                   "y": 0.0
@@ -1287,7 +1263,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 5.0,
                   "y": 0.0
@@ -1306,7 +1283,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 6.0,
                   "y": 0.0
@@ -1325,7 +1303,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 7.0,
                   "y": 0.0
@@ -1344,7 +1323,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 0.0,
                   "y": 1.0
@@ -1363,7 +1343,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 1.0,
                   "y": 1.0
@@ -1382,7 +1363,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 2.0,
                   "y": 1.0
@@ -1401,7 +1383,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 3.0,
                   "y": 1.0
@@ -1420,7 +1403,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 4.0,
                   "y": 1.0
@@ -1439,7 +1423,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 5.0,
                   "y": 1.0
@@ -1458,7 +1443,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 6.0,
                   "y": 1.0
@@ -1477,7 +1463,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 7.0,
                   "y": 1.0
@@ -1496,7 +1483,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 0.0,
                   "y": 2.0
@@ -1515,7 +1503,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 1.0,
                   "y": 2.0
@@ -1534,7 +1523,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 2.0,
                   "y": 2.0
@@ -1553,7 +1543,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 3.0,
                   "y": 2.0
@@ -1572,7 +1563,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 4.0,
                   "y": 2.0
@@ -1591,7 +1583,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 5.0,
                   "y": 2.0
@@ -1610,7 +1603,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 6.0,
                   "y": 2.0
@@ -1629,7 +1623,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 7.0,
                   "y": 2.0
@@ -1648,7 +1643,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 0.0,
                   "y": 3.0
@@ -1667,7 +1663,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 1.0,
                   "y": 3.0
@@ -1686,7 +1683,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 2.0,
                   "y": 3.0
@@ -1705,7 +1703,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 3.0,
                   "y": 3.0
@@ -1724,7 +1723,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 4.0,
                   "y": 3.0
@@ -1743,7 +1743,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 5.0,
                   "y": 3.0
@@ -1762,7 +1763,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 6.0,
                   "y": 3.0
@@ -1781,7 +1783,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 7.0,
                   "y": 3.0
@@ -1800,7 +1803,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 0.0,
                   "y": 4.0
@@ -1819,7 +1823,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 1.0,
                   "y": 4.0
@@ -1838,7 +1843,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 2.0,
                   "y": 4.0
@@ -1857,7 +1863,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 3.0,
                   "y": 4.0
@@ -1876,7 +1883,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 4.0,
                   "y": 4.0
@@ -1895,7 +1903,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 5.0,
                   "y": 4.0
@@ -1914,7 +1923,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 6.0,
                   "y": 4.0
@@ -1933,7 +1943,8 @@
                     "role": "tile",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/terrain/groundGrass_mown.png",
+                    "variant": ""
                   },
                   "x": 7.0,
                   "y": 4.0
@@ -2000,6 +2011,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -2072,6 +2088,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "required": false,
@@ -2109,13 +2130,6 @@
               "tier": "presentation",
               "type": "[SportsBoardTilesItem]"
             },
-            "totalCount": {
-              "default": 0.0,
-              "description": "Total number of items",
-              "label": "Total Count",
-              "tier": "presentation",
-              "type": "number"
-            },
             "units": {
               "default": [
                 {
@@ -2144,7 +2158,8 @@
                     "role": "npc",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png",
+                    "variant": ""
                   },
                   "team": "player",
                   "unitType": "player"
@@ -2175,7 +2190,8 @@
                     "role": "npc",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png",
+                    "variant": ""
                   },
                   "team": "player",
                   "unitType": "player"
@@ -2206,7 +2222,8 @@
                     "role": "npc",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png",
+                    "variant": ""
                   },
                   "team": "player",
                   "unitType": "player"
@@ -2237,7 +2254,8 @@
                     "role": "npc",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterGreen.png",
+                    "variant": ""
                   },
                   "team": "player",
                   "unitType": "player"
@@ -2268,7 +2286,8 @@
                     "role": "npc",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png",
+                    "variant": ""
                   },
                   "team": "enemy",
                   "unitType": "player"
@@ -2299,7 +2318,8 @@
                     "role": "npc",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png",
+                    "variant": ""
                   },
                   "team": "enemy",
                   "unitType": "player"
@@ -2330,7 +2350,8 @@
                     "role": "npc",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png",
+                    "variant": ""
                   },
                   "team": "enemy",
                   "unitType": "player"
@@ -2361,7 +2382,8 @@
                     "role": "npc",
                     "style": "",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-sports-board/default/units/characterBlue.png",
+                    "variant": ""
                   },
                   "team": "enemy",
                   "unitType": "player"
@@ -2465,6 +2487,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "required": false,
@@ -2559,6 +2586,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "required": false,
@@ -2612,6 +2644,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -2755,7 +2792,8 @@
               "homeScore",
               "phase",
               "selectedUnitId",
-              "units"
+              "units",
+              "validMoves"
             ],
             "requires": []
           },
@@ -2847,6 +2885,11 @@
                   ],
                   [
                     "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.homeScore",
                     0.0
                   ],
@@ -2876,24 +2919,49 @@
                           "features": "@config.features",
                           "projection": "flat",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Home",
-                            "value": "@entity.homeScore"
+                            "stats": [
+                              {
+                                "label": "Home",
+                                "value": "@entity.homeScore"
+                              },
+                              {
+                                "label": "Away",
+                                "value": "@entity.awayScore"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Away",
-                            "value": "@entity.awayScore"
+                            "icon": "flag",
+                            "label": "Phase",
+                            "type": "game-icon",
+                            "value": "@entity.phase"
+                          },
+                          {
+                            "action": "RESET",
+                            "icon": "refresh-cw",
+                            "label": "Reset",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -2912,6 +2980,11 @@
                   ],
                   [
                     "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.phase",
                     "kickoff"
                   ],
@@ -2926,24 +2999,49 @@
                           "features": "@config.features",
                           "projection": "flat",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Home",
-                            "value": "@entity.homeScore"
+                            "stats": [
+                              {
+                                "label": "Home",
+                                "value": "@entity.homeScore"
+                              },
+                              {
+                                "label": "Away",
+                                "value": "@entity.awayScore"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Away",
-                            "value": "@entity.awayScore"
+                            "icon": "flag",
+                            "label": "Phase",
+                            "type": "game-icon",
+                            "value": "@entity.phase"
+                          },
+                          {
+                            "action": "RESET",
+                            "icon": "refresh-cw",
+                            "label": "Reset",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -2967,6 +3065,11 @@
                   ],
                   [
                     "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.phase",
                     "selected"
                   ],
@@ -2981,24 +3084,49 @@
                           "features": "@config.features",
                           "projection": "flat",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Home",
-                            "value": "@entity.homeScore"
+                            "stats": [
+                              {
+                                "label": "Home",
+                                "value": "@entity.homeScore"
+                              },
+                              {
+                                "label": "Away",
+                                "value": "@entity.awayScore"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Away",
-                            "value": "@entity.awayScore"
+                            "icon": "flag",
+                            "label": "Phase",
+                            "type": "game-icon",
+                            "value": "@entity.phase"
+                          },
+                          {
+                            "action": "RESET",
+                            "icon": "refresh-cw",
+                            "label": "Reset",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -3049,6 +3177,11 @@
                   ],
                   [
                     "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.phase",
                     "kickoff"
                   ],
@@ -3063,24 +3196,49 @@
                           "features": "@config.features",
                           "projection": "flat",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Home",
-                            "value": "@entity.homeScore"
+                            "stats": [
+                              {
+                                "label": "Home",
+                                "value": "@entity.homeScore"
+                              },
+                              {
+                                "label": "Away",
+                                "value": "@entity.awayScore"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Away",
-                            "value": "@entity.awayScore"
+                            "icon": "flag",
+                            "label": "Phase",
+                            "type": "game-icon",
+                            "value": "@entity.phase"
+                          },
+                          {
+                            "action": "RESET",
+                            "icon": "refresh-cw",
+                            "label": "Reset",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -3149,24 +3307,49 @@
                           "features": "@config.features",
                           "projection": "flat",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Home",
-                            "value": "@entity.homeScore"
+                            "stats": [
+                              {
+                                "label": "Home",
+                                "value": "@entity.homeScore"
+                              },
+                              {
+                                "label": "Away",
+                                "value": "@entity.awayScore"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Away",
-                            "value": "@entity.awayScore"
+                            "icon": "flag",
+                            "label": "Phase",
+                            "type": "game-icon",
+                            "value": "@entity.phase"
+                          },
+                          {
+                            "action": "RESET",
+                            "icon": "refresh-cw",
+                            "label": "Reset",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -3187,6 +3370,11 @@
                     "set",
                     "@entity.selectedUnitId",
                     ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
                   ],
                   [
                     "set",
@@ -3219,24 +3407,49 @@
                           "features": "@config.features",
                           "projection": "flat",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Home",
-                            "value": "@entity.homeScore"
+                            "stats": [
+                              {
+                                "label": "Home",
+                                "value": "@entity.homeScore"
+                              },
+                              {
+                                "label": "Away",
+                                "value": "@entity.awayScore"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Away",
-                            "value": "@entity.awayScore"
+                            "icon": "flag",
+                            "label": "Phase",
+                            "type": "game-icon",
+                            "value": "@entity.phase"
+                          },
+                          {
+                            "action": "RESET",
+                            "icon": "refresh-cw",
+                            "label": "Reset",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -3336,24 +3549,49 @@
                         "features": "@config.features",
                         "projection": "flat",
                         "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
                         "showMinimap": false,
+                        "tileClickEvent": "TILE_CLICK",
                         "tiles": "@config.tiles",
                         "type": "canvas-2d",
-                        "units": "@entity.units"
+                        "unitClickEvent": "UNIT_CLICK",
+                        "units": "@entity.units",
+                        "validMoves": "@entity.validMoves"
                       }
                     ],
                     "hud": {
-                      "stats": [
+                      "children": [
                         {
-                          "label": "Home",
-                          "value": "@entity.homeScore"
+                          "stats": [
+                            {
+                              "label": "Home",
+                              "value": "@entity.homeScore"
+                            },
+                            {
+                              "label": "Away",
+                              "value": "@entity.awayScore"
+                            }
+                          ],
+                          "type": "game-hud"
                         },
                         {
-                          "label": "Away",
-                          "value": "@entity.awayScore"
+                          "icon": "flag",
+                          "label": "Phase",
+                          "type": "game-icon",
+                          "value": "@entity.phase"
+                        },
+                        {
+                          "action": "RESET",
+                          "icon": "refresh-cw",
+                          "label": "Reset",
+                          "type": "button",
+                          "variant": "secondary"
                         }
                       ],
-                      "type": "game-hud"
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
                     },
                     "type": "game-shell"
                   }
