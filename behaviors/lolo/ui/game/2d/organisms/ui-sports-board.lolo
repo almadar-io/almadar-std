@@ -1,6 +1,7 @@
 app ui-sports-board "1.0.0"
 "SportsBoard — top-down soccer/sports game: select units, move them to tiles, score goals. game-shell + canvas-2d with live input wiring (TILE_CLICK/UNIT_CLICK + selectedUnitId/validMoves) and a RESET HUD control."
 orbital SportsBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
   type SportsBoardError = {
     message : string!
     name : string
@@ -179,9 +180,7 @@ orbital SportsBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Home", value: @entity.homeScore }, { label: "Away", value: @entity.awayScore } ] }, { type: game-icon, label: "Phase", value: @entity.phase, icon: "flag" }, { type: button, action: RESET, label: "Reset", icon: refresh-cw, variant: secondary } ] }
@@ -253,5 +252,9 @@ orbital SportsBoardOrbital {
     }
   }
 
-  page "/sports-board" as SportsBoardPage -> SportsBoardRender
+  trait SportsBoardAnimTick = AnimTick.traits.AnimTick -> SportsBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/sports-board" as SportsBoardPage -> SportsBoardRender, SportsBoardAnimTick
 }

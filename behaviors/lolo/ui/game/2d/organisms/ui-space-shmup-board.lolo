@@ -1,6 +1,8 @@
 app ui-space-shmup-board "1.0.0"
 "SpaceShmupBoard — sci-fi SHMUP with TILE_CLICK/UNIT_CLICK input wiring, SHOOT HUD control, score/lives display, and UI Pack - Sci-fi assets."
 orbital SpaceShmupBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
+
   type SpaceShmupBoardError = {
     message : string!
     name : string
@@ -220,9 +222,7 @@ orbital SpaceShmupBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: SHOOT, label: "Fire", icon: zap, variant: primary }, { type: button, action: PAUSE, label: "Pause", icon: pause, variant: secondary } ] }
@@ -310,5 +310,9 @@ orbital SpaceShmupBoardOrbital {
     }
   }
 
-  page "/space-shmup-board" as SpaceShmupBoardPage -> SpaceShmupBoardRender
+  trait SpaceShmupBoardAnimTick = AnimTick.traits.AnimTick -> SpaceShmupBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/space-shmup-board" as SpaceShmupBoardPage -> SpaceShmupBoardRender, SpaceShmupBoardAnimTick
 }

@@ -1,6 +1,8 @@
 app ui-uncontrolled-battle-board "1.0.0"
 "UncontrolledBattleBoard — game-shell composition with LOLO-driven sprite animation and combat effects; self-resolving auto-battle."
 orbital UncontrolledBattleBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
+
   type UncontrolledBattleBoardError = {
     message : string!
     name : string
@@ -178,9 +180,7 @@ orbital UncontrolledBattleBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge u { frame: (% (+ (object/get u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge e { ttl: (- (object/get e ttl) 1) }))) (fn e (> (object/get e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Round", value: @entity.turn }, { label: "Allies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "player") (> (object/get u hp) 0))))) }, { label: "Enemies", value: (array/len (array/filter @entity.units (fn u (and (== (object/get u team) "enemy") (> (object/get u hp) 0))))) } ] }, { type: sprite, src: (object/get (array/first (array/filter @entity.units (fn u (== (object/get u team) "player")))) modelUrl), label: "Player" }, { type: damage-number, value: 0, x: 0, y: 0, visible: false } ] }
@@ -260,5 +260,9 @@ orbital UncontrolledBattleBoardOrbital {
     }
   }
 
-  page "/uncontrolled-battle-board" as UncontrolledBattleBoardPage -> UncontrolledBattleBoardRender
+  trait UncontrolledBattleBoardAnimTick = AnimTick.traits.AnimTick -> UncontrolledBattleBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/uncontrolled-battle-board" as UncontrolledBattleBoardPage -> UncontrolledBattleBoardRender, UncontrolledBattleBoardAnimTick
 }

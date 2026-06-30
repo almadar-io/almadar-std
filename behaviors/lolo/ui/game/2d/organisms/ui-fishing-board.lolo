@@ -1,6 +1,7 @@
 app ui-fishing-board "1.0.0"
 "FishingBoard — game-shell composition with LOLO-driven sprite animation and catch effects."
 orbital FishingBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
   type FishingBoardError = {
     message : string!
     name : string
@@ -147,9 +148,7 @@ orbital FishingBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Catch", value: @entity.catchCount }, { label: "Score", value: @entity.score } ] }, { type: action-button, action: CAST, label: "Cast", icon: "anchor" } ] }
@@ -249,5 +248,9 @@ orbital FishingBoardOrbital {
     }
   }
 
-  page "/fishing-board" as FishingBoardPage -> FishingBoardRender
+  trait FishingBoardAnimTick = AnimTick.traits.AnimTick -> FishingBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/fishing-board" as FishingBoardPage -> FishingBoardRender, FishingBoardAnimTick
 }

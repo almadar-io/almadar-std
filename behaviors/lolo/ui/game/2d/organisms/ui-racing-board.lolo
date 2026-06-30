@@ -1,6 +1,8 @@
 app ui-racing-board "1.0.0"
 "RacingBoard — sci-fi flat-track racer with TILE_CLICK/UNIT_CLICK input wiring, score-display HUD, and UI Pack - Sci-fi assets."
 orbital RacingBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
+
   type RacingBoardError = {
     message : string!
     name : string
@@ -204,9 +206,7 @@ orbital RacingBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Lap", value: @entity.lap }, { label: "Position", value: @entity.position } ] }, { type: score-display, score: @entity.position, label: "POS" }, { type: action-buttons, actions: [ { label: "Move", action: MOVE }, { label: "Lap", action: LAP_COMPLETE } ] } ] }
@@ -295,5 +295,9 @@ orbital RacingBoardOrbital {
     }
   }
 
-  page "/racing-board" as RacingBoardPage -> RacingBoardRender
+  trait RacingBoardAnimTick = AnimTick.traits.AnimTick -> RacingBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/racing-board" as RacingBoardPage -> RacingBoardRender, RacingBoardAnimTick
 }

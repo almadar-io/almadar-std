@@ -1,6 +1,7 @@
 app ui-sokoban-board "1.0.0"
 "SokobanBoard — game-shell composition with HUD and LOLO-driven pusher animation."
 orbital SokobanBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
   type SokobanBoardError = {
     message : string!
     name : string
@@ -157,9 +158,7 @@ orbital SokobanBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.units (array/map @entity.units (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [
@@ -222,5 +221,9 @@ orbital SokobanBoardOrbital {
     }
   }
 
-  page "/sokoban-board" as SokobanBoardPage -> SokobanBoardRender
+  trait SokobanBoardAnimTick = AnimTick.traits.AnimTick -> SokobanBoardItem {
+    config { frameCount: 8 }
+  }
+
+  page "/sokoban-board" as SokobanBoardPage -> SokobanBoardRender, SokobanBoardAnimTick
 }
