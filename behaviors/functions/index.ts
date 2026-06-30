@@ -89,7 +89,6 @@ export * from './core/atoms/std-modal.js';
 export * from './core/atoms/std-multi-party-flow.js';
 export * from './infra/atoms/std-notify-on-event.js';
 export * from './core/atoms/std-pagination.js';
-export * from './core/atoms/std-platformer-physics.js';
 export * from './core/atoms/std-push.js';
 export * from './core/atoms/std-rate-limiter.js';
 export * from './core/atoms/std-rating-review.js';
