@@ -757,36 +757,60 @@
               "tier": "domain"
             },
             {
-              "description": "Emits UI:{moveEvent} with {dx,dy} on arrow/WASD key press to move the player",
-              "event": "MOVE",
+              "description": "Move-left intent (keyboard keyMap)",
+              "event": "MOVE_LEFT",
               "payloadSchema": [
                 {
-                  "name": "dx",
-                  "required": true,
-                  "type": "number"
-                },
-                {
-                  "name": "dy",
-                  "required": true,
-                  "type": "number"
+                  "name": "id",
+                  "type": "string"
                 }
               ],
               "scope": "external",
               "tier": "domain"
             },
             {
-              "description": "Emits UI:{fireEvent} with {tx,ty} on space / arena click to fire a projectile",
+              "description": "Move-right intent (keyboard keyMap)",
+              "event": "MOVE_RIGHT",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Move-up intent (keyboard keyMap)",
+              "event": "MOVE_UP",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Move-down intent (keyboard keyMap)",
+              "event": "MOVE_DOWN",
+              "payloadSchema": [
+                {
+                  "name": "id",
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Fire intent (keyboard Space / Fire button)",
               "event": "FIRE",
               "payloadSchema": [
                 {
-                  "name": "tx",
-                  "required": true,
-                  "type": "number"
-                },
-                {
-                  "name": "ty",
-                  "required": true,
-                  "type": "number"
+                  "name": "id",
+                  "type": "string"
                 }
               ],
               "scope": "external",
@@ -846,37 +870,61 @@
                 "name": "Initialize"
               },
               {
-                "description": "Emits UI:{moveEvent} with {dx,dy} on arrow/WASD key press to move the player",
-                "key": "MOVE",
-                "name": "Move",
+                "description": "Move-left intent (keyboard keyMap)",
+                "key": "MOVE_LEFT",
+                "name": "Move Left",
                 "payloadSchema": [
                   {
-                    "name": "dx",
-                    "required": true,
-                    "type": "number"
-                  },
-                  {
-                    "name": "dy",
-                    "required": true,
-                    "type": "number"
+                    "name": "id",
+                    "type": "string"
                   }
                 ],
                 "tier": "domain"
               },
               {
-                "description": "Emits UI:{fireEvent} with {tx,ty} on space / arena click to fire a projectile",
+                "description": "Move-right intent (keyboard keyMap)",
+                "key": "MOVE_RIGHT",
+                "name": "Move Right",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Move-up intent (keyboard keyMap)",
+                "key": "MOVE_UP",
+                "name": "Move Up",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Move-down intent (keyboard keyMap)",
+                "key": "MOVE_DOWN",
+                "name": "Move Down",
+                "payloadSchema": [
+                  {
+                    "name": "id",
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Fire intent (keyboard Space / Fire button)",
                 "key": "FIRE",
                 "name": "Fire",
                 "payloadSchema": [
                   {
-                    "name": "tx",
-                    "required": true,
-                    "type": "number"
-                  },
-                  {
-                    "name": "ty",
-                    "required": true,
-                    "type": "number"
+                    "name": "id",
+                    "type": "string"
                   }
                 ],
                 "tier": "domain"
@@ -1114,6 +1162,17 @@
                               }
                             ]
                           ],
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP",
+                            "Space": "FIRE"
+                          },
                           "projection": "free",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -1326,42 +1385,121 @@
                           "math/max",
                           0.0,
                           [
-                            "math/min",
-                            "@config.width",
+                            "-",
                             [
-                              "+",
-                              [
-                                "object/get",
-                                "@entity.player",
-                                "x"
-                              ],
-                              [
-                                "*",
-                                "@payload.dx",
-                                "@config.moveStep"
-                              ]
-                            ]
+                              "object/get",
+                              "@entity.player",
+                              "x"
+                            ],
+                            "@config.moveStep"
                           ]
-                        ],
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                "event": "MOVE_LEFT",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "walk",
+                        "x": [
+                          "math/min",
+                          "@config.width",
+                          [
+                            "+",
+                            [
+                              "object/get",
+                              "@entity.player",
+                              "x"
+                            ],
+                            "@config.moveStep"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                "event": "MOVE_RIGHT",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "walk",
                         "y": [
                           "math/max",
                           0.0,
                           [
-                            "math/min",
-                            "@config.height",
+                            "-",
                             [
-                              "+",
-                              [
-                                "object/get",
-                                "@entity.player",
-                                "y"
-                              ],
-                              [
-                                "*",
-                                "@payload.dy",
-                                "@config.moveStep"
-                              ]
-                            ]
+                              "object/get",
+                              "@entity.player",
+                              "y"
+                            ],
+                            "@config.moveStep"
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                ],
+                "event": "MOVE_UP",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "walk",
+                        "y": [
+                          "math/min",
+                          "@config.height",
+                          [
+                            "+",
+                            [
+                              "object/get",
+                              "@entity.player",
+                              "y"
+                            ],
+                            "@config.moveStep"
                           ]
                         ]
                       }
@@ -1423,6 +1561,17 @@
                               }
                             ]
                           ],
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP",
+                            "Space": "FIRE"
+                          },
                           "projection": "free",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -1617,7 +1766,7 @@
                     }
                   ]
                 ],
-                "event": "MOVE",
+                "event": "MOVE_DOWN",
                 "from": "playing",
                 "guard": [
                   "==",
@@ -1737,6 +1886,17 @@
                               }
                             ]
                           ],
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP",
+                            "Space": "FIRE"
+                          },
                           "projection": "free",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2008,6 +2168,17 @@
                               }
                             ]
                           ],
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP",
+                            "Space": "FIRE"
+                          },
                           "projection": "free",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2279,6 +2450,17 @@
                               }
                             ]
                           ],
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP",
+                            "Space": "FIRE"
+                          },
                           "projection": "free",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2540,6 +2722,17 @@
                               }
                             ]
                           ],
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP",
+                            "Space": "FIRE"
+                          },
                           "projection": "free",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -2917,6 +3110,17 @@
                               }
                             ]
                           ],
+                          "keyMap": {
+                            "ArrowDown": "MOVE_DOWN",
+                            "ArrowLeft": "MOVE_LEFT",
+                            "ArrowRight": "MOVE_RIGHT",
+                            "ArrowUp": "MOVE_UP",
+                            "KeyA": "MOVE_LEFT",
+                            "KeyD": "MOVE_RIGHT",
+                            "KeyS": "MOVE_DOWN",
+                            "KeyW": "MOVE_UP",
+                            "Space": "FIRE"
+                          },
                           "projection": "free",
                           "scale": "@config.scale",
                           "selectedUnitId": "@entity.selectedUnitId",
@@ -3273,6 +3477,17 @@
                             }
                           ]
                         ],
+                        "keyMap": {
+                          "ArrowDown": "MOVE_DOWN",
+                          "ArrowLeft": "MOVE_LEFT",
+                          "ArrowRight": "MOVE_RIGHT",
+                          "ArrowUp": "MOVE_UP",
+                          "KeyA": "MOVE_LEFT",
+                          "KeyD": "MOVE_RIGHT",
+                          "KeyS": "MOVE_DOWN",
+                          "KeyW": "MOVE_UP",
+                          "Space": "FIRE"
+                        },
                         "projection": "free",
                         "scale": "@config.scale",
                         "selectedUnitId": "@entity.selectedUnitId",
@@ -4149,6 +4364,17 @@
                             }
                           ]
                         ],
+                        "keyMap": {
+                          "ArrowDown": "MOVE_DOWN",
+                          "ArrowLeft": "MOVE_LEFT",
+                          "ArrowRight": "MOVE_RIGHT",
+                          "ArrowUp": "MOVE_UP",
+                          "KeyA": "MOVE_LEFT",
+                          "KeyD": "MOVE_RIGHT",
+                          "KeyS": "MOVE_DOWN",
+                          "KeyW": "MOVE_UP",
+                          "Space": "FIRE"
+                        },
                         "projection": "free",
                         "scale": "@config.scale",
                         "selectedUnitId": "@entity.selectedUnitId",
