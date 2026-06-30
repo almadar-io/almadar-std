@@ -1,5 +1,5 @@
 {
-  "description": "PlatformerTemplate — thin layout: PlatformerBoard + HUD (lives/score); config-driven.",
+  "description": "PlatformerTemplate — thin playable shell; renders game-shell + side-scrolling canvas-2d matching ui-platformer-board.",
   "name": "ui-platformer-template",
   "orbitals": [
     {
@@ -9,6 +9,129 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "default": {
+              "animation": "idle",
+              "facingRight": true,
+              "frame": 0.0,
+              "grounded": false,
+              "height": 48.0,
+              "vx": 0.0,
+              "vy": 0.0,
+              "width": 32.0,
+              "x": 80.0,
+              "y": 320.0
+            },
+            "name": "player",
+            "properties": {
+              "animation": {
+                "name": "animation",
+                "required": false,
+                "type": "string"
+              },
+              "facingRight": {
+                "name": "facingRight",
+                "required": false,
+                "type": "boolean"
+              },
+              "frame": {
+                "name": "frame",
+                "required": false,
+                "type": "number"
+              },
+              "grounded": {
+                "name": "grounded",
+                "required": false,
+                "type": "boolean"
+              },
+              "height": {
+                "name": "height",
+                "required": false,
+                "type": "number"
+              },
+              "vx": {
+                "name": "vx",
+                "required": false,
+                "type": "number"
+              },
+              "vy": {
+                "name": "vy",
+                "required": false,
+                "type": "number"
+              },
+              "width": {
+                "name": "width",
+                "required": false,
+                "type": "number"
+              },
+              "x": {
+                "name": "x",
+                "required": false,
+                "type": "number"
+              },
+              "y": {
+                "name": "y",
+                "required": false,
+                "type": "number"
+              }
+            },
+            "type": "object"
+          },
+          {
+            "default": 0.0,
+            "name": "score",
+            "type": "number"
+          },
+          {
+            "default": 3.0,
+            "name": "lives",
+            "type": "number"
+          },
+          {
+            "default": "none",
+            "name": "result",
+            "type": "string",
+            "values": [
+              "none",
+              "won",
+              "lost"
+            ]
+          },
+          {
+            "default": 800.0,
+            "name": "worldWidth",
+            "type": "number"
+          },
+          {
+            "default": 400.0,
+            "name": "worldHeight",
+            "type": "number"
+          },
+          {
+            "default": "",
+            "name": "selectedUnitId",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "validMoves",
+            "type": "array"
           }
         ],
         "name": "PlatformerTemplateItem",
@@ -30,6 +153,20 @@
         {
           "category": "interaction",
           "config": {
+            "assetBaseUrl": {
+              "default": "https://almadar-kflow-assets.web.app/shared/",
+              "description": "Base URL prefix for asset lookups",
+              "label": "Asset Base URL",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "backgroundImage": {
+              "default": "",
+              "description": "Optional parallax background image URL",
+              "label": "Background Image",
+              "tier": "presentation",
+              "type": "asset"
+            },
             "bgColor": {
               "default": "#5c94fc",
               "description": "Canvas background color",
@@ -57,6 +194,13 @@
               "label": "Class Name",
               "tier": "presentation",
               "type": "string"
+            },
+            "followCamera": {
+              "default": true,
+              "description": "Camera follows the player horizontally",
+              "label": "Follow Camera",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "goalX": {
               "default": 720.0,
@@ -173,8 +317,43 @@
               "type": "number"
             }
           },
+          "emits": [
+            {
+              "event": "TILE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "x",
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "type": "number"
+                }
+              ],
+              "scope": "external"
+            },
+            {
+              "event": "UNIT_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "type": "string"
+                }
+              ],
+              "scope": "external"
+            }
+          ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "lives",
+              "player",
+              "result",
+              "score",
+              "selectedUnitId",
+              "validMoves",
+              "worldHeight",
+              "worldWidth"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -186,45 +365,739 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "LEFT",
+                "name": "Left"
+              },
+              {
+                "key": "RIGHT",
+                "name": "Right"
+              },
+              {
+                "key": "JUMP",
+                "name": "Jump"
+              },
+              {
+                "key": "STOP",
+                "name": "Stop"
+              },
+              {
+                "key": "PLAY_AGAIN",
+                "name": "Play Again"
+              },
+              {
+                "key": "GAME_END",
+                "name": "Game End"
+              },
+              {
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
+                    "type": "number"
+                  }
+                ]
+              },
+              {
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "type": "string"
+                  }
+                ]
               }
             ],
             "states": [
               {
                 "isInitial": true,
-                "name": "idle"
+                "name": "playing"
               }
             ],
             "transitions": [
               {
                 "effects": [
                   [
-                    "fetch",
-                    "PlatformerTemplateItem",
-                    {}
+                    "set",
+                    "@entity.player",
+                    {
+                      "animation": "idle",
+                      "facingRight": true,
+                      "frame": 0.0,
+                      "grounded": false,
+                      "height": 48.0,
+                      "vx": 0.0,
+                      "vy": 0.0,
+                      "width": 32.0,
+                      "x": 80.0,
+                      "y": 320.0
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lives",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.worldWidth",
+                    "@config.worldWidth"
+                  ],
+                  [
+                    "set",
+                    "@entity.worldHeight",
+                    "@config.worldHeight"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
                   ],
                   [
                     "render-ui",
                     "main",
                     {
-                      "bgColor": "@config.bgColor",
-                      "canvasHeight": "@config.canvasHeight",
-                      "canvasWidth": "@config.canvasWidth",
-                      "className": "@config.className",
-                      "entity": "@entity",
-                      "gameEndEvent": "GAME_END",
-                      "goalX": "@config.goalX",
-                      "platforms": "@config.platforms",
-                      "playerSprite": "@config.playerSprite",
-                      "tileSprites": "@config.tileSprites",
-                      "type": "platformer-template",
-                      "worldHeight": "@config.worldHeight",
-                      "worldWidth": "@config.worldWidth"
+                      "children": [
+                        {
+                          "assetBaseUrl": "@config.assetBaseUrl",
+                          "backgroundImage": "@config.backgroundImage",
+                          "bgColor": "@config.bgColor",
+                          "canvasHeight": "@config.canvasHeight",
+                          "canvasWidth": "@config.canvasWidth",
+                          "followCamera": "@config.followCamera",
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "projection": "side",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "validMoves": "@entity.validMoves",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "label": "Score",
+                            "type": "score-display",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "downAction": "STOP",
+                            "leftAction": "LEFT",
+                            "rightAction": "RIGHT",
+                            "type": "d-pad",
+                            "upAction": "JUMP"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "icon": "refresh",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "walk",
+                        "facingRight": false
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetBaseUrl": "@config.assetBaseUrl",
+                          "backgroundImage": "@config.backgroundImage",
+                          "bgColor": "@config.bgColor",
+                          "canvasHeight": "@config.canvasHeight",
+                          "canvasWidth": "@config.canvasWidth",
+                          "followCamera": "@config.followCamera",
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "projection": "side",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "validMoves": "@entity.validMoves",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "label": "Score",
+                            "type": "score-display",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "downAction": "STOP",
+                            "leftAction": "LEFT",
+                            "rightAction": "RIGHT",
+                            "type": "d-pad",
+                            "upAction": "JUMP"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "icon": "refresh",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "LEFT",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "walk",
+                        "facingRight": true
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetBaseUrl": "@config.assetBaseUrl",
+                          "backgroundImage": "@config.backgroundImage",
+                          "bgColor": "@config.bgColor",
+                          "canvasHeight": "@config.canvasHeight",
+                          "canvasWidth": "@config.canvasWidth",
+                          "followCamera": "@config.followCamera",
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "projection": "side",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "validMoves": "@entity.validMoves",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "label": "Score",
+                            "type": "score-display",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "downAction": "STOP",
+                            "leftAction": "LEFT",
+                            "rightAction": "RIGHT",
+                            "type": "d-pad",
+                            "upAction": "JUMP"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "icon": "refresh",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "RIGHT",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "jump",
+                        "vy": -10.0
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetBaseUrl": "@config.assetBaseUrl",
+                          "backgroundImage": "@config.backgroundImage",
+                          "bgColor": "@config.bgColor",
+                          "canvasHeight": "@config.canvasHeight",
+                          "canvasWidth": "@config.canvasWidth",
+                          "followCamera": "@config.followCamera",
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "projection": "side",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "validMoves": "@entity.validMoves",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "label": "Score",
+                            "type": "score-display",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "downAction": "STOP",
+                            "leftAction": "LEFT",
+                            "rightAction": "RIGHT",
+                            "type": "d-pad",
+                            "upAction": "JUMP"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "icon": "refresh",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "JUMP",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    [
+                      "object/merge",
+                      "@entity.player",
+                      {
+                        "animation": "idle",
+                        "vx": 0.0
+                      }
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetBaseUrl": "@config.assetBaseUrl",
+                          "backgroundImage": "@config.backgroundImage",
+                          "bgColor": "@config.bgColor",
+                          "canvasHeight": "@config.canvasHeight",
+                          "canvasWidth": "@config.canvasWidth",
+                          "followCamera": "@config.followCamera",
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "projection": "side",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "validMoves": "@entity.validMoves",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "label": "Score",
+                            "type": "score-display",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "downAction": "STOP",
+                            "leftAction": "LEFT",
+                            "rightAction": "RIGHT",
+                            "type": "d-pad",
+                            "upAction": "JUMP"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "icon": "refresh",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "STOP",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.player",
+                    {
+                      "animation": "idle",
+                      "facingRight": true,
+                      "frame": 0.0,
+                      "grounded": false,
+                      "height": 48.0,
+                      "vx": 0.0,
+                      "vy": 0.0,
+                      "width": 32.0,
+                      "x": 80.0,
+                      "y": 320.0
+                    }
+                  ],
+                  [
+                    "set",
+                    "@entity.score",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.lives",
+                    3.0
+                  ],
+                  [
+                    "set",
+                    "@entity.result",
+                    "none"
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetBaseUrl": "@config.assetBaseUrl",
+                          "backgroundImage": "@config.backgroundImage",
+                          "bgColor": "@config.bgColor",
+                          "canvasHeight": "@config.canvasHeight",
+                          "canvasWidth": "@config.canvasWidth",
+                          "followCamera": "@config.followCamera",
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "projection": "side",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "validMoves": "@entity.validMoves",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "label": "Score",
+                            "type": "score-display",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "downAction": "STOP",
+                            "leftAction": "LEFT",
+                            "rightAction": "RIGHT",
+                            "type": "d-pad",
+                            "upAction": "JUMP"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "icon": "refresh",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "PLAY_AGAIN",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.result",
+                    "won"
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetBaseUrl": "@config.assetBaseUrl",
+                          "backgroundImage": "@config.backgroundImage",
+                          "bgColor": "@config.bgColor",
+                          "canvasHeight": "@config.canvasHeight",
+                          "canvasWidth": "@config.canvasWidth",
+                          "followCamera": "@config.followCamera",
+                          "platforms": "@config.platforms",
+                          "player": "@entity.player",
+                          "playerSprite": "@config.playerSprite",
+                          "projection": "side",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "tileClickEvent": "TILE_CLICK",
+                          "tileSprites": "@config.tileSprites",
+                          "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "validMoves": "@entity.validMoves",
+                          "worldHeight": "@entity.worldHeight",
+                          "worldWidth": "@entity.worldWidth"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "label": "Score",
+                            "type": "score-display",
+                            "value": "@entity.score"
+                          },
+                          {
+                            "downAction": "STOP",
+                            "leftAction": "LEFT",
+                            "rightAction": "RIGHT",
+                            "type": "d-pad",
+                            "upAction": "JUMP"
+                          },
+                          {
+                            "action": "PLAY_AGAIN",
+                            "icon": "refresh",
+                            "label": "Restart",
+                            "type": "button",
+                            "variant": "secondary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "GAME_END",
+                "from": "playing",
+                "to": "playing"
               }
             ]
           }

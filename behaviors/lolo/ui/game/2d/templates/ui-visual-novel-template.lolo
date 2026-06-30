@@ -1,5 +1,5 @@
 app ui-visual-novel-template "1.0.0"
-"VisualNovelTemplate — dialogue-scene arena; composes VisualNovelBoard with a titled header."
+"VisualNovelTemplate — thin playable shell; renders visual-novel-board descriptor matching ui-visual-novel-board."
 orbital VisualNovelTemplateOrbital {
   type VisualNovelTemplateChoicesItem = {
     label : string!
@@ -16,27 +16,88 @@ orbital VisualNovelTemplateOrbital {
 
   entity VisualNovelTemplateItem [runtime] {
     id : string!
+    nodes : [VisualNovelTemplateNodesItem]
+    currentNodeId : string = "start"
+    currentSpeaker : string = ""
+    currentText : string = ""
+    currentChoices : [VisualNovelTemplateChoicesItem] = []
   }
 
   trait VisualNovelTemplateRender -> @rebindable VisualNovelTemplateItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
-        (fetch VisualNovelTemplateItem {})
+    state playing {
+      INIT -> playing
+        (set @entity.nodes @config.nodes)
+        (set @entity.currentNodeId @config.currentNodeId)
+        (set @entity.currentSpeaker (object/get (array/find @config.nodes (fn n (== @n.id @config.currentNodeId))) speaker))
+        (set @entity.currentText (object/get (array/find @config.nodes (fn n (== @n.id @config.currentNodeId))) text))
+        (set @entity.currentChoices (object/get (array/find @config.nodes (fn n (== @n.id @config.currentNodeId))) choices))
         (render-ui main {
-          entity: @entity
-          className: @config.className
-          title: @config.title
-          nodes: @config.nodes
-          currentNodeId: @config.currentNodeId
+          type: visual-novel-board
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
           typewriterSpeed: @config.typewriterSpeed
           portraitScale: @config.portraitScale
+          dialogueBubble: { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText }
+          choiceButton: { type: choice-button, choices: @entity.currentChoices, chooseEvent: CHOOSE }
           chooseEvent: CHOOSE
           advanceEvent: ADVANCE
           restartEvent: RESTART
-          type: visual-novel-template
         })
+      CHOOSE -> playing
+        (set @entity.currentNodeId ?nextId)
+        (set @entity.currentSpeaker (object/get (array/find @entity.nodes (fn n (== @n.id ?nextId))) speaker))
+        (set @entity.currentText (object/get (array/find @entity.nodes (fn n (== @n.id ?nextId))) text))
+        (set @entity.currentChoices (object/get (array/find @entity.nodes (fn n (== @n.id ?nextId))) choices))
+        (render-ui main {
+          type: visual-novel-board
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
+          typewriterSpeed: @config.typewriterSpeed
+          portraitScale: @config.portraitScale
+          dialogueBubble: { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText }
+          choiceButton: { type: choice-button, choices: @entity.currentChoices, chooseEvent: CHOOSE }
+          chooseEvent: CHOOSE
+          advanceEvent: ADVANCE
+          restartEvent: RESTART
+        })
+      ADVANCE -> playing
+        (render-ui main {
+          type: visual-novel-board
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
+          typewriterSpeed: @config.typewriterSpeed
+          portraitScale: @config.portraitScale
+          dialogueBubble: { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText }
+          choiceButton: { type: choice-button, choices: @entity.currentChoices, chooseEvent: CHOOSE }
+          chooseEvent: CHOOSE
+          advanceEvent: ADVANCE
+          restartEvent: RESTART
+        })
+      RESTART -> playing
+        (set @entity.currentNodeId @config.currentNodeId)
+        (set @entity.currentSpeaker (object/get (array/find @entity.nodes (fn n (== @n.id @config.currentNodeId))) speaker))
+        (set @entity.currentText (object/get (array/find @entity.nodes (fn n (== @n.id @config.currentNodeId))) text))
+        (set @entity.currentChoices (object/get (array/find @entity.nodes (fn n (== @n.id @config.currentNodeId))) choices))
+        (render-ui main {
+          type: visual-novel-board
+          nodes: @entity.nodes
+          currentNodeId: @entity.currentNodeId
+          typewriterSpeed: @config.typewriterSpeed
+          portraitScale: @config.portraitScale
+          dialogueBubble: { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText }
+          choiceButton: { type: choice-button, choices: @entity.currentChoices, chooseEvent: CHOOSE }
+          chooseEvent: CHOOSE
+          advanceEvent: ADVANCE
+          restartEvent: RESTART
+        })
+    }
+
+    emits {
+      CHOOSE -> external { nextId : string }
+      ADVANCE -> external {}
+      RESTART -> external {}
     }
 
     config {

@@ -1,5 +1,5 @@
 {
-  "description": "VisualNovelTemplate — dialogue-scene arena; composes VisualNovelBoard with a titled header.",
+  "description": "VisualNovelTemplate — thin playable shell; renders visual-novel-board descriptor matching ui-visual-novel-board.",
   "name": "ui-visual-novel-template",
   "orbitals": [
     {
@@ -9,6 +9,95 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "backgroundKey": {
+                  "name": "backgroundKey",
+                  "required": false,
+                  "type": "string"
+                },
+                "choices": {
+                  "items": {
+                    "properties": {
+                      "label": {
+                        "name": "label",
+                        "required": true,
+                        "type": "string"
+                      },
+                      "nextId": {
+                        "name": "nextId",
+                        "required": true,
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "choices",
+                  "required": false,
+                  "type": "array"
+                },
+                "id": {
+                  "name": "id",
+                  "required": true,
+                  "type": "string"
+                },
+                "portraitKey": {
+                  "name": "portraitKey",
+                  "required": false,
+                  "type": "string"
+                },
+                "speaker": {
+                  "name": "speaker",
+                  "required": true,
+                  "type": "string"
+                },
+                "text": {
+                  "name": "text",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "nodes",
+            "type": "array"
+          },
+          {
+            "default": "start",
+            "name": "currentNodeId",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "currentSpeaker",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "currentText",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "nextId": {
+                  "name": "nextId",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "currentChoices",
+            "type": "array"
           }
         ],
         "name": "VisualNovelTemplateItem",
@@ -184,8 +273,34 @@
               "type": "number"
             }
           },
+          "emits": [
+            {
+              "event": "CHOOSE",
+              "payloadSchema": [
+                {
+                  "name": "nextId",
+                  "type": "string"
+                }
+              ],
+              "scope": "external"
+            },
+            {
+              "event": "ADVANCE",
+              "scope": "external"
+            },
+            {
+              "event": "RESTART",
+              "scope": "external"
+            }
+          ],
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "currentChoices",
+              "currentNodeId",
+              "currentSpeaker",
+              "currentText",
+              "nodes"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -197,43 +312,365 @@
               {
                 "key": "INIT",
                 "name": "Initialize"
+              },
+              {
+                "key": "CHOOSE",
+                "name": "Choose",
+                "payloadSchema": [
+                  {
+                    "name": "nextId",
+                    "type": "string"
+                  }
+                ]
+              },
+              {
+                "key": "ADVANCE",
+                "name": "Advance"
+              },
+              {
+                "key": "RESTART",
+                "name": "Restart"
               }
             ],
             "states": [
               {
                 "isInitial": true,
-                "name": "idle"
+                "name": "playing"
               }
             ],
             "transitions": [
               {
                 "effects": [
                   [
-                    "fetch",
-                    "VisualNovelTemplateItem",
-                    {}
+                    "set",
+                    "@entity.nodes",
+                    "@config.nodes"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentNodeId",
+                    "@config.currentNodeId"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentSpeaker",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@config.nodes",
+                        [
+                          "fn",
+                          "n",
+                          [
+                            "==",
+                            "@n.id",
+                            "@config.currentNodeId"
+                          ]
+                        ]
+                      ],
+                      "speaker"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentText",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@config.nodes",
+                        [
+                          "fn",
+                          "n",
+                          [
+                            "==",
+                            "@n.id",
+                            "@config.currentNodeId"
+                          ]
+                        ]
+                      ],
+                      "text"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentChoices",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@config.nodes",
+                        [
+                          "fn",
+                          "n",
+                          [
+                            "==",
+                            "@n.id",
+                            "@config.currentNodeId"
+                          ]
+                        ]
+                      ],
+                      "choices"
+                    ]
                   ],
                   [
                     "render-ui",
                     "main",
                     {
                       "advanceEvent": "ADVANCE",
+                      "choiceButton": {
+                        "choices": "@entity.currentChoices",
+                        "chooseEvent": "CHOOSE",
+                        "type": "choice-button"
+                      },
                       "chooseEvent": "CHOOSE",
-                      "className": "@config.className",
-                      "currentNodeId": "@config.currentNodeId",
-                      "entity": "@entity",
-                      "nodes": "@config.nodes",
+                      "currentNodeId": "@entity.currentNodeId",
+                      "dialogueBubble": {
+                        "speaker": "@entity.currentSpeaker",
+                        "text": "@entity.currentText",
+                        "type": "dialogue-bubble"
+                      },
+                      "nodes": "@entity.nodes",
                       "portraitScale": "@config.portraitScale",
                       "restartEvent": "RESTART",
-                      "title": "@config.title",
-                      "type": "visual-novel-template",
+                      "type": "visual-novel-board",
                       "typewriterSpeed": "@config.typewriterSpeed"
                     }
                   ]
                 ],
                 "event": "INIT",
-                "from": "idle",
-                "to": "idle"
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentNodeId",
+                    "@payload.nextId"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentSpeaker",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@entity.nodes",
+                        [
+                          "fn",
+                          "n",
+                          [
+                            "==",
+                            "@n.id",
+                            "@payload.nextId"
+                          ]
+                        ]
+                      ],
+                      "speaker"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentText",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@entity.nodes",
+                        [
+                          "fn",
+                          "n",
+                          [
+                            "==",
+                            "@n.id",
+                            "@payload.nextId"
+                          ]
+                        ]
+                      ],
+                      "text"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentChoices",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@entity.nodes",
+                        [
+                          "fn",
+                          "n",
+                          [
+                            "==",
+                            "@n.id",
+                            "@payload.nextId"
+                          ]
+                        ]
+                      ],
+                      "choices"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "advanceEvent": "ADVANCE",
+                      "choiceButton": {
+                        "choices": "@entity.currentChoices",
+                        "chooseEvent": "CHOOSE",
+                        "type": "choice-button"
+                      },
+                      "chooseEvent": "CHOOSE",
+                      "currentNodeId": "@entity.currentNodeId",
+                      "dialogueBubble": {
+                        "speaker": "@entity.currentSpeaker",
+                        "text": "@entity.currentText",
+                        "type": "dialogue-bubble"
+                      },
+                      "nodes": "@entity.nodes",
+                      "portraitScale": "@config.portraitScale",
+                      "restartEvent": "RESTART",
+                      "type": "visual-novel-board",
+                      "typewriterSpeed": "@config.typewriterSpeed"
+                    }
+                  ]
+                ],
+                "event": "CHOOSE",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "advanceEvent": "ADVANCE",
+                      "choiceButton": {
+                        "choices": "@entity.currentChoices",
+                        "chooseEvent": "CHOOSE",
+                        "type": "choice-button"
+                      },
+                      "chooseEvent": "CHOOSE",
+                      "currentNodeId": "@entity.currentNodeId",
+                      "dialogueBubble": {
+                        "speaker": "@entity.currentSpeaker",
+                        "text": "@entity.currentText",
+                        "type": "dialogue-bubble"
+                      },
+                      "nodes": "@entity.nodes",
+                      "portraitScale": "@config.portraitScale",
+                      "restartEvent": "RESTART",
+                      "type": "visual-novel-board",
+                      "typewriterSpeed": "@config.typewriterSpeed"
+                    }
+                  ]
+                ],
+                "event": "ADVANCE",
+                "from": "playing",
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.currentNodeId",
+                    "@config.currentNodeId"
+                  ],
+                  [
+                    "set",
+                    "@entity.currentSpeaker",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@entity.nodes",
+                        [
+                          "fn",
+                          "n",
+                          [
+                            "==",
+                            "@n.id",
+                            "@config.currentNodeId"
+                          ]
+                        ]
+                      ],
+                      "speaker"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentText",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@entity.nodes",
+                        [
+                          "fn",
+                          "n",
+                          [
+                            "==",
+                            "@n.id",
+                            "@config.currentNodeId"
+                          ]
+                        ]
+                      ],
+                      "text"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentChoices",
+                    [
+                      "object/get",
+                      [
+                        "array/find",
+                        "@entity.nodes",
+                        [
+                          "fn",
+                          "n",
+                          [
+                            "==",
+                            "@n.id",
+                            "@config.currentNodeId"
+                          ]
+                        ]
+                      ],
+                      "choices"
+                    ]
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "advanceEvent": "ADVANCE",
+                      "choiceButton": {
+                        "choices": "@entity.currentChoices",
+                        "chooseEvent": "CHOOSE",
+                        "type": "choice-button"
+                      },
+                      "chooseEvent": "CHOOSE",
+                      "currentNodeId": "@entity.currentNodeId",
+                      "dialogueBubble": {
+                        "speaker": "@entity.currentSpeaker",
+                        "text": "@entity.currentText",
+                        "type": "dialogue-bubble"
+                      },
+                      "nodes": "@entity.nodes",
+                      "portraitScale": "@config.portraitScale",
+                      "restartEvent": "RESTART",
+                      "type": "visual-novel-board",
+                      "typewriterSpeed": "@config.typewriterSpeed"
+                    }
+                  ]
+                ],
+                "event": "RESTART",
+                "from": "playing",
+                "to": "playing"
               }
             ]
           }
