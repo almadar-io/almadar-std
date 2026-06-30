@@ -19,7 +19,7 @@
 import type { TraitReference, PageRefObject, OrbitalDefinition, Entity, EntityField, EntityPersistence, TraitConfig, TraitFieldRef, EntityRow, SExpr, TraitEventListener, Trait, StateMachine } from '@almadar/core/types';
 import type { MakeTraitRefOpts } from '@almadar/core/builders';
 import { makeTraitRef, makePageRef, makeOrbitalWithUses } from '@almadar/core/builders';
-import { rebindInlineTraitEntity } from '../../../../factory-runtime/apply-params-to-orb.js';
+import { rebindInlineTraitEntity, mergeCallSiteConfigOverrides } from '../../../../factory-runtime/apply-params-to-orb.js';
 
 const BEHAVIOR_PATH = 'std/behaviors/std-agent-pipeline';
 const ALIAS = 'AgentPipeline';
@@ -3193,7 +3193,9 @@ export function stdAgentPipelinePipelinePlanOrbital(params: StdAgentPipelinePipe
       const override = overrides?.[tr.name];
       if (!override) return t;
       const merged: TraitReference = { ...tr };
-      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
       if (override.name !== undefined) merged.name = override.name;
@@ -9136,7 +9138,9 @@ export function stdAgentPipelinePipelineExecOrbital(params: StdAgentPipelinePipe
       const override = overrides?.[tr.name];
       if (!override) return t;
       const merged: TraitReference = { ...tr };
-      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
       if (override.name !== undefined) merged.name = override.name;
@@ -10460,7 +10464,9 @@ export function stdAgentPipelinePipelineSessionOrbital(params: StdAgentPipelineP
       const override = overrides?.[tr.name];
       if (!override) return t;
       const merged: TraitReference = { ...tr };
-      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
       if (override.name !== undefined) merged.name = override.name;
@@ -12123,7 +12129,9 @@ export function stdAgentPipelineExecutionLogOrbital(params: StdAgentPipelineExec
       const override = overrides?.[tr.name];
       if (!override) return t;
       const merged: TraitReference = { ...tr };
-      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
       if (override.name !== undefined) merged.name = override.name;
@@ -12315,7 +12323,9 @@ export function stdAgentPipelinePipelineProgressOrbital(params: StdAgentPipeline
       const override = overrides?.[tr.name];
       if (!override) return t;
       const merged: TraitReference = { ...tr };
-      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
       if (override.name !== undefined) merged.name = override.name;
@@ -12498,7 +12508,9 @@ export function stdAgentPipelineSessionTreeOrbital(params: StdAgentPipelineSessi
       const override = overrides?.[tr.name];
       if (!override) return t;
       const merged: TraitReference = { ...tr };
-      if (override.config !== undefined) merged.config = { ...(tr.config ?? {}), ...override.config };
+      if (override.config !== undefined) {
+        merged.config = mergeCallSiteConfigOverrides(tr.config ?? {}, override.config);
+      }
       if (override.linkedEntity !== undefined) merged.linkedEntity = override.linkedEntity;
       if (override.events !== undefined) merged.events = { ...(tr.events ?? {}), ...override.events };
       if (override.name !== undefined) merged.name = override.name;
