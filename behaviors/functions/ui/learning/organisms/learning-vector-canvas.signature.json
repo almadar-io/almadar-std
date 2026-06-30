@@ -7,7 +7,18 @@
     "entities": [
       {
         "name": "VectorCanvasItem",
-        "fields": [],
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "vectors",
+            "type": "array",
+            "required": false
+          }
+        ],
         "persistence": "runtime"
       }
     ],
@@ -24,10 +35,47 @@
         ],
         "overridableConfigKeys": [
           {
+            "key": "animate",
+            "type": "boolean",
+            "default": false,
+            "label": "Animate",
+            "description": "Enable continuous redraw loop.",
+            "tier": "presentation"
+          },
+          {
+            "key": "gridStep",
+            "type": "number",
+            "default": 1,
+            "label": "Grid Step",
+            "tier": "presentation"
+          },
+          {
             "key": "height",
             "type": "number",
             "default": 400,
             "label": "Height",
+            "tier": "presentation"
+          },
+          {
+            "key": "interactive",
+            "type": "boolean",
+            "default": false,
+            "label": "Interactive",
+            "description": "Enable pointer interaction on the canvas.",
+            "tier": "presentation"
+          },
+          {
+            "key": "showAxes",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Axes",
+            "tier": "presentation"
+          },
+          {
+            "key": "showGrid",
+            "type": "boolean",
+            "default": true,
+            "label": "Show Grid",
             "tier": "presentation"
           },
           {
@@ -37,6 +85,74 @@
             "label": "Title",
             "description": "Title shown above the canvas.",
             "tier": "domain"
+          },
+          {
+            "key": "vectors",
+            "type": "[VectorCanvasVector]",
+            "default": [
+              {
+                "color": "#2563eb",
+                "label": "u",
+                "vx": 3,
+                "vy": 2,
+                "x": 0,
+                "y": 0
+              },
+              {
+                "color": "#dc2626",
+                "label": "v",
+                "vx": -2,
+                "vy": 3,
+                "x": 0,
+                "y": 0
+              },
+              {
+                "color": "#16a34a",
+                "label": "w",
+                "vx": 1,
+                "vy": 5,
+                "x": 0,
+                "y": 0
+              }
+            ],
+            "label": "Vectors",
+            "description": "Vectors to plot (origin + components).",
+            "tier": "domain",
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": true,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": true,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            }
           },
           {
             "key": "width",
@@ -78,7 +194,10 @@
         "entityRebindable": true,
         "entityContract": {
           "requires": [],
-          "provides": []
+          "provides": [
+            "title",
+            "vectors"
+          ]
         }
       }
     ],

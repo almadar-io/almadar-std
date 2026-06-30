@@ -1,5 +1,5 @@
 {
-  "description": "Wave canvas organism — a sampled sine wave rendered on a math-canvas, useful for teaching periodic motion.",
+  "description": "Wave canvas organism — a sampled wave on a math-canvas, driven by entity data.",
   "name": "learning-wave-canvas",
   "orbitals": [
     {
@@ -9,6 +9,57 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "yMin",
+            "type": "number"
+          },
+          {
+            "name": "yMax",
+            "type": "number"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "samples": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "samples",
+                  "required": false,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "curves",
+            "type": "array"
           }
         ],
         "name": "WaveCanvasItem",
@@ -30,11 +81,128 @@
         {
           "category": "interaction",
           "config": {
+            "animate": {
+              "default": false,
+              "description": "Enable continuous redraw loop.",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "curves": {
+              "default": [
+                {
+                  "color": "#7c3aed",
+                  "label": "y = sin(x)",
+                  "samples": [
+                    {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 0.79,
+                      "y": 0.71
+                    },
+                    {
+                      "x": 1.57,
+                      "y": 1.0
+                    },
+                    {
+                      "x": 2.36,
+                      "y": 0.71
+                    },
+                    {
+                      "x": 3.14,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 3.93,
+                      "y": -0.71
+                    },
+                    {
+                      "x": 4.71,
+                      "y": -1.0
+                    },
+                    {
+                      "x": 5.5,
+                      "y": -0.71
+                    },
+                    {
+                      "x": 6.28,
+                      "y": 0.0
+                    }
+                  ]
+                }
+              ],
+              "description": "Sampled wave curves.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "samples": {
+                    "items": {
+                      "properties": {
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "samples",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Curves",
+              "tier": "domain",
+              "type": "[WaveCanvasCurve]"
+            },
+            "gridStep": {
+              "default": 1.0,
+              "label": "Grid Step",
+              "tier": "presentation",
+              "type": "number"
+            },
             "height": {
               "default": 300.0,
               "label": "Height",
               "tier": "presentation",
               "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showAxes": {
+              "default": true,
+              "label": "Show Axes",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showGrid": {
+              "default": true,
+              "label": "Show Grid",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "title": {
               "default": "Wave Canvas",
@@ -60,10 +228,27 @@
               "label": "X Min",
               "tier": "domain",
               "type": "number"
+            },
+            "yMax": {
+              "default": 1.5,
+              "label": "Y Max",
+              "tier": "domain",
+              "type": "number"
+            },
+            "yMin": {
+              "default": -1.5,
+              "label": "Y Min",
+              "tier": "domain",
+              "type": "number"
             }
           },
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "curves",
+              "title",
+              "yMax",
+              "yMin"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -87,70 +272,49 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.yMin",
+                    "@config.yMin"
+                  ],
+                  [
+                    "set",
+                    "@entity.yMax",
+                    "@config.yMax"
+                  ],
+                  [
+                    "set",
+                    "@entity.curves",
+                    "@config.curves"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": [
                         {
-                          "content": "@config.title",
+                          "content": "@entity.title",
                           "type": "typography",
                           "variant": "h4"
                         },
                         {
-                          "curves": [
-                            {
-                              "color": "#7c3aed",
-                              "label": "y = sin(x)",
-                              "samples": [
-                                {
-                                  "x": 0.0,
-                                  "y": 0.0
-                                },
-                                {
-                                  "x": 0.79,
-                                  "y": 0.71
-                                },
-                                {
-                                  "x": 1.57,
-                                  "y": 1.0
-                                },
-                                {
-                                  "x": 2.36,
-                                  "y": 0.71
-                                },
-                                {
-                                  "x": 3.14,
-                                  "y": 0.0
-                                },
-                                {
-                                  "x": 3.93,
-                                  "y": -0.71
-                                },
-                                {
-                                  "x": 4.71,
-                                  "y": -1.0
-                                },
-                                {
-                                  "x": 5.5,
-                                  "y": -0.71
-                                },
-                                {
-                                  "x": 6.28,
-                                  "y": 0.0
-                                }
-                              ]
-                            }
-                          ],
-                          "gridStep": 1.0,
+                          "animate": "@config.animate",
+                          "curves": "@entity.curves",
+                          "gridStep": "@config.gridStep",
                           "height": "@config.height",
-                          "showAxes": true,
-                          "showGrid": true,
+                          "interactive": "@config.interactive",
+                          "showAxes": "@config.showAxes",
+                          "showGrid": "@config.showGrid",
                           "type": "math-canvas",
                           "width": "@config.width",
                           "xMax": "@config.xMax",
                           "xMin": "@config.xMin",
-                          "yMax": 1.5,
-                          "yMin": -1.5
+                          "yMax": "@entity.yMax",
+                          "yMin": "@entity.yMin"
                         }
                       ],
                       "direction": "vertical",

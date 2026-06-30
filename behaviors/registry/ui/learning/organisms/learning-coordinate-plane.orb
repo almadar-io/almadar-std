@@ -1,5 +1,5 @@
 {
-  "description": "Coordinate plane organism — a math-canvas with a sample curve and scatter points, wrapped in a card with a title.",
+  "description": "Coordinate plane organism — a math-canvas bound to entity curves and points.",
   "name": "learning-coordinate-plane",
   "orbitals": [
     {
@@ -9,6 +9,98 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "samples": {
+                  "items": {
+                    "properties": {
+                      "color": {
+                        "name": "color",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "label": {
+                        "name": "label",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "radius": {
+                        "name": "radius",
+                        "required": false,
+                        "type": "number"
+                      },
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "samples",
+                  "required": false,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "curves",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "points",
+            "type": "array"
           }
         ],
         "name": "CoordinatePlaneItem",
@@ -30,12 +122,188 @@
         {
           "category": "interaction",
           "config": {
+            "animate": {
+              "default": false,
+              "description": "Enable continuous redraw loop.",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "curves": {
+              "default": [
+                {
+                  "color": "#2563eb",
+                  "label": "y = x²",
+                  "samples": [
+                    {
+                      "x": -3.0,
+                      "y": 9.0
+                    },
+                    {
+                      "x": -2.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": -1.0,
+                      "y": 1.0
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 1.0,
+                      "y": 1.0
+                    },
+                    {
+                      "x": 2.0,
+                      "y": 4.0
+                    },
+                    {
+                      "x": 3.0,
+                      "y": 9.0
+                    }
+                  ]
+                }
+              ],
+              "description": "Sampled curves to plot.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "samples": {
+                    "items": {
+                      "properties": {
+                        "color": {
+                          "name": "color",
+                          "required": false,
+                          "type": "string"
+                        },
+                        "label": {
+                          "name": "label",
+                          "required": false,
+                          "type": "string"
+                        },
+                        "radius": {
+                          "name": "radius",
+                          "required": false,
+                          "type": "number"
+                        },
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "samples",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Curves",
+              "tier": "domain",
+              "type": "[CoordinatePlaneCurve]"
+            },
+            "gridStep": {
+              "default": 1.0,
+              "label": "Grid Step",
+              "tier": "presentation",
+              "type": "number"
+            },
             "height": {
               "default": 400.0,
               "description": "Canvas height in pixels.",
               "label": "Height",
               "tier": "presentation",
               "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "points": {
+              "default": [
+                {
+                  "color": "#dc2626",
+                  "label": "A",
+                  "radius": 4.0,
+                  "x": -2.0,
+                  "y": 4.0
+                },
+                {
+                  "color": "#16a34a",
+                  "label": "B",
+                  "radius": 4.0,
+                  "x": 1.0,
+                  "y": 1.0
+                }
+              ],
+              "description": "Scatter points to highlight.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Points",
+              "tier": "domain",
+              "type": "[CoordinatePlanePoint]"
+            },
+            "showAxes": {
+              "default": true,
+              "label": "Show Axes",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showGrid": {
+              "default": true,
+              "label": "Show Grid",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "title": {
               "default": "Coordinate Plane",
@@ -81,7 +349,11 @@
             }
           },
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "curves",
+              "points",
+              "title"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -105,70 +377,39 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.curves",
+                    "@config.curves"
+                  ],
+                  [
+                    "set",
+                    "@entity.points",
+                    "@config.points"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": [
                         {
-                          "content": "@config.title",
+                          "content": "@entity.title",
                           "type": "typography",
                           "variant": "h4"
                         },
                         {
-                          "curves": [
-                            {
-                              "color": "#2563eb",
-                              "label": "y = x²",
-                              "samples": [
-                                {
-                                  "x": -3.0,
-                                  "y": 9.0
-                                },
-                                {
-                                  "x": -2.0,
-                                  "y": 4.0
-                                },
-                                {
-                                  "x": -1.0,
-                                  "y": 1.0
-                                },
-                                {
-                                  "x": 0.0,
-                                  "y": 0.0
-                                },
-                                {
-                                  "x": 1.0,
-                                  "y": 1.0
-                                },
-                                {
-                                  "x": 2.0,
-                                  "y": 4.0
-                                },
-                                {
-                                  "x": 3.0,
-                                  "y": 9.0
-                                }
-                              ]
-                            }
-                          ],
-                          "gridStep": 1.0,
+                          "animate": "@config.animate",
+                          "curves": "@entity.curves",
+                          "gridStep": "@config.gridStep",
                           "height": "@config.height",
-                          "points": [
-                            {
-                              "color": "#dc2626",
-                              "label": "A",
-                              "x": -2.0,
-                              "y": 4.0
-                            },
-                            {
-                              "color": "#16a34a",
-                              "label": "B",
-                              "x": 1.0,
-                              "y": 1.0
-                            }
-                          ],
-                          "showAxes": true,
-                          "showGrid": true,
+                          "interactive": "@config.interactive",
+                          "points": "@entity.points",
+                          "showAxes": "@config.showAxes",
+                          "showGrid": "@config.showGrid",
                           "type": "math-canvas",
                           "width": "@config.width",
                           "xMax": "@config.xMax",

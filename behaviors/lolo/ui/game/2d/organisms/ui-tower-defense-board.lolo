@@ -117,8 +117,8 @@ orbital TowerDefenseBoardOrbital {
         (set @entity.waypointLabels [])
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Towers", value: (array/len @entity.towers) } ] }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower" })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
       PLACE_TOWER -> playing when (and (>= @entity.gold @config.towerCost) (and (grid/in-bounds { x: ?x, y: ?y } @config.gridWidth @config.gridHeight) (and (== (array/len (array/filter @entity.towers (fn t (and (== @t.x ?x) (== @t.y ?y))))) 0) (== (array/len (array/filter @config.path (fn p (and (== (object/get @p x) ?x) (== (object/get @p y) ?y))))) 0))))
@@ -126,8 +126,8 @@ orbital TowerDefenseBoardOrbital {
         (set @entity.towers (array/concat @entity.towers [{ id: (str/concat "tower-" (array/len @entity.towers)), x: ?x, y: ?y, range: @config.towerRange, damage: @config.towerDamage, cooldown: @config.towerCooldown, lastFiredAt: 0 }]))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Towers", value: (array/len @entity.towers) } ] }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower" })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
       START_WAVE -> playing when (and (== @entity.waveActive false) (== @entity.result "none"))
@@ -135,23 +135,23 @@ orbital TowerDefenseBoardOrbital {
         (set @entity.creeps (array/map (array/range 0 @config.creepsPerWave) (fn i { id: (str/concat "creep-" @i), x: (object/get (array/first @config.path) x), y: (object/get (array/first @config.path) y), hp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), maxHp: (+ @config.creepBaseHp (* @i @config.creepHpScaling)), pathIndex: 0, speed: @config.creepSpeed, animation: "walk", frame: 0 })))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Towers", value: (array/len @entity.towers) } ] }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower" })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
       MOVE_HERO -> playing when (== @entity.result "none")
         (set @entity.hero (object/merge @entity.hero { x: (math/max 0 (math/min (- @config.gridWidth 1) (+ (object/get @entity.hero x) ?dx))), y: (math/max 0 (math/min (- @config.gridHeight 1) (+ (object/get @entity.hero y) ?dy))) }))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Towers", value: (array/len @entity.towers) } ] }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower" })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
       GAME_END -> gameover when (or (== @entity.result "won") (== @entity.result "lost"))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Towers", value: (array/len @entity.towers) } ] }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower" })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
     }
 
@@ -172,8 +172,8 @@ orbital TowerDefenseBoardOrbital {
         (set @entity.waypointLabels [])
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Towers", value: (array/len @entity.towers) } ] }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower" })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
     }
 
@@ -183,8 +183,8 @@ orbital TowerDefenseBoardOrbital {
         (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Towers", value: (array/len @entity.towers) } ] }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower" })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
       creepMoveTick every 1s
@@ -200,8 +200,8 @@ orbital TowerDefenseBoardOrbital {
         (set @entity.result (if (and (== (array/len @entity.creeps) 0) (and (> @entity.lives 0) (>= @entity.wave @entity.maxWaves))) "won" @entity.result))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Towers", value: (array/len @entity.towers) } ] }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower" })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
 
       towerFireTick every 1s
@@ -212,8 +212,8 @@ orbital TowerDefenseBoardOrbital {
         (set @entity.creeps (array/filter @entity.creeps (fn c (> (object/get @c hp) 0))))
         (render-ui main {
           type: game-shell
-          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
-          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave }, { label: "Towers", value: (array/len @entity.towers) } ] }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: (array/map @entity.towers (fn t { id: @t.id, x: @t.x, y: @t.y, type: "tower" })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
     }
 

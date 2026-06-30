@@ -1,8 +1,20 @@
 app learning-function-plotter "1.0.0"
-"Function plotter organism — plots multiple sampled functions on a math-canvas."
+"Function plotter organism — plots entity-provided sampled functions on a math-canvas."
 orbital FunctionPlotterOrbital {
+  type FunctionPlotterPoint = {
+    x : number!
+    y : number!
+  }
+  type FunctionPlotterCurve = {
+    label : string
+    color : string
+    samples : [FunctionPlotterPoint]
+  }
+
   entity FunctionPlotterItem [runtime] {
     id : string!
+    title : string
+    curves : [FunctionPlotterCurve]
   }
 
   trait FunctionPlotterRender -> @rebindable FunctionPlotterItem [interaction, instance] {
@@ -10,13 +22,15 @@ orbital FunctionPlotterOrbital {
 
     state idle {
       INIT -> idle
+        (set @entity.title @config.title)
+        (set @entity.curves @config.curves)
         (render-ui main {
           type: stack
           direction: vertical
           gap: md
           padding: md
           children: [
-            { type: typography, variant: h4, content: @config.title },
+            { type: typography, variant: h4, content: @entity.title },
             { type: math-canvas,
               width: @config.width,
               height: @config.height,
@@ -24,31 +38,12 @@ orbital FunctionPlotterOrbital {
               xMax: @config.xMax,
               yMin: @config.yMin,
               yMax: @config.yMax,
-              showAxes: true,
-              showGrid: true,
-              gridStep: 1,
-              curves: [
-                { label: "sin(x)", color: "#2563eb",
-                  samples: [
-                    { x: -6.28, y: 0 }, { x: -5.5, y: 0.71 }, { x: -4.71, y: 1 },
-                    { x: -3.93, y: 0.71 }, { x: -3.14, y: 0 }, { x: -2.36, y: -0.71 },
-                    { x: -1.57, y: -1 }, { x: -0.79, y: -0.71 }, { x: 0, y: 0 },
-                    { x: 0.79, y: 0.71 }, { x: 1.57, y: 1 }, { x: 2.36, y: 0.71 },
-                    { x: 3.14, y: 0 }, { x: 3.93, y: -0.71 }, { x: 4.71, y: -1 },
-                    { x: 5.5, y: -0.71 }, { x: 6.28, y: 0 }
-                  ]
-                },
-                { label: "cos(x)", color: "#dc2626",
-                  samples: [
-                    { x: -6.28, y: 1 }, { x: -5.5, y: 0.71 }, { x: -4.71, y: 0 },
-                    { x: -3.93, y: -0.71 }, { x: -3.14, y: -1 }, { x: -2.36, y: -0.71 },
-                    { x: -1.57, y: 0 }, { x: -0.79, y: 0.71 }, { x: 0, y: 1 },
-                    { x: 0.79, y: 0.71 }, { x: 1.57, y: 0 }, { x: 2.36, y: -0.71 },
-                    { x: 3.14, y: -1 }, { x: 3.93, y: -0.71 }, { x: 4.71, y: 0 },
-                    { x: 5.5, y: 0.71 }, { x: 6.28, y: 1 }
-                  ]
-                }
-              ]
+              showAxes: @config.showAxes,
+              showGrid: @config.showGrid,
+              gridStep: @config.gridStep,
+              curves: @entity.curves,
+              interactive: @config.interactive,
+              animate: @config.animate
             }
           ]
         })
@@ -58,6 +53,31 @@ orbital FunctionPlotterOrbital {
       title : string = "Function Plotter"
         @label "Title"
         @description "Title shown above the plot."
+        @tier "domain"
+      curves : [FunctionPlotterCurve] = [
+        { label: "sin(x)", color: "#2563eb",
+          samples: [
+            { x: -6.28, y: 0 }, { x: -5.5, y: 0.71 }, { x: -4.71, y: 1 },
+            { x: -3.93, y: 0.71 }, { x: -3.14, y: 0 }, { x: -2.36, y: -0.71 },
+            { x: -1.57, y: -1 }, { x: -0.79, y: -0.71 }, { x: 0, y: 0 },
+            { x: 0.79, y: 0.71 }, { x: 1.57, y: 1 }, { x: 2.36, y: 0.71 },
+            { x: 3.14, y: 0 }, { x: 3.93, y: -0.71 }, { x: 4.71, y: -1 },
+            { x: 5.5, y: -0.71 }, { x: 6.28, y: 0 }
+          ]
+        },
+        { label: "cos(x)", color: "#dc2626",
+          samples: [
+            { x: -6.28, y: 1 }, { x: -5.5, y: 0.71 }, { x: -4.71, y: 0 },
+            { x: -3.93, y: -0.71 }, { x: -3.14, y: -1 }, { x: -2.36, y: -0.71 },
+            { x: -1.57, y: 0 }, { x: -0.79, y: 0.71 }, { x: 0, y: 1 },
+            { x: 0.79, y: 0.71 }, { x: 1.57, y: 0 }, { x: 2.36, y: -0.71 },
+            { x: 3.14, y: -1 }, { x: 3.93, y: -0.71 }, { x: 4.71, y: 0 },
+            { x: 5.5, y: 0.71 }, { x: 6.28, y: 1 }
+          ]
+        }
+      ]
+        @label "Curves"
+        @description "Sampled curves to plot."
         @tier "domain"
       width : number = 600
         @label "Width"
@@ -77,6 +97,23 @@ orbital FunctionPlotterOrbital {
       yMax : number = 2
         @label "Y Max"
         @tier "domain"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
     }
   }
 

@@ -1,5 +1,5 @@
 {
-  "description": "Field canvas organism — a physics-canvas showing bodies and force/velocity arrows.",
+  "description": "Field canvas organism — a physics-canvas bound to entity bodies, constraints, and forces.",
   "name": "learning-field-canvas",
   "orbitals": [
     {
@@ -9,6 +9,97 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "name": "backgroundColor",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "fx": {
+                  "name": "fx",
+                  "required": false,
+                  "type": "number"
+                },
+                "fy": {
+                  "name": "fy",
+                  "required": false,
+                  "type": "number"
+                },
+                "id": {
+                  "name": "id",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "radius": {
+                  "name": "radius",
+                  "required": false,
+                  "type": "number"
+                },
+                "vx": {
+                  "name": "vx",
+                  "required": false,
+                  "type": "number"
+                },
+                "vy": {
+                  "name": "vy",
+                  "required": false,
+                  "type": "number"
+                },
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "bodies",
+            "type": "array"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "from": {
+                  "name": "from",
+                  "required": true,
+                  "type": "string"
+                },
+                "to": {
+                  "name": "to",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "constraints",
+            "type": "array"
           }
         ],
         "name": "FieldCanvasItem",
@@ -30,11 +121,173 @@
         {
           "category": "interaction",
           "config": {
+            "animate": {
+              "default": false,
+              "description": "Enable continuous redraw loop.",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "backgroundColor": {
+              "default": "#f8fafc",
+              "label": "Background Color",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "bodies": {
+              "default": [
+                {
+                  "color": "#2563eb",
+                  "id": "b1",
+                  "label": "A",
+                  "radius": 14.0,
+                  "vx": 2.0,
+                  "vy": -1.0,
+                  "x": 120.0,
+                  "y": 200.0
+                },
+                {
+                  "color": "#dc2626",
+                  "id": "b2",
+                  "label": "B",
+                  "radius": 18.0,
+                  "vx": -1.0,
+                  "vy": 1.5,
+                  "x": 300.0,
+                  "y": 150.0
+                },
+                {
+                  "color": "#16a34a",
+                  "fx": -0.5,
+                  "fy": 0.0,
+                  "id": "b3",
+                  "label": "C",
+                  "radius": 12.0,
+                  "vx": 0.0,
+                  "vy": 0.0,
+                  "x": 480.0,
+                  "y": 220.0
+                }
+              ],
+              "description": "Physics bodies to render.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "fx": {
+                    "name": "fx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "fy": {
+                    "name": "fy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "id": {
+                    "name": "id",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "radius": {
+                    "name": "radius",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vx": {
+                    "name": "vx",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "vy": {
+                    "name": "vy",
+                    "required": false,
+                    "type": "number"
+                  },
+                  "x": {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  "y": {
+                    "name": "y",
+                    "required": true,
+                    "type": "number"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Bodies",
+              "tier": "domain",
+              "type": "[FieldCanvasBody]"
+            },
+            "constraints": {
+              "default": [],
+              "description": "Constraints linking bodies.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "from": {
+                    "name": "from",
+                    "required": true,
+                    "type": "string"
+                  },
+                  "to": {
+                    "name": "to",
+                    "required": true,
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Constraints",
+              "tier": "domain",
+              "type": "[FieldCanvasConstraint]"
+            },
+            "forceScale": {
+              "default": 30.0,
+              "label": "Force Scale",
+              "tier": "presentation",
+              "type": "number"
+            },
             "height": {
               "default": 400.0,
               "label": "Height",
               "tier": "presentation",
               "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showForces": {
+              "default": true,
+              "description": "Render force arrows for each body.",
+              "label": "Show Forces",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showVelocity": {
+              "default": true,
+              "description": "Render velocity arrows for each body.",
+              "label": "Show Velocity",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "title": {
               "default": "Field Canvas",
@@ -42,6 +295,12 @@
               "label": "Title",
               "tier": "domain",
               "type": "string"
+            },
+            "velocityScale": {
+              "default": 25.0,
+              "label": "Velocity Scale",
+              "tier": "presentation",
+              "type": "number"
             },
             "width": {
               "default": 600.0,
@@ -51,7 +310,12 @@
             }
           },
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "backgroundColor",
+              "bodies",
+              "constraints",
+              "title"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -75,57 +339,47 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.backgroundColor",
+                    "@config.backgroundColor"
+                  ],
+                  [
+                    "set",
+                    "@entity.bodies",
+                    "@config.bodies"
+                  ],
+                  [
+                    "set",
+                    "@entity.constraints",
+                    "@config.constraints"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": [
                         {
-                          "content": "@config.title",
+                          "content": "@entity.title",
                           "type": "typography",
                           "variant": "h4"
                         },
                         {
-                          "backgroundColor": "#f8fafc",
-                          "bodies": [
-                            {
-                              "color": "#2563eb",
-                              "id": "b1",
-                              "label": "A",
-                              "radius": 14.0,
-                              "vx": 2.0,
-                              "vy": -1.0,
-                              "x": 120.0,
-                              "y": 200.0
-                            },
-                            {
-                              "color": "#dc2626",
-                              "id": "b2",
-                              "label": "B",
-                              "radius": 18.0,
-                              "vx": -1.0,
-                              "vy": 1.5,
-                              "x": 300.0,
-                              "y": 150.0
-                            },
-                            {
-                              "color": "#16a34a",
-                              "fx": -0.5,
-                              "fy": 0.0,
-                              "id": "b3",
-                              "label": "C",
-                              "radius": 12.0,
-                              "vx": 0.0,
-                              "vy": 0.0,
-                              "x": 480.0,
-                              "y": 220.0
-                            }
-                          ],
-                          "forceScale": 30.0,
+                          "animate": "@config.animate",
+                          "backgroundColor": "@entity.backgroundColor",
+                          "bodies": "@entity.bodies",
+                          "constraints": "@entity.constraints",
+                          "forceScale": "@config.forceScale",
                           "height": "@config.height",
-                          "showForces": true,
-                          "showVelocity": true,
+                          "interactive": "@config.interactive",
+                          "showForces": "@config.showForces",
+                          "showVelocity": "@config.showVelocity",
                           "type": "physics-canvas",
-                          "velocityScale": 25.0,
+                          "velocityScale": "@config.velocityScale",
                           "width": "@config.width"
                         }
                       ],

@@ -1,5 +1,5 @@
 {
-  "description": "Function plotter organism — plots multiple sampled functions on a math-canvas.",
+  "description": "Function plotter organism — plots entity-provided sampled functions on a math-canvas.",
   "name": "learning-function-plotter",
   "orbitals": [
     {
@@ -9,6 +9,49 @@
             "name": "id",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "title",
+            "type": "string"
+          },
+          {
+            "items": {
+              "properties": {
+                "color": {
+                  "name": "color",
+                  "required": false,
+                  "type": "string"
+                },
+                "label": {
+                  "name": "label",
+                  "required": false,
+                  "type": "string"
+                },
+                "samples": {
+                  "items": {
+                    "properties": {
+                      "x": {
+                        "name": "x",
+                        "required": true,
+                        "type": "number"
+                      },
+                      "y": {
+                        "name": "y",
+                        "required": true,
+                        "type": "number"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "name": "samples",
+                  "required": false,
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "name": "curves",
+            "type": "array"
           }
         ],
         "name": "FunctionPlotterItem",
@@ -30,11 +73,234 @@
         {
           "category": "interaction",
           "config": {
+            "animate": {
+              "default": false,
+              "description": "Enable continuous redraw loop.",
+              "label": "Animate",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "curves": {
+              "default": [
+                {
+                  "color": "#2563eb",
+                  "label": "sin(x)",
+                  "samples": [
+                    {
+                      "x": -6.28,
+                      "y": 0.0
+                    },
+                    {
+                      "x": -5.5,
+                      "y": 0.71
+                    },
+                    {
+                      "x": -4.71,
+                      "y": 1.0
+                    },
+                    {
+                      "x": -3.93,
+                      "y": 0.71
+                    },
+                    {
+                      "x": -3.14,
+                      "y": 0.0
+                    },
+                    {
+                      "x": -2.36,
+                      "y": -0.71
+                    },
+                    {
+                      "x": -1.57,
+                      "y": -1.0
+                    },
+                    {
+                      "x": -0.79,
+                      "y": -0.71
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 0.79,
+                      "y": 0.71
+                    },
+                    {
+                      "x": 1.57,
+                      "y": 1.0
+                    },
+                    {
+                      "x": 2.36,
+                      "y": 0.71
+                    },
+                    {
+                      "x": 3.14,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 3.93,
+                      "y": -0.71
+                    },
+                    {
+                      "x": 4.71,
+                      "y": -1.0
+                    },
+                    {
+                      "x": 5.5,
+                      "y": -0.71
+                    },
+                    {
+                      "x": 6.28,
+                      "y": 0.0
+                    }
+                  ]
+                },
+                {
+                  "color": "#dc2626",
+                  "label": "cos(x)",
+                  "samples": [
+                    {
+                      "x": -6.28,
+                      "y": 1.0
+                    },
+                    {
+                      "x": -5.5,
+                      "y": 0.71
+                    },
+                    {
+                      "x": -4.71,
+                      "y": 0.0
+                    },
+                    {
+                      "x": -3.93,
+                      "y": -0.71
+                    },
+                    {
+                      "x": -3.14,
+                      "y": -1.0
+                    },
+                    {
+                      "x": -2.36,
+                      "y": -0.71
+                    },
+                    {
+                      "x": -1.57,
+                      "y": 0.0
+                    },
+                    {
+                      "x": -0.79,
+                      "y": 0.71
+                    },
+                    {
+                      "x": 0.0,
+                      "y": 1.0
+                    },
+                    {
+                      "x": 0.79,
+                      "y": 0.71
+                    },
+                    {
+                      "x": 1.57,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 2.36,
+                      "y": -0.71
+                    },
+                    {
+                      "x": 3.14,
+                      "y": -1.0
+                    },
+                    {
+                      "x": 3.93,
+                      "y": -0.71
+                    },
+                    {
+                      "x": 4.71,
+                      "y": 0.0
+                    },
+                    {
+                      "x": 5.5,
+                      "y": 0.71
+                    },
+                    {
+                      "x": 6.28,
+                      "y": 1.0
+                    }
+                  ]
+                }
+              ],
+              "description": "Sampled curves to plot.",
+              "items": {
+                "properties": {
+                  "color": {
+                    "name": "color",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "label": {
+                    "name": "label",
+                    "required": false,
+                    "type": "string"
+                  },
+                  "samples": {
+                    "items": {
+                      "properties": {
+                        "x": {
+                          "name": "x",
+                          "required": true,
+                          "type": "number"
+                        },
+                        "y": {
+                          "name": "y",
+                          "required": true,
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "name": "samples",
+                    "required": false,
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "label": "Curves",
+              "tier": "domain",
+              "type": "[FunctionPlotterCurve]"
+            },
+            "gridStep": {
+              "default": 1.0,
+              "label": "Grid Step",
+              "tier": "presentation",
+              "type": "number"
+            },
             "height": {
               "default": 400.0,
               "label": "Height",
               "tier": "presentation",
               "type": "number"
+            },
+            "interactive": {
+              "default": false,
+              "description": "Enable pointer interaction on the canvas.",
+              "label": "Interactive",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showAxes": {
+              "default": true,
+              "label": "Show Axes",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "showGrid": {
+              "default": true,
+              "label": "Show Grid",
+              "tier": "presentation",
+              "type": "boolean"
             },
             "title": {
               "default": "Function Plotter",
@@ -75,7 +341,10 @@
             }
           },
           "entityContract": {
-            "provides": [],
+            "provides": [
+              "curves",
+              "title"
+            ],
             "requires": []
           },
           "entityRebindable": true,
@@ -99,170 +368,33 @@
               {
                 "effects": [
                   [
+                    "set",
+                    "@entity.title",
+                    "@config.title"
+                  ],
+                  [
+                    "set",
+                    "@entity.curves",
+                    "@config.curves"
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": [
                         {
-                          "content": "@config.title",
+                          "content": "@entity.title",
                           "type": "typography",
                           "variant": "h4"
                         },
                         {
-                          "curves": [
-                            {
-                              "color": "#2563eb",
-                              "label": "sin(x)",
-                              "samples": [
-                                {
-                                  "x": -6.28,
-                                  "y": 0.0
-                                },
-                                {
-                                  "x": -5.5,
-                                  "y": 0.71
-                                },
-                                {
-                                  "x": -4.71,
-                                  "y": 1.0
-                                },
-                                {
-                                  "x": -3.93,
-                                  "y": 0.71
-                                },
-                                {
-                                  "x": -3.14,
-                                  "y": 0.0
-                                },
-                                {
-                                  "x": -2.36,
-                                  "y": -0.71
-                                },
-                                {
-                                  "x": -1.57,
-                                  "y": -1.0
-                                },
-                                {
-                                  "x": -0.79,
-                                  "y": -0.71
-                                },
-                                {
-                                  "x": 0.0,
-                                  "y": 0.0
-                                },
-                                {
-                                  "x": 0.79,
-                                  "y": 0.71
-                                },
-                                {
-                                  "x": 1.57,
-                                  "y": 1.0
-                                },
-                                {
-                                  "x": 2.36,
-                                  "y": 0.71
-                                },
-                                {
-                                  "x": 3.14,
-                                  "y": 0.0
-                                },
-                                {
-                                  "x": 3.93,
-                                  "y": -0.71
-                                },
-                                {
-                                  "x": 4.71,
-                                  "y": -1.0
-                                },
-                                {
-                                  "x": 5.5,
-                                  "y": -0.71
-                                },
-                                {
-                                  "x": 6.28,
-                                  "y": 0.0
-                                }
-                              ]
-                            },
-                            {
-                              "color": "#dc2626",
-                              "label": "cos(x)",
-                              "samples": [
-                                {
-                                  "x": -6.28,
-                                  "y": 1.0
-                                },
-                                {
-                                  "x": -5.5,
-                                  "y": 0.71
-                                },
-                                {
-                                  "x": -4.71,
-                                  "y": 0.0
-                                },
-                                {
-                                  "x": -3.93,
-                                  "y": -0.71
-                                },
-                                {
-                                  "x": -3.14,
-                                  "y": -1.0
-                                },
-                                {
-                                  "x": -2.36,
-                                  "y": -0.71
-                                },
-                                {
-                                  "x": -1.57,
-                                  "y": 0.0
-                                },
-                                {
-                                  "x": -0.79,
-                                  "y": 0.71
-                                },
-                                {
-                                  "x": 0.0,
-                                  "y": 1.0
-                                },
-                                {
-                                  "x": 0.79,
-                                  "y": 0.71
-                                },
-                                {
-                                  "x": 1.57,
-                                  "y": 0.0
-                                },
-                                {
-                                  "x": 2.36,
-                                  "y": -0.71
-                                },
-                                {
-                                  "x": 3.14,
-                                  "y": -1.0
-                                },
-                                {
-                                  "x": 3.93,
-                                  "y": -0.71
-                                },
-                                {
-                                  "x": 4.71,
-                                  "y": 0.0
-                                },
-                                {
-                                  "x": 5.5,
-                                  "y": 0.71
-                                },
-                                {
-                                  "x": 6.28,
-                                  "y": 1.0
-                                }
-                              ]
-                            }
-                          ],
-                          "gridStep": 1.0,
+                          "animate": "@config.animate",
+                          "curves": "@entity.curves",
+                          "gridStep": "@config.gridStep",
                           "height": "@config.height",
-                          "showAxes": true,
-                          "showGrid": true,
+                          "interactive": "@config.interactive",
+                          "showAxes": "@config.showAxes",
+                          "showGrid": "@config.showGrid",
                           "type": "math-canvas",
                           "width": "@config.width",
                           "xMax": "@config.xMax",
