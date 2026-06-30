@@ -112,7 +112,7 @@ export interface StdUiSokobanBoardSokobanBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'SokobanBoardRender',
+    'SokobanBoardAnimTick' | 'SokobanBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -122,7 +122,12 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
   const canonicalName = params.entityName ?? 'SokobanBoardItem';
   const built = makeOrbitalWithUses({
     name: 'SokobanBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'AnimTick',
+        'from': 'std/behaviors/std-anim-tick',
+      },
+    ],
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
@@ -3135,80 +3140,6 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
           {
             'effects': [
               [
-                'set',
-                '@entity.units',
-                [
-                  'array/map',
-                  '@entity.units',
-                  [
-                    'fn',
-                    'u',
-                    [
-                      'object/merge',
-                      '@u',
-                      {
-                        'frame': [
-                          '%',
-                          [
-                            '+',
-                            [
-                              'object/get',
-                              '@u',
-                              'frame',
-                            ],
-                            1,
-                          ],
-                          8,
-                        ],
-                      },
-                    ],
-                  ],
-                ],
-              ],
-              [
-                'set',
-                '@entity.effects',
-                [
-                  'array/filter',
-                  [
-                    'array/map',
-                    '@entity.effects',
-                    [
-                      'fn',
-                      'e',
-                      [
-                        'object/merge',
-                        '@e',
-                        {
-                          'ttl': [
-                            '-',
-                            [
-                              'object/get',
-                              '@e',
-                              'ttl',
-                            ],
-                            1,
-                          ],
-                        },
-                      ],
-                    ],
-                  ],
-                  [
-                    'fn',
-                    'e',
-                    [
-                      '>',
-                      [
-                        'object/get',
-                        '@e',
-                        'ttl',
-                      ],
-                      0,
-                    ],
-                  ],
-                ],
-              ],
-              [
                 'render-ui',
                 'main',
                 {
@@ -3273,10 +3204,21 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
               ],
             ],
             'interval': 100,
-            'name': 'animTick',
+            'name': 'renderTick',
           },
         ],
       } as never, 'SokobanBoardItem', canonicalName) as never,
+      makeTraitRef({
+        'config': {
+          'frameCount': {
+            'default': 8,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'SokobanBoardAnimTick',
+        'ref': 'AnimTick.traits.AnimTick',
+      }),
     ],
     pages: [
       {
@@ -3285,6 +3227,9 @@ export function stdUiSokobanBoardSokobanBoardOrbital(params: StdUiSokobanBoardSo
         'traits': [
           {
             'ref': 'SokobanBoardRender',
+          },
+          {
+            'ref': 'SokobanBoardAnimTick',
           },
         ],
       } as never,
@@ -3341,6 +3286,7 @@ export const StdUiSokobanBoardSokobanBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'SokobanBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'SokobanBoardRender',

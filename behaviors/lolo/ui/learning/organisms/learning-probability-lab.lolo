@@ -1,0 +1,165 @@
+app learning-probability-lab "1.0.0"
+"Probability lab organism — dice, coins, random walks, and distributions on a math-canvas."
+orbital ProbabilityLabOrbital {
+  type ProbabilityLabCurve = {
+    label : string
+    color : string
+    samples : [ProbabilityLabPoint]
+  }
+  type ProbabilityLabPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+  type ProbabilityLabShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [ProbabilityLabShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type ProbabilityLabShapePoint = {
+    x : number!
+    y : number!
+  }
+
+  entity ProbabilityLabItem [runtime] {
+    id : string!
+    title : string
+    curves : [ProbabilityLabCurve]
+    points : [ProbabilityLabPoint]
+    shapes : [ProbabilityLabShape]
+  }
+
+  trait ProbabilityLabRender -> @rebindable ProbabilityLabItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.title @config.title)
+        (set @entity.curves @config.curves)
+        (set @entity.points @config.points)
+        (set @entity.shapes @config.shapes)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: md
+          padding: md
+          children: [
+            { type: typography, variant: h4, content: @entity.title },
+            { type: math-canvas,
+              width: @config.width,
+              height: @config.height,
+              xMin: @config.xMin,
+              xMax: @config.xMax,
+              yMin: @config.yMin,
+              yMax: @config.yMax,
+              showAxes: @config.showAxes,
+              showGrid: @config.showGrid,
+              gridStep: @config.gridStep,
+              curves: @entity.curves,
+              points: @entity.points,
+              vectors: [],
+              shapes: @entity.shapes,
+              interactive: @config.interactive,
+              animate: @config.animate
+            }
+          ]
+        })
+    }
+
+    config {
+      mode : "dice" | "coins" | "random-walk" | "distribution" = distribution
+        @label "Mode"
+        @description "What kind of probability or statistics visualization to render."
+        @synonyms "chance, probability, statistics, dice, coin flip, random walk, sampling, distribution, histogram, law of large numbers, expected value"
+        @tier "domain"
+      title : string = "Probability Lab"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      xMin : number = 0
+        @label "X Min"
+        @description "Minimum x value on the canvas."
+        @tier "presentation"
+      xMax : number = 10
+        @label "X Max"
+        @description "Maximum x value on the canvas."
+        @tier "presentation"
+      yMin : number = 0
+        @label "Y Min"
+        @description "Minimum y value on the canvas."
+        @tier "presentation"
+      yMax : number = 1
+        @label "Y Max"
+        @description "Maximum y value on the canvas."
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      curves : [ProbabilityLabCurve] = [
+        { label: "uniform", color: "#2563eb", samples: [
+          { x: 0, y: 0.1 }, { x: 1, y: 0.1 }, { x: 2, y: 0.1 }, { x: 3, y: 0.1 }, { x: 4, y: 0.1 },
+          { x: 5, y: 0.1 }, { x: 6, y: 0.1 }, { x: 7, y: 0.1 }, { x: 8, y: 0.1 }, { x: 9, y: 0.1 }, { x: 10, y: 0.1 }
+        ]}
+      ]
+        @label "Curves"
+        @description "Distribution curves or cumulative frequencies."
+        @tier "domain"
+      points : [ProbabilityLabPoint] = []
+        @label "Points"
+        @description "Sampled outcomes or scatter points."
+        @tier "domain"
+      shapes : [ProbabilityLabShape] = []
+        @label "Shapes"
+        @description "Extra declarative shapes such as bars or outcome labels."
+        @tier "domain"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+    }
+  }
+
+  page "/learning/probability-lab" as ProbabilityLabPage -> ProbabilityLabRender
+}

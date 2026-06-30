@@ -355,13 +355,11 @@ export * from './ui/core/molecules/ui-wizard-navigation.js';
 export * from './ui/core/molecules/ui-wizard-progress.js';
 
 // Organisms
-export * from './ui/learning/organisms/learning-cell-viewer.js';
-export * from './ui/learning/organisms/learning-coordinate-plane.js';
-export * from './ui/learning/organisms/learning-field-canvas.js';
-export * from './ui/learning/organisms/learning-function-plotter.js';
-export * from './ui/learning/organisms/learning-molecule-viewer.js';
-export * from './ui/learning/organisms/learning-vector-canvas.js';
-export * from './ui/learning/organisms/learning-wave-canvas.js';
+export * from './ui/learning/organisms/learning-biology-lab.js';
+export * from './ui/learning/organisms/learning-chemistry-lab.js';
+export * from './ui/learning/organisms/learning-math-lab.js';
+export * from './ui/learning/organisms/learning-physics-lab.js';
+export * from './ui/learning/organisms/learning-probability-lab.js';
 export * from './agent/organisms/std-agent-assistant.js';
 export * from './agent/organisms/std-agent-builder.js';
 export * from './agent/organisms/std-agent-pipeline.js';

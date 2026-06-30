@@ -501,6 +501,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
             'name': 'inventory',
             'type': 'array',
           },
+          {
+            'default': '',
+            'name': 'equippedWeapon',
+            'type': 'string',
+          },
         ];
         const extras = params.fields ?? [];
         if (extras.length === 0) return canonical;
@@ -6741,6 +6746,7 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
             'depth',
             'effects',
             'enemies',
+            'equippedWeapon',
             'gridHeight',
             'gridWidth',
             'inventory',
@@ -6975,6 +6981,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                   [],
                 ],
                 [
+                  'set',
+                  '@entity.equippedWeapon',
+                  '',
+                ],
+                [
                   'render-ui',
                   'main',
                   {
@@ -7165,6 +7176,31 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                         {
                           'items': '@entity.inventory',
                           'type': 'inventory-grid',
+                        },
+                        {
+                          'assetUrl': [
+                            'object/get',
+                            [
+                              'object/get',
+                              '@config.assetManifest',
+                              'features',
+                            ],
+                            'sword',
+                          ],
+                          'empty': [
+                            '==',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'label': 'Sword',
+                          'rarity': 'uncommon',
+                          'selected': [
+                            '!=',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'size': 'sm',
+                          'type': 'item-slot',
                         },
                         {
                           'action': 'PLAY_AGAIN',
@@ -7425,12 +7461,20 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                                     'sword',
                                   ],
                                   [
-                                    'set',
-                                    '@entity.playerAttack',
+                                    'do',
                                     [
-                                      '+',
+                                      'set',
                                       '@entity.playerAttack',
-                                      1,
+                                      [
+                                        '+',
+                                        '@entity.playerAttack',
+                                        1,
+                                      ],
+                                    ],
+                                    [
+                                      'set',
+                                      '@entity.equippedWeapon',
+                                      'sword',
                                     ],
                                   ],
                                   true,
@@ -7934,6 +7978,31 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           'type': 'inventory-grid',
                         },
                         {
+                          'assetUrl': [
+                            'object/get',
+                            [
+                              'object/get',
+                              '@config.assetManifest',
+                              'features',
+                            ],
+                            'sword',
+                          ],
+                          'empty': [
+                            '==',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'label': 'Sword',
+                          'rarity': 'uncommon',
+                          'selected': [
+                            '!=',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'size': 'sm',
+                          'type': 'item-slot',
+                        },
+                        {
                           'action': 'PLAY_AGAIN',
                           'icon': 'refresh',
                           'label': 'New Run',
@@ -8172,6 +8241,31 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           'type': 'inventory-grid',
                         },
                         {
+                          'assetUrl': [
+                            'object/get',
+                            [
+                              'object/get',
+                              '@config.assetManifest',
+                              'features',
+                            ],
+                            'sword',
+                          ],
+                          'empty': [
+                            '==',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'label': 'Sword',
+                          'rarity': 'uncommon',
+                          'selected': [
+                            '!=',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'size': 'sm',
+                          'type': 'item-slot',
+                        },
+                        {
                           'action': 'PLAY_AGAIN',
                           'icon': 'refresh',
                           'label': 'New Run',
@@ -8397,6 +8491,31 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           'type': 'inventory-grid',
                         },
                         {
+                          'assetUrl': [
+                            'object/get',
+                            [
+                              'object/get',
+                              '@config.assetManifest',
+                              'features',
+                            ],
+                            'sword',
+                          ],
+                          'empty': [
+                            '==',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'label': 'Sword',
+                          'rarity': 'uncommon',
+                          'selected': [
+                            '!=',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'size': 'sm',
+                          'type': 'item-slot',
+                        },
+                        {
                           'action': 'PLAY_AGAIN',
                           'icon': 'refresh',
                           'label': 'New Run',
@@ -8612,6 +8731,31 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                           'type': 'inventory-grid',
                         },
                         {
+                          'assetUrl': [
+                            'object/get',
+                            [
+                              'object/get',
+                              '@config.assetManifest',
+                              'features',
+                            ],
+                            'sword',
+                          ],
+                          'empty': [
+                            '==',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'label': 'Sword',
+                          'rarity': 'uncommon',
+                          'selected': [
+                            '!=',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'size': 'sm',
+                          'type': 'item-slot',
+                        },
+                        {
                           'action': 'PLAY_AGAIN',
                           'icon': 'refresh',
                           'label': 'New Run',
@@ -8741,6 +8885,11 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                   'set',
                   '@entity.inventory',
                   [],
+                ],
+                [
+                  'set',
+                  '@entity.equippedWeapon',
+                  '',
                 ],
                 [
                   'render-ui',
@@ -8933,6 +9082,31 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                         {
                           'items': '@entity.inventory',
                           'type': 'inventory-grid',
+                        },
+                        {
+                          'assetUrl': [
+                            'object/get',
+                            [
+                              'object/get',
+                              '@config.assetManifest',
+                              'features',
+                            ],
+                            'sword',
+                          ],
+                          'empty': [
+                            '==',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'label': 'Sword',
+                          'rarity': 'uncommon',
+                          'selected': [
+                            '!=',
+                            '@entity.equippedWeapon',
+                            '',
+                          ],
+                          'size': 'sm',
+                          'type': 'item-slot',
                         },
                         {
                           'action': 'PLAY_AGAIN',
@@ -9238,6 +9412,31 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                       {
                         'items': '@entity.inventory',
                         'type': 'inventory-grid',
+                      },
+                      {
+                        'assetUrl': [
+                          'object/get',
+                          [
+                            'object/get',
+                            '@config.assetManifest',
+                            'features',
+                          ],
+                          'sword',
+                        ],
+                        'empty': [
+                          '==',
+                          '@entity.equippedWeapon',
+                          '',
+                        ],
+                        'label': 'Sword',
+                        'rarity': 'uncommon',
+                        'selected': [
+                          '!=',
+                          '@entity.equippedWeapon',
+                          '',
+                        ],
+                        'size': 'sm',
+                        'type': 'item-slot',
                       },
                       {
                         'action': 'PLAY_AGAIN',
@@ -10107,6 +10306,31 @@ export function stdUiRoguelikeBoardRoguelikeBoardOrbital(params: StdUiRoguelikeB
                       {
                         'items': '@entity.inventory',
                         'type': 'inventory-grid',
+                      },
+                      {
+                        'assetUrl': [
+                          'object/get',
+                          [
+                            'object/get',
+                            '@config.assetManifest',
+                            'features',
+                          ],
+                          'sword',
+                        ],
+                        'empty': [
+                          '==',
+                          '@entity.equippedWeapon',
+                          '',
+                        ],
+                        'label': 'Sword',
+                        'rarity': 'uncommon',
+                        'selected': [
+                          '!=',
+                          '@entity.equippedWeapon',
+                          '',
+                        ],
+                        'size': 'sm',
+                        'type': 'item-slot',
                       },
                       {
                         'action': 'PLAY_AGAIN',

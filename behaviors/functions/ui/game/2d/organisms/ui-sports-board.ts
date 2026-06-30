@@ -127,7 +127,7 @@ export interface StdUiSportsBoardSportsBoardOrbitalParams {
    * atom-owned (use `listens` via a sibling trait instead).
    */
   traitOverrides?: Partial<Record<
-    'SportsBoardRender',
+    'SportsBoardAnimTick' | 'SportsBoardRender',
     Pick<MakeTraitRefOpts, 'config' | 'linkedEntity' | 'events' | 'name' | 'emitsScope' | 'listens'>
   >>;
 }
@@ -137,7 +137,12 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
   const canonicalName = params.entityName ?? 'SportsBoardItem';
   const built = makeOrbitalWithUses({
     name: 'SportsBoardOrbital',
-    uses: [],
+    uses: [
+      {
+        'as': 'AnimTick',
+        'from': 'std/behaviors/std-anim-tick',
+      },
+    ],
     entity: {
       name: canonicalName,
       persistence: params.persistence ?? 'runtime',
@@ -3594,80 +3599,6 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
           {
             'effects': [
               [
-                'set',
-                '@entity.units',
-                [
-                  'array/map',
-                  '@entity.units',
-                  [
-                    'fn',
-                    'u',
-                    [
-                      'object/merge',
-                      '@u',
-                      {
-                        'frame': [
-                          '%',
-                          [
-                            '+',
-                            [
-                              'object/get',
-                              '@u',
-                              'frame',
-                            ],
-                            1,
-                          ],
-                          8,
-                        ],
-                      },
-                    ],
-                  ],
-                ],
-              ],
-              [
-                'set',
-                '@entity.effects',
-                [
-                  'array/filter',
-                  [
-                    'array/map',
-                    '@entity.effects',
-                    [
-                      'fn',
-                      'e',
-                      [
-                        'object/merge',
-                        '@e',
-                        {
-                          'ttl': [
-                            '-',
-                            [
-                              'object/get',
-                              '@e',
-                              'ttl',
-                            ],
-                            1,
-                          ],
-                        },
-                      ],
-                    ],
-                  ],
-                  [
-                    'fn',
-                    'e',
-                    [
-                      '>',
-                      [
-                        'object/get',
-                        '@e',
-                        'ttl',
-                      ],
-                      0,
-                    ],
-                  ],
-                ],
-              ],
-              [
                 'render-ui',
                 'main',
                 {
@@ -3727,10 +3658,21 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
               ],
             ],
             'interval': 100,
-            'name': 'animTick',
+            'name': 'renderTick',
           },
         ],
       } as never, 'SportsBoardItem', canonicalName) as never,
+      makeTraitRef({
+        'config': {
+          'frameCount': {
+            'default': 8,
+            'type': 'unknown',
+          },
+        },
+        'linkedEntity': canonicalName,
+        'name': 'SportsBoardAnimTick',
+        'ref': 'AnimTick.traits.AnimTick',
+      }),
     ],
     pages: [
       {
@@ -3739,6 +3681,9 @@ export function stdUiSportsBoardSportsBoardOrbital(params: StdUiSportsBoardSport
         'traits': [
           {
             'ref': 'SportsBoardRender',
+          },
+          {
+            'ref': 'SportsBoardAnimTick',
           },
         ],
       } as never,
@@ -3795,6 +3740,7 @@ export const StdUiSportsBoardSportsBoardOrbitalManifest = {
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [
+    'SportsBoardAnimTick',
   ] as const,
   inlineTraitNames: [
     'SportsBoardRender',

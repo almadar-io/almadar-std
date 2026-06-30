@@ -1,0 +1,182 @@
+app learning-math-lab "1.0.0"
+"Math lab organism — plots functions, vectors, geometry, number lines, slope fields, and areas on a math-canvas."
+orbital MathLabOrbital {
+  type MathLabCurve = {
+    label : string
+    color : string
+    samples : [MathLabPoint]
+  }
+  type MathLabPoint = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+  type MathLabVector = {
+    x : number!
+    y : number!
+    vx : number!
+    vy : number!
+    color : string
+    label : string
+  }
+  type MathLabShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [MathLabShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type MathLabShapePoint = {
+    x : number!
+    y : number!
+  }
+
+  entity MathLabItem [runtime] {
+    id : string!
+    title : string
+    curves : [MathLabCurve]
+    points : [MathLabPoint]
+    vectors : [MathLabVector]
+    shapes : [MathLabShape]
+  }
+
+  trait MathLabRender -> @rebindable MathLabItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.title @config.title)
+        (set @entity.curves @config.curves)
+        (set @entity.points @config.points)
+        (set @entity.vectors @config.vectors)
+        (set @entity.shapes @config.shapes)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: md
+          padding: md
+          children: [
+            { type: typography, variant: h4, content: @entity.title },
+            { type: math-canvas,
+              width: @config.width,
+              height: @config.height,
+              xMin: @config.xMin,
+              xMax: @config.xMax,
+              yMin: @config.yMin,
+              yMax: @config.yMax,
+              showAxes: @config.showAxes,
+              showGrid: @config.showGrid,
+              gridStep: @config.gridStep,
+              curves: @entity.curves,
+              points: @entity.points,
+              vectors: @entity.vectors,
+              shapes: @entity.shapes,
+              interactive: @config.interactive,
+              animate: @config.animate
+            }
+          ]
+        })
+    }
+
+    config {
+      mode : "coordinate-plane" | "function-plot" | "vector" | "geometry" | "number-line" | "slope-field" | "area-integral" = coordinate-plane
+        @label "Mode"
+        @description "What kind of math visualization to render."
+        @synonyms "graph, plot, axes, coordinate plane, function, vector, geometry, number line, slope field, riemann sum, area under curve"
+        @tier "domain"
+      title : string = "Math Lab"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      xMin : number = -5
+        @label "X Min"
+        @description "Minimum x value on the canvas."
+        @tier "presentation"
+      xMax : number = 5
+        @label "X Max"
+        @description "Maximum x value on the canvas."
+        @tier "presentation"
+      yMin : number = -5
+        @label "Y Min"
+        @description "Minimum y value on the canvas."
+        @tier "presentation"
+      yMax : number = 5
+        @label "Y Max"
+        @description "Maximum y value on the canvas."
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @tier "presentation"
+      curves : [MathLabCurve] = [
+        { label: "y = x²", color: "#2563eb", samples: [
+          { x: -3, y: 9 }, { x: -2, y: 4 }, { x: -1, y: 1 },
+          { x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 4 }, { x: 3, y: 9 }
+        ]}
+      ]
+        @label "Curves"
+        @description "Sampled curves to plot."
+        @tier "domain"
+      points : [MathLabPoint] = [
+        { x: -2, y: 4, label: "A", color: "#dc2626", radius: 4 },
+        { x: 1, y: 1, label: "B", color: "#16a34a", radius: 4 }
+      ]
+        @label "Points"
+        @description "Scatter points to highlight."
+        @tier "domain"
+      vectors : [MathLabVector] = []
+        @label "Vectors"
+        @description "Vectors to draw (origin + components)."
+        @tier "domain"
+      shapes : [MathLabShape] = []
+        @label "Shapes"
+        @description "Extra declarative shapes such as polygons, text, or number-line ticks."
+        @tier "domain"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+    }
+  }
+
+  page "/learning/math-lab" as MathLabPage -> MathLabRender
+}

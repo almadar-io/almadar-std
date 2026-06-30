@@ -1,0 +1,138 @@
+app learning-biology-lab "1.0.0"
+"Biology lab organism — cells, organelles, food webs, and classification networks on a biology-canvas."
+orbital BiologyLabOrbital {
+  type BiologyLabNode = {
+    id : string
+    x : number!
+    y : number!
+    radius : number
+    color : string
+    label : string
+    kind : "cell" | "organelle" | "molecule" | "organism"
+  }
+  type BiologyLabEdge = {
+    from : string!
+    to : string!
+    color : string
+    label : string
+  }
+  type BiologyLabShape = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [BiologyLabShapePoint]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type BiologyLabShapePoint = {
+    x : number!
+    y : number!
+  }
+
+  entity BiologyLabItem [runtime] {
+    id : string!
+    title : string
+    nodes : [BiologyLabNode]
+    edges : [BiologyLabEdge]
+    shapes : [BiologyLabShape]
+  }
+
+  trait BiologyLabRender -> @rebindable BiologyLabItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (set @entity.title @config.title)
+        (set @entity.nodes @config.nodes)
+        (set @entity.edges @config.edges)
+        (set @entity.shapes @config.shapes)
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: md
+          padding: md
+          children: [
+            { type: typography, variant: h4, content: @entity.title },
+            { type: biology-canvas,
+              width: @config.width,
+              height: @config.height,
+              backgroundColor: @config.backgroundColor,
+              nodes: @entity.nodes,
+              edges: @entity.edges,
+              shapes: @entity.shapes,
+              interactive: @config.interactive,
+              animate: @config.animate
+            }
+          ]
+        })
+    }
+
+    config {
+      mode : "cell" | "food-web" | "classification-network" = cell
+        @label "Mode"
+        @description "What kind of biology visualization to render."
+        @synonyms "cell, organelle, membrane, nucleus, mitochondria, ecosystem, food web, trophic level, predator, prey, taxonomy, classification, phylogeny"
+        @tier "domain"
+      title : string = "Biology Lab"
+        @label "Title"
+        @description "Title shown above the canvas."
+        @tier "presentation"
+      backgroundColor : string = "#f0fdf4"
+        @label "Background Color"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "Canvas width in pixels."
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "Canvas height in pixels."
+        @tier "presentation"
+      nodes : [BiologyLabNode] = [
+        { id: "cell", x: 300, y: 200, radius: 120, color: "#16a34a", label: "Cell", kind: cell },
+        { id: "nucleus", x: 300, y: 200, radius: 40, color: "#2563eb", label: "Nucleus", kind: organelle },
+        { id: "mitochondria", x: 230, y: 150, radius: 20, color: "#dc2626", label: "Mitochondrion", kind: organelle }
+      ]
+        @label "Nodes"
+        @description "Biological nodes such as cells, organelles, species, or taxa."
+        @tier "domain"
+      edges : [BiologyLabEdge] = []
+        @label "Edges"
+        @description "Relationships such as energy flow or evolutionary distance."
+        @tier "domain"
+      shapes : [BiologyLabShape] = []
+        @label "Shapes"
+        @description "Extra declarative shapes such as membranes or labels."
+        @tier "domain"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "Enable pointer interaction on the canvas."
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "Enable continuous redraw loop."
+        @tier "presentation"
+    }
+  }
+
+  page "/learning/biology-lab" as BiologyLabPage -> BiologyLabRender
+}

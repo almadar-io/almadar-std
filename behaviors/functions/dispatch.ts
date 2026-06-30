@@ -17,40 +17,30 @@ import { mergeCallSiteConfigOverrides } from '@almadar/core/factory-runtime';
 import type { OrbitalParamsManifest, ParamFieldDescriptor } from '@almadar/core/factory-runtime';
 
 import {
-  stdLearningCellViewerCellViewerOrbital,
-  StdLearningCellViewerCellViewerOrbitalManifest,
-  isStdLearningCellViewerCellViewerOrbitalParams,
-} from './ui/learning/organisms/learning-cell-viewer.js';
+  stdLearningBiologyLabBiologyLabOrbital,
+  StdLearningBiologyLabBiologyLabOrbitalManifest,
+  isStdLearningBiologyLabBiologyLabOrbitalParams,
+} from './ui/learning/organisms/learning-biology-lab.js';
 import {
-  stdLearningCoordinatePlaneCoordinatePlaneOrbital,
-  StdLearningCoordinatePlaneCoordinatePlaneOrbitalManifest,
-  isStdLearningCoordinatePlaneCoordinatePlaneOrbitalParams,
-} from './ui/learning/organisms/learning-coordinate-plane.js';
+  stdLearningChemistryLabChemistryLabOrbital,
+  StdLearningChemistryLabChemistryLabOrbitalManifest,
+  isStdLearningChemistryLabChemistryLabOrbitalParams,
+} from './ui/learning/organisms/learning-chemistry-lab.js';
 import {
-  stdLearningFieldCanvasFieldCanvasOrbital,
-  StdLearningFieldCanvasFieldCanvasOrbitalManifest,
-  isStdLearningFieldCanvasFieldCanvasOrbitalParams,
-} from './ui/learning/organisms/learning-field-canvas.js';
+  stdLearningMathLabMathLabOrbital,
+  StdLearningMathLabMathLabOrbitalManifest,
+  isStdLearningMathLabMathLabOrbitalParams,
+} from './ui/learning/organisms/learning-math-lab.js';
 import {
-  stdLearningFunctionPlotterFunctionPlotterOrbital,
-  StdLearningFunctionPlotterFunctionPlotterOrbitalManifest,
-  isStdLearningFunctionPlotterFunctionPlotterOrbitalParams,
-} from './ui/learning/organisms/learning-function-plotter.js';
+  stdLearningPhysicsLabPhysicsLabOrbital,
+  StdLearningPhysicsLabPhysicsLabOrbitalManifest,
+  isStdLearningPhysicsLabPhysicsLabOrbitalParams,
+} from './ui/learning/organisms/learning-physics-lab.js';
 import {
-  stdLearningMoleculeViewerMoleculeViewerOrbital,
-  StdLearningMoleculeViewerMoleculeViewerOrbitalManifest,
-  isStdLearningMoleculeViewerMoleculeViewerOrbitalParams,
-} from './ui/learning/organisms/learning-molecule-viewer.js';
-import {
-  stdLearningVectorCanvasVectorCanvasOrbital,
-  StdLearningVectorCanvasVectorCanvasOrbitalManifest,
-  isStdLearningVectorCanvasVectorCanvasOrbitalParams,
-} from './ui/learning/organisms/learning-vector-canvas.js';
-import {
-  stdLearningWaveCanvasWaveCanvasOrbital,
-  StdLearningWaveCanvasWaveCanvasOrbitalManifest,
-  isStdLearningWaveCanvasWaveCanvasOrbitalParams,
-} from './ui/learning/organisms/learning-wave-canvas.js';
+  stdLearningProbabilityLabProbabilityLabOrbital,
+  StdLearningProbabilityLabProbabilityLabOrbitalManifest,
+  isStdLearningProbabilityLabProbabilityLabOrbitalParams,
+} from './ui/learning/organisms/learning-probability-lab.js';
 import {
   stdAgentAssistantAssistantOrbital,
   StdAgentAssistantAssistantOrbitalManifest,
@@ -579,68 +569,50 @@ interface DispatchEntry {
 }
 
 const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEntry>([
-  ['learning-cell-viewer::CellViewerOrbital', {
+  ['learning-biology-lab::BiologyLabOrbital', {
     factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningCellViewerCellViewerOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-cell-viewer::CellViewerOrbital');
+      if (!isStdLearningBiologyLabBiologyLabOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-biology-lab::BiologyLabOrbital');
       }
-      return stdLearningCellViewerCellViewerOrbital(p);
+      return stdLearningBiologyLabBiologyLabOrbital(p);
     },
-    manifest: StdLearningCellViewerCellViewerOrbitalManifest,
+    manifest: StdLearningBiologyLabBiologyLabOrbitalManifest,
   }],
-  ['learning-coordinate-plane::CoordinatePlaneOrbital', {
+  ['learning-chemistry-lab::ChemistryLabOrbital', {
     factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningCoordinatePlaneCoordinatePlaneOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-coordinate-plane::CoordinatePlaneOrbital');
+      if (!isStdLearningChemistryLabChemistryLabOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-chemistry-lab::ChemistryLabOrbital');
       }
-      return stdLearningCoordinatePlaneCoordinatePlaneOrbital(p);
+      return stdLearningChemistryLabChemistryLabOrbital(p);
     },
-    manifest: StdLearningCoordinatePlaneCoordinatePlaneOrbitalManifest,
+    manifest: StdLearningChemistryLabChemistryLabOrbitalManifest,
   }],
-  ['learning-field-canvas::FieldCanvasOrbital', {
+  ['learning-math-lab::MathLabOrbital', {
     factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningFieldCanvasFieldCanvasOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-field-canvas::FieldCanvasOrbital');
+      if (!isStdLearningMathLabMathLabOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-math-lab::MathLabOrbital');
       }
-      return stdLearningFieldCanvasFieldCanvasOrbital(p);
+      return stdLearningMathLabMathLabOrbital(p);
     },
-    manifest: StdLearningFieldCanvasFieldCanvasOrbitalManifest,
+    manifest: StdLearningMathLabMathLabOrbitalManifest,
   }],
-  ['learning-function-plotter::FunctionPlotterOrbital', {
+  ['learning-physics-lab::PhysicsLabOrbital', {
     factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningFunctionPlotterFunctionPlotterOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-function-plotter::FunctionPlotterOrbital');
+      if (!isStdLearningPhysicsLabPhysicsLabOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-physics-lab::PhysicsLabOrbital');
       }
-      return stdLearningFunctionPlotterFunctionPlotterOrbital(p);
+      return stdLearningPhysicsLabPhysicsLabOrbital(p);
     },
-    manifest: StdLearningFunctionPlotterFunctionPlotterOrbitalManifest,
+    manifest: StdLearningPhysicsLabPhysicsLabOrbitalManifest,
   }],
-  ['learning-molecule-viewer::MoleculeViewerOrbital', {
+  ['learning-probability-lab::ProbabilityLabOrbital', {
     factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningMoleculeViewerMoleculeViewerOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-molecule-viewer::MoleculeViewerOrbital');
+      if (!isStdLearningProbabilityLabProbabilityLabOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-probability-lab::ProbabilityLabOrbital');
       }
-      return stdLearningMoleculeViewerMoleculeViewerOrbital(p);
+      return stdLearningProbabilityLabProbabilityLabOrbital(p);
     },
-    manifest: StdLearningMoleculeViewerMoleculeViewerOrbitalManifest,
-  }],
-  ['learning-vector-canvas::VectorCanvasOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningVectorCanvasVectorCanvasOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-vector-canvas::VectorCanvasOrbital');
-      }
-      return stdLearningVectorCanvasVectorCanvasOrbital(p);
-    },
-    manifest: StdLearningVectorCanvasVectorCanvasOrbitalManifest,
-  }],
-  ['learning-wave-canvas::WaveCanvasOrbital', {
-    factory: (p: object): OrbitalDefinition => {
-      if (!isStdLearningWaveCanvasWaveCanvasOrbitalParams(p)) {
-        throw new TypeError('Invalid params for learning-wave-canvas::WaveCanvasOrbital');
-      }
-      return stdLearningWaveCanvasWaveCanvasOrbital(p);
-    },
-    manifest: StdLearningWaveCanvasWaveCanvasOrbitalManifest,
+    manifest: StdLearningProbabilityLabProbabilityLabOrbitalManifest,
   }],
   ['std-agent-assistant::AssistantOrbital', {
     factory: (p: object): OrbitalDefinition => {

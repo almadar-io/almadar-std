@@ -7251,7 +7251,20 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
-                        'features': '@config.features',
+                        'features': [
+                          'array/map',
+                          '@entity.towers',
+                          [
+                            'fn',
+                            't',
+                            {
+                              'id': '@t.id',
+                              'type': 'tower',
+                              'x': '@t.x',
+                              'y': '@t.y',
+                            },
+                          ],
+                        ],
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -7280,18 +7293,15 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
+                            {
+                              'label': 'Towers',
+                              'value': [
+                                'array/len',
+                                '@entity.towers',
+                              ],
+                            },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'path': '@config.path',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypointLabels',
-                        },
-                        {
-                          'features': '@entity.towers',
-                          'manifest': '@config.assetManifest',
-                          'type': 'feature-renderer',
                         },
                         {
                           'action': 'START_WAVE',
@@ -7359,7 +7369,20 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
-                        'features': '@config.features',
+                        'features': [
+                          'array/map',
+                          '@entity.towers',
+                          [
+                            'fn',
+                            't',
+                            {
+                              'id': '@t.id',
+                              'type': 'tower',
+                              'x': '@t.x',
+                              'y': '@t.y',
+                            },
+                          ],
+                        ],
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -7388,18 +7411,15 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
+                            {
+                              'label': 'Towers',
+                              'value': [
+                                'array/len',
+                                '@entity.towers',
+                              ],
+                            },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'path': '@config.path',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypointLabels',
-                        },
-                        {
-                          'features': '@entity.towers',
-                          'manifest': '@config.assetManifest',
-                          'type': 'feature-renderer',
                         },
                         {
                           'action': 'START_WAVE',
@@ -7585,7 +7605,20 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
-                        'features': '@config.features',
+                        'features': [
+                          'array/map',
+                          '@entity.towers',
+                          [
+                            'fn',
+                            't',
+                            {
+                              'id': '@t.id',
+                              'type': 'tower',
+                              'x': '@t.x',
+                              'y': '@t.y',
+                            },
+                          ],
+                        ],
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -7614,18 +7647,15 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
+                            {
+                              'label': 'Towers',
+                              'value': [
+                                'array/len',
+                                '@entity.towers',
+                              ],
+                            },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'path': '@config.path',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypointLabels',
-                        },
-                        {
-                          'features': '@entity.towers',
-                          'manifest': '@config.assetManifest',
-                          'type': 'feature-renderer',
                         },
                         {
                           'action': 'START_WAVE',
@@ -7723,7 +7753,20 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
-                        'features': '@config.features',
+                        'features': [
+                          'array/map',
+                          '@entity.towers',
+                          [
+                            'fn',
+                            't',
+                            {
+                              'id': '@t.id',
+                              'type': 'tower',
+                              'x': '@t.x',
+                              'y': '@t.y',
+                            },
+                          ],
+                        ],
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -7752,18 +7795,15 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
+                            {
+                              'label': 'Towers',
+                              'value': [
+                                'array/len',
+                                '@entity.towers',
+                              ],
+                            },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'path': '@config.path',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypointLabels',
-                        },
-                        {
-                          'features': '@entity.towers',
-                          'manifest': '@config.assetManifest',
-                          'type': 'feature-renderer',
                         },
                         {
                           'action': 'START_WAVE',
@@ -7801,7 +7841,20 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
-                        'features': '@config.features',
+                        'features': [
+                          'array/map',
+                          '@entity.towers',
+                          [
+                            'fn',
+                            't',
+                            {
+                              'id': '@t.id',
+                              'type': 'tower',
+                              'x': '@t.x',
+                              'y': '@t.y',
+                            },
+                          ],
+                        ],
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -7830,18 +7883,15 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
+                            {
+                              'label': 'Towers',
+                              'value': [
+                                'array/len',
+                                '@entity.towers',
+                              ],
+                            },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'path': '@config.path',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypointLabels',
-                        },
-                        {
-                          'features': '@entity.towers',
-                          'manifest': '@config.assetManifest',
-                          'type': 'feature-renderer',
                         },
                         {
                           'action': 'START_WAVE',
@@ -7952,7 +8002,20 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                       {
                         'assetManifest': '@config.assetManifest',
                         'effects': '@entity.effects',
-                        'features': '@config.features',
+                        'features': [
+                          'array/map',
+                          '@entity.towers',
+                          [
+                            'fn',
+                            't',
+                            {
+                              'id': '@t.id',
+                              'type': 'tower',
+                              'x': '@t.x',
+                              'y': '@t.y',
+                            },
+                          ],
+                        ],
                         'projection': 'isometric',
                         'scale': '@config.scale',
                         'selectedUnitId': '@entity.selectedUnitId',
@@ -7981,18 +8044,15 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                               'label': 'Wave',
                               'value': '@entity.wave',
                             },
+                            {
+                              'label': 'Towers',
+                              'value': [
+                                'array/len',
+                                '@entity.towers',
+                              ],
+                            },
                           ],
                           'type': 'game-hud',
-                        },
-                        {
-                          'path': '@config.path',
-                          'type': 'waypoint-marker',
-                          'waypoints': '@entity.waypointLabels',
-                        },
-                        {
-                          'features': '@entity.towers',
-                          'manifest': '@config.assetManifest',
-                          'type': 'feature-renderer',
                         },
                         {
                           'action': 'START_WAVE',
@@ -8102,7 +8162,20 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     {
                       'assetManifest': '@config.assetManifest',
                       'effects': '@entity.effects',
-                      'features': '@config.features',
+                      'features': [
+                        'array/map',
+                        '@entity.towers',
+                        [
+                          'fn',
+                          't',
+                          {
+                            'id': '@t.id',
+                            'type': 'tower',
+                            'x': '@t.x',
+                            'y': '@t.y',
+                          },
+                        ],
+                      ],
                       'projection': 'isometric',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
@@ -8131,18 +8204,15 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                             'label': 'Wave',
                             'value': '@entity.wave',
                           },
+                          {
+                            'label': 'Towers',
+                            'value': [
+                              'array/len',
+                              '@entity.towers',
+                            ],
+                          },
                         ],
                         'type': 'game-hud',
-                      },
-                      {
-                        'path': '@config.path',
-                        'type': 'waypoint-marker',
-                        'waypoints': '@entity.waypointLabels',
-                      },
-                      {
-                        'features': '@entity.towers',
-                        'manifest': '@config.assetManifest',
-                        'type': 'feature-renderer',
                       },
                       {
                         'action': 'START_WAVE',
@@ -8550,7 +8620,20 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     {
                       'assetManifest': '@config.assetManifest',
                       'effects': '@entity.effects',
-                      'features': '@config.features',
+                      'features': [
+                        'array/map',
+                        '@entity.towers',
+                        [
+                          'fn',
+                          't',
+                          {
+                            'id': '@t.id',
+                            'type': 'tower',
+                            'x': '@t.x',
+                            'y': '@t.y',
+                          },
+                        ],
+                      ],
                       'projection': 'isometric',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
@@ -8579,18 +8662,15 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                             'label': 'Wave',
                             'value': '@entity.wave',
                           },
+                          {
+                            'label': 'Towers',
+                            'value': [
+                              'array/len',
+                              '@entity.towers',
+                            ],
+                          },
                         ],
                         'type': 'game-hud',
-                      },
-                      {
-                        'path': '@config.path',
-                        'type': 'waypoint-marker',
-                        'waypoints': '@entity.waypointLabels',
-                      },
-                      {
-                        'features': '@entity.towers',
-                        'manifest': '@config.assetManifest',
-                        'type': 'feature-renderer',
                       },
                       {
                         'action': 'START_WAVE',
@@ -8917,7 +8997,20 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                     {
                       'assetManifest': '@config.assetManifest',
                       'effects': '@entity.effects',
-                      'features': '@config.features',
+                      'features': [
+                        'array/map',
+                        '@entity.towers',
+                        [
+                          'fn',
+                          't',
+                          {
+                            'id': '@t.id',
+                            'type': 'tower',
+                            'x': '@t.x',
+                            'y': '@t.y',
+                          },
+                        ],
+                      ],
                       'projection': 'isometric',
                       'scale': '@config.scale',
                       'selectedUnitId': '@entity.selectedUnitId',
@@ -8946,18 +9039,15 @@ export function stdUiTowerDefenseBoardTowerDefenseBoardOrbital(params: StdUiTowe
                             'label': 'Wave',
                             'value': '@entity.wave',
                           },
+                          {
+                            'label': 'Towers',
+                            'value': [
+                              'array/len',
+                              '@entity.towers',
+                            ],
+                          },
                         ],
                         'type': 'game-hud',
-                      },
-                      {
-                        'path': '@config.path',
-                        'type': 'waypoint-marker',
-                        'waypoints': '@entity.waypointLabels',
-                      },
-                      {
-                        'features': '@entity.towers',
-                        'manifest': '@config.assetManifest',
-                        'type': 'feature-renderer',
                       },
                       {
                         'action': 'START_WAVE',
