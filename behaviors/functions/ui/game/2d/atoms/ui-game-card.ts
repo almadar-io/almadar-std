@@ -47,7 +47,7 @@ export interface StdUiGameCardClickPayload {
  * without modifying its state-machine topology.
  */
 export interface StdUiGameCardConfig {
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"art","dimension":"2d","name":"art","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   art?: EntityRow;
   /** Default: `0` */
   attack?: number;

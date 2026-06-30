@@ -6,7 +6,7 @@
  * machines live in behaviors/registry/.
  *
  * Layout: <topic>/<tier>/std-X.ts (topic is any direct subdir of functions/).
- * Topics in this package: core, agent, core-variations, infra, ui/core, ui/marketing, ui/game, ui/avl.
+ * Topics in this package: core, agent, core-variations, infra, ui/core, ui/marketing, ui/game, ui/avl, ui/learning.
  *
  * @packageDocumentation
  */
@@ -25,6 +25,7 @@ export * from './agent/atoms/std-agent-session.js';
 export * from './agent/atoms/std-agent-step-progress.js';
 export * from './agent/atoms/std-agent-token-gauge.js';
 export * from './agent/atoms/std-agent-tool-call.js';
+export * from './core/atoms/std-anim-tick.js';
 export * from './core/atoms/std-app-layout.js';
 export * from './core-variations/atoms/std-app-layout-bottomnav.js';
 export * from './core-variations/atoms/std-app-layout-minimal.js';
@@ -88,6 +89,7 @@ export * from './core/atoms/std-modal.js';
 export * from './core/atoms/std-multi-party-flow.js';
 export * from './infra/atoms/std-notify-on-event.js';
 export * from './core/atoms/std-pagination.js';
+export * from './core/atoms/std-platformer-physics.js';
 export * from './core/atoms/std-push.js';
 export * from './core/atoms/std-rate-limiter.js';
 export * from './core/atoms/std-rating-review.js';
@@ -151,12 +153,14 @@ export * from './ui/game/2d/atoms/ui-game-audio-toggle.js';
 export * from './ui/game/2d/atoms/ui-game-card.js';
 export * from './ui/game/2d/atoms/ui-game-icon.js';
 export * from './ui/game/2d/atoms/ui-health-bar.js';
+export * from './ui/core/atoms/ui-hstack.js';
 export * from './ui/core/atoms/ui-icon.js';
 export * from './ui/core/atoms/ui-infinite-scroll-sentinel.js';
 export * from './ui/core/atoms/ui-input.js';
 export * from './ui/game/2d/atoms/ui-item-slot.js';
 export * from './ui/core/atoms/ui-label.js';
 export * from './ui/core/atoms/ui-law-reference-tooltip.js';
+export * from './ui/learning/atoms/ui-learning-canvas.js';
 export * from './ui/game/2d/atoms/ui-mini-map.js';
 export * from './ui/core/atoms/ui-overlay.js';
 export * from './ui/marketing/atoms/ui-pattern-tile.js';
@@ -199,6 +203,7 @@ export * from './ui/core/atoms/ui-trend-indicator.js';
 export * from './ui/game/2d/atoms/ui-turn-indicator.js';
 export * from './ui/core/atoms/ui-typewriter-text.js';
 export * from './ui/core/atoms/ui-typography.js';
+export * from './ui/core/atoms/ui-vstack.js';
 export * from './ui/game/2d/atoms/ui-waypoint-marker.js';
 export * from './ui/game/2d/atoms/ui-xp-bar.js';
 
@@ -219,6 +224,7 @@ export * from './ui/core/molecules/ui-activation-block.js';
 export * from './ui/core/molecules/ui-alert.js';
 export * from './ui/marketing/molecules/ui-article-section.js';
 export * from './ui/avl/molecules/ui-behavior-view.js';
+export * from './ui/learning/molecules/ui-biology-canvas.js';
 export * from './ui/core/molecules/ui-bloom-quiz-block.js';
 export * from './ui/core/molecules/ui-branching-logic-builder.js';
 export * from './ui/core/molecules/ui-breadcrumb.js';
@@ -228,6 +234,7 @@ export * from './ui/core/molecules/ui-carousel.js';
 export * from './ui/marketing/molecules/ui-case-study-card.js';
 export * from './ui/core/molecules/ui-chart.js';
 export * from './ui/core/molecules/ui-chart-legend.js';
+export * from './ui/learning/molecules/ui-chemistry-canvas.js';
 export * from './ui/core/molecules/ui-code-block.js';
 export * from './ui/marketing/molecules/ui-community-links.js';
 export * from './ui/core/molecules/ui-confirm-dialog.js';
@@ -262,6 +269,7 @@ export * from './ui/core/molecules/ui-flip-card.js';
 export * from './ui/core/molecules/ui-floating-action-button.js';
 export * from './ui/core/molecules/ui-form-actions.js';
 export * from './ui/core/molecules/ui-form-field.js';
+export * from './ui/core/molecules/ui-form-layout.js';
 export * from './ui/core/molecules/ui-form-section-header.js';
 export * from './ui/game/3d/molecules/ui-game-canvas-3d.js';
 export * from './ui/game/2d/molecules/ui-game-hud.js';
@@ -284,6 +292,7 @@ export * from './ui/core/molecules/ui-loading-state.js';
 export * from './ui/core/molecules/ui-map-view.js';
 export * from './ui/core/molecules/ui-markdown-content.js';
 export * from './ui/marketing/molecules/ui-marketing-footer.js';
+export * from './ui/learning/molecules/ui-math-canvas.js';
 export * from './ui/core/molecules/ui-matrix-question.js';
 export * from './ui/core/molecules/ui-menu.js';
 export * from './ui/core/molecules/ui-meter.js';
@@ -296,6 +305,7 @@ export * from './ui/core/molecules/ui-option-constraint-group.js';
 export * from './ui/core/molecules/ui-orbital-visualization.js';
 export * from './ui/core/molecules/ui-page-header.js';
 export * from './ui/core/molecules/ui-pagination.js';
+export * from './ui/learning/molecules/ui-physics-canvas.js';
 export * from './ui/core/molecules/ui-popover.js';
 export * from './ui/core/molecules/ui-positioned-canvas.js';
 export * from './ui/marketing/molecules/ui-pricing-card.js';
@@ -346,6 +356,13 @@ export * from './ui/core/molecules/ui-wizard-navigation.js';
 export * from './ui/core/molecules/ui-wizard-progress.js';
 
 // Organisms
+export * from './ui/learning/organisms/learning-cell-viewer.js';
+export * from './ui/learning/organisms/learning-coordinate-plane.js';
+export * from './ui/learning/organisms/learning-field-canvas.js';
+export * from './ui/learning/organisms/learning-function-plotter.js';
+export * from './ui/learning/organisms/learning-molecule-viewer.js';
+export * from './ui/learning/organisms/learning-vector-canvas.js';
+export * from './ui/learning/organisms/learning-wave-canvas.js';
 export * from './agent/organisms/std-agent-assistant.js';
 export * from './agent/organisms/std-agent-builder.js';
 export * from './agent/organisms/std-agent-pipeline.js';

@@ -1,0 +1,150 @@
+{
+  "description": "Field canvas organism — a physics-canvas showing bodies and force/velocity arrows.",
+  "name": "learning-field-canvas",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "FieldCanvasItem",
+        "persistence": "runtime"
+      },
+      "name": "FieldCanvasOrbital",
+      "pages": [
+        {
+          "name": "FieldCanvasPage",
+          "path": "/learning/field-canvas",
+          "traits": [
+            {
+              "ref": "FieldCanvasRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "height": {
+              "default": 400.0,
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "title": {
+              "default": "Field Canvas",
+              "description": "Title shown above the field.",
+              "label": "Title",
+              "tier": "domain",
+              "type": "string"
+            },
+            "width": {
+              "default": 600.0,
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FieldCanvasItem",
+          "name": "FieldCanvasRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "@config.title",
+                          "type": "typography",
+                          "variant": "h4"
+                        },
+                        {
+                          "backgroundColor": "#f8fafc",
+                          "bodies": [
+                            {
+                              "color": "#2563eb",
+                              "id": "b1",
+                              "label": "A",
+                              "radius": 14.0,
+                              "vx": 2.0,
+                              "vy": -1.0,
+                              "x": 120.0,
+                              "y": 200.0
+                            },
+                            {
+                              "color": "#dc2626",
+                              "id": "b2",
+                              "label": "B",
+                              "radius": 18.0,
+                              "vx": -1.0,
+                              "vy": 1.5,
+                              "x": 300.0,
+                              "y": 150.0
+                            },
+                            {
+                              "color": "#16a34a",
+                              "fx": -0.5,
+                              "fy": 0.0,
+                              "id": "b3",
+                              "label": "C",
+                              "radius": 12.0,
+                              "vx": 0.0,
+                              "vy": 0.0,
+                              "x": 480.0,
+                              "y": 220.0
+                            }
+                          ],
+                          "forceScale": 30.0,
+                          "height": "@config.height",
+                          "showForces": true,
+                          "showVelocity": true,
+                          "type": "physics-canvas",
+                          "velocityScale": 25.0,
+                          "width": "@config.width"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "padding": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

@@ -444,7 +444,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Flip the flag on a reviewed code line',
@@ -457,7 +457,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Submit the current flag set for scoring',
@@ -469,7 +469,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Reset the puzzle and play again',
@@ -481,7 +481,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -520,7 +520,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Submit the current flag set for scoring',
@@ -532,7 +532,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Reset the puzzle and play again',
@@ -544,7 +544,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'completeEvent prop',
@@ -562,7 +562,7 @@ export function stdUiDebuggerBoardDebuggerBoardOrbital(params: StdUiDebuggerBoar
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [

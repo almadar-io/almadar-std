@@ -68,6 +68,36 @@
             "default": "start",
             "name": "currentNodeId",
             "type": "string"
+          },
+          {
+            "default": "",
+            "name": "currentSpeaker",
+            "type": "string"
+          },
+          {
+            "default": "",
+            "name": "currentText",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "label": {
+                  "name": "label",
+                  "required": true,
+                  "type": "string"
+                },
+                "nextId": {
+                  "name": "nextId",
+                  "required": true,
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "name": "currentChoices",
+            "type": "array"
           }
         ],
         "name": "VisualNovelBoardItem",
@@ -101,7 +131,8 @@
                 "role": "decoration",
                 "style": "",
                 "thumbnailUrl": "",
-                "url": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png"
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png",
+                "variant": ""
               },
               "description": "Full-frame scene background rendered behind the dialogue box.",
               "label": "Background Image",
@@ -151,6 +182,11 @@
                 },
                 "url": {
                   "name": "url",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
@@ -337,7 +373,8 @@
                 "role": "npc",
                 "style": "",
                 "thumbnailUrl": "",
-                "url": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png"
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png",
+                "variant": ""
               },
               "description": "Large character portrait rendered standing over the scene.",
               "label": "Portrait Url",
@@ -387,6 +424,11 @@
                 },
                 "url": {
                   "name": "url",
+                  "required": false,
+                  "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
                   "required": false,
                   "type": "string"
                 }
@@ -455,7 +497,10 @@
           ],
           "entityContract": {
             "provides": [
+              "currentChoices",
               "currentNodeId",
+              "currentSpeaker",
+              "currentText",
               "nodes"
             ],
             "requires": []
@@ -533,12 +578,94 @@
                     "@config.startNodeId"
                   ],
                   [
+                    "set",
+                    "@entity.currentSpeaker",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@entity.nodes",
+                          [
+                            "fn",
+                            "n",
+                            [
+                              "==",
+                              "@n.id",
+                              "@entity.currentNodeId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "speaker"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentText",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@entity.nodes",
+                          [
+                            "fn",
+                            "n",
+                            [
+                              "==",
+                              "@n.id",
+                              "@entity.currentNodeId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "text"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentChoices",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@entity.nodes",
+                          [
+                            "fn",
+                            "n",
+                            [
+                              "==",
+                              "@n.id",
+                              "@entity.currentNodeId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "choices"
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "advanceEvent": "ADVANCE",
+                      "choiceButton": {
+                        "choices": "@entity.currentChoices",
+                        "chooseEvent": "CHOOSE",
+                        "type": "choice-button"
+                      },
                       "chooseEvent": "CHOOSE",
                       "currentNodeId": "@entity.currentNodeId",
+                      "dialogueBubble": {
+                        "speaker": "@entity.currentSpeaker",
+                        "text": "@entity.currentText",
+                        "type": "dialogue-bubble"
+                      },
                       "nodes": "@entity.nodes",
                       "portraitScale": "@config.portraitScale",
                       "restartEvent": "RESTART",
@@ -559,12 +686,94 @@
                     "@payload.nextId"
                   ],
                   [
+                    "set",
+                    "@entity.currentSpeaker",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@entity.nodes",
+                          [
+                            "fn",
+                            "n",
+                            [
+                              "==",
+                              "@n.id",
+                              "@entity.currentNodeId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "speaker"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentText",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@entity.nodes",
+                          [
+                            "fn",
+                            "n",
+                            [
+                              "==",
+                              "@n.id",
+                              "@entity.currentNodeId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "text"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentChoices",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@entity.nodes",
+                          [
+                            "fn",
+                            "n",
+                            [
+                              "==",
+                              "@n.id",
+                              "@entity.currentNodeId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "choices"
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "advanceEvent": "ADVANCE",
+                      "choiceButton": {
+                        "choices": "@entity.currentChoices",
+                        "chooseEvent": "CHOOSE",
+                        "type": "choice-button"
+                      },
                       "chooseEvent": "CHOOSE",
                       "currentNodeId": "@entity.currentNodeId",
+                      "dialogueBubble": {
+                        "speaker": "@entity.currentSpeaker",
+                        "text": "@entity.currentText",
+                        "type": "dialogue-bubble"
+                      },
                       "nodes": "@entity.nodes",
                       "portraitScale": "@config.portraitScale",
                       "restartEvent": "RESTART",
@@ -584,8 +793,18 @@
                     "main",
                     {
                       "advanceEvent": "ADVANCE",
+                      "choiceButton": {
+                        "choices": "@entity.currentChoices",
+                        "chooseEvent": "CHOOSE",
+                        "type": "choice-button"
+                      },
                       "chooseEvent": "CHOOSE",
                       "currentNodeId": "@entity.currentNodeId",
+                      "dialogueBubble": {
+                        "speaker": "@entity.currentSpeaker",
+                        "text": "@entity.currentText",
+                        "type": "dialogue-bubble"
+                      },
                       "nodes": "@entity.nodes",
                       "portraitScale": "@config.portraitScale",
                       "restartEvent": "RESTART",
@@ -606,12 +825,94 @@
                     "@config.startNodeId"
                   ],
                   [
+                    "set",
+                    "@entity.currentSpeaker",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@entity.nodes",
+                          [
+                            "fn",
+                            "n",
+                            [
+                              "==",
+                              "@n.id",
+                              "@entity.currentNodeId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "speaker"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentText",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@entity.nodes",
+                          [
+                            "fn",
+                            "n",
+                            [
+                              "==",
+                              "@n.id",
+                              "@entity.currentNodeId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "text"
+                    ]
+                  ],
+                  [
+                    "set",
+                    "@entity.currentChoices",
+                    [
+                      "object/get",
+                      [
+                        "array/first",
+                        [
+                          "array/filter",
+                          "@entity.nodes",
+                          [
+                            "fn",
+                            "n",
+                            [
+                              "==",
+                              "@n.id",
+                              "@entity.currentNodeId"
+                            ]
+                          ]
+                        ]
+                      ],
+                      "choices"
+                    ]
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "advanceEvent": "ADVANCE",
+                      "choiceButton": {
+                        "choices": "@entity.currentChoices",
+                        "chooseEvent": "CHOOSE",
+                        "type": "choice-button"
+                      },
                       "chooseEvent": "CHOOSE",
                       "currentNodeId": "@entity.currentNodeId",
+                      "dialogueBubble": {
+                        "speaker": "@entity.currentSpeaker",
+                        "text": "@entity.currentText",
+                        "type": "dialogue-bubble"
+                      },
                       "nodes": "@entity.nodes",
                       "portraitScale": "@config.portraitScale",
                       "restartEvent": "RESTART",

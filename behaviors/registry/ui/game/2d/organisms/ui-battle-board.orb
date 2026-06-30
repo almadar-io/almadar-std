@@ -1,5 +1,5 @@
 {
-  "description": "BattleBoard — game-shell composition with LOLO-driven sprite animation and combat effects.",
+  "description": "BattleBoard — reference game board: game-shell/game-hud/canvas-2d descriptor tree with live input wiring (TILE_CLICK/UNIT_CLICK + selectedUnitId/validMoves) and an END_TURN HUD control. The canonical atomic-composition contract for game boards (see docs/Almadar_Std_Game_UI_Lift.md).",
   "name": "ui-battle-board",
   "orbitals": [
     {
@@ -108,6 +108,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "required": false,
@@ -202,6 +207,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "required": false,
@@ -281,6 +291,26 @@
             "type": "string"
           },
           {
+            "default": [],
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "validMoves",
+            "type": "array"
+          },
+          {
             "default": 0.0,
             "name": "turn",
             "type": "number"
@@ -348,6 +378,32 @@
               "type": "object"
             },
             "name": "effects",
+            "type": "array"
+          },
+          {
+            "default": 0.0,
+            "name": "xp",
+            "type": "number"
+          },
+          {
+            "default": 100.0,
+            "name": "xpToNext",
+            "type": "number"
+          },
+          {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "name": "inventory",
+            "type": "array"
+          },
+          {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "name": "selectedUnitEffects",
             "type": "array"
           }
         ],
@@ -612,6 +668,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "type": "object"
@@ -668,6 +729,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -728,6 +794,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "type": "object"
@@ -784,6 +855,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -942,6 +1018,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "required": false,
@@ -1010,6 +1091,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -6045,6 +6131,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "required": false,
@@ -6113,6 +6204,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -6523,6 +6619,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "required": false,
@@ -6615,6 +6716,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -6838,12 +6944,17 @@
               "enemyTurn",
               "gridHeight",
               "gridWidth",
+              "inventory",
               "movementRange",
               "phase",
               "result",
+              "selectedUnitEffects",
               "selectedUnitId",
               "turn",
-              "units"
+              "units",
+              "validMoves",
+              "xp",
+              "xpToNext"
             ],
             "requires": []
           },
@@ -7026,6 +7137,11 @@
                   ],
                   [
                     "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.turn",
                     0.0
                   ],
@@ -7050,34 +7166,106 @@
                     []
                   ],
                   [
+                    "set",
+                    "@entity.xp",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.xpToNext",
+                    100.0
+                  ],
+                  [
+                    "set",
+                    "@entity.inventory",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitEffects",
+                    []
+                  ],
+                  [
                     "render-ui",
                     "main",
                     {
                       "children": [
                         {
                           "assetManifest": "@config.assetManifest",
+                          "damageNumbers": "@entity.effects",
                           "effects": "@entity.effects",
                           "features": "@config.features",
                           "projection": "isometric",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": true,
+                          "statusEffects": "@entity.selectedUnitEffects",
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Turn",
-                            "value": "@entity.turn"
+                            "stats": [
+                              {
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "label": "Selected Unit",
+                            "src": [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@entity.selectedUnitId"
+                                  ]
+                                ]
+                              ],
+                              "sprite"
+                            ],
+                            "type": "sprite"
+                          },
+                          {
+                            "current": "@entity.xp",
+                            "label": "XP",
+                            "max": "@entity.xpToNext",
+                            "type": "xp-bar"
+                          },
+                          {
+                            "items": "@entity.inventory",
+                            "type": "inventory-grid"
+                          },
+                          {
+                            "action": "END_TURN",
+                            "icon": "flag",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -7098,6 +7286,11 @@
                     "set",
                     "@entity.selectedUnitId",
                     ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
                   ],
                   [
                     "set",
@@ -7122,6 +7315,26 @@
                   [
                     "set",
                     "@entity.effects",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.xp",
+                    0.0
+                  ],
+                  [
+                    "set",
+                    "@entity.xpToNext",
+                    100.0
+                  ],
+                  [
+                    "set",
+                    "@entity.inventory",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.selectedUnitEffects",
                     []
                   ],
                   [
@@ -7146,28 +7359,80 @@
                       "children": [
                         {
                           "assetManifest": "@config.assetManifest",
+                          "damageNumbers": "@entity.effects",
                           "effects": "@entity.effects",
                           "features": "@config.features",
                           "projection": "isometric",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": true,
+                          "statusEffects": "@entity.selectedUnitEffects",
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Turn",
-                            "value": "@entity.turn"
+                            "stats": [
+                              {
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "label": "Selected Unit",
+                            "src": [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@entity.selectedUnitId"
+                                  ]
+                                ]
+                              ],
+                              "sprite"
+                            ],
+                            "type": "sprite"
+                          },
+                          {
+                            "current": "@entity.xp",
+                            "label": "XP",
+                            "max": "@entity.xpToNext",
+                            "type": "xp-bar"
+                          },
+                          {
+                            "items": "@entity.inventory",
+                            "type": "inventory-grid"
+                          },
+                          {
+                            "action": "END_TURN",
+                            "icon": "flag",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -7191,28 +7456,80 @@
                       "children": [
                         {
                           "assetManifest": "@config.assetManifest",
+                          "damageNumbers": "@entity.effects",
                           "effects": "@entity.effects",
                           "features": "@config.features",
                           "projection": "isometric",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": true,
+                          "statusEffects": "@entity.selectedUnitEffects",
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Turn",
-                            "value": "@entity.turn"
+                            "stats": [
+                              {
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "label": "Selected Unit",
+                            "src": [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@entity.selectedUnitId"
+                                  ]
+                                ]
+                              ],
+                              "sprite"
+                            ],
+                            "type": "sprite"
+                          },
+                          {
+                            "current": "@entity.xp",
+                            "label": "XP",
+                            "max": "@entity.xpToNext",
+                            "type": "xp-bar"
+                          },
+                          {
+                            "items": "@entity.inventory",
+                            "type": "inventory-grid"
+                          },
+                          {
+                            "action": "END_TURN",
+                            "icon": "flag",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -7260,6 +7577,153 @@
                   ],
                   [
                     "set",
+                    "@entity.selectedUnitEffects",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    [
+                      "array/map",
+                      [
+                        "array/filter",
+                        "@config.tiles",
+                        [
+                          "fn",
+                          "t",
+                          [
+                            "and",
+                            [
+                              "grid/in-bounds",
+                              {
+                                "x": [
+                                  "object/get",
+                                  "@t",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@t",
+                                  "y"
+                                ]
+                              },
+                              "@entity.gridWidth",
+                              "@entity.gridHeight"
+                            ],
+                            [
+                              "and",
+                              [
+                                "<=",
+                                [
+                                  "grid/manhattan-distance",
+                                  [
+                                    "object/get",
+                                    [
+                                      "array/find",
+                                      "@entity.units",
+                                      [
+                                        "fn",
+                                        "u",
+                                        [
+                                          "==",
+                                          "@u.id",
+                                          "@payload.unitId"
+                                        ]
+                                      ]
+                                    ],
+                                    "position"
+                                  ],
+                                  {
+                                    "x": [
+                                      "object/get",
+                                      "@t",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@t",
+                                      "y"
+                                    ]
+                                  }
+                                ],
+                                "@entity.movementRange"
+                              ],
+                              [
+                                "==",
+                                [
+                                  "array/len",
+                                  [
+                                    "array/filter",
+                                    "@entity.units",
+                                    [
+                                      "fn",
+                                      "u",
+                                      [
+                                        "and",
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "x"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "x"
+                                          ]
+                                        ],
+                                        [
+                                          "==",
+                                          [
+                                            "object/get",
+                                            [
+                                              "object/get",
+                                              "@u",
+                                              "position"
+                                            ],
+                                            "y"
+                                          ],
+                                          [
+                                            "object/get",
+                                            "@t",
+                                            "y"
+                                          ]
+                                        ]
+                                      ]
+                                    ]
+                                  ]
+                                ],
+                                0.0
+                              ]
+                            ]
+                          ]
+                        ]
+                      ],
+                      [
+                        "fn",
+                        "t",
+                        {
+                          "x": [
+                            "object/get",
+                            "@t",
+                            "x"
+                          ],
+                          "y": [
+                            "object/get",
+                            "@t",
+                            "y"
+                          ]
+                        }
+                      ]
+                    ]
+                  ],
+                  [
+                    "set",
                     "@entity.phase",
                     "movement"
                   ],
@@ -7270,28 +7734,80 @@
                       "children": [
                         {
                           "assetManifest": "@config.assetManifest",
+                          "damageNumbers": "@entity.effects",
                           "effects": "@entity.effects",
                           "features": "@config.features",
                           "projection": "isometric",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": true,
+                          "statusEffects": "@entity.selectedUnitEffects",
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Turn",
-                            "value": "@entity.turn"
+                            "stats": [
+                              {
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "label": "Selected Unit",
+                            "src": [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@entity.selectedUnitId"
+                                  ]
+                                ]
+                              ],
+                              "sprite"
+                            ],
+                            "type": "sprite"
+                          },
+                          {
+                            "current": "@entity.xp",
+                            "label": "XP",
+                            "max": "@entity.xpToNext",
+                            "type": "xp-bar"
+                          },
+                          {
+                            "items": "@entity.inventory",
+                            "type": "inventory-grid"
+                          },
+                          {
+                            "action": "END_TURN",
+                            "icon": "flag",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -7362,6 +7878,20 @@
                   ],
                   [
                     "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
+                    "@entity.xp",
+                    [
+                      "+",
+                      "@entity.xp",
+                      10.0
+                    ]
+                  ],
+                  [
+                    "set",
                     "@entity.phase",
                     "observation"
                   ],
@@ -7372,28 +7902,80 @@
                       "children": [
                         {
                           "assetManifest": "@config.assetManifest",
+                          "damageNumbers": "@entity.effects",
                           "effects": "@entity.effects",
                           "features": "@config.features",
                           "projection": "isometric",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": true,
+                          "statusEffects": "@entity.selectedUnitEffects",
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Turn",
-                            "value": "@entity.turn"
+                            "stats": [
+                              {
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "label": "Selected Unit",
+                            "src": [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@entity.selectedUnitId"
+                                  ]
+                                ]
+                              ],
+                              "sprite"
+                            ],
+                            "type": "sprite"
+                          },
+                          {
+                            "current": "@entity.xp",
+                            "label": "XP",
+                            "max": "@entity.xpToNext",
+                            "type": "xp-bar"
+                          },
+                          {
+                            "items": "@entity.inventory",
+                            "type": "inventory-grid"
+                          },
+                          {
+                            "action": "END_TURN",
+                            "icon": "flag",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -7717,6 +8299,11 @@
                   ],
                   [
                     "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.phase",
                     "observation"
                   ],
@@ -7727,28 +8314,80 @@
                       "children": [
                         {
                           "assetManifest": "@config.assetManifest",
+                          "damageNumbers": "@entity.effects",
                           "effects": "@entity.effects",
                           "features": "@config.features",
                           "projection": "isometric",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": true,
+                          "statusEffects": "@entity.selectedUnitEffects",
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Turn",
-                            "value": "@entity.turn"
+                            "stats": [
+                              {
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "label": "Selected Unit",
+                            "src": [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@entity.selectedUnitId"
+                                  ]
+                                ]
+                              ],
+                              "sprite"
+                            ],
+                            "type": "sprite"
+                          },
+                          {
+                            "current": "@entity.xp",
+                            "label": "XP",
+                            "max": "@entity.xpToNext",
+                            "type": "xp-bar"
+                          },
+                          {
+                            "items": "@entity.inventory",
+                            "type": "inventory-grid"
+                          },
+                          {
+                            "action": "END_TURN",
+                            "icon": "flag",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -7872,6 +8511,11 @@
                   ],
                   [
                     "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.enemyTurn",
                     true
                   ],
@@ -7887,28 +8531,80 @@
                       "children": [
                         {
                           "assetManifest": "@config.assetManifest",
+                          "damageNumbers": "@entity.effects",
                           "effects": "@entity.effects",
                           "features": "@config.features",
                           "projection": "isometric",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": true,
+                          "statusEffects": "@entity.selectedUnitEffects",
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Turn",
-                            "value": "@entity.turn"
+                            "stats": [
+                              {
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "label": "Selected Unit",
+                            "src": [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@entity.selectedUnitId"
+                                  ]
+                                ]
+                              ],
+                              "sprite"
+                            ],
+                            "type": "sprite"
+                          },
+                          {
+                            "current": "@entity.xp",
+                            "label": "XP",
+                            "max": "@entity.xpToNext",
+                            "type": "xp-bar"
+                          },
+                          {
+                            "items": "@entity.inventory",
+                            "type": "inventory-grid"
+                          },
+                          {
+                            "action": "END_TURN",
+                            "icon": "flag",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -7932,6 +8628,11 @@
                   ],
                   [
                     "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.phase",
                     "observation"
                   ],
@@ -7942,28 +8643,80 @@
                       "children": [
                         {
                           "assetManifest": "@config.assetManifest",
+                          "damageNumbers": "@entity.effects",
                           "effects": "@entity.effects",
                           "features": "@config.features",
                           "projection": "isometric",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": true,
+                          "statusEffects": "@entity.selectedUnitEffects",
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Turn",
-                            "value": "@entity.turn"
+                            "stats": [
+                              {
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "label": "Selected Unit",
+                            "src": [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@entity.selectedUnitId"
+                                  ]
+                                ]
+                              ],
+                              "sprite"
+                            ],
+                            "type": "sprite"
+                          },
+                          {
+                            "current": "@entity.xp",
+                            "label": "XP",
+                            "max": "@entity.xpToNext",
+                            "type": "xp-bar"
+                          },
+                          {
+                            "items": "@entity.inventory",
+                            "type": "inventory-grid"
+                          },
+                          {
+                            "action": "END_TURN",
+                            "icon": "flag",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -8033,28 +8786,80 @@
                       "children": [
                         {
                           "assetManifest": "@config.assetManifest",
+                          "damageNumbers": "@entity.effects",
                           "effects": "@entity.effects",
                           "features": "@config.features",
                           "projection": "isometric",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": true,
+                          "statusEffects": "@entity.selectedUnitEffects",
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Turn",
-                            "value": "@entity.turn"
+                            "stats": [
+                              {
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "label": "Selected Unit",
+                            "src": [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@entity.selectedUnitId"
+                                  ]
+                                ]
+                              ],
+                              "sprite"
+                            ],
+                            "type": "sprite"
+                          },
+                          {
+                            "current": "@entity.xp",
+                            "label": "XP",
+                            "max": "@entity.xpToNext",
+                            "type": "xp-bar"
+                          },
+                          {
+                            "items": "@entity.inventory",
+                            "type": "inventory-grid"
+                          },
+                          {
+                            "action": "END_TURN",
+                            "icon": "flag",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -8145,6 +8950,11 @@
                   ],
                   [
                     "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.turn",
                     0.0
                   ],
@@ -8175,28 +8985,80 @@
                       "children": [
                         {
                           "assetManifest": "@config.assetManifest",
+                          "damageNumbers": "@entity.effects",
                           "effects": "@entity.effects",
                           "features": "@config.features",
                           "projection": "isometric",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": true,
+                          "statusEffects": "@entity.selectedUnitEffects",
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": "@config.tiles",
                           "type": "canvas-2d",
-                          "units": "@entity.units"
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": "@entity.units",
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Turn",
-                            "value": "@entity.turn"
+                            "stats": [
+                              {
+                                "label": "Turn",
+                                "value": "@entity.turn"
+                              },
+                              {
+                                "label": "Result",
+                                "value": "@entity.result"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Result",
-                            "value": "@entity.result"
+                            "label": "Selected Unit",
+                            "src": [
+                              "object/get",
+                              [
+                                "array/find",
+                                "@entity.units",
+                                [
+                                  "fn",
+                                  "u",
+                                  [
+                                    "==",
+                                    "@u.id",
+                                    "@entity.selectedUnitId"
+                                  ]
+                                ]
+                              ],
+                              "sprite"
+                            ],
+                            "type": "sprite"
+                          },
+                          {
+                            "current": "@entity.xp",
+                            "label": "XP",
+                            "max": "@entity.xpToNext",
+                            "type": "xp-bar"
+                          },
+                          {
+                            "items": "@entity.inventory",
+                            "type": "inventory-grid"
+                          },
+                          {
+                            "action": "END_TURN",
+                            "icon": "flag",
+                            "label": "End Turn",
+                            "type": "button",
+                            "variant": "secondary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -8292,28 +9154,80 @@
                     "children": [
                       {
                         "assetManifest": "@config.assetManifest",
+                        "damageNumbers": "@entity.effects",
                         "effects": "@entity.effects",
                         "features": "@config.features",
                         "projection": "isometric",
                         "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
                         "showMinimap": true,
+                        "statusEffects": "@entity.selectedUnitEffects",
+                        "tileClickEvent": "TILE_CLICK",
                         "tiles": "@config.tiles",
                         "type": "canvas-2d",
-                        "units": "@entity.units"
+                        "unitClickEvent": "UNIT_CLICK",
+                        "units": "@entity.units",
+                        "validMoves": "@entity.validMoves"
                       }
                     ],
                     "hud": {
-                      "stats": [
+                      "children": [
                         {
-                          "label": "Turn",
-                          "value": "@entity.turn"
+                          "stats": [
+                            {
+                              "label": "Turn",
+                              "value": "@entity.turn"
+                            },
+                            {
+                              "label": "Result",
+                              "value": "@entity.result"
+                            }
+                          ],
+                          "type": "game-hud"
                         },
                         {
-                          "label": "Result",
-                          "value": "@entity.result"
+                          "label": "Selected Unit",
+                          "src": [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@entity.selectedUnitId"
+                                ]
+                              ]
+                            ],
+                            "sprite"
+                          ],
+                          "type": "sprite"
+                        },
+                        {
+                          "current": "@entity.xp",
+                          "label": "XP",
+                          "max": "@entity.xpToNext",
+                          "type": "xp-bar"
+                        },
+                        {
+                          "items": "@entity.inventory",
+                          "type": "inventory-grid"
+                        },
+                        {
+                          "action": "END_TURN",
+                          "icon": "flag",
+                          "label": "End Turn",
+                          "type": "button",
+                          "variant": "secondary"
                         }
                       ],
-                      "type": "game-hud"
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
                     },
                     "type": "game-shell"
                   }
@@ -8820,28 +9734,80 @@
                     "children": [
                       {
                         "assetManifest": "@config.assetManifest",
+                        "damageNumbers": "@entity.effects",
                         "effects": "@entity.effects",
                         "features": "@config.features",
                         "projection": "isometric",
                         "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
                         "showMinimap": true,
+                        "statusEffects": "@entity.selectedUnitEffects",
+                        "tileClickEvent": "TILE_CLICK",
                         "tiles": "@config.tiles",
                         "type": "canvas-2d",
-                        "units": "@entity.units"
+                        "unitClickEvent": "UNIT_CLICK",
+                        "units": "@entity.units",
+                        "validMoves": "@entity.validMoves"
                       }
                     ],
                     "hud": {
-                      "stats": [
+                      "children": [
                         {
-                          "label": "Turn",
-                          "value": "@entity.turn"
+                          "stats": [
+                            {
+                              "label": "Turn",
+                              "value": "@entity.turn"
+                            },
+                            {
+                              "label": "Result",
+                              "value": "@entity.result"
+                            }
+                          ],
+                          "type": "game-hud"
                         },
                         {
-                          "label": "Result",
-                          "value": "@entity.result"
+                          "label": "Selected Unit",
+                          "src": [
+                            "object/get",
+                            [
+                              "array/find",
+                              "@entity.units",
+                              [
+                                "fn",
+                                "u",
+                                [
+                                  "==",
+                                  "@u.id",
+                                  "@entity.selectedUnitId"
+                                ]
+                              ]
+                            ],
+                            "sprite"
+                          ],
+                          "type": "sprite"
+                        },
+                        {
+                          "current": "@entity.xp",
+                          "label": "XP",
+                          "max": "@entity.xpToNext",
+                          "type": "xp-bar"
+                        },
+                        {
+                          "items": "@entity.inventory",
+                          "type": "inventory-grid"
+                        },
+                        {
+                          "action": "END_TURN",
+                          "icon": "flag",
+                          "label": "End Turn",
+                          "type": "button",
+                          "variant": "secondary"
                         }
                       ],
-                      "type": "game-hud"
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
                     },
                     "type": "game-shell"
                   }

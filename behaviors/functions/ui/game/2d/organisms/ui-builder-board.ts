@@ -607,7 +607,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{placeEvent} with { slotId, componentId } on component placement',
@@ -625,7 +625,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{checkEvent} with {} when the player checks the build',
@@ -637,7 +637,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -649,7 +649,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -694,7 +694,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{checkEvent} with {} when the player checks the build',
@@ -706,7 +706,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -718,7 +718,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'completeEvent prop',
@@ -736,7 +736,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [

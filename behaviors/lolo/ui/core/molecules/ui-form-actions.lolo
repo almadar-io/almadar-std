@@ -1,25 +1,11 @@
 app ui-form-actions "1.0.0"
 "FormActions — UI factory (1:1 with the @almadar/ui form-actions pattern)."
 orbital FormActionsOrbital {
-  type FormActionsPrimary = {
-    label : string!
-    actionType : string
-    event : string
-    navigatesTo : string
-    variant : string
-  }
-  type FormActionsSecondaryItem = {
-    label : string!
-    actionType : string
-    event : string
-    navigatesTo : string
-    variant : string
-  }
-  type FormActionsFiltersItem = {
-    field : string!
-    label : string!
-    type : "checkbox" | "select" | "toggle"
-    options : [string]
+  type FormActionsError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
   }
 
   entity FormActionsItem [runtime] {
@@ -31,49 +17,78 @@ orbital FormActionsOrbital {
 
     state idle {
       INIT -> idle
-        (fetch FormActionsItem {})
         (render-ui main {
-          children: [{ content: "Sample content", type: typography }]
-          primary: @config.primary
-          secondary: @config.secondary
-          variant: @config.variant
-          orientation: @config.orientation
           className: @config.className
-          entity: FormActionsItem
-          filters: @config.filters
-          look: @config.look
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          children: [{ content: "Sample content", type: typography }]
+          sticky: @config.sticky
+          align: @config.align
           type: form-actions
         })
     }
 
     config {
-      primary : FormActionsPrimary = { label: "Label", actionType: "Action Type", navigatesTo: "Navigates To", variant: "Variant" }
-        @label "Primary"
-        @description "Primary action button config (for form-actions pattern) Accepts Readonly for compatibility with generated const objects"
-        @tier "presentation"
-      secondary : [FormActionsSecondaryItem] = [{ label: "Label", actionType: "Action Type", navigatesTo: "Navigates To", variant: "Variant" }, { label: "Label 2", actionType: "Action Type 2", navigatesTo: "Navigates To 2", variant: "Variant 2" }]
-        @label "Secondary"
-        @description "Secondary action buttons config (for form-actions pattern) Accepts readonly array for compatibility with generated const arrays"
-        @tier "presentation"
-      variant : "default" | "segmented" | "toggle" = default
-        @label "Variant"
-        @description "Visual variant"
-        @tier "presentation"
-      orientation : "horizontal" | "vertical" = horizontal
-        @label "Orientation"
-        @description "Orientation"
-        @tier "presentation"
       className : string = ""
         @label "Class Name"
         @description "Additional CSS classes"
         @tier "presentation"
-      filters : [FormActionsFiltersItem] = [{ field: "Field", label: "Label", type: checkbox, options: ["Item", "Item 2"] }, { field: "Field 2", label: "Label 2", type: select, options: ["Item", "Item 2"] }]
-        @label "Filters"
-        @description "Filter definitions for filter-group pattern"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
         @tier "presentation"
-      look : "right-aligned-buttons" | "floating-bar" | "inline-row" | "dropdown-menu" | "command-palette-trigger" = "right-aligned-buttons"
-        @label "Look"
-        @description "Layer 2 visual treatment for the action-cluster (form-actions) pattern."
+      error : FormActionsError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json = {}
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      sticky : boolean = false
+        @label "Sticky"
+        @description "Sticky at bottom"
+        @tier "presentation"
+      align : "left" | "right" | "between" | "center" = right
+        @label "Align"
+        @description "Alignment"
         @tier "presentation"
     }
   }

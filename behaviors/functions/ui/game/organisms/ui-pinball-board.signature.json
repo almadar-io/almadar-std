@@ -24,7 +24,22 @@
             "required": false
           },
           {
+            "name": "audioEnabled",
+            "type": "boolean",
+            "required": false
+          },
+          {
             "name": "effects",
+            "type": "array",
+            "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
             "type": "array",
             "required": false
           }
@@ -40,7 +55,8 @@
           "UNIT_CLICK",
           "BUMPER_HIT",
           "BALL_LOST",
-          "PLAY_AGAIN"
+          "PLAY_AGAIN",
+          "TOGGLE_AUDIO"
         ],
         "listenedEvents": [],
         "events": [
@@ -48,31 +64,37 @@
             "name": "TILE_CLICK",
             "direction": "emit",
             "description": "Emits UI:{tileClickEvent} with { x, y } on tile click",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "UNIT_CLICK",
             "direction": "emit",
             "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "BUMPER_HIT",
             "direction": "emit",
             "description": "Emits when the ball strikes a bumper",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "BALL_LOST",
             "direction": "emit",
             "description": "Emits when a ball drains",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "PLAY_AGAIN",
             "direction": "emit",
             "description": "Emits UI:{playAgainEvent} on reset",
-            "tier": "essential"
+            "tier": "domain"
+          },
+          {
+            "name": "TOGGLE_AUDIO",
+            "direction": "emit",
+            "description": "Emits when the audio toggle is pressed",
+            "tier": "domain"
           },
           {
             "name": "INIT",
@@ -81,70 +103,12 @@
         ],
         "overridableConfigKeys": [
           {
-            "key": "activeFilters",
-            "type": "json",
-            "default": {},
-            "label": "Active Filters",
-            "description": "Active filters",
-            "tier": "presentation"
-          },
-          {
             "key": "assetBaseUrl",
-            "type": "Asset",
+            "type": "string",
             "default": "https://almadar-kflow-assets.web.app/shared/",
             "label": "Asset Base Url",
             "description": "Base URL prepended to manifest sprite paths",
-            "tier": "presentation",
-            "properties": {
-              "animations": {
-                "name": "animations",
-                "required": false,
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              },
-              "aspect": {
-                "name": "aspect",
-                "required": false,
-                "type": "string"
-              },
-              "category": {
-                "name": "category",
-                "required": false,
-                "type": "string"
-              },
-              "dimension": {
-                "name": "dimension",
-                "required": false,
-                "type": "string"
-              },
-              "name": {
-                "name": "name",
-                "required": false,
-                "type": "string"
-              },
-              "role": {
-                "name": "role",
-                "required": false,
-                "type": "string"
-              },
-              "style": {
-                "name": "style",
-                "required": false,
-                "type": "string"
-              },
-              "thumbnailUrl": {
-                "name": "thumbnailUrl",
-                "required": false,
-                "type": "string"
-              },
-              "url": {
-                "name": "url",
-                "required": false,
-                "type": "string"
-              }
-            }
+            "tier": "presentation"
           },
           {
             "key": "assetManifest",
@@ -162,7 +126,8 @@
                   "role": "effect",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png",
+                  "variant": ""
                 }
               },
               "features": {
@@ -177,7 +142,8 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png",
+                  "variant": ""
                 },
                 "paddle": {
                   "animations": [
@@ -190,7 +156,8 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png",
+                  "variant": ""
                 }
               },
               "terrains": {
@@ -205,7 +172,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "wall": {
                   "animations": [
@@ -218,7 +186,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 }
               },
               "units": {
@@ -237,7 +206,8 @@
                   "role": "npc",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/units/ball.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/units/ball.png",
+                  "variant": ""
                 }
               }
             },
@@ -298,6 +268,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -354,6 +329,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -414,6 +394,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -470,6 +455,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -541,7 +531,8 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png",
+                  "variant": ""
                 },
                 "type": "bumper",
                 "x": 2,
@@ -560,7 +551,8 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png",
+                  "variant": ""
                 },
                 "type": "bumper",
                 "x": 1,
@@ -579,7 +571,8 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/bumper.png",
+                  "variant": ""
                 },
                 "type": "bumper",
                 "x": 3,
@@ -598,7 +591,8 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png",
+                  "variant": ""
                 },
                 "type": "paddle",
                 "x": 1,
@@ -617,7 +611,8 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/features/paddle.png",
+                  "variant": ""
                 },
                 "type": "paddle",
                 "x": 3,
@@ -678,6 +673,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -750,6 +750,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -787,23 +792,6 @@
             "tier": "presentation"
           },
           {
-            "key": "pageProp",
-            "type": "number",
-            "default": 0,
-            "label": "Page",
-            "description": "Current page number",
-            "synonyms": "page",
-            "tier": "presentation"
-          },
-          {
-            "key": "pageSize",
-            "type": "number",
-            "default": 0,
-            "label": "Page Size",
-            "description": "Number of items per page",
-            "tier": "presentation"
-          },
-          {
             "key": "scale",
             "type": "number",
             "default": 1,
@@ -812,51 +800,12 @@
             "tier": "presentation"
           },
           {
-            "key": "searchValue",
-            "type": "string",
-            "default": "Search Value",
-            "label": "Search Value",
-            "description": "Current search query value",
-            "tier": "presentation"
-          },
-          {
-            "key": "selectedIds",
-            "type": "[string]",
-            "default": [],
-            "label": "Selected Ids",
-            "description": "Currently selected item IDs",
-            "tier": "presentation",
-            "items": {
-              "type": "string"
-            }
-          },
-          {
             "key": "showMinimap",
             "type": "boolean",
             "default": false,
             "label": "Show Minimap",
             "description": "Show minimap overlay",
             "tier": "presentation"
-          },
-          {
-            "key": "sortBy",
-            "type": "string",
-            "default": "Sort By",
-            "label": "Sort By",
-            "description": "Current sort field",
-            "tier": "presentation"
-          },
-          {
-            "key": "sortDirection",
-            "type": "string",
-            "default": "asc",
-            "label": "Sort Direction",
-            "description": "Current sort direction",
-            "tier": "presentation",
-            "enumValues": [
-              "asc",
-              "desc"
-            ]
           },
           {
             "key": "tiles",
@@ -876,7 +825,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 0
@@ -895,7 +845,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 0
@@ -914,7 +865,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 0
@@ -933,7 +885,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 0
@@ -952,7 +905,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 0
@@ -971,7 +925,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 1
@@ -990,7 +945,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 1
@@ -1009,7 +965,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 1
@@ -1028,7 +985,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 1
@@ -1047,7 +1005,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 1
@@ -1066,7 +1025,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 2
@@ -1085,7 +1045,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 2
@@ -1104,7 +1065,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 2
@@ -1123,7 +1085,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 2
@@ -1142,7 +1105,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 2
@@ -1161,7 +1125,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 3
@@ -1180,7 +1145,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 3
@@ -1199,7 +1165,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 3
@@ -1218,7 +1185,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 3
@@ -1237,7 +1205,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 3
@@ -1256,7 +1225,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 4
@@ -1275,7 +1245,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 4
@@ -1294,7 +1265,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 4
@@ -1313,7 +1285,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 4
@@ -1332,7 +1305,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 4
@@ -1351,7 +1325,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 5
@@ -1370,7 +1345,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 5
@@ -1389,7 +1365,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 5
@@ -1408,7 +1385,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 5
@@ -1427,7 +1405,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 5
@@ -1446,7 +1425,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 6
@@ -1465,7 +1445,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 6
@@ -1484,7 +1465,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 6
@@ -1503,7 +1485,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 6
@@ -1522,7 +1505,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 6
@@ -1541,7 +1525,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 7
@@ -1560,7 +1545,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 7
@@ -1579,7 +1565,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 7
@@ -1598,7 +1585,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/playfield.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 7
@@ -1617,7 +1605,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 7
@@ -1636,7 +1625,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 8
@@ -1655,7 +1645,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 8
@@ -1674,7 +1665,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 8
@@ -1693,7 +1685,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 8
@@ -1712,7 +1705,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/terrain/wall.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 8
@@ -1782,6 +1776,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -1854,6 +1853,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -1888,14 +1892,6 @@
             }
           },
           {
-            "key": "totalCount",
-            "type": "number",
-            "default": 0,
-            "label": "Total Count",
-            "description": "Total number of items",
-            "tier": "presentation"
-          },
-          {
             "key": "units",
             "type": "[PinballBoardUnitsItem]",
             "default": [
@@ -1925,7 +1921,8 @@
                   "role": "npc",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/units/ball.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-pinball-board/default/units/ball.png",
+                  "variant": ""
                 },
                 "team": "player",
                 "unitType": "ball"
@@ -2032,6 +2029,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -2126,6 +2128,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -2179,6 +2186,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -2258,10 +2270,13 @@
         "entityContract": {
           "requires": [],
           "provides": [
+            "audioEnabled",
             "balls",
             "effects",
             "score",
-            "units"
+            "selectedUnitId",
+            "units",
+            "validMoves"
           ]
         }
       }
@@ -2278,6 +2293,7 @@
       "BUMPER_HIT",
       "PLAY_AGAIN",
       "TILE_CLICK",
+      "TOGGLE_AUDIO",
       "UNIT_CLICK"
     ],
     "listenedEvents": []

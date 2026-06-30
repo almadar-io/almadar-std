@@ -52,6 +52,16 @@
             "name": "effects",
             "type": "array",
             "required": false
+          },
+          {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -61,6 +71,8 @@
       {
         "name": "PlatformerBoardRender",
         "emittedEvents": [
+          "TILE_CLICK",
+          "UNIT_CLICK",
           "GAME_END",
           "LEFT",
           "RIGHT",
@@ -71,40 +83,52 @@
         "listenedEvents": [],
         "events": [
           {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "Tile click passthrough — platformer is keyboard-driven; click coordinates for jump target",
+            "tier": "domain"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "Unit click passthrough",
+            "tier": "domain"
+          },
+          {
             "name": "GAME_END",
             "direction": "emit",
             "description": "Emitted when result becomes won or lost",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "LEFT",
             "direction": "emit",
             "description": "Left arrow / A key pressed",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "RIGHT",
             "direction": "emit",
             "description": "Right arrow / D key pressed",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "JUMP",
             "direction": "emit",
             "description": "Up / Space pressed",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "STOP",
             "direction": "emit",
             "description": "Horizontal key released",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "PLAY_AGAIN",
             "direction": "emit",
             "description": "Emits UI:{playAgainEvent} on restart",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "INIT",
@@ -167,6 +191,11 @@
                 "name": "url",
                 "required": false,
                 "type": "string"
+              },
+              "variant": {
+                "name": "variant",
+                "required": false,
+                "type": "string"
               }
             }
           },
@@ -182,9 +211,10 @@
               "dimension": "2d",
               "name": "ground",
               "role": "decoration",
-              "style": "",
+              "style": "pixel",
               "thumbnailUrl": "",
-              "url": "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png"
+              "url": "https://almadar-kflow-assets.web.app/shared/ui-platformer-board/default/terrain/ground.png",
+              "variant": ""
             },
             "label": "Background Image",
             "description": "Background image URL",
@@ -235,6 +265,11 @@
               },
               "url": {
                 "name": "url",
+                "required": false,
+                "type": "string"
+              },
+              "variant": {
+                "name": "variant",
                 "required": false,
                 "type": "string"
               }
@@ -455,6 +490,11 @@
                 "name": "url",
                 "required": false,
                 "type": "string"
+              },
+              "variant": {
+                "name": "variant",
+                "required": false,
+                "type": "string"
               }
             }
           },
@@ -519,6 +559,11 @@
                   "name": "url",
                   "required": false,
                   "type": "string"
+                },
+                "variant": {
+                  "name": "variant",
+                  "required": false,
+                  "type": "string"
                 }
               },
               "type": "object"
@@ -553,6 +598,8 @@
             "player",
             "result",
             "score",
+            "selectedUnitId",
+            "validMoves",
             "worldHeight",
             "worldWidth"
           ]
@@ -572,7 +619,9 @@
       "LEFT",
       "PLAY_AGAIN",
       "RIGHT",
-      "STOP"
+      "STOP",
+      "TILE_CLICK",
+      "UNIT_CLICK"
     ],
     "listenedEvents": []
   }

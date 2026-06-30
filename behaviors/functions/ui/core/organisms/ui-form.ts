@@ -77,7 +77,7 @@ export interface StdUiFormConfig {
   configPath?: string;
   error?: EntityRow;
   evaluationContext?: EntityRow;
-  /** Default: `[{"disabled":false,"field":"Field","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":true,"type":"Type 2","values":["Item","Item 2"]}]` */
+  /** Default: `[{"disabled":false,"field":"Field","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"many","displayField":"Display Field 2","entity":"Entity 2"},"required":true,"type":"Type 2","values":["Item","Item 2"]}]` */
   fields?: EntityRow[];
   /** Default: `"md"` */
   gap?: 'sm' | 'md' | 'lg';
@@ -99,7 +99,7 @@ export interface StdUiFormConfig {
   relationsLoading?: Record<string, TraitConfig>;
   /** Default: `false` */
   repeatable?: boolean;
-  /** Default: `[{"collapsible":false,"fields":[{"disabled":false,"field":"Field","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":true,"type":"Type 2","values":["Item","Item 2"]}],"id":"Id","title":"Title"},{"collapsible":true,"fields":[{"disabled":false,"field":"Field","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":true,"type":"Type 2","values":["Item","Item 2"]}],"id":"Id 2","title":"Title 2"}]` */
+  /** Default: `[{"collapsible":false,"fields":[{"disabled":false,"field":"Field","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"many","displayField":"Display Field 2","entity":"Entity 2"},"required":true,"type":"Type 2","values":["Item","Item 2"]}],"id":"Id","title":"Title"},{"collapsible":true,"fields":[{"disabled":false,"field":"Field","inputType":"Input Type","label":"Label","max":1,"min":1,"name":"Name","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern","placeholder":"Placeholder","readonly":false,"relation":{"cardinality":"one","displayField":"Display Field","entity":"Entity"},"required":false,"type":"Type","values":["Item","Item 2"]},{"disabled":true,"field":"Field 2","inputType":"Input Type 2","label":"Label 2","max":2,"min":2,"name":"Name 2","options":[{"label":"Label","value":"Value"},{"label":"Label 2","value":"Value 2"}],"pattern":"Pattern 2","placeholder":"Placeholder 2","readonly":true,"relation":{"cardinality":"many","displayField":"Display Field 2","entity":"Entity 2"},"required":true,"type":"Type 2","values":["Item","Item 2"]}],"id":"Id 2","title":"Title 2"}]` */
   sections?: EntityRow[];
   /** Default: `false` */
   showCancel?: boolean;
@@ -335,9 +335,9 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                 'placeholder': 'Placeholder 2',
                 'readonly': true,
                 'relation': {
-                  'cardinality': 'one',
-                  'displayField': 'Display Field',
-                  'entity': 'Entity',
+                  'cardinality': 'many',
+                  'displayField': 'Display Field 2',
+                  'entity': 'Entity 2',
                 },
                 'required': true,
                 'type': 'Type 2',
@@ -679,9 +679,9 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                     'placeholder': 'Placeholder 2',
                     'readonly': true,
                     'relation': {
-                      'cardinality': 'one',
-                      'displayField': 'Display Field',
-                      'entity': 'Entity',
+                      'cardinality': 'many',
+                      'displayField': 'Display Field 2',
+                      'entity': 'Entity 2',
                     },
                     'required': true,
                     'type': 'Type 2',
@@ -752,9 +752,9 @@ export function stdUiFormFormOrbital(params: StdUiFormFormOrbitalParams = {}): O
                     'placeholder': 'Placeholder 2',
                     'readonly': true,
                     'relation': {
-                      'cardinality': 'one',
-                      'displayField': 'Display Field',
-                      'entity': 'Entity',
+                      'cardinality': 'many',
+                      'displayField': 'Display Field 2',
+                      'entity': 'Entity 2',
                     },
                     'required': true,
                     'type': 'Type 2',

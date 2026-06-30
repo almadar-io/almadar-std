@@ -45,7 +45,7 @@ export interface StdUiMarketingFooterConfig {
   columns?: EntityRow[];
   /** Default: `"Copyright"` */
   copyright?: string;
-  /** Default: `{"alt":"Alt","href":"Href","src":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
+  /** Default: `{"alt":"Alt","href":"Href","src":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   logo?: EntityRow;
 }
 

@@ -39,20 +39,31 @@ export type StdUiFormActionsEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiFormActionsConfig {
+  /** Default: `{}` */
+  activeFilters?: unknown;
+  /** Default: `"right"` */
+  align?: 'left' | 'right' | 'between' | 'center';
   /** Default: `""` */
   className?: string;
-  /** Default: `[{"field":"Field","label":"Label","options":["Item","Item 2"],"type":"checkbox"},{"field":"Field 2","label":"Label 2","options":["Item","Item 2"],"type":"select"}]` */
-  filters?: EntityRow[];
-  /** Default: `"right-aligned-buttons"` */
-  look?: 'right-aligned-buttons' | 'floating-bar' | 'inline-row' | 'dropdown-menu' | 'command-palette-trigger';
-  /** Default: `"horizontal"` */
-  orientation?: 'horizontal' | 'vertical';
-  /** Default: `{"actionType":"Action Type","label":"Label","navigatesTo":"Navigates To","variant":"Variant"}` */
-  primary?: EntityRow;
-  /** Default: `[{"actionType":"Action Type","label":"Label","navigatesTo":"Navigates To","variant":"Variant"},{"actionType":"Action Type 2","label":"Label 2","navigatesTo":"Navigates To 2","variant":"Variant 2"}]` */
-  secondary?: EntityRow[];
-  /** Default: `"default"` */
-  variant?: 'default' | 'segmented' | 'toggle';
+  error?: EntityRow;
+  /** Default: `false` */
+  isLoading?: boolean;
+  /** Default: `0` */
+  pageProp?: number;
+  /** Default: `0` */
+  pageSize?: number;
+  /** Default: `"Search Value"` */
+  searchValue?: string;
+  /** Default: `[]` */
+  selectedIds?: string[];
+  /** Default: `"Sort By"` */
+  sortBy?: string;
+  /** Default: `"asc"` */
+  sortDirection?: 'asc' | 'desc';
+  /** Default: `false` */
+  sticky?: boolean;
+  /** Default: `0` */
+  totalCount?: number;
 }
 
 /**

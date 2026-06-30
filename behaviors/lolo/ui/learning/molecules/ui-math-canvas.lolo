@@ -1,0 +1,194 @@
+app ui-math-canvas "1.0.0"
+"MathCanvas — UI factory (1:1 with the @almadar/ui math-canvas pattern)."
+orbital MathCanvasOrbital {
+  type MathCanvasCurvesItem = {
+    label : string
+    color : string
+    samples : [MathCanvasCurvesItemSamplesItem]!
+  }
+  type MathCanvasCurvesItemSamplesItem = {
+    x : number!
+    y : number!
+  }
+  type MathCanvasPointsItem = {
+    x : number!
+    y : number!
+    label : string
+    color : string
+    radius : number
+  }
+  type MathCanvasVectorsItem = {
+    x : number!
+    y : number!
+    vx : number!
+    vy : number!
+    color : string
+    label : string
+  }
+  type MathCanvasShapesItem = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [MathCanvasShapesItemPointsItem]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type MathCanvasShapesItemPointsItem = {
+    x : number!
+    y : number!
+  }
+  type MathCanvasError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type MathCanvasSHAPECLICKPayload = {
+    id : string
+    type : string
+    index : number!
+  }
+
+  entity MathCanvasItem [runtime] {
+    id : string!
+  }
+
+  trait MathCanvasRender -> @rebindable MathCanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          width: @config.width
+          height: @config.height
+          title: @config.title
+          xMin: @config.xMin
+          xMax: @config.xMax
+          yMin: @config.yMin
+          yMax: @config.yMax
+          showAxes: @config.showAxes
+          showGrid: @config.showGrid
+          gridStep: @config.gridStep
+          curves: @config.curves
+          points: @config.points
+          vectors: @config.vectors
+          shapes: @config.shapes
+          interactive: @config.interactive
+          animate: @config.animate
+          onShapeClick: SHAPE_CLICK
+          isLoading: @config.isLoading
+          error: @config.error
+          type: math-canvas
+        })
+    }
+
+    emits {
+      SHAPE_CLICK -> external {
+        payload : MathCanvasSHAPECLICKPayload
+      }
+        @description "onShapeClick prop"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "width prop"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "height prop"
+        @tier "presentation"
+      title : string = "Title"
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      xMin : number = -10
+        @label "X Min"
+        @description "xMin prop"
+        @tier "presentation"
+      xMax : number = 10
+        @label "X Max"
+        @description "xMax prop"
+        @tier "presentation"
+      yMin : number = -10
+        @label "Y Min"
+        @description "yMin prop"
+        @tier "presentation"
+      yMax : number = 10
+        @label "Y Max"
+        @description "yMax prop"
+        @tier "presentation"
+      showAxes : boolean = true
+        @label "Show Axes"
+        @description "showAxes prop"
+        @tier "presentation"
+      showGrid : boolean = true
+        @label "Show Grid"
+        @description "showGrid prop"
+        @tier "presentation"
+      gridStep : number = 1
+        @label "Grid Step"
+        @description "gridStep prop"
+        @tier "presentation"
+      curves : [MathCanvasCurvesItem] = [{ label: "Label", color: "Color", samples: [{ x: 1, y: 1 }, { x: 2, y: 2 }] }, { label: "Label 2", color: "Color 2", samples: [{ x: 1, y: 1 }, { x: 2, y: 2 }] }]
+        @label "Curves"
+        @description "curves prop"
+        @tier "presentation"
+      points : [MathCanvasPointsItem] = [{ x: 1, y: 1, label: "Label", color: "Color", radius: 1 }, { x: 2, y: 2, label: "Label 2", color: "Color 2", radius: 2 }]
+        @label "Points"
+        @description "points prop"
+        @tier "presentation"
+      vectors : [MathCanvasVectorsItem] = [{ x: 1, y: 1, vx: 1, vy: 1, color: "Color", label: "Label" }, { x: 2, y: 2, vx: 2, vy: 2, color: "Color 2", label: "Label 2" }]
+        @label "Vectors"
+        @description "vectors prop"
+        @tier "presentation"
+      shapes : [MathCanvasShapesItem] = [{ type: line, id: "Id", x: 1, y: 1, x1: 1, y1: 1, x2: 1, y2: 1, radius: 1, width: 1, height: 1, points: [{ x: 1, y: 1 }, { x: 2, y: 2 }], path: "Path", text: "Text", label: "Label", fontSize: 1, align: left, axis: x, min: 1, max: 1, step: 1, color: "Color", fill: "Fill", lineWidth: 1, opacity: 1 }, { type: arrow, id: "Id 2", x: 2, y: 2, x1: 2, y1: 2, x2: 2, y2: 2, radius: 2, width: 2, height: 2, points: [{ x: 1, y: 1 }, { x: 2, y: 2 }], path: "Path 2", text: "Text 2", label: "Label 2", fontSize: 2, align: center, axis: y, min: 2, max: 2, step: 2, color: "Color 2", fill: "Fill 2", lineWidth: 2, opacity: 2 }]
+        @label "Shapes"
+        @description "Extra declarative shapes in canvas pixel coordinates."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "interactive prop"
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "animate prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "isLoading prop"
+        @tier "presentation"
+      error : MathCanvasError
+        @label "Error"
+        @description "error prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/math-canvas" as MathCanvasPage -> MathCanvasRender
+}

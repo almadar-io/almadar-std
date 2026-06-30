@@ -280,7 +280,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
             ],
             'scope': 'external',
             'synonyms': 'new, add, initialize, generate',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'listens': [
@@ -320,7 +320,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                 },
               ],
               'synonyms': 'find, query, lookup, search',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates new contact notifications are available.',
@@ -333,7 +333,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                 },
               ],
               'synonyms': 'alerts, updates, reminders, news',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
             {
               'description': 'Signals the creation of a new record.',
@@ -346,7 +346,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                 },
               ],
               'synonyms': 'new, add, initialize, generate',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -785,7 +785,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
             ],
             'scope': 'external',
             'synonyms': 'new contact, add contact, contact added',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals that a contact\'s details have been modified.',
@@ -798,7 +798,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
             ],
             'scope': 'external',
             'synonyms': 'modified, changed, refreshed',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals a contact record has been removed.',
@@ -811,7 +811,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
             ],
             'scope': 'external',
             'synonyms': 'removed, purged, archived',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'linkedEntity': 'Contact',
@@ -861,7 +861,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                 },
               ],
               'synonyms': 'new, add, generate, initiate',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates data has been modified and needs to be refreshed.',
@@ -875,7 +875,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                 },
               ],
               'synonyms': 'refresh, reload, update, sync',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Initiates the removal of a record.',
@@ -888,7 +888,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                 },
               ],
               'synonyms': 'remove, discard, purge',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals the creation of a new contact record.',
@@ -901,7 +901,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                 },
               ],
               'synonyms': 'new contact, add contact, contact added',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals that a contact\'s details have been modified.',
@@ -914,7 +914,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                 },
               ],
               'synonyms': 'modified, changed, refreshed',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals a contact record has been removed.',
@@ -927,7 +927,7 @@ export function stdGenericAppContactOrbital(params: StdGenericAppContactOrbitalP
                 },
               ],
               'synonyms': 'removed, purged, archived',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -1396,7 +1396,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'new, add, generate, initialize',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'listens': [
@@ -1436,7 +1436,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                 },
               ],
               'synonyms': 'query, find, lookup, browse',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates new notifications are available for items.',
@@ -1449,7 +1449,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                 },
               ],
               'synonyms': 'alerts, notification, updates, new',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
             {
               'description': 'Signals the creation of a new record.',
@@ -1462,7 +1462,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                 },
               ],
               'synonyms': 'new, add, generate, initialize',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -1917,7 +1917,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'added, new, added, instantiate',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals that an item\'s data has been modified and persisted.',
@@ -1930,7 +1930,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'modified, changed, refreshed, updated',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals that an item has been removed.',
@@ -1943,7 +1943,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'removed, purged, discarded',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'linkedEntity': 'Item',
@@ -2001,7 +2001,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                 },
               ],
               'synonyms': 'new, add, generate, initialize',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals that data has been modified and should be refreshed.',
@@ -2015,7 +2015,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                 },
               ],
               'synonyms': 'refresh, changed, modified, updated',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Initiates the removal of a record.',
@@ -2028,7 +2028,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                 },
               ],
               'synonyms': 'remove, discard, erase',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'An approver granted a held item request; replay the create from the carried payload.',
@@ -2045,7 +2045,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                 },
               ],
               'synonyms': 'approved, granted, authorized',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals a new item has been created.',
@@ -2058,7 +2058,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                 },
               ],
               'synonyms': 'added, new, added, instantiate',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals that an item\'s data has been modified and persisted.',
@@ -2071,7 +2071,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                 },
               ],
               'synonyms': 'modified, changed, refreshed, updated',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals that an item has been removed.',
@@ -2084,7 +2084,7 @@ export function stdGenericAppItemOrbital(params: StdGenericAppItemOrbitalParams 
                 },
               ],
               'synonyms': 'removed, purged, discarded',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -2639,7 +2639,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                 },
               ],
               'synonyms': 'find, query, lookup, browse',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates new activity notifications are available.',
@@ -2652,7 +2652,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                 },
               ],
               'synonyms': 'notify, alert, update, new',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
           ],
           'states': [
@@ -2969,7 +2969,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
             ],
             'scope': 'external',
             'synonyms': 'new, added, generated',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals that an activity has been modified and saved.',
@@ -2982,7 +2982,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
             ],
             'scope': 'external',
             'synonyms': 'modified, changed, updated, refreshed',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals that an activity record has been removed.',
@@ -2995,7 +2995,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
             ],
             'scope': 'external',
             'synonyms': 'removed, purged, discarded',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'linkedEntity': 'Activity',
@@ -3037,7 +3037,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                 },
               ],
               'synonyms': 'refresh, sync, change, modify',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Initiates the removal of a record.',
@@ -3050,7 +3050,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                 },
               ],
               'synonyms': 'remove, discard, erase',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals a new activity has been created.',
@@ -3063,7 +3063,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                 },
               ],
               'synonyms': 'new, added, generated',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals that an activity has been modified and saved.',
@@ -3076,7 +3076,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                 },
               ],
               'synonyms': 'modified, changed, updated, refreshed',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals that an activity record has been removed.',
@@ -3089,7 +3089,7 @@ export function stdGenericAppActivityOrbital(params: StdGenericAppActivityOrbita
                 },
               ],
               'synonyms': 'removed, purged, discarded',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -3495,7 +3495,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'new, add, generate, instantiate',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'listens': [
@@ -3535,7 +3535,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                 },
               ],
               'synonyms': 'find, query, lookup, search',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates new task notifications are available.',
@@ -3548,7 +3548,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                 },
               ],
               'synonyms': 'alert, notify, update, reminder',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
             {
               'description': 'Indicates a new record has been created.',
@@ -3561,7 +3561,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                 },
               ],
               'synonyms': 'new, add, generate, instantiate',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -3976,7 +3976,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'new task, task added, task initiation',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals a task has been modified.',
@@ -3989,7 +3989,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'modified, changed, altered',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals that a task has been removed.',
@@ -4002,7 +4002,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'removed, purged, archived',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'linkedEntity': 'Task',
@@ -4052,7 +4052,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                 },
               ],
               'synonyms': 'new, add, generate, initiate',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates data has been modified and should be refreshed.',
@@ -4066,7 +4066,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                 },
               ],
               'synonyms': 'refresh, reload, update, sync',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Initiates the removal of a record.',
@@ -4079,7 +4079,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                 },
               ],
               'synonyms': 'remove, discard, erase',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'A new task has been created.',
@@ -4092,7 +4092,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                 },
               ],
               'synonyms': 'new task, task added, task initiation',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals a task has been modified.',
@@ -4105,7 +4105,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                 },
               ],
               'synonyms': 'modified, changed, altered',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals that a task has been removed.',
@@ -4118,7 +4118,7 @@ export function stdGenericAppTaskOrbital(params: StdGenericAppTaskOrbitalParams 
                 },
               ],
               'synonyms': 'removed, purged, archived',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -4540,7 +4540,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
             ],
             'scope': 'external',
             'synonyms': 'new, add, initialize, generate',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'listens': [
@@ -4580,7 +4580,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                 },
               ],
               'synonyms': 'find, query, lookup, browse',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates new calendar notifications are available.',
@@ -4593,7 +4593,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                 },
               ],
               'synonyms': 'alert, notify, reminder',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals a new record has been created.',
@@ -4606,7 +4606,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                 },
               ],
               'synonyms': 'new, add, initialize, generate',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -4972,7 +4972,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
             ],
             'scope': 'external',
             'synonyms': 'new, added, scheduled',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals a change or update to calendar data.',
@@ -4985,7 +4985,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
             ],
             'scope': 'external',
             'synonyms': 'modified, changed, refreshed',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals that a calendar item has been removed.',
@@ -4998,7 +4998,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
             ],
             'scope': 'external',
             'synonyms': 'removed, purged, discarded',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'linkedEntity': 'CalendarEvent',
@@ -5048,7 +5048,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                 },
               ],
               'synonyms': 'new, add, generate, initiate',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates a record has been modified and changes are pending.',
@@ -5062,7 +5062,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                 },
               ],
               'synonyms': 'modified, changed, altered, updated',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
             {
               'description': 'Initiates the removal of a record.',
@@ -5075,7 +5075,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                 },
               ],
               'synonyms': 'remove, discard, purge',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'A new calendar entry has been created.',
@@ -5088,7 +5088,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                 },
               ],
               'synonyms': 'new, added, scheduled',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals a change or update to calendar data.',
@@ -5101,7 +5101,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                 },
               ],
               'synonyms': 'modified, changed, refreshed',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals that a calendar item has been removed.',
@@ -5114,7 +5114,7 @@ export function stdGenericAppCalendarOrbital(params: StdGenericAppCalendarOrbita
                 },
               ],
               'synonyms': 'removed, purged, discarded',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -5554,7 +5554,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                 },
               ],
               'synonyms': 'find, query, lookup, browse',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates new notifications are available for widgets.',
@@ -5567,7 +5567,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                 },
               ],
               'synonyms': 'notify, alert, update, message',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
           ],
           'states': [
@@ -5973,7 +5973,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
             ],
             'scope': 'external',
             'synonyms': 'new, added, generated, created',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals a widget\'s data or appearance has been modified.',
@@ -5986,7 +5986,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
             ],
             'scope': 'external',
             'synonyms': 'refresh, change, update',
-            'tier': 'customization',
+            'tier': 'presentation',
           },
           {
             'description': 'Signals a widget has been removed.',
@@ -5999,7 +5999,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
             ],
             'scope': 'external',
             'synonyms': 'removed, discarded, purged',
-            'tier': 'customization',
+            'tier': 'presentation',
           },
         ],
         'linkedEntity': 'Widget',
@@ -6041,7 +6041,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                 },
               ],
               'synonyms': 'refresh, reload, update, sync',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Initiates the removal of a record.',
@@ -6054,7 +6054,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                 },
               ],
               'synonyms': 'remove, discard, erase',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'A new widget has been generated or added.',
@@ -6067,7 +6067,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                 },
               ],
               'synonyms': 'new, added, generated, created',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals a widget\'s data or appearance has been modified.',
@@ -6080,7 +6080,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                 },
               ],
               'synonyms': 'refresh, change, update',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
             {
               'description': 'Signals a widget has been removed.',
@@ -6093,7 +6093,7 @@ export function stdGenericAppWidgetOrbital(params: StdGenericAppWidgetOrbitalPar
                 },
               ],
               'synonyms': 'removed, discarded, purged',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
           ],
           'states': [
@@ -6490,7 +6490,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'new, add, generate, initialize',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'listens': [
@@ -6530,7 +6530,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                 },
               ],
               'synonyms': 'query, find, lookup',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates new feed notifications are available.',
@@ -6543,7 +6543,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                 },
               ],
               'synonyms': 'notify, alert, update, message',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
             {
               'description': 'Signals the creation of a new record.',
@@ -6556,7 +6556,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                 },
               ],
               'synonyms': 'new, add, generate, initialize',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -6908,7 +6908,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'posted, published, added',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals that the feed data has been refreshed or modified.',
@@ -6921,7 +6921,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'refresh, update, new, changed',
-            'tier': 'customization',
+            'tier': 'presentation',
           },
           {
             'description': 'Signals a feed item has been removed.',
@@ -6934,7 +6934,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'removed, purged, archived',
-            'tier': 'customization',
+            'tier': 'presentation',
           },
         ],
         'linkedEntity': 'FeedPost',
@@ -6984,7 +6984,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                 },
               ],
               'synonyms': 'new, add, generate, initialize',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates data has been modified and requires synchronization.',
@@ -6998,7 +6998,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                 },
               ],
               'synonyms': 'refresh, sync, changed, modified',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Initiates the removal of a record.',
@@ -7011,7 +7011,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                 },
               ],
               'synonyms': 'remove, discard, erase',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'A new feed item has been created.',
@@ -7024,7 +7024,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                 },
               ],
               'synonyms': 'posted, published, added',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals that the feed data has been refreshed or modified.',
@@ -7037,7 +7037,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                 },
               ],
               'synonyms': 'refresh, update, new, changed',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
             {
               'description': 'Signals a feed item has been removed.',
@@ -7050,7 +7050,7 @@ export function stdGenericAppFeedOrbital(params: StdGenericAppFeedOrbitalParams 
                 },
               ],
               'synonyms': 'removed, purged, archived',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
           ],
           'states': [
@@ -7457,7 +7457,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'new, add, generate, initialize',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'listens': [
@@ -7497,7 +7497,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                 },
               ],
               'synonyms': 'find, query, lookup',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates new notifications are available for notes.',
@@ -7510,7 +7510,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                 },
               ],
               'synonyms': 'new, alert, update, notify',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
             {
               'description': 'Signals the creation of a new record.',
@@ -7523,7 +7523,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                 },
               ],
               'synonyms': 'new, add, generate, initialize',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -7918,7 +7918,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'new, added, recorded',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals that a note has been modified and saved.',
@@ -7931,7 +7931,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'modified, changed, updated',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Signals a note has been removed.',
@@ -7944,7 +7944,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
             ],
             'scope': 'external',
             'synonyms': 'removed, purged, discarded',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'linkedEntity': 'Note',
@@ -7994,7 +7994,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                 },
               ],
               'synonyms': 'new, add, generate, initiate',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Indicates a record has been modified and changes are pending.',
@@ -8008,7 +8008,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                 },
               ],
               'synonyms': 'modified, changed, altered, updated',
-              'tier': 'customization',
+              'tier': 'presentation',
             },
             {
               'description': 'Initiates the removal of a record.',
@@ -8021,7 +8021,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                 },
               ],
               'synonyms': 'remove, discard, erase',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'A new note has been created.',
@@ -8034,7 +8034,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                 },
               ],
               'synonyms': 'new, added, recorded',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals that a note has been modified and saved.',
@@ -8047,7 +8047,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                 },
               ],
               'synonyms': 'modified, changed, updated',
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Signals a note has been removed.',
@@ -8060,7 +8060,7 @@ export function stdGenericAppNoteOrbital(params: StdGenericAppNoteOrbitalParams 
                 },
               ],
               'synonyms': 'removed, purged, discarded',
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [

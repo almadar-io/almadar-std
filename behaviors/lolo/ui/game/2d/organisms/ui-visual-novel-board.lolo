@@ -13,6 +13,7 @@ orbital VisualNovelBoardOrbital {
       category : string
       animations : [string]
       style : string
+      variant : string
       dimension : string
       aspect : string
       name : string
@@ -35,6 +36,9 @@ orbital VisualNovelBoardOrbital {
     id : string!
     nodes : [VisualNovelBoardNodesItem]
     currentNodeId : string = "start"
+    currentSpeaker : string = ""
+    currentText : string = ""
+    currentChoices : [VisualNovelBoardChoicesItem] = []
   }
 
   trait VisualNovelBoardRender -> @rebindable VisualNovelBoardItem [interaction, instance] {
@@ -44,12 +48,17 @@ orbital VisualNovelBoardOrbital {
       INIT -> playing
         (set @entity.nodes @config.nodes)
         (set @entity.currentNodeId @config.startNodeId)
+        (set @entity.currentSpeaker (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) speaker))
+        (set @entity.currentText (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) text))
+        (set @entity.currentChoices (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) choices))
         (render-ui main {
           type: visual-novel-board
           nodes: @entity.nodes
           currentNodeId: @entity.currentNodeId
           typewriterSpeed: @config.typewriterSpeed
           portraitScale: @config.portraitScale
+          dialogueBubble: { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText }
+          choiceButton: { type: choice-button, choices: @entity.currentChoices, chooseEvent: CHOOSE }
           chooseEvent: CHOOSE
           advanceEvent: ADVANCE
           restartEvent: RESTART
@@ -57,12 +66,17 @@ orbital VisualNovelBoardOrbital {
 
       CHOOSE -> playing
         (set @entity.currentNodeId ?nextId)
+        (set @entity.currentSpeaker (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) speaker))
+        (set @entity.currentText (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) text))
+        (set @entity.currentChoices (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) choices))
         (render-ui main {
           type: visual-novel-board
           nodes: @entity.nodes
           currentNodeId: @entity.currentNodeId
           typewriterSpeed: @config.typewriterSpeed
           portraitScale: @config.portraitScale
+          dialogueBubble: { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText }
+          choiceButton: { type: choice-button, choices: @entity.currentChoices, chooseEvent: CHOOSE }
           chooseEvent: CHOOSE
           advanceEvent: ADVANCE
           restartEvent: RESTART
@@ -75,6 +89,8 @@ orbital VisualNovelBoardOrbital {
           currentNodeId: @entity.currentNodeId
           typewriterSpeed: @config.typewriterSpeed
           portraitScale: @config.portraitScale
+          dialogueBubble: { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText }
+          choiceButton: { type: choice-button, choices: @entity.currentChoices, chooseEvent: CHOOSE }
           chooseEvent: CHOOSE
           advanceEvent: ADVANCE
           restartEvent: RESTART
@@ -82,12 +98,17 @@ orbital VisualNovelBoardOrbital {
 
       RESTART -> playing
         (set @entity.currentNodeId @config.startNodeId)
+        (set @entity.currentSpeaker (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) speaker))
+        (set @entity.currentText (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) text))
+        (set @entity.currentChoices (object/get (array/first (array/filter @entity.nodes (fn n (== @n.id @entity.currentNodeId)))) choices))
         (render-ui main {
           type: visual-novel-board
           nodes: @entity.nodes
           currentNodeId: @entity.currentNodeId
           typewriterSpeed: @config.typewriterSpeed
           portraitScale: @config.portraitScale
+          dialogueBubble: { type: dialogue-bubble, speaker: @entity.currentSpeaker, text: @entity.currentText }
+          choiceButton: { type: choice-button, choices: @entity.currentChoices, chooseEvent: CHOOSE }
           chooseEvent: CHOOSE
           advanceEvent: ADVANCE
           restartEvent: RESTART
@@ -138,11 +159,11 @@ orbital VisualNovelBoardOrbital {
         @label "Portrait Scale"
         @description "Character portrait draw-size multiplier"
         @tier "presentation"
-      backgroundImage : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png", role: "decoration", category: "corridor", animations: ["static"], style: "", dimension: "2d", aspect: "16:9", name: "corridor", thumbnailUrl: "" }
+      backgroundImage : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/backgrounds/corridor.png", role: "decoration", category: "corridor", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "16:9", name: "corridor", thumbnailUrl: "" }
         @label "Background Image"
         @description "Full-frame scene background rendered behind the dialogue box."
         @tier "presentation"
-      portraitUrl : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png", role: "npc", category: "guide", animations: ["static"], style: "", dimension: "2d", aspect: "1:1", name: "guide", thumbnailUrl: "" }
+      portraitUrl : Asset = { url: "https://almadar-kflow-assets.web.app/shared/ui-visual-novel-board/default/portraits/guide.png", role: "npc", category: "guide", animations: ["static"], style: "", variant: "", dimension: "2d", aspect: "1:1", name: "guide", thumbnailUrl: "" }
         @label "Portrait Url"
         @description "Large character portrait rendered standing over the scene."
         @tier "presentation"

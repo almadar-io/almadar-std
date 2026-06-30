@@ -1,6 +1,23 @@
 app ui-tower-defense-template "1.0.0"
-"TowerDefenseTemplate — isometric tower-defense arena; composes TowerDefenseBoard with HUD (gold/lives/wave)."
+"TowerDefenseTemplate — thin playable shell; renders game-shell + isometric canvas-2d matching ui-tower-defense-board."
 orbital TowerDefenseTemplateOrbital {
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type TowerDefenseTemplateAssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+  }
   type TowerDefenseTemplateTilesItem = {
     id : string
     x : number!
@@ -22,43 +39,115 @@ orbital TowerDefenseTemplateOrbital {
     cooldown : number!
     lastFiredAt : number
   }
+  type TowerDefenseTemplateCreepItem = {
+    id : string!
+    x : number!
+    y : number!
+    hp : number!
+    maxHp : number!
+    pathIndex : number!
+    speed : number
+    animation : string
+    frame : number
+  }
+  type TowerDefenseTemplateFeaturesItem = {
+    id : string!
+    x : number!
+    y : number!
+    type : string!
+    sprite : Asset
+  }
+  type TowerDefenseTemplateEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
+  }
 
   entity TowerDefenseTemplateItem [runtime] {
     id : string!
+    gold : number = 100
+    lives : number = 20
+    wave : number = 0
+    waveActive : boolean = false
+    towers : [TowerDefenseTemplateTowersItem]
+    creeps : [TowerDefenseTemplateCreepItem] = []
+    features : [TowerDefenseTemplateFeaturesItem] = []
+    effects : [TowerDefenseTemplateEffectItem] = []
+    selectedUnitId : string = ""
+    validMoves : [TowerDefenseTemplatePathItem] = []
+    waypointLabels : [string] = []
+    result : "none" | "won" | "lost" = none
   }
 
   trait TowerDefenseTemplateRender -> @rebindable TowerDefenseTemplateItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
-        (fetch TowerDefenseTemplateItem {})
+    state playing {
+      INIT -> playing
+        (set @entity.gold @config.gold)
+        (set @entity.lives @config.lives)
+        (set @entity.wave 1)
+        (set @entity.towers @config.towers)
+        (set @entity.creeps [])
+        (set @entity.features [])
+        (set @entity.waypointLabels [])
+        (set @entity.waveActive false)
+        (set @entity.effects [])
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.result none)
         (render-ui main {
-          entity: @entity
-          className: @config.className
-          title: @config.title
-          tiles: @config.tiles
-          path: @config.path
-          towers: @config.towers
-          gold: @config.gold
-          lives: @config.lives
-          maxWaves: @config.maxWaves
-          towerCost: @config.towerCost
-          towerRange: @config.towerRange
-          towerDamage: @config.towerDamage
-          creepsPerWave: @config.creepsPerWave
-          creepBaseHp: @config.creepBaseHp
-          goldPerKill: @config.goldPerKill
-          scale: @config.scale
-          unitScale: @config.unitScale
-          gridWidth: @config.gridWidth
-          gridHeight: @config.gridHeight
-          placeTowerEvent: PLACE_TOWER
-          startWaveEvent: START_WAVE
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          type: tower-defense-template
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
+      PLACE_TOWER -> playing when (>= @entity.gold @config.towerCost)
+        (set @entity.gold (- @entity.gold @config.towerCost))
+        (set @entity.towers (array/concat @entity.towers [{ id: (str/concat "tower-" (array/len @entity.towers)), x: ?x, y: ?y, range: @config.towerRange, damage: @config.towerDamage, cooldown: 1, lastFiredAt: 0 }]))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      START_WAVE -> playing
+        (set @entity.wave (+ @entity.wave 1))
+        (set @entity.waveActive true)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      UNIT_CLICK -> playing
+        (set @entity.selectedUnitId ?unitId)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      PLAY_AGAIN -> playing
+        (set @entity.gold @config.gold)
+        (set @entity.lives @config.lives)
+        (set @entity.wave 1)
+        (set @entity.towers @config.towers)
+        (set @entity.creeps [])
+        (set @entity.features [])
+        (set @entity.waypointLabels [])
+        (set @entity.waveActive false)
+        (set @entity.effects [])
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.result none)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Gold", value: @entity.gold }, { label: "Lives", value: @entity.lives }, { label: "Wave", value: @entity.wave } ] }, { type: waypoint-marker, waypoints: @entity.waypointLabels, path: @config.path }, { type: feature-renderer, features: @entity.towers, manifest: @config.assetManifest }, { type: button, action: START_WAVE, label: "Start Wave", icon: play, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @config.tiles, units: @entity.creeps, features: @config.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: PLACE_TOWER, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+    }
+
+    emits {
+      PLACE_TOWER -> external { x, y }
+      UNIT_CLICK -> external { unitId }
     }
 
     config {
@@ -133,6 +222,14 @@ orbital TowerDefenseTemplateOrbital {
       towers : [TowerDefenseTemplateTowersItem] = [{ id: "t0", x: 1, y: 1, range: 2, damage: 3, cooldown: 1, lastFiredAt: 0 }, { id: "t1", x: 3, y: 3, range: 2, damage: 3, cooldown: 1, lastFiredAt: 0 }]
         @label "Towers"
         @description "Pre-placed towers forwarded to TowerDefenseBoard."
+        @tier "presentation"
+      features : [TowerDefenseTemplateFeaturesItem] = []
+        @label "Features"
+        @description "Static feature objects on the map."
+        @tier "presentation"
+      assetManifest : TowerDefenseTemplateAssetManifest = { terrains: { wall: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/wall.png", role: "terrain", category: "wall", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "wall", thumbnailUrl: "" }, ground: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/ground.png", role: "terrain", category: "ground", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "ground", thumbnailUrl: "" }, path: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/terrain/path.png", role: "terrain", category: "path", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "path", thumbnailUrl: "" } }, units: { creep: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/units/creep.png", role: "unit", category: "creep", animations: ["idle","walk","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "creep", thumbnailUrl: "" } }, features: { tower: { url: "https://almadar-kflow-assets.web.app/shared/ui-tower-defense-board/default/features/tower.png", role: "feature", category: "tower", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "tower", thumbnailUrl: "" } } }
+        @label "Asset Manifest"
+        @description "Terrain/unit/feature sprite maps."
         @tier "presentation"
     }
   }

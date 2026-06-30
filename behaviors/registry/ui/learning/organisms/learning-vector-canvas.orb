@@ -1,0 +1,168 @@
+{
+  "description": "Vector canvas organism — plots coordinate axes and a set of vectors on a math-canvas.",
+  "name": "learning-vector-canvas",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "VectorCanvasItem",
+        "persistence": "runtime"
+      },
+      "name": "VectorCanvasOrbital",
+      "pages": [
+        {
+          "name": "VectorCanvasPage",
+          "path": "/learning/vector-canvas",
+          "traits": [
+            {
+              "ref": "VectorCanvasRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "height": {
+              "default": 400.0,
+              "label": "Height",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "title": {
+              "default": "Vector Canvas",
+              "description": "Title shown above the canvas.",
+              "label": "Title",
+              "tier": "domain",
+              "type": "string"
+            },
+            "width": {
+              "default": 600.0,
+              "label": "Width",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "xMax": {
+              "default": 6.0,
+              "label": "X Max",
+              "tier": "domain",
+              "type": "number"
+            },
+            "xMin": {
+              "default": -6.0,
+              "label": "X Min",
+              "tier": "domain",
+              "type": "number"
+            },
+            "yMax": {
+              "default": 6.0,
+              "label": "Y Max",
+              "tier": "domain",
+              "type": "number"
+            },
+            "yMin": {
+              "default": -2.0,
+              "label": "Y Min",
+              "tier": "domain",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "VectorCanvasItem",
+          "name": "VectorCanvasRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "content": "@config.title",
+                          "type": "typography",
+                          "variant": "h4"
+                        },
+                        {
+                          "gridStep": 1.0,
+                          "height": "@config.height",
+                          "showAxes": true,
+                          "showGrid": true,
+                          "type": "math-canvas",
+                          "vectors": [
+                            {
+                              "color": "#2563eb",
+                              "label": "u",
+                              "vx": 3.0,
+                              "vy": 2.0,
+                              "x": 0.0,
+                              "y": 0.0
+                            },
+                            {
+                              "color": "#dc2626",
+                              "label": "v",
+                              "vx": -2.0,
+                              "vy": 3.0,
+                              "x": 0.0,
+                              "y": 0.0
+                            },
+                            {
+                              "color": "#16a34a",
+                              "label": "w",
+                              "vx": 1.0,
+                              "vy": 5.0,
+                              "x": 0.0,
+                              "y": 0.0
+                            }
+                          ],
+                          "width": "@config.width",
+                          "xMax": "@config.xMax",
+                          "xMin": "@config.xMin",
+                          "yMax": "@config.yMax",
+                          "yMin": "@config.yMin"
+                        }
+                      ],
+                      "direction": "vertical",
+                      "gap": "md",
+                      "padding": "md",
+                      "type": "stack"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

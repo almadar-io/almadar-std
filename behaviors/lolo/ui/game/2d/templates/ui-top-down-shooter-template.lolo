@@ -1,46 +1,133 @@
 app ui-top-down-shooter-template "1.0.0"
-"TopDownShooterTemplate — top-down arena shooter; composes TopDownShooterBoard with HUD (score/wave/lives)."
+"TopDownShooterTemplate — thin playable shell; renders game-shell + flat canvas-2d matching ui-top-down-shooter-board."
 orbital TopDownShooterTemplateOrbital {
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
   type TopDownShooterTemplateAssetManifest = {
     baseUrl : asset
-    units : Map string asset
-    features : Map string asset
+    units : Map string Asset
+    features : Map string Asset
     background : asset
+  }
+  type TopDownShooterTemplatePlayer = {
+    x : number
+    y : number
+    vx : number
+    vy : number
+    animation : string
+    frame : number
+  }
+  type TopDownShooterTemplateEnemyItem = {
+    id : string!
+    x : number!
+    y : number!
+    hp : number!
+    animation : string
+    frame : number
+  }
+  type TopDownShooterTemplateProjectileItem = {
+    id : string!
+    x : number!
+    y : number!
+  }
+  type TopDownShooterTemplateEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
+  }
+  type TopDownShooterTemplateValidMoveItem = {
+    x : number!
+    y : number!
   }
 
   entity TopDownShooterTemplateItem [runtime] {
     id : string!
+    player : TopDownShooterTemplatePlayer = { x: 320, y: 400, vx: 0, vy: 0, animation: "idle", frame: 0 }
+    enemies : [TopDownShooterTemplateEnemyItem] = []
+    projectiles : [TopDownShooterTemplateProjectileItem] = []
+    effects : [TopDownShooterTemplateEffectItem] = []
+    score : number = 0
+    wave : number = 1
+    lives : number = 3
+    result : "none" | "won" | "lost" = none
+    selectedUnitId : string = ""
+    validMoves : [TopDownShooterTemplateValidMoveItem] = []
   }
 
   trait TopDownShooterTemplateRender -> @rebindable TopDownShooterTemplateItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
-        (fetch TopDownShooterTemplateItem {})
+    state playing {
+      INIT -> playing
+        (set @entity.player { x: 320, y: 400, vx: 0, vy: 0, animation: "idle", frame: 0 })
+        (set @entity.enemies [])
+        (set @entity.projectiles [])
+        (set @entity.effects [])
+        (set @entity.score 0)
+        (set @entity.wave 1)
+        (set @entity.lives @config.lives)
+        (set @entity.result none)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
         (render-ui main {
-          entity: @entity
-          className: @config.className
-          title: @config.title
-          width: @config.width
-          height: @config.height
-          spriteSize: @config.spriteSize
-          lives: @config.lives
-          maxWaves: @config.maxWaves
-          enemiesPerWave: @config.enemiesPerWave
-          enemyHp: @config.enemyHp
-          enemySpeed: @config.enemySpeed
-          projectileSpeed: @config.projectileSpeed
-          moveStep: @config.moveStep
-          hitRadius: @config.hitRadius
-          scorePerKill: @config.scorePerKill
-          assetManifest: @config.assetManifest
-          moveEvent: MOVE
-          fireEvent: FIRE
-          playAgainEvent: PLAY_AGAIN
-          gameEndEvent: GAME_END
-          type: top-down-shooter-template
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Wave", value: @entity.wave }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: FIRE, label: "Fire", icon: zap, variant: primary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) projectile) })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
+      MOVE -> playing
+        (set @entity.player (object/merge @entity.player { vx: ?vx, vy: ?vy, animation: "move" }))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Wave", value: @entity.wave }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: FIRE, label: "Fire", icon: zap, variant: primary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) projectile) })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      FIRE -> playing
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Wave", value: @entity.wave }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: FIRE, label: "Fire", icon: zap, variant: primary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) projectile) })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      PLAY_AGAIN -> playing
+        (set @entity.player { x: 320, y: 400, vx: 0, vy: 0, animation: "idle", frame: 0 })
+        (set @entity.enemies [])
+        (set @entity.projectiles [])
+        (set @entity.effects [])
+        (set @entity.score 0)
+        (set @entity.wave 1)
+        (set @entity.lives @config.lives)
+        (set @entity.result none)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Wave", value: @entity.wave }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: FIRE, label: "Fire", icon: zap, variant: primary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) projectile) })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      GAME_END -> playing
+        (set @entity.result won)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Wave", value: @entity.wave }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, score: @entity.score, label: "SCORE" }, { type: button, action: FIRE, label: "Fire", icon: zap, variant: primary } ] }
+          children: [ { type: canvas-2d, tiles: [], units: (array/concat [ { id: "player", position: { x: (object/get @entity.player x), y: (object/get @entity.player y) }, sprite: (object/get (object/get @config.assetManifest units) player), animation: (object/get @entity.player animation), frame: (object/get @entity.player frame), team: "player" } ] (array/map @entity.enemies (fn e { id: @e.id, position: { x: (object/get @e x), y: (object/get @e y) }, sprite: (object/get (object/get @config.assetManifest units) enemy), animation: (object/get @e animation), frame: (object/get @e frame), team: "enemy" }))), features: (array/map @entity.projectiles (fn p { id: @p.id, x: (object/get @p x), y: (object/get @p y), type: "projectile", sprite: (object/get (object/get @config.assetManifest features) projectile) })), effects: @entity.effects, assetManifest: @config.assetManifest, projection: "flat", showMinimap: false, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external { x, y }
+      UNIT_CLICK -> external { unitId }
+      MOVE -> external { vx, vy }
+      FIRE -> external {}
     }
 
     config {
@@ -100,7 +187,11 @@ orbital TopDownShooterTemplateOrbital {
         @label "Score Per Kill"
         @description "Score awarded for each enemy destroyed"
         @tier "presentation"
-      assetManifest : TopDownShooterTemplateAssetManifest = { baseUrl: "https://almadar-kflow-assets.web.app/shared/", units: { player: "units/chars-toon/kenney-vendored/toon/platformChar_idle.png", enemy: "units/chars-toon/kenney-vendored/toon/platformChar_jump.png" }, features: { projectile: "features/props-items/kenney-vendored/items/platformPack_item001.png", pickup: "features/props-items/kenney-vendored/items/platformPack_item001.png" }, background: "backgrounds/bg-parallax/trait-wars/scenes/world/streets.png" }
+      scale : number = 1
+        @label "Scale"
+        @description "Canvas render scale"
+        @tier "presentation"
+      assetManifest : TopDownShooterTemplateAssetManifest = { baseUrl: "https://almadar-kflow-assets.web.app/shared/", units: { player: { url: "https://almadar-kflow-assets.web.app/shared/units/chars-toon/kenney-vendored/toon/platformChar_idle.png", role: "unit", category: "player", animations: ["idle","move","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "player", thumbnailUrl: "" }, enemy: { url: "https://almadar-kflow-assets.web.app/shared/units/chars-toon/kenney-vendored/toon/platformChar_jump.png", role: "unit", category: "enemy", animations: ["idle","move","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "enemy", thumbnailUrl: "" } }, features: { projectile: { url: "https://almadar-kflow-assets.web.app/shared/features/props-items/kenney-vendored/items/platformPack_item001.png", role: "projectile", category: "projectile", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "projectile", thumbnailUrl: "" } }, background: "https://almadar-kflow-assets.web.app/shared/backgrounds/bg-parallax/trait-wars/scenes/world/streets.png" }
         @label "Asset Manifest"
         @description "Base-url + unit/feature sprite maps + background forwarded to TopDownShooterBoard."
         @tier "presentation"

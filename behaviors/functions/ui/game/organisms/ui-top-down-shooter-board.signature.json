@@ -24,6 +24,16 @@
             "required": false
           },
           {
+            "name": "selectedUnitId",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "score",
             "type": "number",
             "required": false
@@ -66,6 +76,8 @@
       {
         "name": "TopDownShooterBoardRender",
         "emittedEvents": [
+          "TILE_CLICK",
+          "UNIT_CLICK",
           "MOVE",
           "FIRE",
           "GAME_END",
@@ -74,28 +86,40 @@
         "listenedEvents": [],
         "events": [
           {
+            "name": "TILE_CLICK",
+            "direction": "emit",
+            "description": "Emits UI:{tileClickEvent} with { x, y } on tile/arena click",
+            "tier": "domain"
+          },
+          {
+            "name": "UNIT_CLICK",
+            "direction": "emit",
+            "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+            "tier": "domain"
+          },
+          {
             "name": "MOVE",
             "direction": "emit",
             "description": "Emits UI:{moveEvent} with {dx,dy} on arrow/WASD key press to move the player",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "FIRE",
             "direction": "emit",
             "description": "Emits UI:{fireEvent} with {tx,ty} on space / arena click to fire a projectile",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "GAME_END",
             "direction": "emit",
             "description": "Emits UI:{gameEndEvent} with {result} when the game reaches won or lost",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "PLAY_AGAIN",
             "direction": "emit",
             "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "INIT",
@@ -107,7 +131,20 @@
             "key": "assetManifest",
             "type": "TopDownShooterBoardAssetManifest",
             "default": {
-              "background": "backgrounds/bg-parallax/trait-wars/scenes/world/streets.png",
+              "background": {
+                "animations": [
+                  "static"
+                ],
+                "aspect": "16:9",
+                "category": "background",
+                "dimension": "2d",
+                "name": "space",
+                "role": "background",
+                "style": "sci-fi",
+                "thumbnailUrl": "",
+                "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/backgrounds/space.png",
+                "variant": ""
+              },
               "effects": {
                 "explosion": {
                   "animations": [
@@ -118,9 +155,10 @@
                   "dimension": "2d",
                   "name": "explosion",
                   "role": "effect",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/effects/explosion.png",
+                  "variant": ""
                 },
                 "spark": {
                   "animations": [
@@ -131,9 +169,10 @@
                   "dimension": "2d",
                   "name": "spark",
                   "role": "effect",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/effects/spark.png",
+                  "variant": ""
                 }
               },
               "features": {
@@ -146,9 +185,10 @@
                   "dimension": "2d",
                   "name": "pickup",
                   "role": "decoration",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "features/props-items/kenney-vendored/items/platformPack_item001.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/features/pickup.png",
+                  "variant": ""
                 },
                 "projectile": {
                   "animations": [
@@ -159,9 +199,10 @@
                   "dimension": "2d",
                   "name": "projectile",
                   "role": "decoration",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "features/props-items/kenney-vendored/items/platformPack_item001.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/features/projectile.png",
+                  "variant": ""
                 }
               },
               "units": {
@@ -178,9 +219,10 @@
                   "dimension": "2d",
                   "name": "enemy",
                   "role": "npc",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "units/chars-toon/kenney-vendored/toon/platformChar_jump.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/units/enemy.png",
+                  "variant": ""
                 },
                 "player": {
                   "animations": [
@@ -195,9 +237,10 @@
                   "dimension": "2d",
                   "name": "player",
                   "role": "npc",
-                  "style": "",
+                  "style": "sci-fi",
                   "thumbnailUrl": "",
-                  "url": "units/chars-toon/kenney-vendored/toon/platformChar_idle.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/units/player.png",
+                  "variant": ""
                 }
               }
             },
@@ -256,6 +299,11 @@
                     "name": "url",
                     "required": false,
                     "type": "string"
+                  },
+                  "variant": {
+                    "name": "variant",
+                    "required": false,
+                    "type": "string"
                   }
                 },
                 "type": "object"
@@ -311,6 +359,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -371,6 +424,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -427,6 +485,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -599,7 +662,9 @@
             "projectiles",
             "result",
             "score",
+            "selectedUnitId",
             "tick",
+            "validMoves",
             "wave"
           ]
         }
@@ -616,7 +681,9 @@
       "FIRE",
       "GAME_END",
       "MOVE",
-      "PLAY_AGAIN"
+      "PLAY_AGAIN",
+      "TILE_CLICK",
+      "UNIT_CLICK"
     ],
     "listenedEvents": []
   }

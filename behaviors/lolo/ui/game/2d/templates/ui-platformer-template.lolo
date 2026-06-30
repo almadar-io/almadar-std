@@ -1,5 +1,5 @@
 app ui-platformer-template "1.0.0"
-"PlatformerTemplate — thin layout: PlatformerBoard + HUD (lives/score); config-driven."
+"PlatformerTemplate — thin playable shell; renders game-shell + side-scrolling canvas-2d matching ui-platformer-board."
 orbital PlatformerTemplateOrbital {
   type PlatformerTemplatePlatformsItem = {
     x : number!
@@ -8,32 +8,105 @@ orbital PlatformerTemplateOrbital {
     height : number!
     type : "ground" | "platform" | "hazard" | "goal"
   }
+  type PlatformerTemplatePlayer = {
+    x : number
+    y : number
+    width : number
+    height : number
+    vx : number
+    vy : number
+    grounded : boolean
+    facingRight : boolean
+    animation : string
+    frame : number
+  }
+  type PlatformerTemplateMoveItem = {
+    x : number!
+    y : number!
+  }
 
   entity PlatformerTemplateItem [runtime] {
     id : string!
+    player : PlatformerTemplatePlayer = { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 }
+    score : number = 0
+    lives : number = 3
+    result : "none" | "won" | "lost" = none
+    worldWidth : number = 800
+    worldHeight : number = 400
+    selectedUnitId : string = ""
+    validMoves : [PlatformerTemplateMoveItem] = []
   }
 
   trait PlatformerTemplateRender -> @rebindable PlatformerTemplateItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
-        (fetch PlatformerTemplateItem {})
+    state playing {
+      INIT -> playing
+        (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 })
+        (set @entity.score 0)
+        (set @entity.lives 3)
+        (set @entity.result none)
+        (set @entity.worldWidth @config.worldWidth)
+        (set @entity.worldHeight @config.worldHeight)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
         (render-ui main {
-          entity: @entity
-          className: @config.className
-          platforms: @config.platforms
-          goalX: @config.goalX
-          worldWidth: @config.worldWidth
-          worldHeight: @config.worldHeight
-          canvasWidth: @config.canvasWidth
-          canvasHeight: @config.canvasHeight
-          playerSprite: @config.playerSprite
-          tileSprites: @config.tileSprites
-          bgColor: @config.bgColor
-          gameEndEvent: GAME_END
-          type: platformer-template
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: d-pad, leftAction: LEFT, rightAction: RIGHT, upAction: JUMP, downAction: STOP }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
+      LEFT -> playing
+        (set @entity.player (object/merge @entity.player { facingRight: false, animation: "walk" }))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: d-pad, leftAction: LEFT, rightAction: RIGHT, upAction: JUMP, downAction: STOP }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      RIGHT -> playing
+        (set @entity.player (object/merge @entity.player { facingRight: true, animation: "walk" }))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: d-pad, leftAction: LEFT, rightAction: RIGHT, upAction: JUMP, downAction: STOP }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      JUMP -> playing
+        (set @entity.player (object/merge @entity.player { animation: "jump", vy: -10 }))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: d-pad, leftAction: LEFT, rightAction: RIGHT, upAction: JUMP, downAction: STOP }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      STOP -> playing
+        (set @entity.player (object/merge @entity.player { vx: 0, animation: "idle" }))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: d-pad, leftAction: LEFT, rightAction: RIGHT, upAction: JUMP, downAction: STOP }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      PLAY_AGAIN -> playing
+        (set @entity.player { x: 80, y: 320, width: 32, height: 48, vx: 0, vy: 0, grounded: false, facingRight: true, animation: "idle", frame: 0 })
+        (set @entity.score 0)
+        (set @entity.lives 3)
+        (set @entity.result none)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: d-pad, leftAction: LEFT, rightAction: RIGHT, upAction: JUMP, downAction: STOP }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      GAME_END -> playing
+        (set @entity.result won)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Score", value: @entity.score }, { label: "Lives", value: @entity.lives } ] }, { type: score-display, value: @entity.score, label: "Score" }, { type: d-pad, leftAction: LEFT, rightAction: RIGHT, upAction: JUMP, downAction: STOP }, { type: button, action: PLAY_AGAIN, label: "Restart", icon: refresh, variant: secondary } ] }
+          children: [ { type: canvas-2d, projection: "side", player: @entity.player, platforms: @config.platforms, worldWidth: @entity.worldWidth, worldHeight: @entity.worldHeight, canvasWidth: @config.canvasWidth, canvasHeight: @config.canvasHeight, followCamera: @config.followCamera, bgColor: @config.bgColor, playerSprite: @config.playerSprite, tileSprites: @config.tileSprites, backgroundImage: @config.backgroundImage, assetBaseUrl: @config.assetBaseUrl, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external { x, y }
+      UNIT_CLICK -> external { unitId }
     }
 
     config {
@@ -76,6 +149,18 @@ orbital PlatformerTemplateOrbital {
       bgColor : string = "#5c94fc"
         @label "Bg Color"
         @description "Canvas background color"
+        @tier "presentation"
+      followCamera : boolean = true
+        @label "Follow Camera"
+        @description "Camera follows the player horizontally"
+        @tier "presentation"
+      backgroundImage : asset = ""
+        @label "Background Image"
+        @description "Optional parallax background image URL"
+        @tier "presentation"
+      assetBaseUrl : string = "https://almadar-kflow-assets.web.app/shared/"
+        @label "Asset Base URL"
+        @description "Base URL prefix for asset lookups"
         @tier "presentation"
     }
   }

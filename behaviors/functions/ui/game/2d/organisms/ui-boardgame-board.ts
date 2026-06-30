@@ -70,14 +70,14 @@ export interface StdUiBoardgameBoardCancelPayload {
 export interface StdUiBoardgameBoardConfig {
   /** Default: `{}` */
   activeFilters?: unknown;
-  /** Default: `{"effects":{},"features":{"marker":{"animations":["static"],"aspect":"1:1","category":"marker","dimension":"2d","name":"marker","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/features/marker.png"}},"terrains":{"dark":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png"},"light":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png"}},"units":{"token":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"token","dimension":"2d","name":"token","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png"},"token_enemy":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"token_enemy","dimension":"2d","name":"token_enemy","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png"}}}` */
+  /** Default: `{"effects":{},"features":{"marker":{"animations":["static"],"aspect":"1:1","category":"marker","dimension":"2d","name":"marker","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/features/marker.png","variant":""}},"terrains":{"dark":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png","variant":""},"light":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png","variant":""}},"units":{"token":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"token","dimension":"2d","name":"token","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png","variant":""},"token_enemy":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"token_enemy","dimension":"2d","name":"token_enemy","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png","variant":""}}}` */
   assetManifest?: EntityRow;
   /** Default: `""` */
   className?: string;
   /** Default: `true` */
   enableCamera?: boolean;
   error?: EntityRow;
-  /** Default: `[{"id":"f1","sprite":{"animations":["static"],"aspect":"1:1","category":"marker","dimension":"2d","name":"marker","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/features/marker.png"},"type":"marker","x":0,"y":0}]` */
+  /** Default: `[{"id":"f1","sprite":{"animations":["static"],"aspect":"1:1","category":"marker","dimension":"2d","name":"marker","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/features/marker.png","variant":""},"type":"marker","x":0,"y":0}]` */
   features?: EntityRow[];
   /** Default: `false` */
   isLoading?: boolean;
@@ -85,7 +85,7 @@ export interface StdUiBoardgameBoardConfig {
   pageProp?: number;
   /** Default: `0` */
   pageSize?: number;
-  /** Default: `[{"animation":"idle","frame":0,"health":10,"id":"u1","maxHealth":10,"name":"Token A","position":{"x":1,"y":1},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"token","dimension":"2d","name":"token","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png"},"team":"player","unitType":"token"},{"animation":"idle","frame":0,"health":10,"id":"u2","maxHealth":10,"name":"Token B","position":{"x":2,"y":2},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"token_enemy","dimension":"2d","name":"token_enemy","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png"},"team":"enemy","unitType":"token"}]` */
+  /** Default: `[{"animation":"idle","frame":0,"health":10,"id":"u1","maxHealth":10,"name":"Token A","position":{"x":1,"y":1},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"token","dimension":"2d","name":"token","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png","variant":""},"team":"player","unitType":"token"},{"animation":"idle","frame":0,"health":10,"id":"u2","maxHealth":10,"name":"Token B","position":{"x":2,"y":2},"sprite":{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"token_enemy","dimension":"2d","name":"token_enemy","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png","variant":""},"team":"enemy","unitType":"token"}]` */
   pieces?: EntityRow[];
   /** Default: `0.45` */
   scale?: number;
@@ -99,7 +99,7 @@ export interface StdUiBoardgameBoardConfig {
   sortBy?: string;
   /** Default: `"asc"` */
   sortDirection?: 'asc' | 'desc';
-  /** Default: `[{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png"},"x":0,"y":0},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png"},"x":1,"y":0},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png"},"x":2,"y":0},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png"},"x":3,"y":0},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png"},"x":0,"y":1},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png"},"x":1,"y":1},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png"},"x":2,"y":1},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png"},"x":3,"y":1},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png"},"x":0,"y":2},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png"},"x":1,"y":2},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png"},"x":2,"y":2},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png"},"x":3,"y":2},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png"},"x":0,"y":3},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png"},"x":1,"y":3},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png"},"x":2,"y":3},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png"},"x":3,"y":3}]` */
+  /** Default: `[{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png","variant":""},"x":0,"y":0},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png","variant":""},"x":1,"y":0},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png","variant":""},"x":2,"y":0},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png","variant":""},"x":3,"y":0},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png","variant":""},"x":0,"y":1},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png","variant":""},"x":1,"y":1},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png","variant":""},"x":2,"y":1},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png","variant":""},"x":3,"y":1},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png","variant":""},"x":0,"y":2},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png","variant":""},"x":1,"y":2},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png","variant":""},"x":2,"y":2},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png","variant":""},"x":3,"y":2},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png","variant":""},"x":0,"y":3},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png","variant":""},"x":1,"y":3},{"passable":true,"terrain":"dark","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"dark","dimension":"2d","name":"dark","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png","variant":""},"x":2,"y":3},{"passable":true,"terrain":"light","terrainSprite":{"animations":["static"],"aspect":"1:1","category":"light","dimension":"2d","name":"light","role":"tile","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png","variant":""},"x":3,"y":3}]` */
   tiles?: EntityRow[];
   /** Default: `0` */
   totalCount?: number;
@@ -267,6 +267,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -322,6 +327,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -360,6 +370,26 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
           {
             'name': 'selectedPieceId',
             'type': 'string',
+          },
+          {
+            'default': [],
+            'items': {
+              'properties': {
+                'x': {
+                  'name': 'x',
+                  'required': true,
+                  'type': 'number',
+                },
+                'y': {
+                  'name': 'y',
+                  'required': true,
+                  'type': 'number',
+                },
+              },
+              'type': 'object',
+            },
+            'name': 'validMoves',
+            'type': 'array',
           },
           {
             'default': 0,
@@ -455,6 +485,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/features/marker.png',
+                  'variant': '',
                 },
               },
               'terrains': {
@@ -470,6 +501,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png',
+                  'variant': '',
                 },
                 'light': {
                   'animations': [
@@ -483,6 +515,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png',
+                  'variant': '',
                 },
               },
               'units': {
@@ -502,6 +535,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png',
+                  'variant': '',
                 },
                 'token_enemy': {
                   'animations': [
@@ -519,6 +553,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png',
+                  'variant': '',
                 },
               },
             },
@@ -573,6 +608,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -634,6 +674,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'type': 'object',
                 },
@@ -692,6 +737,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'type': 'object',
                 },
@@ -747,6 +797,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -819,6 +874,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/features/marker.png',
+                  'variant': '',
                 },
                 'type': 'marker',
                 'x': 0,
@@ -876,6 +932,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -946,6 +1007,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -1031,6 +1097,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token.png',
+                  'variant': '',
                 },
                 'team': 'player',
                 'unitType': 'token',
@@ -1062,6 +1129,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/units/token_enemy.png',
+                  'variant': '',
                 },
                 'team': 'enemy',
                 'unitType': 'token',
@@ -1168,6 +1236,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -1220,6 +1293,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -1325,6 +1403,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 0,
@@ -1344,6 +1423,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 0,
@@ -1363,6 +1443,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 0,
@@ -1382,6 +1463,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 0,
@@ -1401,6 +1483,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 1,
@@ -1420,6 +1503,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 1,
@@ -1439,6 +1523,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 1,
@@ -1458,6 +1543,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 1,
@@ -1477,6 +1563,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 2,
@@ -1496,6 +1583,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 2,
@@ -1515,6 +1603,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 2,
@@ -1534,6 +1623,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 2,
@@ -1553,6 +1643,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png',
+                  'variant': '',
                 },
                 'x': 0,
                 'y': 3,
@@ -1572,6 +1663,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png',
+                  'variant': '',
                 },
                 'x': 1,
                 'y': 3,
@@ -1591,6 +1683,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/dark.png',
+                  'variant': '',
                 },
                 'x': 2,
                 'y': 3,
@@ -1610,6 +1703,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'style': '',
                   'thumbnailUrl': '',
                   'url': 'https://almadar-kflow-assets.web.app/shared/ui-boardgame-board/default/terrain/light.png',
+                  'variant': '',
                 },
                 'x': 3,
                 'y': 3,
@@ -1676,6 +1770,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                     },
                     'url': {
                       'name': 'url',
+                      'required': false,
+                      'type': 'string',
+                    },
+                    'variant': {
+                      'name': 'variant',
                       'required': false,
                       'type': 'string',
                     },
@@ -1749,6 +1848,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                       'required': false,
                       'type': 'string',
                     },
+                    'variant': {
+                      'name': 'variant',
+                      'required': false,
+                      'type': 'string',
+                    },
                   },
                   'required': false,
                   'type': 'object',
@@ -1810,7 +1914,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
@@ -1823,7 +1927,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{endTurnEvent} with {} on end turn',
@@ -1835,7 +1939,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{cancelEvent} with {} on cancel',
@@ -1847,7 +1951,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -1861,6 +1965,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
             'pieces',
             'selectedPieceId',
             'turn',
+            'validMoves',
           ],
           'requires': [],
         },
@@ -1885,7 +1990,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Declarative event: emits UI:{tileClickEvent} with { x, y } on tile click',
@@ -1903,7 +2008,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{endTurnEvent} with {} on end turn',
@@ -1915,7 +2020,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{cancelEvent} with {} on cancel',
@@ -1927,7 +2032,7 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [
@@ -1948,6 +2053,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                   'set',
                   '@entity.selectedPieceId',
                   '',
+                ],
+                [
+                  'set',
+                  '@entity.validMoves',
+                  [],
                 ],
                 [
                   'set',
@@ -1995,24 +2105,43 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                         'features': '@config.features',
                         'projection': 'flat',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedPieceId',
                         'showMinimap': false,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.pieces',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Player',
+                              'value': '@entity.currentPlayer',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Player',
-                          'value': '@entity.currentPlayer',
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2031,6 +2160,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                 ],
                 [
                   'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
                   '@entity.phase',
                   'observation',
                 ],
@@ -2045,24 +2179,43 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                         'features': '@config.features',
                         'projection': 'flat',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedPieceId',
                         'showMinimap': false,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.pieces',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Player',
+                              'value': '@entity.currentPlayer',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Player',
-                          'value': '@entity.currentPlayer',
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2086,6 +2239,148 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                 ],
                 [
                   'set',
+                  '@entity.validMoves',
+                  [
+                    'array/map',
+                    [
+                      'array/filter',
+                      '@config.tiles',
+                      [
+                        'fn',
+                        't',
+                        [
+                          'and',
+                          [
+                            'grid/in-bounds',
+                            {
+                              'x': [
+                                'object/get',
+                                '@t',
+                                'x',
+                              ],
+                              'y': [
+                                'object/get',
+                                '@t',
+                                'y',
+                              ],
+                            },
+                            '@entity.gridWidth',
+                            '@entity.gridHeight',
+                          ],
+                          [
+                            'and',
+                            [
+                              '<=',
+                              [
+                                'grid/manhattan-distance',
+                                [
+                                  'object/get',
+                                  [
+                                    'array/find',
+                                    '@entity.pieces',
+                                    [
+                                      'fn',
+                                      'u',
+                                      [
+                                        '==',
+                                        '@u.id',
+                                        '@payload.unitId',
+                                      ],
+                                    ],
+                                  ],
+                                  'position',
+                                ],
+                                {
+                                  'x': [
+                                    'object/get',
+                                    '@t',
+                                    'x',
+                                  ],
+                                  'y': [
+                                    'object/get',
+                                    '@t',
+                                    'y',
+                                  ],
+                                },
+                              ],
+                              '@entity.movementRange',
+                            ],
+                            [
+                              '==',
+                              [
+                                'array/len',
+                                [
+                                  'array/filter',
+                                  '@entity.pieces',
+                                  [
+                                    'fn',
+                                    'u',
+                                    [
+                                      'and',
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'position',
+                                          ],
+                                          'x',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@t',
+                                          'x',
+                                        ],
+                                      ],
+                                      [
+                                        '==',
+                                        [
+                                          'object/get',
+                                          [
+                                            'object/get',
+                                            '@u',
+                                            'position',
+                                          ],
+                                          'y',
+                                        ],
+                                        [
+                                          'object/get',
+                                          '@t',
+                                          'y',
+                                        ],
+                                      ],
+                                    ],
+                                  ],
+                                ],
+                              ],
+                              0,
+                            ],
+                          ],
+                        ],
+                      ],
+                    ],
+                    [
+                      'fn',
+                      't',
+                      {
+                        'x': [
+                          'object/get',
+                          '@t',
+                          'x',
+                        ],
+                        'y': [
+                          'object/get',
+                          '@t',
+                          'y',
+                        ],
+                      },
+                    ],
+                  ],
+                ],
+                [
+                  'set',
                   '@entity.phase',
                   'movement',
                 ],
@@ -2100,24 +2395,43 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                         'features': '@config.features',
                         'projection': 'flat',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedPieceId',
                         'showMinimap': false,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.pieces',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Player',
+                              'value': '@entity.currentPlayer',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Player',
-                          'value': '@entity.currentPlayer',
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2189,6 +2503,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                 ],
                 [
                   'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
                   '@entity.phase',
                   'observation',
                 ],
@@ -2203,24 +2522,43 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                         'features': '@config.features',
                         'projection': 'flat',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedPieceId',
                         'showMinimap': false,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.pieces',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Player',
+                              'value': '@entity.currentPlayer',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Player',
-                          'value': '@entity.currentPlayer',
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2343,6 +2681,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                 ],
                 [
                   'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
                   '@entity.currentPlayer',
                   [
                     'if',
@@ -2371,24 +2714,43 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                         'features': '@config.features',
                         'projection': 'flat',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedPieceId',
                         'showMinimap': false,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.pieces',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Player',
+                              'value': '@entity.currentPlayer',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Player',
-                          'value': '@entity.currentPlayer',
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2407,6 +2769,11 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                 ],
                 [
                   'set',
+                  '@entity.validMoves',
+                  [],
+                ],
+                [
+                  'set',
                   '@entity.phase',
                   'observation',
                 ],
@@ -2421,24 +2788,43 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                         'features': '@config.features',
                         'projection': 'flat',
                         'scale': '@config.scale',
+                        'selectedUnitId': '@entity.selectedPieceId',
                         'showMinimap': false,
+                        'tileClickEvent': 'TILE_CLICK',
                         'tiles': '@config.tiles',
                         'type': 'canvas-2d',
+                        'unitClickEvent': 'UNIT_CLICK',
                         'units': '@entity.pieces',
+                        'validMoves': '@entity.validMoves',
                       },
                     ],
                     'hud': {
-                      'stats': [
+                      'children': [
                         {
-                          'label': 'Turn',
-                          'value': '@entity.turn',
+                          'stats': [
+                            {
+                              'label': 'Turn',
+                              'value': '@entity.turn',
+                            },
+                            {
+                              'label': 'Player',
+                              'value': '@entity.currentPlayer',
+                            },
+                          ],
+                          'type': 'game-hud',
                         },
                         {
-                          'label': 'Player',
-                          'value': '@entity.currentPlayer',
+                          'action': 'END_TURN',
+                          'icon': 'flag',
+                          'label': 'End Turn',
+                          'type': 'button',
+                          'variant': 'secondary',
                         },
                       ],
-                      'type': 'game-hud',
+                      'direction': 'horizontal',
+                      'gap': 'md',
+                      'justify': 'between',
+                      'type': 'stack',
                     },
                     'type': 'game-shell',
                   },
@@ -2543,24 +2929,43 @@ export function stdUiBoardgameBoardBoardgameBoardOrbital(params: StdUiBoardgameB
                       'features': '@config.features',
                       'projection': 'flat',
                       'scale': '@config.scale',
+                      'selectedUnitId': '@entity.selectedPieceId',
                       'showMinimap': false,
+                      'tileClickEvent': 'TILE_CLICK',
                       'tiles': '@config.tiles',
                       'type': 'canvas-2d',
+                      'unitClickEvent': 'UNIT_CLICK',
                       'units': '@entity.pieces',
+                      'validMoves': '@entity.validMoves',
                     },
                   ],
                   'hud': {
-                    'stats': [
+                    'children': [
                       {
-                        'label': 'Turn',
-                        'value': '@entity.turn',
+                        'stats': [
+                          {
+                            'label': 'Turn',
+                            'value': '@entity.turn',
+                          },
+                          {
+                            'label': 'Player',
+                            'value': '@entity.currentPlayer',
+                          },
+                        ],
+                        'type': 'game-hud',
                       },
                       {
-                        'label': 'Player',
-                        'value': '@entity.currentPlayer',
+                        'action': 'END_TURN',
+                        'icon': 'flag',
+                        'label': 'End Turn',
+                        'type': 'button',
+                        'variant': 'secondary',
                       },
                     ],
-                    'type': 'game-hud',
+                    'direction': 'horizontal',
+                    'gap': 'md',
+                    'justify': 'between',
+                    'type': 'stack',
                   },
                   'type': 'game-shell',
                 },

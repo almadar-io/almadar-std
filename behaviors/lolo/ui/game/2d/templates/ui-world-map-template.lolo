@@ -1,6 +1,23 @@
 app ui-world-map-template "1.0.0"
-"WorldMapTemplate — UI factory (1:1 with the @almadar/ui world-map-template pattern)."
+"WorldMapTemplate — thin playable shell; renders game-shell + isometric canvas-2d matching ui-world-map-board."
 orbital WorldMapTemplateOrbital {
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
+  type WorldMapTemplateAssetManifest = {
+    terrains : Map string Asset
+    units : Map string Asset
+    features : Map string Asset
+  }
   type WorldMapTemplateTilesItem = {
     id : string
     x : number!
@@ -13,7 +30,21 @@ orbital WorldMapTemplateOrbital {
     movementCost : number
     tileType : string
     elevation : number
-    modelUrl : asset
+    modelUrl : Asset
+  }
+  type WorldMapTemplateUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type WorldMapTemplateUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type WorldMapTemplateUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
   }
   type WorldMapTemplateUnitsItem = {
     id : string!
@@ -21,9 +52,9 @@ orbital WorldMapTemplateOrbital {
     x : number
     y : number
     z : number
-    sprite : json
-    spriteSheet : json
-    modelUrl : json
+    sprite : Asset
+    spriteSheet : Asset
+    modelUrl : Asset
     unitType : string
     heroId : string
     name : string
@@ -34,20 +65,8 @@ orbital WorldMapTemplateOrbital {
     traits : [WorldMapTemplateUnitsItemTraitsItem]
     previousPosition : WorldMapTemplateUnitsItemPreviousPosition
     elevation : number
-  }
-  type WorldMapTemplateUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type WorldMapTemplateUnitsItemTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type WorldMapTemplateUnitsItemPreviousPosition = {
-    x : number!
-    y : number!
+    animation : string
+    frame : number
   }
   type WorldMapTemplateFeaturesItem = {
     id : string
@@ -55,35 +74,101 @@ orbital WorldMapTemplateOrbital {
     y : number!
     z : number
     type : string!
-    sprite : json
-    assetUrl : json
+    sprite : Asset
+    assetUrl : Asset
     color : string
     elevation : number
+  }
+  type WorldMapTemplateEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
+  }
+  type WorldMapTemplateValidMoveItem = {
+    x : number!
+    y : number!
   }
 
   entity WorldMapTemplateItem [runtime] {
     id : string!
+    tiles : [WorldMapTemplateTilesItem]
+    units : [WorldMapTemplateUnitsItem]
+    features : [WorldMapTemplateFeaturesItem]
+    effects : [WorldMapTemplateEffectItem] = []
+    turn : number = 0
+    selectedHeroId : string = ""
+    validMoves : [WorldMapTemplateValidMoveItem] = []
+    waypoints : [string] = []
+    gridWidth : number = 5
+    gridHeight : number = 5
+    result : "none" | "won" | "lost" = none
   }
 
   trait WorldMapTemplateRender -> @rebindable WorldMapTemplateItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
-        (fetch WorldMapTemplateItem {})
+    state playing {
+      INIT -> playing
+        (set @entity.tiles @config.tiles)
+        (set @entity.units @config.units)
+        (set @entity.features @config.features)
+        (set @entity.effects [])
+        (set @entity.turn 0)
+        (set @entity.selectedHeroId "")
+        (set @entity.validMoves [])
+        (set @entity.waypoints [])
+        (set @entity.gridWidth 5)
+        (set @entity.gridHeight 5)
+        (set @entity.result none)
         (render-ui main {
-          entity: @entity
-          className: @config.className
-          scale: @config.scale
-          unitScale: @config.unitScale
-          diamondTopY: @config.diamondTopY
-          allowMoveAllHeroes: @config.allowMoveAllHeroes
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          type: world-map-template
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }, { type: mini-map, tiles: @entity.tiles, units: @entity.units, width: @entity.gridWidth, height: @entity.gridHeight }, { type: waypoint-marker, waypoints: @entity.waypoints, path: @entity.validMoves }, { type: button, action: ADVANCE_TURN, label: "Pass Turn", icon: arrow-right, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: HERO_MOVE, unitClickEvent: HERO_SELECT, selectedUnitId: @entity.selectedHeroId, validMoves: @entity.validMoves } ]
         })
+      HERO_SELECT -> playing
+        (set @entity.selectedHeroId ?unitId)
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }, { type: mini-map, tiles: @entity.tiles, units: @entity.units, width: @entity.gridWidth, height: @entity.gridHeight }, { type: waypoint-marker, waypoints: @entity.waypoints, path: @entity.validMoves }, { type: button, action: ADVANCE_TURN, label: "Pass Turn", icon: arrow-right, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: HERO_MOVE, unitClickEvent: HERO_SELECT, selectedUnitId: @entity.selectedHeroId, validMoves: @entity.validMoves } ]
+        })
+      HERO_MOVE -> playing
+        (set @entity.selectedHeroId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }, { type: mini-map, tiles: @entity.tiles, units: @entity.units, width: @entity.gridWidth, height: @entity.gridHeight }, { type: waypoint-marker, waypoints: @entity.waypoints, path: @entity.validMoves }, { type: button, action: ADVANCE_TURN, label: "Pass Turn", icon: arrow-right, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: HERO_MOVE, unitClickEvent: HERO_SELECT, selectedUnitId: @entity.selectedHeroId, validMoves: @entity.validMoves } ]
+        })
+      ADVANCE_TURN -> playing
+        (set @entity.turn (+ @entity.turn 1))
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }, { type: mini-map, tiles: @entity.tiles, units: @entity.units, width: @entity.gridWidth, height: @entity.gridHeight }, { type: waypoint-marker, waypoints: @entity.waypoints, path: @entity.validMoves }, { type: button, action: ADVANCE_TURN, label: "Pass Turn", icon: arrow-right, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: HERO_MOVE, unitClickEvent: HERO_SELECT, selectedUnitId: @entity.selectedHeroId, validMoves: @entity.validMoves } ]
+        })
+      PLAY_AGAIN -> playing
+        (set @entity.tiles @config.tiles)
+        (set @entity.units @config.units)
+        (set @entity.features @config.features)
+        (set @entity.effects [])
+        (set @entity.turn 0)
+        (set @entity.selectedHeroId "")
+        (set @entity.validMoves [])
+        (set @entity.waypoints [])
+        (set @entity.result none)
+        (render-ui main {
+          type: game-shell
+          hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Region", value: "Overworld" }, { label: "Turn", value: @entity.turn }, { label: "Gold", value: 0 } ] }, { type: mini-map, tiles: @entity.tiles, units: @entity.units, width: @entity.gridWidth, height: @entity.gridHeight }, { type: waypoint-marker, waypoints: @entity.waypoints, path: @entity.validMoves }, { type: button, action: ADVANCE_TURN, label: "Pass Turn", icon: arrow-right, variant: secondary } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: HERO_MOVE, unitClickEvent: HERO_SELECT, selectedUnitId: @entity.selectedHeroId, validMoves: @entity.validMoves } ]
+        })
+    }
+
+    emits {
+      HERO_MOVE -> external { x, y }
+      HERO_SELECT -> external { unitId }
     }
 
     config {
@@ -111,17 +196,17 @@ orbital WorldMapTemplateOrbital {
         @label "Tiles"
         @description "Direct tile data — forwarded to WorldMapBoard; takes priority over entity."
         @tier "presentation"
-      units : [WorldMapTemplateUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "hero", name: "Hero", team: player, health: 10, maxHealth: 10, spriteSheet: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/hero.png" }, { id: "u2", position: { x: 3, y: 3 }, unitType: "guard", name: "Guard", team: enemy, health: 8, maxHealth: 10, spriteSheet: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/guard.png" }]
+      units : [WorldMapTemplateUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "hero", name: "Hero", team: player, health: 10, maxHealth: 10, spriteSheet: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/hero.png", role: "unit", category: "hero", animations: ["idle","walk"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "hero", thumbnailUrl: "" } }, { id: "u2", position: { x: 3, y: 3 }, unitType: "guard", name: "Guard", team: enemy, health: 8, maxHealth: 10, spriteSheet: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/guard.png", role: "unit", category: "guard", animations: ["idle","walk"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "guard", thumbnailUrl: "" } }]
         @label "Units"
         @description "Direct unit data — forwarded to WorldMapBoard; takes priority over entity."
         @tier "presentation"
-      features : [WorldMapTemplateFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", sprite: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/gold_mine.png" }, { id: "f2", x: 3, y: 1, type: "portal", sprite: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/portal.png" }]
+      features : [WorldMapTemplateFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "gold_mine", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/gold_mine.png", role: "feature", category: "gold_mine", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" } }, { id: "f2", x: 3, y: 1, type: "portal", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/portal.png", role: "feature", category: "portal", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" } }]
         @label "Features"
         @description "Direct feature data — forwarded to WorldMapBoard; takes priority over entity."
         @tier "presentation"
-      assetManifest : string = ""
+      assetManifest : WorldMapTemplateAssetManifest = { terrains: { grass: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png", role: "terrain", category: "grass", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "grass", thumbnailUrl: "" }, forest: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png", role: "terrain", category: "forest", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "forest", thumbnailUrl: "" }, stone: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png", role: "terrain", category: "stone", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "stone", thumbnailUrl: "" } }, units: { hero: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/hero.png", role: "unit", category: "hero", animations: ["idle","walk"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "hero", thumbnailUrl: "" }, guard: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/guard.png", role: "unit", category: "guard", animations: ["idle","walk"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "guard", thumbnailUrl: "" } }, features: { gold_mine: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/gold_mine.png", role: "feature", category: "gold_mine", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" }, portal: { url: "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/portal.png", role: "feature", category: "portal", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" } } }
         @label "Asset Manifest"
-        @description "Direct asset manifest — forwarded to WorldMapBoard; takes priority over entity."
+        @description "Terrain/unit/feature sprite maps."
         @tier "presentation"
     }
   }

@@ -76,7 +76,7 @@ export interface StdUiSidebarConfig {
   isLoading?: boolean;
   /** Default: `[{"active":false,"badge":"Badge","href":"Href","icon":"circle","id":"Id","isActive":false,"label":"Label","subItems":[]},{"active":true,"badge":"Badge 2","href":"Href 2","icon":"circle","id":"Id 2","isActive":true,"label":"Label 2","subItems":[]}]` */
   items?: EntityRow[];
-  /** Default: `"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"` */
+  /** Default: `"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"` */
   logoSrc?: unknown;
   /** Default: `false` */
   showCloseButton?: boolean;

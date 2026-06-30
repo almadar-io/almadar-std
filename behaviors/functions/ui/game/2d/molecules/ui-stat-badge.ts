@@ -39,7 +39,7 @@ export type StdUiStatBadgeEventKey = 'INIT';
  * without modifying its state-machine topology.
  */
 export interface StdUiStatBadgeConfig {
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
+  /** Default: `{"animations":["idle","walk","attack","hit","death"],"aspect":"1:1","category":"assetUrl","dimension":"2d","name":"assetUrl","role":"npc","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-roguelike-board/default/units/player.png"}` */
   assetUrl?: EntityRow;
   /** Default: `""` */
   className?: string;
@@ -49,7 +49,7 @@ export interface StdUiStatBadgeConfig {
   format?: 'number' | 'hearts' | 'bar' | 'text';
   /** Default: `"circle"` */
   icon?: unknown;
-  /** Default: `{"animations":["static"],"aspect":"1:1","category":"asset","dimension":"2d","name":"asset","role":"decoration","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/characters/archetypes/00_base_model.png"}` */
+  /** Default: `{"animations":["static"],"aspect":"1:1","category":"iconUrl","dimension":"2d","name":"iconUrl","role":"ui","style":"","thumbnailUrl":"","url":"https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/ui/star.png"}` */
   iconUrl?: EntityRow;
   /** Default: `"Label"` */
   label?: string;

@@ -17,6 +17,41 @@ import { mergeCallSiteConfigOverrides } from '@almadar/core/factory-runtime';
 import type { OrbitalParamsManifest, ParamFieldDescriptor } from '@almadar/core/factory-runtime';
 
 import {
+  stdLearningCellViewerCellViewerOrbital,
+  StdLearningCellViewerCellViewerOrbitalManifest,
+  isStdLearningCellViewerCellViewerOrbitalParams,
+} from './ui/learning/organisms/learning-cell-viewer.js';
+import {
+  stdLearningCoordinatePlaneCoordinatePlaneOrbital,
+  StdLearningCoordinatePlaneCoordinatePlaneOrbitalManifest,
+  isStdLearningCoordinatePlaneCoordinatePlaneOrbitalParams,
+} from './ui/learning/organisms/learning-coordinate-plane.js';
+import {
+  stdLearningFieldCanvasFieldCanvasOrbital,
+  StdLearningFieldCanvasFieldCanvasOrbitalManifest,
+  isStdLearningFieldCanvasFieldCanvasOrbitalParams,
+} from './ui/learning/organisms/learning-field-canvas.js';
+import {
+  stdLearningFunctionPlotterFunctionPlotterOrbital,
+  StdLearningFunctionPlotterFunctionPlotterOrbitalManifest,
+  isStdLearningFunctionPlotterFunctionPlotterOrbitalParams,
+} from './ui/learning/organisms/learning-function-plotter.js';
+import {
+  stdLearningMoleculeViewerMoleculeViewerOrbital,
+  StdLearningMoleculeViewerMoleculeViewerOrbitalManifest,
+  isStdLearningMoleculeViewerMoleculeViewerOrbitalParams,
+} from './ui/learning/organisms/learning-molecule-viewer.js';
+import {
+  stdLearningVectorCanvasVectorCanvasOrbital,
+  StdLearningVectorCanvasVectorCanvasOrbitalManifest,
+  isStdLearningVectorCanvasVectorCanvasOrbitalParams,
+} from './ui/learning/organisms/learning-vector-canvas.js';
+import {
+  stdLearningWaveCanvasWaveCanvasOrbital,
+  StdLearningWaveCanvasWaveCanvasOrbitalManifest,
+  isStdLearningWaveCanvasWaveCanvasOrbitalParams,
+} from './ui/learning/organisms/learning-wave-canvas.js';
+import {
   stdAgentAssistantAssistantOrbital,
   StdAgentAssistantAssistantOrbitalManifest,
   isStdAgentAssistantAssistantOrbitalParams,
@@ -539,6 +574,69 @@ interface DispatchEntry {
 }
 
 const REGISTRY: ReadonlyMap<string, DispatchEntry> = new Map<string, DispatchEntry>([
+  ['learning-cell-viewer::CellViewerOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningCellViewerCellViewerOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-cell-viewer::CellViewerOrbital');
+      }
+      return stdLearningCellViewerCellViewerOrbital(p);
+    },
+    manifest: StdLearningCellViewerCellViewerOrbitalManifest,
+  }],
+  ['learning-coordinate-plane::CoordinatePlaneOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningCoordinatePlaneCoordinatePlaneOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-coordinate-plane::CoordinatePlaneOrbital');
+      }
+      return stdLearningCoordinatePlaneCoordinatePlaneOrbital(p);
+    },
+    manifest: StdLearningCoordinatePlaneCoordinatePlaneOrbitalManifest,
+  }],
+  ['learning-field-canvas::FieldCanvasOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningFieldCanvasFieldCanvasOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-field-canvas::FieldCanvasOrbital');
+      }
+      return stdLearningFieldCanvasFieldCanvasOrbital(p);
+    },
+    manifest: StdLearningFieldCanvasFieldCanvasOrbitalManifest,
+  }],
+  ['learning-function-plotter::FunctionPlotterOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningFunctionPlotterFunctionPlotterOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-function-plotter::FunctionPlotterOrbital');
+      }
+      return stdLearningFunctionPlotterFunctionPlotterOrbital(p);
+    },
+    manifest: StdLearningFunctionPlotterFunctionPlotterOrbitalManifest,
+  }],
+  ['learning-molecule-viewer::MoleculeViewerOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningMoleculeViewerMoleculeViewerOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-molecule-viewer::MoleculeViewerOrbital');
+      }
+      return stdLearningMoleculeViewerMoleculeViewerOrbital(p);
+    },
+    manifest: StdLearningMoleculeViewerMoleculeViewerOrbitalManifest,
+  }],
+  ['learning-vector-canvas::VectorCanvasOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningVectorCanvasVectorCanvasOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-vector-canvas::VectorCanvasOrbital');
+      }
+      return stdLearningVectorCanvasVectorCanvasOrbital(p);
+    },
+    manifest: StdLearningVectorCanvasVectorCanvasOrbitalManifest,
+  }],
+  ['learning-wave-canvas::WaveCanvasOrbital', {
+    factory: (p: object): OrbitalDefinition => {
+      if (!isStdLearningWaveCanvasWaveCanvasOrbitalParams(p)) {
+        throw new TypeError('Invalid params for learning-wave-canvas::WaveCanvasOrbital');
+      }
+      return stdLearningWaveCanvasWaveCanvasOrbital(p);
+    },
+    manifest: StdLearningWaveCanvasWaveCanvasOrbitalManifest,
+  }],
   ['std-agent-assistant::AssistantOrbital', {
     factory: (p: object): OrbitalDefinition => {
       if (!isStdAgentAssistantAssistantOrbitalParams(p)) {

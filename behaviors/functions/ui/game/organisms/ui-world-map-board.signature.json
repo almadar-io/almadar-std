@@ -29,6 +29,11 @@
             "required": false
           },
           {
+            "name": "validMoves",
+            "type": "array",
+            "required": false
+          },
+          {
             "name": "turn",
             "type": "number",
             "required": false
@@ -57,6 +62,11 @@
             "name": "effects",
             "type": "array",
             "required": false
+          },
+          {
+            "name": "waypoints",
+            "type": "array",
+            "required": false
           }
         ],
         "persistence": "runtime"
@@ -71,6 +81,7 @@
           "BATTLE_ENCOUNTER",
           "FEATURE_ENTER",
           "TILE_CLICK",
+          "ADVANCE_TURN",
           "GAME_END",
           "PLAY_AGAIN"
         ],
@@ -80,43 +91,49 @@
             "name": "HERO_SELECT",
             "direction": "emit",
             "description": "-- Declarative event props --",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "HERO_MOVE",
             "direction": "emit",
             "description": "Emits UI:{heroMoveEvent} with { heroId, toX, toY }",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "BATTLE_ENCOUNTER",
             "direction": "emit",
             "description": "Emits UI:{battleEncounterEvent} with { attackerId, defenderId }",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "FEATURE_ENTER",
             "direction": "emit",
             "description": "Emits UI:{featureEnterEvent} with { heroId, feature, hex }",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "TILE_CLICK",
             "direction": "emit",
             "description": "Emits UI:{tileClickEvent} with { x, y }",
-            "tier": "essential"
+            "tier": "domain"
+          },
+          {
+            "name": "ADVANCE_TURN",
+            "direction": "emit",
+            "description": "Emits UI:{advanceTurnEvent} with {} when the player passes the turn without moving",
+            "tier": "domain"
           },
           {
             "name": "GAME_END",
             "direction": "emit",
             "description": "Called when all enemies or all player heroes are defeated",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "PLAY_AGAIN",
             "direction": "emit",
             "description": "Emits UI:{playAgainEvent} with {} on play again / reset",
-            "tier": "essential"
+            "tier": "domain"
           },
           {
             "name": "START",
@@ -152,7 +169,8 @@
                   "role": "effect",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/effects/slash_03.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/effects/slash_03.png",
+                  "variant": ""
                 }
               },
               "features": {
@@ -167,7 +185,8 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/gold_mine.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/gold_mine.png",
+                  "variant": ""
                 },
                 "portal": {
                   "animations": [
@@ -180,7 +199,8 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/portal.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/portal.png",
+                  "variant": ""
                 }
               },
               "terrains": {
@@ -195,7 +215,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "grass": {
                   "animations": [
@@ -208,7 +229,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "stone": {
                   "animations": [
@@ -221,7 +243,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 }
               },
               "units": {
@@ -240,7 +263,8 @@
                   "role": "npc",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/guard.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/guard.png",
+                  "variant": ""
                 },
                 "hero": {
                   "animations": [
@@ -257,7 +281,8 @@
                   "role": "npc",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/hero.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/hero.png",
+                  "variant": ""
                 }
               }
             },
@@ -318,6 +343,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -374,6 +404,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -434,6 +469,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -490,6 +530,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -585,7 +630,8 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/gold_mine.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/gold_mine.png",
+                  "variant": ""
                 },
                 "type": "gold_mine",
                 "x": 11,
@@ -604,7 +650,8 @@
                   "role": "decoration",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/portal.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/features/portal.png",
+                  "variant": ""
                 },
                 "type": "portal",
                 "x": 7,
@@ -665,6 +712,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -737,6 +789,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -800,7 +857,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 0
@@ -820,7 +878,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 0
@@ -840,7 +899,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 0
@@ -860,7 +920,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 0
@@ -880,7 +941,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 0
@@ -900,7 +962,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 0
@@ -920,7 +983,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 0
@@ -940,7 +1004,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 0
@@ -960,7 +1025,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 0
@@ -980,7 +1046,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 0
@@ -1000,7 +1067,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 0
@@ -1020,7 +1088,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 0
@@ -1040,7 +1109,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 0
@@ -1060,7 +1130,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 0
@@ -1080,7 +1151,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 0
@@ -1100,7 +1172,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 0
@@ -1120,7 +1193,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 1
@@ -1140,7 +1214,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 1
@@ -1160,7 +1235,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 1
@@ -1180,7 +1256,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 1
@@ -1200,7 +1277,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 1
@@ -1220,7 +1298,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 1
@@ -1240,7 +1319,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 1
@@ -1260,7 +1340,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 1
@@ -1280,7 +1361,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 1
@@ -1300,7 +1382,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 1
@@ -1320,7 +1403,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 1
@@ -1340,7 +1424,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 1
@@ -1360,7 +1445,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 1
@@ -1380,7 +1466,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 1
@@ -1400,7 +1487,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 1
@@ -1420,7 +1508,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 1
@@ -1440,7 +1529,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 2
@@ -1460,7 +1550,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 2
@@ -1480,7 +1571,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 2
@@ -1500,7 +1592,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 2
@@ -1520,7 +1613,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 2
@@ -1540,7 +1634,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 2
@@ -1560,7 +1655,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 2
@@ -1580,7 +1676,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 2
@@ -1600,7 +1697,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 2
@@ -1620,7 +1718,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 2
@@ -1640,7 +1739,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 2
@@ -1660,7 +1760,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 2
@@ -1680,7 +1781,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 2
@@ -1700,7 +1802,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 2
@@ -1720,7 +1823,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 2
@@ -1740,7 +1844,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 2
@@ -1760,7 +1865,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 3
@@ -1780,7 +1886,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 3
@@ -1800,7 +1907,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 3
@@ -1820,7 +1928,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 3
@@ -1840,7 +1949,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 3
@@ -1860,7 +1970,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 3
@@ -1880,7 +1991,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 3
@@ -1900,7 +2012,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 3
@@ -1920,7 +2033,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 3
@@ -1940,7 +2054,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 3
@@ -1960,7 +2075,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 3
@@ -1980,7 +2096,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 3
@@ -2000,7 +2117,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 3
@@ -2020,7 +2138,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 3
@@ -2040,7 +2159,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 3
@@ -2060,7 +2180,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 3
@@ -2080,7 +2201,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 4
@@ -2100,7 +2222,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 4
@@ -2120,7 +2243,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 4
@@ -2140,7 +2264,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 4
@@ -2160,7 +2285,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 4
@@ -2180,7 +2306,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 4
@@ -2200,7 +2327,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 4
@@ -2220,7 +2348,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 4
@@ -2240,7 +2369,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 4
@@ -2260,7 +2390,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 4
@@ -2280,7 +2411,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 4
@@ -2300,7 +2432,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 4
@@ -2320,7 +2453,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 4
@@ -2340,7 +2474,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 4
@@ -2360,7 +2495,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 4
@@ -2380,7 +2516,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 4
@@ -2400,7 +2537,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 5
@@ -2420,7 +2558,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 5
@@ -2440,7 +2579,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 5
@@ -2460,7 +2600,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 5
@@ -2480,7 +2621,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 5
@@ -2500,7 +2642,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/forest.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 5
@@ -2520,7 +2663,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 5
@@ -2540,7 +2684,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 5
@@ -2560,7 +2705,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 5
@@ -2580,7 +2726,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 5
@@ -2600,7 +2747,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 5
@@ -2620,7 +2768,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 5
@@ -2640,7 +2789,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 5
@@ -2660,7 +2810,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 5
@@ -2680,7 +2831,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 5
@@ -2700,7 +2852,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 5
@@ -2720,7 +2873,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 6
@@ -2740,7 +2894,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 6
@@ -2760,7 +2915,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 6
@@ -2780,7 +2936,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 6
@@ -2800,7 +2957,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 6
@@ -2820,7 +2978,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 6
@@ -2840,7 +2999,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 6
@@ -2860,7 +3020,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 6
@@ -2880,7 +3041,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 6
@@ -2900,7 +3062,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 6
@@ -2920,7 +3083,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 6
@@ -2940,7 +3104,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 6
@@ -2960,7 +3125,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 6
@@ -2980,7 +3146,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 6
@@ -3000,7 +3167,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 6
@@ -3020,7 +3188,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 6
@@ -3040,7 +3209,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 7
@@ -3060,7 +3230,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 7
@@ -3080,7 +3251,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 7
@@ -3100,7 +3272,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 7
@@ -3120,7 +3293,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 7
@@ -3140,7 +3314,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 7
@@ -3160,7 +3335,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 7
@@ -3180,7 +3356,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 7
@@ -3200,7 +3377,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 7
@@ -3220,7 +3398,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 7
@@ -3240,7 +3419,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 7
@@ -3260,7 +3440,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 7
@@ -3280,7 +3461,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 7
@@ -3300,7 +3482,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 7
@@ -3320,7 +3503,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 7
@@ -3340,7 +3524,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 7
@@ -3360,7 +3545,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 8
@@ -3380,7 +3566,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 8
@@ -3400,7 +3587,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 8
@@ -3420,7 +3608,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 8
@@ -3440,7 +3629,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 8
@@ -3460,7 +3650,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 8
@@ -3480,7 +3671,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 8
@@ -3500,7 +3692,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 8
@@ -3520,7 +3713,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 8
@@ -3540,7 +3734,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 8
@@ -3560,7 +3755,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 8
@@ -3580,7 +3776,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 8
@@ -3600,7 +3797,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 8
@@ -3620,7 +3818,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 8
@@ -3640,7 +3839,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 8
@@ -3660,7 +3860,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 8
@@ -3680,7 +3881,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 9
@@ -3700,7 +3902,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 9
@@ -3720,7 +3923,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 9
@@ -3740,7 +3944,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 9
@@ -3760,7 +3965,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 9
@@ -3780,7 +3986,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 9
@@ -3800,7 +4007,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 9
@@ -3820,7 +4028,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 9
@@ -3840,7 +4049,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 9
@@ -3860,7 +4070,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 9
@@ -3880,7 +4091,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 9
@@ -3900,7 +4112,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 9
@@ -3920,7 +4133,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 9
@@ -3940,7 +4154,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 9
@@ -3960,7 +4175,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 9
@@ -3980,7 +4196,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 9
@@ -4000,7 +4217,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 10
@@ -4020,7 +4238,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 10
@@ -4040,7 +4259,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 10
@@ -4060,7 +4280,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 10
@@ -4080,7 +4301,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 10
@@ -4100,7 +4322,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 10
@@ -4120,7 +4343,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 10
@@ -4140,7 +4364,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 10
@@ -4160,7 +4385,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 10
@@ -4180,7 +4406,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 10
@@ -4200,7 +4427,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 10
@@ -4220,7 +4448,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 10
@@ -4240,7 +4469,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 10
@@ -4260,7 +4490,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 10
@@ -4280,7 +4511,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 10
@@ -4300,7 +4532,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 10
@@ -4320,7 +4553,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 11
@@ -4340,7 +4574,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 11
@@ -4360,7 +4595,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 11
@@ -4380,7 +4616,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 11
@@ -4400,7 +4637,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 11
@@ -4420,7 +4658,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 11
@@ -4440,7 +4679,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 11
@@ -4460,7 +4700,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 11
@@ -4480,7 +4721,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 11
@@ -4500,7 +4742,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 11
@@ -4520,7 +4763,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 11
@@ -4540,7 +4784,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 11
@@ -4560,7 +4805,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 11
@@ -4580,7 +4826,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 11
@@ -4600,7 +4847,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 11
@@ -4620,7 +4868,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 11
@@ -4640,7 +4889,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 12
@@ -4660,7 +4910,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 12
@@ -4680,7 +4931,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 12
@@ -4700,7 +4952,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 12
@@ -4720,7 +4973,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 12
@@ -4740,7 +4994,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 12
@@ -4760,7 +5015,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 12
@@ -4780,7 +5036,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 12
@@ -4800,7 +5057,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 12
@@ -4820,7 +5078,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 12
@@ -4840,7 +5099,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 12
@@ -4860,7 +5120,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 12
@@ -4880,7 +5141,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 12
@@ -4900,7 +5162,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 12
@@ -4920,7 +5183,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 12
@@ -4940,7 +5204,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 12
@@ -4960,7 +5225,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 13
@@ -4980,7 +5246,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 13
@@ -5000,7 +5267,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 13
@@ -5020,7 +5288,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 13
@@ -5040,7 +5309,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 13
@@ -5060,7 +5330,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 13
@@ -5080,7 +5351,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 13
@@ -5100,7 +5372,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 13
@@ -5120,7 +5393,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 13
@@ -5140,7 +5414,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 13
@@ -5160,7 +5435,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 13
@@ -5180,7 +5456,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 13
@@ -5200,7 +5477,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 13
@@ -5220,7 +5498,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 13
@@ -5240,7 +5519,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 13
@@ -5260,7 +5540,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 13
@@ -5280,7 +5561,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 14
@@ -5300,7 +5582,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 14
@@ -5320,7 +5603,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 14
@@ -5340,7 +5624,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 14
@@ -5360,7 +5645,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 14
@@ -5380,7 +5666,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 14
@@ -5400,7 +5687,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 14
@@ -5420,7 +5708,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 14
@@ -5440,7 +5729,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 14
@@ -5460,7 +5750,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 14
@@ -5480,7 +5771,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 14
@@ -5500,7 +5792,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 14
@@ -5520,7 +5813,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 14
@@ -5540,7 +5834,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 14
@@ -5560,7 +5855,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 14
@@ -5580,7 +5876,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 14
@@ -5600,7 +5897,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 0,
                 "y": 15
@@ -5620,7 +5918,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 1,
                 "y": 15
@@ -5640,7 +5939,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 2,
                 "y": 15
@@ -5660,7 +5960,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 3,
                 "y": 15
@@ -5680,7 +5981,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 4,
                 "y": 15
@@ -5700,7 +6002,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 5,
                 "y": 15
@@ -5720,7 +6023,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 6,
                 "y": 15
@@ -5740,7 +6044,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 7,
                 "y": 15
@@ -5760,7 +6065,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 8,
                 "y": 15
@@ -5780,7 +6086,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/grass.png",
+                  "variant": ""
                 },
                 "x": 9,
                 "y": 15
@@ -5800,7 +6107,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 10,
                 "y": 15
@@ -5820,7 +6128,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 11,
                 "y": 15
@@ -5840,7 +6149,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 12,
                 "y": 15
@@ -5860,7 +6170,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 13,
                 "y": 15
@@ -5880,7 +6191,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 14,
                 "y": 15
@@ -5900,7 +6212,8 @@
                   "role": "tile",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/terrain/stone.png",
+                  "variant": ""
                 },
                 "x": 15,
                 "y": 15
@@ -5972,6 +6285,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -6040,6 +6358,11 @@
                     },
                     "url": {
                       "name": "url",
+                      "required": false,
+                      "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
                       "required": false,
                       "type": "string"
                     }
@@ -6114,7 +6437,8 @@
                   "role": "npc",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/hero.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/hero.png",
+                  "variant": ""
                 },
                 "team": "player",
                 "unitType": "hero"
@@ -6146,7 +6470,8 @@
                   "role": "npc",
                   "style": "",
                   "thumbnailUrl": "",
-                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/guard.png"
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-world-map-board/default/units/guard.png",
+                  "variant": ""
                 },
                 "team": "enemy",
                 "unitType": "guard"
@@ -6253,6 +6578,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -6352,6 +6682,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "type": "object"
@@ -6438,7 +6773,9 @@
             "selectedHeroId",
             "tiles",
             "turn",
-            "units"
+            "units",
+            "validMoves",
+            "waypoints"
           ]
         }
       }
@@ -6451,6 +6788,7 @@
       }
     ],
     "emittedEvents": [
+      "ADVANCE_TURN",
       "BATTLE_ENCOUNTER",
       "FEATURE_ENTER",
       "GAME_END",

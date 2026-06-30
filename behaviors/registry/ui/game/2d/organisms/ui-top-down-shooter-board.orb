@@ -1,5 +1,5 @@
 {
-  "description": "TopDownShooterBoard — game-shell composition with LOLO-driven sprite animation and shoot/hit effects.",
+  "description": "TopDownShooterBoard — sci-fi top-down shooter with MOVE/FIRE input wiring, wave/score/lives HUD, FIRE control button, and UI Pack - Sci-fi assets.",
   "name": "ui-top-down-shooter-board",
   "orbitals": [
     {
@@ -110,6 +110,31 @@
             "type": "array"
           },
           {
+            "default": "",
+            "name": "selectedUnitId",
+            "type": "string"
+          },
+          {
+            "default": [],
+            "items": {
+              "properties": {
+                "x": {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                "y": {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              },
+              "type": "object"
+            },
+            "name": "validMoves",
+            "type": "array"
+          },
+          {
             "default": 0.0,
             "name": "score",
             "type": "number"
@@ -196,7 +221,20 @@
           "config": {
             "assetManifest": {
               "default": {
-                "background": "backgrounds/bg-parallax/trait-wars/scenes/world/streets.png",
+                "background": {
+                  "animations": [
+                    "static"
+                  ],
+                  "aspect": "16:9",
+                  "category": "background",
+                  "dimension": "2d",
+                  "name": "space",
+                  "role": "background",
+                  "style": "sci-fi",
+                  "thumbnailUrl": "",
+                  "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/backgrounds/space.png",
+                  "variant": ""
+                },
                 "effects": {
                   "explosion": {
                     "animations": [
@@ -207,9 +245,10 @@
                     "dimension": "2d",
                     "name": "explosion",
                     "role": "effect",
-                    "style": "",
+                    "style": "sci-fi",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/pixelExplosion07.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/effects/explosion.png",
+                    "variant": ""
                   },
                   "spark": {
                     "animations": [
@@ -220,9 +259,10 @@
                     "dimension": "2d",
                     "name": "spark",
                     "role": "effect",
-                    "style": "",
+                    "style": "sci-fi",
                     "thumbnailUrl": "",
-                    "url": "https://almadar-kflow-assets.web.app/shared/ui-battle-board/default/effects/spark_06.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/effects/spark.png",
+                    "variant": ""
                   }
                 },
                 "features": {
@@ -235,9 +275,10 @@
                     "dimension": "2d",
                     "name": "pickup",
                     "role": "decoration",
-                    "style": "",
+                    "style": "sci-fi",
                     "thumbnailUrl": "",
-                    "url": "features/props-items/kenney-vendored/items/platformPack_item001.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/features/pickup.png",
+                    "variant": ""
                   },
                   "projectile": {
                     "animations": [
@@ -248,9 +289,10 @@
                     "dimension": "2d",
                     "name": "projectile",
                     "role": "decoration",
-                    "style": "",
+                    "style": "sci-fi",
                     "thumbnailUrl": "",
-                    "url": "features/props-items/kenney-vendored/items/platformPack_item001.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/features/projectile.png",
+                    "variant": ""
                   }
                 },
                 "units": {
@@ -267,9 +309,10 @@
                     "dimension": "2d",
                     "name": "enemy",
                     "role": "npc",
-                    "style": "",
+                    "style": "sci-fi",
                     "thumbnailUrl": "",
-                    "url": "units/chars-toon/kenney-vendored/toon/platformChar_jump.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/units/enemy.png",
+                    "variant": ""
                   },
                   "player": {
                     "animations": [
@@ -284,9 +327,10 @@
                     "dimension": "2d",
                     "name": "player",
                     "role": "npc",
-                    "style": "",
+                    "style": "sci-fi",
                     "thumbnailUrl": "",
-                    "url": "units/chars-toon/kenney-vendored/toon/platformChar_idle.png"
+                    "url": "https://almadar-kflow-assets.web.app/shared/ui-top-down-shooter-board/default/units/player.png",
+                    "variant": ""
                   }
                 }
               },
@@ -343,6 +387,11 @@
                       "name": "url",
                       "required": false,
                       "type": "string"
+                    },
+                    "variant": {
+                      "name": "variant",
+                      "required": false,
+                      "type": "string"
                     }
                   },
                   "required": false,
@@ -396,6 +445,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -456,6 +510,11 @@
                         "name": "url",
                         "required": false,
                         "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
+                        "required": false,
+                        "type": "string"
                       }
                     },
                     "type": "object"
@@ -512,6 +571,11 @@
                       },
                       "url": {
                         "name": "url",
+                        "required": false,
+                        "type": "string"
+                      },
+                      "variant": {
+                        "name": "variant",
                         "required": false,
                         "type": "string"
                       }
@@ -662,6 +726,37 @@
           },
           "emits": [
             {
+              "description": "Emits UI:{tileClickEvent} with { x, y } on tile/arena click",
+              "event": "TILE_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "x",
+                  "required": true,
+                  "type": "number"
+                },
+                {
+                  "name": "y",
+                  "required": true,
+                  "type": "number"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
+              "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+              "event": "UNIT_CLICK",
+              "payloadSchema": [
+                {
+                  "name": "unitId",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "scope": "external",
+              "tier": "domain"
+            },
+            {
               "description": "Emits UI:{moveEvent} with {dx,dy} on arrow/WASD key press to move the player",
               "event": "MOVE",
               "payloadSchema": [
@@ -733,7 +828,9 @@
               "projectiles",
               "result",
               "score",
+              "selectedUnitId",
               "tick",
+              "validMoves",
               "wave"
             ],
             "requires": []
@@ -778,6 +875,37 @@
                   },
                   {
                     "name": "ty",
+                    "required": true,
+                    "type": "number"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emits UI:{unitClickEvent} with { unitId } on unit click",
+                "key": "UNIT_CLICK",
+                "name": "Unit Click",
+                "payloadSchema": [
+                  {
+                    "name": "unitId",
+                    "required": true,
+                    "type": "string"
+                  }
+                ],
+                "tier": "domain"
+              },
+              {
+                "description": "Emits UI:{tileClickEvent} with { x, y } on tile/arena click",
+                "key": "TILE_CLICK",
+                "name": "Tile Click",
+                "payloadSchema": [
+                  {
+                    "name": "x",
+                    "required": true,
+                    "type": "number"
+                  },
+                  {
+                    "name": "y",
                     "required": true,
                     "type": "number"
                   }
@@ -887,6 +1015,16 @@
                   ],
                   [
                     "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.score",
                     0.0
                   ],
@@ -961,9 +1099,12 @@
                           ],
                           "projection": "flat",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": [],
                           "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
                           "units": [
                             "array/concat",
                             [
@@ -1046,25 +1187,46 @@
                                 }
                               ]
                             ]
-                          ]
+                          ],
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Score",
-                            "value": "@entity.score"
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Wave",
+                                "value": "@entity.wave"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Wave",
-                            "value": "@entity.wave"
+                            "label": "SCORE",
+                            "score": "@entity.score",
+                            "type": "score-display"
                           },
                           {
-                            "label": "Lives",
-                            "value": "@entity.lives"
+                            "action": "FIRE",
+                            "icon": "zap",
+                            "label": "Fire",
+                            "type": "button",
+                            "variant": "primary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -1170,9 +1332,12 @@
                           ],
                           "projection": "flat",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": [],
                           "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
                           "units": [
                             "array/concat",
                             [
@@ -1255,25 +1420,46 @@
                                 }
                               ]
                             ]
-                          ]
+                          ],
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Score",
-                            "value": "@entity.score"
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Wave",
+                                "value": "@entity.wave"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Wave",
-                            "value": "@entity.wave"
+                            "label": "SCORE",
+                            "score": "@entity.score",
+                            "type": "score-display"
                           },
                           {
-                            "label": "Lives",
-                            "value": "@entity.lives"
+                            "action": "FIRE",
+                            "icon": "zap",
+                            "label": "Fire",
+                            "type": "button",
+                            "variant": "primary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -1384,9 +1570,12 @@
                           ],
                           "projection": "flat",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": [],
                           "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
                           "units": [
                             "array/concat",
                             [
@@ -1469,31 +1658,442 @@
                                 }
                               ]
                             ]
-                          ]
+                          ],
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Score",
-                            "value": "@entity.score"
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Wave",
+                                "value": "@entity.wave"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Wave",
-                            "value": "@entity.wave"
+                            "label": "SCORE",
+                            "score": "@entity.score",
+                            "type": "score-display"
                           },
                           {
-                            "label": "Lives",
-                            "value": "@entity.lives"
+                            "action": "FIRE",
+                            "icon": "zap",
+                            "label": "Fire",
+                            "type": "button",
+                            "variant": "primary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
                   ]
                 ],
                 "event": "FIRE",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    "@payload.unitId"
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": [
+                            "array/map",
+                            "@entity.projectiles",
+                            [
+                              "fn",
+                              "p",
+                              {
+                                "id": "@p.id",
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "features"
+                                  ],
+                                  "projectile"
+                                ],
+                                "type": "projectile",
+                                "x": [
+                                  "object/get",
+                                  "@p",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@p",
+                                  "y"
+                                ]
+                              }
+                            ]
+                          ],
+                          "projection": "flat",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": [],
+                          "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": [
+                            "array/concat",
+                            [
+                              {
+                                "animation": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "animation"
+                                ],
+                                "frame": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "frame"
+                                ],
+                                "id": "player",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "y"
+                                  ]
+                                },
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "units"
+                                  ],
+                                  "player"
+                                ],
+                                "team": "player"
+                              }
+                            ],
+                            [
+                              "array/map",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                {
+                                  "animation": [
+                                    "object/get",
+                                    "@e",
+                                    "animation"
+                                  ],
+                                  "frame": [
+                                    "object/get",
+                                    "@e",
+                                    "frame"
+                                  ],
+                                  "id": "@e.id",
+                                  "position": {
+                                    "x": [
+                                      "object/get",
+                                      "@e",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@e",
+                                      "y"
+                                    ]
+                                  },
+                                  "sprite": [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@config.assetManifest",
+                                      "units"
+                                    ],
+                                    "enemy"
+                                  ],
+                                  "team": "enemy"
+                                }
+                              ]
+                            ]
+                          ],
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Wave",
+                                "value": "@entity.wave"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "label": "SCORE",
+                            "score": "@entity.score",
+                            "type": "score-display"
+                          },
+                          {
+                            "action": "FIRE",
+                            "icon": "zap",
+                            "label": "Fire",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "UNIT_CLICK",
+                "from": "playing",
+                "guard": [
+                  "==",
+                  "@entity.result",
+                  "none"
+                ],
+                "to": "playing"
+              },
+              {
+                "effects": [
+                  [
+                    "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "children": [
+                        {
+                          "assetManifest": "@config.assetManifest",
+                          "effects": "@entity.effects",
+                          "features": [
+                            "array/map",
+                            "@entity.projectiles",
+                            [
+                              "fn",
+                              "p",
+                              {
+                                "id": "@p.id",
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "features"
+                                  ],
+                                  "projectile"
+                                ],
+                                "type": "projectile",
+                                "x": [
+                                  "object/get",
+                                  "@p",
+                                  "x"
+                                ],
+                                "y": [
+                                  "object/get",
+                                  "@p",
+                                  "y"
+                                ]
+                              }
+                            ]
+                          ],
+                          "projection": "flat",
+                          "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
+                          "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
+                          "tiles": [],
+                          "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
+                          "units": [
+                            "array/concat",
+                            [
+                              {
+                                "animation": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "animation"
+                                ],
+                                "frame": [
+                                  "object/get",
+                                  "@entity.player",
+                                  "frame"
+                                ],
+                                "id": "player",
+                                "position": {
+                                  "x": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "x"
+                                  ],
+                                  "y": [
+                                    "object/get",
+                                    "@entity.player",
+                                    "y"
+                                  ]
+                                },
+                                "sprite": [
+                                  "object/get",
+                                  [
+                                    "object/get",
+                                    "@config.assetManifest",
+                                    "units"
+                                  ],
+                                  "player"
+                                ],
+                                "team": "player"
+                              }
+                            ],
+                            [
+                              "array/map",
+                              "@entity.enemies",
+                              [
+                                "fn",
+                                "e",
+                                {
+                                  "animation": [
+                                    "object/get",
+                                    "@e",
+                                    "animation"
+                                  ],
+                                  "frame": [
+                                    "object/get",
+                                    "@e",
+                                    "frame"
+                                  ],
+                                  "id": "@e.id",
+                                  "position": {
+                                    "x": [
+                                      "object/get",
+                                      "@e",
+                                      "x"
+                                    ],
+                                    "y": [
+                                      "object/get",
+                                      "@e",
+                                      "y"
+                                    ]
+                                  },
+                                  "sprite": [
+                                    "object/get",
+                                    [
+                                      "object/get",
+                                      "@config.assetManifest",
+                                      "units"
+                                    ],
+                                    "enemy"
+                                  ],
+                                  "team": "enemy"
+                                }
+                              ]
+                            ]
+                          ],
+                          "validMoves": "@entity.validMoves"
+                        }
+                      ],
+                      "hud": {
+                        "children": [
+                          {
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Wave",
+                                "value": "@entity.wave"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
+                          },
+                          {
+                            "label": "SCORE",
+                            "score": "@entity.score",
+                            "type": "score-display"
+                          },
+                          {
+                            "action": "FIRE",
+                            "icon": "zap",
+                            "label": "Fire",
+                            "type": "button",
+                            "variant": "primary"
+                          }
+                        ],
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
+                      },
+                      "type": "game-shell"
+                    }
+                  ]
+                ],
+                "event": "TILE_CLICK",
                 "from": "playing",
                 "guard": [
                   "==",
@@ -1545,9 +2145,12 @@
                           ],
                           "projection": "flat",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": [],
                           "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
                           "units": [
                             "array/concat",
                             [
@@ -1630,25 +2233,46 @@
                                 }
                               ]
                             ]
-                          ]
+                          ],
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Score",
-                            "value": "@entity.score"
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Wave",
+                                "value": "@entity.wave"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Wave",
-                            "value": "@entity.wave"
+                            "label": "SCORE",
+                            "score": "@entity.score",
+                            "type": "score-display"
                           },
                           {
-                            "label": "Lives",
-                            "value": "@entity.lives"
+                            "action": "FIRE",
+                            "icon": "zap",
+                            "label": "Fire",
+                            "type": "button",
+                            "variant": "primary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -1738,6 +2362,16 @@
                   ],
                   [
                     "set",
+                    "@entity.selectedUnitId",
+                    ""
+                  ],
+                  [
+                    "set",
+                    "@entity.validMoves",
+                    []
+                  ],
+                  [
+                    "set",
                     "@entity.score",
                     0.0
                   ],
@@ -1812,9 +2446,12 @@
                           ],
                           "projection": "flat",
                           "scale": "@config.scale",
+                          "selectedUnitId": "@entity.selectedUnitId",
                           "showMinimap": false,
+                          "tileClickEvent": "TILE_CLICK",
                           "tiles": [],
                           "type": "canvas-2d",
+                          "unitClickEvent": "UNIT_CLICK",
                           "units": [
                             "array/concat",
                             [
@@ -1897,25 +2534,46 @@
                                 }
                               ]
                             ]
-                          ]
+                          ],
+                          "validMoves": "@entity.validMoves"
                         }
                       ],
                       "hud": {
-                        "stats": [
+                        "children": [
                           {
-                            "label": "Score",
-                            "value": "@entity.score"
+                            "stats": [
+                              {
+                                "label": "Score",
+                                "value": "@entity.score"
+                              },
+                              {
+                                "label": "Wave",
+                                "value": "@entity.wave"
+                              },
+                              {
+                                "label": "Lives",
+                                "value": "@entity.lives"
+                              }
+                            ],
+                            "type": "game-hud"
                           },
                           {
-                            "label": "Wave",
-                            "value": "@entity.wave"
+                            "label": "SCORE",
+                            "score": "@entity.score",
+                            "type": "score-display"
                           },
                           {
-                            "label": "Lives",
-                            "value": "@entity.lives"
+                            "action": "FIRE",
+                            "icon": "zap",
+                            "label": "Fire",
+                            "type": "button",
+                            "variant": "primary"
                           }
                         ],
-                        "type": "game-hud"
+                        "direction": "horizontal",
+                        "gap": "md",
+                        "justify": "between",
+                        "type": "stack"
                       },
                       "type": "game-shell"
                     }
@@ -2068,9 +2726,12 @@
                         ],
                         "projection": "flat",
                         "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
                         "showMinimap": false,
+                        "tileClickEvent": "TILE_CLICK",
                         "tiles": [],
                         "type": "canvas-2d",
+                        "unitClickEvent": "UNIT_CLICK",
                         "units": [
                           "array/concat",
                           [
@@ -2153,25 +2814,46 @@
                               }
                             ]
                           ]
-                        ]
+                        ],
+                        "validMoves": "@entity.validMoves"
                       }
                     ],
                     "hud": {
-                      "stats": [
+                      "children": [
                         {
-                          "label": "Score",
-                          "value": "@entity.score"
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": "@entity.score"
+                            },
+                            {
+                              "label": "Wave",
+                              "value": "@entity.wave"
+                            },
+                            {
+                              "label": "Lives",
+                              "value": "@entity.lives"
+                            }
+                          ],
+                          "type": "game-hud"
                         },
                         {
-                          "label": "Wave",
-                          "value": "@entity.wave"
+                          "label": "SCORE",
+                          "score": "@entity.score",
+                          "type": "score-display"
                         },
                         {
-                          "label": "Lives",
-                          "value": "@entity.lives"
+                          "action": "FIRE",
+                          "icon": "zap",
+                          "label": "Fire",
+                          "type": "button",
+                          "variant": "primary"
                         }
                       ],
-                      "type": "game-hud"
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
                     },
                     "type": "game-shell"
                   }
@@ -2844,9 +3526,12 @@
                         ],
                         "projection": "flat",
                         "scale": "@config.scale",
+                        "selectedUnitId": "@entity.selectedUnitId",
                         "showMinimap": false,
+                        "tileClickEvent": "TILE_CLICK",
                         "tiles": [],
                         "type": "canvas-2d",
+                        "unitClickEvent": "UNIT_CLICK",
                         "units": [
                           "array/concat",
                           [
@@ -2929,25 +3614,46 @@
                               }
                             ]
                           ]
-                        ]
+                        ],
+                        "validMoves": "@entity.validMoves"
                       }
                     ],
                     "hud": {
-                      "stats": [
+                      "children": [
                         {
-                          "label": "Score",
-                          "value": "@entity.score"
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": "@entity.score"
+                            },
+                            {
+                              "label": "Wave",
+                              "value": "@entity.wave"
+                            },
+                            {
+                              "label": "Lives",
+                              "value": "@entity.lives"
+                            }
+                          ],
+                          "type": "game-hud"
                         },
                         {
-                          "label": "Wave",
-                          "value": "@entity.wave"
+                          "label": "SCORE",
+                          "score": "@entity.score",
+                          "type": "score-display"
                         },
                         {
-                          "label": "Lives",
-                          "value": "@entity.lives"
+                          "action": "FIRE",
+                          "icon": "zap",
+                          "label": "Fire",
+                          "type": "button",
+                          "variant": "primary"
                         }
                       ],
-                      "type": "game-hud"
+                      "direction": "horizontal",
+                      "gap": "md",
+                      "justify": "between",
+                      "type": "stack"
                     },
                     "type": "game-shell"
                   }

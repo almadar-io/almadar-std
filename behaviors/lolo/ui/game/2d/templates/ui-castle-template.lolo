@@ -1,6 +1,18 @@
 app ui-castle-template "1.0.0"
-"CastleTemplate — UI factory (1:1 with the @almadar/ui castle-template pattern)."
+"CastleTemplate — thin playable shell; renders game-shell + isometric canvas-2d matching ui-castle-board."
 orbital CastleTemplateOrbital {
+  type Asset = {
+    url : asset
+    role : string
+    category : string
+    animations : [string]
+    style : string
+    variant : string
+    dimension : string
+    aspect : string
+    name : string
+    thumbnailUrl : string
+  }
   type CastleTemplateTilesItem = {
     id : string
     x : number!
@@ -13,7 +25,21 @@ orbital CastleTemplateOrbital {
     movementCost : number
     tileType : string
     elevation : number
-    modelUrl : asset
+    modelUrl : Asset
+  }
+  type CastleTemplateUnitsItemPosition = {
+    x : number!
+    y : number!
+  }
+  type CastleTemplateUnitsItemPreviousPosition = {
+    x : number!
+    y : number!
+  }
+  type CastleTemplateUnitsItemTraitsItem = {
+    name : string!
+    currentState : string!
+    states : [string]!
+    cooldown : number!
   }
   type CastleTemplateUnitsItem = {
     id : string!
@@ -21,9 +47,9 @@ orbital CastleTemplateOrbital {
     x : number
     y : number
     z : number
-    sprite : json
-    spriteSheet : json
-    modelUrl : json
+    sprite : Asset
+    spriteSheet : Asset
+    modelUrl : Asset
     unitType : string
     heroId : string
     name : string
@@ -34,20 +60,8 @@ orbital CastleTemplateOrbital {
     traits : [CastleTemplateUnitsItemTraitsItem]
     previousPosition : CastleTemplateUnitsItemPreviousPosition
     elevation : number
-  }
-  type CastleTemplateUnitsItemPosition = {
-    x : number!
-    y : number!
-  }
-  type CastleTemplateUnitsItemTraitsItem = {
-    name : string!
-    currentState : string!
-    states : [string]!
-    cooldown : number!
-  }
-  type CastleTemplateUnitsItemPreviousPosition = {
-    x : number!
-    y : number!
+    animation : string
+    frame : number
   }
   type CastleTemplateFeaturesItem = {
     id : string
@@ -55,32 +69,89 @@ orbital CastleTemplateOrbital {
     y : number!
     z : number
     type : string!
-    sprite : json
-    assetUrl : json
+    sprite : Asset
+    assetUrl : Asset
     color : string
     elevation : number
+  }
+  type CastleTemplateEffectItem = {
+    key : string!
+    x : number!
+    y : number!
+    ttl : number!
   }
 
   entity CastleTemplateItem [runtime] {
     id : string!
+    tiles : [CastleTemplateTilesItem]
+    units : [CastleTemplateUnitsItem]
+    features : [CastleTemplateFeaturesItem]
+    effects : [CastleTemplateEffectItem] = []
+    health : number = 100
+    gold : number = 0
+    wave : number = 1
+    selectedUnitId : string = ""
+    validMoves : [CastleTemplateUnitsItemPosition] = []
+    result : "none" | "won" | "lost" = none
   }
 
   trait CastleTemplateRender -> @rebindable CastleTemplateItem [interaction, instance] {
-    initial: idle
+    initial: playing
 
-    state idle {
-      INIT -> idle
-        (fetch CastleTemplateItem {})
+    state playing {
+      INIT -> playing
+        (set @entity.tiles @config.tiles)
+        (set @entity.units @config.units)
+        (set @entity.features @config.features)
+        (set @entity.effects [])
+        (set @entity.health 100)
+        (set @entity.gold 0)
+        (set @entity.wave 1)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.result none)
         (render-ui main {
-          entity: @entity
-          className: @config.className
-          scale: @config.scale
-          tiles: @config.tiles
-          units: @config.units
-          features: @config.features
-          assetManifest: @config.assetManifest
-          type: castle-template
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
         })
+      UNIT_CLICK -> playing
+        (set @entity.selectedUnitId ?unitId)
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      TILE_CLICK -> playing
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+      PLAY_AGAIN -> playing
+        (set @entity.tiles @config.tiles)
+        (set @entity.units @config.units)
+        (set @entity.features @config.features)
+        (set @entity.effects [])
+        (set @entity.health 100)
+        (set @entity.gold 0)
+        (set @entity.wave 1)
+        (set @entity.selectedUnitId "")
+        (set @entity.validMoves [])
+        (set @entity.result none)
+        (render-ui main {
+          type: game-shell
+          hud: { type: game-hud, stats: [ { label: "Wall HP", value: @entity.health }, { label: "Gold", value: @entity.gold }, { label: "Wave", value: @entity.wave } ] }
+          children: [ { type: canvas-2d, tiles: @entity.tiles, units: @entity.units, features: @entity.features, effects: @entity.effects, assetManifest: @config.assetManifest, projection: "isometric", showMinimap: true, scale: @config.scale, tileClickEvent: TILE_CLICK, unitClickEvent: UNIT_CLICK, selectedUnitId: @entity.selectedUnitId, validMoves: @entity.validMoves } ]
+        })
+    }
+
+    emits {
+      TILE_CLICK -> external { x, y }
+      UNIT_CLICK -> external { unitId }
     }
 
     config {
@@ -96,11 +167,11 @@ orbital CastleTemplateOrbital {
         @label "Tiles"
         @description "Direct tile data — forwarded to CastleBoard; takes priority over entity."
         @tier "presentation"
-      units : [CastleTemplateUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "guardian", name: "Guardian", team: player, health: 10, maxHealth: 10, spriteSheet: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png" }, { id: "u2", position: { x: 3, y: 3 }, unitType: "worker", name: "Worker", team: enemy, health: 8, maxHealth: 10, spriteSheet: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/worker.png" }]
+      units : [CastleTemplateUnitsItem] = [{ id: "u1", position: { x: 1, y: 1 }, unitType: "guardian", name: "Guardian", team: player, health: 10, maxHealth: 10, spriteSheet: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/guardian.png", role: "unit", category: "guardian", animations: ["idle","walk","attack","hit","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "guardian", thumbnailUrl: "" } }, { id: "u2", position: { x: 3, y: 3 }, unitType: "worker", name: "Worker", team: enemy, health: 8, maxHealth: 10, spriteSheet: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/units/worker.png", role: "unit", category: "worker", animations: ["idle","walk","attack","hit","death"], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "worker", thumbnailUrl: "" } }]
         @label "Units"
         @description "Direct unit data — forwarded to CastleBoard; takes priority over entity."
         @tier "presentation"
-      features : [CastleTemplateFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "portal", sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/features/portal.png" }, { id: "f2", x: 3, y: 1, type: "gold_mine", sprite: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/features/gold_mine.png" }]
+      features : [CastleTemplateFeaturesItem] = [{ id: "f1", x: 2, y: 2, type: "portal", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/features/portal.png", role: "feature", category: "portal", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "portal", thumbnailUrl: "" } }, { id: "f2", x: 3, y: 1, type: "gold_mine", sprite: { url: "https://almadar-kflow-assets.web.app/shared/ui-castle-board/default/features/gold_mine.png", role: "feature", category: "gold_mine", animations: [], style: "pixel", variant: "", dimension: "2d", aspect: "1:1", name: "gold_mine", thumbnailUrl: "" } }]
         @label "Features"
         @description "Direct feature data — forwarded to CastleBoard; takes priority over entity."
         @tier "presentation"

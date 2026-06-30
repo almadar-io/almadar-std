@@ -540,7 +540,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits when all rounds are spent; routes to win/lose by score vs target.',
@@ -552,7 +552,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -564,7 +564,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'completeEvent prop',
@@ -582,7 +582,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -632,7 +632,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits when all rounds are spent; routes to win/lose by score vs target.',
@@ -644,7 +644,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -656,7 +656,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'completeEvent prop',
@@ -674,7 +674,7 @@ export function stdUiNegotiatorBoardNegotiatorBoardOrbital(params: StdUiNegotiat
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [

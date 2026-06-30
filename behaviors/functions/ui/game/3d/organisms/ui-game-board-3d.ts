@@ -1162,7 +1162,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Called when the match ends',
@@ -1174,7 +1174,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Called after a unit moves',
@@ -1202,7 +1202,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': '-- Declarative event props --',
@@ -1220,7 +1220,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{unitClickEvent} with { unitId } on unit click',
@@ -1233,7 +1233,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{endTurnEvent} with {} on end turn',
@@ -1245,7 +1245,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{cancelEvent} with {} on cancel',
@@ -1257,7 +1257,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -1269,7 +1269,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -1314,7 +1314,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': '-- Declarative event props --',
@@ -1332,7 +1332,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': '-- Callbacks --',
@@ -1362,7 +1362,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{endTurnEvent} with {} on end turn',
@@ -1374,7 +1374,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{cancelEvent} with {} on cancel',
@@ -1386,7 +1386,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Called when the match ends',
@@ -1398,7 +1398,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Emits UI:{playAgainEvent} with {} on play again / reset',
@@ -1410,7 +1410,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Called after a unit moves',
@@ -1438,7 +1438,7 @@ export function stdUiGameBoard3dGameBoard3DOrbital(params: StdUiGameBoard3dGameB
                   'type': 'object',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [

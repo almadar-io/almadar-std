@@ -1,0 +1,208 @@
+{
+  "description": "FormLayout — UI factory (1:1 with the @almadar/ui form-layout pattern).",
+  "name": "ui-form-layout",
+  "orbitals": [
+    {
+      "entity": {
+        "fields": [
+          {
+            "name": "id",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "name": "FormLayoutItem",
+        "persistence": "runtime"
+      },
+      "name": "FormLayoutOrbital",
+      "pages": [
+        {
+          "name": "FormLayoutPage",
+          "path": "/form-layout",
+          "traits": [
+            {
+              "ref": "FormLayoutRender"
+            }
+          ]
+        }
+      ],
+      "traits": [
+        {
+          "category": "interaction",
+          "config": {
+            "activeFilters": {
+              "default": {},
+              "description": "Active filters",
+              "label": "Active Filters",
+              "tier": "presentation",
+              "type": "json"
+            },
+            "className": {
+              "default": "",
+              "description": "Additional CSS classes",
+              "label": "Class Name",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "dividers": {
+              "default": true,
+              "description": "Show section dividers",
+              "label": "Dividers",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "error": {
+              "description": "Error state (UiError)",
+              "label": "Error",
+              "properties": {
+                "code": {
+                  "name": "code",
+                  "required": false,
+                  "type": "string"
+                },
+                "message": {
+                  "name": "message",
+                  "required": true,
+                  "type": "string"
+                },
+                "name": {
+                  "name": "name",
+                  "required": false,
+                  "type": "string"
+                },
+                "stack": {
+                  "name": "stack",
+                  "required": false,
+                  "type": "string"
+                }
+              },
+              "tier": "presentation",
+              "type": "FormLayoutError"
+            },
+            "isLoading": {
+              "default": false,
+              "description": "Loading state indicator",
+              "label": "Is Loading",
+              "tier": "presentation",
+              "type": "boolean"
+            },
+            "pageProp": {
+              "default": 0.0,
+              "description": "Current page number",
+              "label": "Page",
+              "synonyms": "page",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "pageSize": {
+              "default": 0.0,
+              "description": "Number of items per page",
+              "label": "Page Size",
+              "tier": "presentation",
+              "type": "number"
+            },
+            "searchValue": {
+              "default": "Search Value",
+              "description": "Current search query value",
+              "label": "Search Value",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "selectedIds": {
+              "default": [],
+              "description": "Currently selected item IDs",
+              "items": {
+                "type": "string"
+              },
+              "label": "Selected Ids",
+              "tier": "presentation",
+              "type": "[string]"
+            },
+            "sortBy": {
+              "default": "Sort By",
+              "description": "Current sort field",
+              "label": "Sort By",
+              "tier": "presentation",
+              "type": "string"
+            },
+            "sortDirection": {
+              "default": "asc",
+              "description": "Current sort direction",
+              "label": "Sort Direction",
+              "tier": "presentation",
+              "type": "string",
+              "values": [
+                "asc",
+                "desc"
+              ]
+            },
+            "totalCount": {
+              "default": 0.0,
+              "description": "Total number of items",
+              "label": "Total Count",
+              "tier": "presentation",
+              "type": "number"
+            }
+          },
+          "entityContract": {
+            "provides": [],
+            "requires": []
+          },
+          "entityRebindable": true,
+          "linkedEntity": "FormLayoutItem",
+          "name": "FormLayoutRender",
+          "scope": "instance",
+          "stateMachine": {
+            "events": [
+              {
+                "key": "INIT",
+                "name": "Initialize"
+              }
+            ],
+            "states": [
+              {
+                "isInitial": true,
+                "name": "idle"
+              }
+            ],
+            "transitions": [
+              {
+                "effects": [
+                  [
+                    "render-ui",
+                    "main",
+                    {
+                      "activeFilters": "@config.activeFilters",
+                      "children": [
+                        {
+                          "content": "Sample content",
+                          "type": "typography"
+                        }
+                      ],
+                      "className": "@config.className",
+                      "dividers": "@config.dividers",
+                      "error": "@config.error",
+                      "isLoading": "@config.isLoading",
+                      "page": "@config.pageProp",
+                      "pageSize": "@config.pageSize",
+                      "searchValue": "@config.searchValue",
+                      "selectedIds": "@config.selectedIds",
+                      "sortBy": "@config.sortBy",
+                      "sortDirection": "@config.sortDirection",
+                      "totalCount": "@config.totalCount",
+                      "type": "form-layout"
+                    }
+                  ]
+                ],
+                "event": "INIT",
+                "from": "idle",
+                "to": "idle"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "version": "1.0.0"
+}

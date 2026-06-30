@@ -1,0 +1,57 @@
+app learning-molecule-viewer "1.0.0"
+"Molecule viewer organism — a chemistry-canvas showing atoms and bonds for a simple molecule."
+orbital MoleculeViewerOrbital {
+  entity MoleculeViewerItem [runtime] {
+    id : string!
+  }
+
+  trait MoleculeViewerRender -> @rebindable MoleculeViewerItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: md
+          padding: md
+          children: [
+            { type: typography, variant: h4, content: @config.title },
+            { type: chemistry-canvas,
+              width: @config.width,
+              height: @config.height,
+              backgroundColor: "#fafafa",
+              atoms: [
+                { id: "C", x: 300, y: 200, element: "C", radius: 22, color: "#374151" },
+                { id: "O", x: 380, y: 160, element: "O", radius: 20, color: "#dc2626" },
+                { id: "H1", x: 240, y: 160, element: "H", radius: 14, color: "#2563eb" },
+                { id: "H2", x: 260, y: 270, element: "H", radius: 14, color: "#2563eb" },
+                { id: "H3", x: 340, y: 270, element: "H", radius: 14, color: "#2563eb" }
+              ],
+              bonds: [
+                { from: "C", to: "O", type: "double" },
+                { from: "C", to: "H1", type: "single" },
+                { from: "C", to: "H2", type: "single" },
+                { from: "C", to: "H3", type: "single" }
+              ]
+            }
+          ]
+        })
+    }
+
+    config {
+      title : string = "Molecule Viewer"
+        @label "Title"
+        @description "Title shown above the molecule."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @tier "presentation"
+    }
+  }
+
+  page "/learning/molecule-viewer" as MoleculeViewerPage -> MoleculeViewerRender
+}

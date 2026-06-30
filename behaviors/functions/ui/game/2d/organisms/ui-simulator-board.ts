@@ -488,7 +488,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Sets parameter A from { value } during play.',
@@ -501,7 +501,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Sets parameter B from { value } during play.',
@@ -514,7 +514,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Evaluates output vs target/tolerance; wins or retries.',
@@ -526,7 +526,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
           {
             'description': 'Resets the puzzle back to the menu.',
@@ -538,7 +538,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
               },
             ],
             'scope': 'external',
-            'tier': 'essential',
+            'tier': 'domain',
           },
         ],
         'entityContract': {
@@ -581,7 +581,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Sets parameter B from { value } during play.',
@@ -594,7 +594,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Evaluates output vs target/tolerance; wins or retries.',
@@ -606,7 +606,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'Resets the puzzle back to the menu.',
@@ -618,7 +618,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'type': 'string',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
             {
               'description': 'completeEvent prop',
@@ -636,7 +636,7 @@ export function stdUiSimulatorBoardSimulatorBoardOrbital(params: StdUiSimulatorB
                   'type': 'number',
                 },
               ],
-              'tier': 'essential',
+              'tier': 'domain',
             },
           ],
           'states': [

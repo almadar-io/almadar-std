@@ -1,0 +1,53 @@
+app learning-field-canvas "1.0.0"
+"Field canvas organism — a physics-canvas showing bodies and force/velocity arrows."
+orbital FieldCanvasOrbital {
+  entity FieldCanvasItem [runtime] {
+    id : string!
+  }
+
+  trait FieldCanvasRender -> @rebindable FieldCanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          type: stack
+          direction: vertical
+          gap: md
+          padding: md
+          children: [
+            { type: typography, variant: h4, content: @config.title },
+            { type: physics-canvas,
+              width: @config.width,
+              height: @config.height,
+              backgroundColor: "#f8fafc",
+              bodies: [
+                { id: "b1", x: 120, y: 200, radius: 14, color: "#2563eb", label: "A", vx: 2, vy: -1 },
+                { id: "b2", x: 300, y: 150, radius: 18, color: "#dc2626", label: "B", vx: -1, vy: 1.5 },
+                { id: "b3", x: 480, y: 220, radius: 12, color: "#16a34a", label: "C", vx: 0, vy: 0, fx: -0.5, fy: 0 }
+              ],
+              showVelocity: true,
+              showForces: true,
+              velocityScale: 25,
+              forceScale: 30
+            }
+          ]
+        })
+    }
+
+    config {
+      title : string = "Field Canvas"
+        @label "Title"
+        @description "Title shown above the field."
+        @tier "domain"
+      width : number = 600
+        @label "Width"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @tier "presentation"
+    }
+  }
+
+  page "/learning/field-canvas" as FieldCanvasPage -> FieldCanvasRender
+}

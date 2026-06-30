@@ -1,0 +1,92 @@
+app ui-form-layout "1.0.0"
+"FormLayout — UI factory (1:1 with the @almadar/ui form-layout pattern)."
+orbital FormLayoutOrbital {
+  type FormLayoutError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+
+  entity FormLayoutItem [runtime] {
+    id : string!
+  }
+
+  trait FormLayoutRender -> @rebindable FormLayoutItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          isLoading: @config.isLoading
+          error: @config.error
+          sortBy: @config.sortBy
+          sortDirection: @config.sortDirection
+          searchValue: @config.searchValue
+          page: @config.pageProp
+          pageSize: @config.pageSize
+          totalCount: @config.totalCount
+          activeFilters: @config.activeFilters
+          selectedIds: @config.selectedIds
+          children: [{ content: "Sample content", type: typography }]
+          dividers: @config.dividers
+          type: form-layout
+        })
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "Additional CSS classes"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "Loading state indicator"
+        @tier "presentation"
+      error : FormLayoutError
+        @label "Error"
+        @description "Error state (UiError)"
+        @tier "presentation"
+      sortBy : string = "Sort By"
+        @label "Sort By"
+        @description "Current sort field"
+        @tier "presentation"
+      sortDirection : "asc" | "desc" = asc
+        @label "Sort Direction"
+        @description "Current sort direction"
+        @tier "presentation"
+      searchValue : string = "Search Value"
+        @label "Search Value"
+        @description "Current search query value"
+        @tier "presentation"
+      pageProp : number = 0
+        @label "Page"
+        @description "Current page number"
+        @synonyms "page"
+        @tier "presentation"
+      pageSize : number = 0
+        @label "Page Size"
+        @description "Number of items per page"
+        @tier "presentation"
+      totalCount : number = 0
+        @label "Total Count"
+        @description "Total number of items"
+        @tier "presentation"
+      activeFilters : json = {}
+        @label "Active Filters"
+        @description "Active filters"
+        @tier "presentation"
+      selectedIds : [string] = []
+        @label "Selected Ids"
+        @description "Currently selected item IDs"
+        @tier "presentation"
+      dividers : boolean = true
+        @label "Dividers"
+        @description "Show section dividers"
+        @tier "presentation"
+    }
+  }
+
+  page "/form-layout" as FormLayoutPage -> FormLayoutRender
+}

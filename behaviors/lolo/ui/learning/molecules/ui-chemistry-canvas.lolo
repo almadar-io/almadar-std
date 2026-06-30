@@ -1,0 +1,162 @@
+app ui-chemistry-canvas "1.0.0"
+"ChemistryCanvas — UI factory (1:1 with the @almadar/ui chemistry-canvas pattern)."
+orbital ChemistryCanvasOrbital {
+  type ChemistryCanvasAtomsItem = {
+    id : string
+    x : number!
+    y : number!
+    element : string
+    radius : number
+    color : string
+  }
+  type ChemistryCanvasBondsItem = {
+    from : string!
+    to : string!
+    type : "single" | "double" | "triple"
+    color : string
+  }
+  type ChemistryCanvasArrowsItem = {
+    x : number!
+    y : number!
+    angle : number
+    length : number
+    color : string
+    label : string
+  }
+  type ChemistryCanvasShapesItem = {
+    type : "line" | "arrow" | "circle" | "rect" | "polygon" | "path" | "text" | "axis" | "grid"!
+    id : string
+    x : number
+    y : number
+    x1 : number
+    y1 : number
+    x2 : number
+    y2 : number
+    radius : number
+    width : number
+    height : number
+    points : [ChemistryCanvasShapesItemPointsItem]
+    path : string
+    text : string
+    label : string
+    fontSize : number
+    align : "left" | "center" | "right"
+    axis : "x" | "y"
+    min : number
+    max : number
+    step : number
+    color : string
+    fill : string
+    lineWidth : number
+    opacity : number
+  }
+  type ChemistryCanvasShapesItemPointsItem = {
+    x : number!
+    y : number!
+  }
+  type ChemistryCanvasError = {
+    message : string!
+    name : string
+    code : string
+    stack : string
+  }
+  type ChemistryCanvasSHAPECLICKPayload = {
+    id : string
+    type : string
+    index : number!
+  }
+
+  entity ChemistryCanvasItem [runtime] {
+    id : string!
+  }
+
+  trait ChemistryCanvasRender -> @rebindable ChemistryCanvasItem [interaction, instance] {
+    initial: idle
+
+    state idle {
+      INIT -> idle
+        (render-ui main {
+          className: @config.className
+          width: @config.width
+          height: @config.height
+          title: @config.title
+          backgroundColor: @config.backgroundColor
+          atoms: @config.atoms
+          bonds: @config.bonds
+          arrows: @config.arrows
+          shapes: @config.shapes
+          interactive: @config.interactive
+          animate: @config.animate
+          onShapeClick: SHAPE_CLICK
+          isLoading: @config.isLoading
+          error: @config.error
+          type: chemistry-canvas
+        })
+    }
+
+    emits {
+      SHAPE_CLICK -> external {
+        payload : ChemistryCanvasSHAPECLICKPayload
+      }
+        @description "onShapeClick prop"
+        @tier "essential"
+    }
+
+    config {
+      className : string = ""
+        @label "Class Name"
+        @description "className prop"
+        @tier "presentation"
+      width : number = 600
+        @label "Width"
+        @description "width prop"
+        @tier "presentation"
+      height : number = 400
+        @label "Height"
+        @description "height prop"
+        @tier "presentation"
+      title : string = "Title"
+        @label "Title"
+        @description "title prop"
+        @tier "presentation"
+      backgroundColor : string = "Background Color"
+        @label "Background Color"
+        @description "backgroundColor prop"
+        @tier "presentation"
+      atoms : [ChemistryCanvasAtomsItem] = [{ id: "Id", x: 1, y: 1, element: "Element", radius: 1, color: "Color" }, { id: "Id 2", x: 2, y: 2, element: "Element 2", radius: 2, color: "Color 2" }]
+        @label "Atoms"
+        @description "atoms prop"
+        @tier "presentation"
+      bonds : [ChemistryCanvasBondsItem] = [{ from: "From", to: "To", type: single, color: "Color" }, { from: "From 2", to: "To 2", type: double, color: "Color 2" }]
+        @label "Bonds"
+        @description "bonds prop"
+        @tier "presentation"
+      arrows : [ChemistryCanvasArrowsItem] = [{ x: 1, y: 1, angle: 1, length: 1, color: "Color", label: "Label" }, { x: 2, y: 2, angle: 2, length: 2, color: "Color 2", label: "Label 2" }]
+        @label "Arrows"
+        @description "arrows prop"
+        @tier "presentation"
+      shapes : [ChemistryCanvasShapesItem] = [{ type: line, id: "Id", x: 1, y: 1, x1: 1, y1: 1, x2: 1, y2: 1, radius: 1, width: 1, height: 1, points: [{ x: 1, y: 1 }, { x: 2, y: 2 }], path: "Path", text: "Text", label: "Label", fontSize: 1, align: left, axis: x, min: 1, max: 1, step: 1, color: "Color", fill: "Fill", lineWidth: 1, opacity: 1 }, { type: arrow, id: "Id 2", x: 2, y: 2, x1: 2, y1: 2, x2: 2, y2: 2, radius: 2, width: 2, height: 2, points: [{ x: 1, y: 1 }, { x: 2, y: 2 }], path: "Path 2", text: "Text 2", label: "Label 2", fontSize: 2, align: center, axis: y, min: 2, max: 2, step: 2, color: "Color 2", fill: "Fill 2", lineWidth: 2, opacity: 2 }]
+        @label "Shapes"
+        @description "Extra declarative shapes in canvas pixel coordinates."
+        @tier "presentation"
+      interactive : boolean = false
+        @label "Interactive"
+        @description "interactive prop"
+        @tier "presentation"
+      animate : boolean = false
+        @label "Animate"
+        @description "animate prop"
+        @tier "presentation"
+      isLoading : boolean = false
+        @label "Is Loading"
+        @description "isLoading prop"
+        @tier "presentation"
+      error : ChemistryCanvasError
+        @label "Error"
+        @description "error prop"
+        @tier "presentation"
+    }
+  }
+
+  page "/chemistry-canvas" as ChemistryCanvasPage -> ChemistryCanvasRender
+}
