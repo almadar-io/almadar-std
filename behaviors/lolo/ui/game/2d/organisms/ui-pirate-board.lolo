@@ -1,6 +1,8 @@
 app ui-pirate-board "1.0.0"
 "PirateBoard — game-shell composition with ship movement, cannon fx, and gold/turn HUD."
 orbital PirateBoardOrbital {
+  uses AnimTick from "std/behaviors/std-anim-tick"
+
   type PirateBoardError = {
     message : string!
     name : string
@@ -276,9 +278,7 @@ orbital PirateBoardOrbital {
     }
 
     ticks {
-      animTick every 100ms
-        (set @entity.ships (array/map @entity.ships (fn u (object/merge @u { frame: (% (+ (object/get @u frame) 1) 8) }))))
-        (set @entity.effects (array/filter (array/map @entity.effects (fn e (object/merge @e { ttl: (- (object/get @e ttl) 1) }))) (fn e (> (object/get @e ttl) 0))))
+      renderTick every 100ms
         (render-ui main {
           type: game-shell
           backgroundAsset: { url: "https://almadar-kflow-assets.web.app/shared/ui-pirate-board/default/ui/panel-frame.png", role: "ui", category: "ui", animations: [], style: "adventure", variant: "", dimension: "2d", aspect: "1:1", name: "panel-frame", thumbnailUrl: "" }
@@ -431,5 +431,10 @@ orbital PirateBoardOrbital {
     }
   }
 
-  page "/pirate-board" as PirateBoardPage -> PirateBoardRender
+  trait PirateBoardAnimTick = AnimTick.traits.AnimTick -> PirateBoardItem {
+    fields { units: ships }
+    config { frameCount: 8 }
+  }
+
+  page "/pirate-board" as PirateBoardPage -> PirateBoardRender, PirateBoardAnimTick
 }
