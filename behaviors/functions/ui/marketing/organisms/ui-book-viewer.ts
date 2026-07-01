@@ -85,9 +85,7 @@ export interface StdUiBookViewerConfig {
  * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
- *   persistence    — entity persistence mode
  *   entityName     — rename the canonical entity
- *   collection     — override the derived collection key
  *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
  *                    `events`, `name`, `emitsScope`, `listens`.
  *                    `effects` is NOT exposed — `.lolo` removed it
@@ -99,12 +97,8 @@ export interface StdUiBookViewerBookViewerOrbitalParams {
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
   pagePath?: string;
-  /** Override the canonical entity persistence mode. */
-  persistence?: EntityPersistence;
   /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
   entityName?: string;
-  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
-  collection?: string;
   /**
    * Per-imported-trait override surface keyed on each imported
    * trait's canonical `name`. Accepts every override `.lolo`
@@ -126,7 +120,7 @@ export function stdUiBookViewerBookViewerOrbital(params: StdUiBookViewerBookView
     uses: [],
     entity: {
       name: canonicalName,
-      persistence: params.persistence ?? 'runtime',
+      persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
@@ -517,9 +511,7 @@ export const StdUiBookViewerBookViewerOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [

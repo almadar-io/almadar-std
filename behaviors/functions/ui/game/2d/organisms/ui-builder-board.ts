@@ -113,9 +113,7 @@ export interface StdUiBuilderBoardConfig {
  * Override surface (mirrors `.lolo`'s native overrides 1:1):
  *   fields         — extra entity fields (appended)
  *   pagePath       — first-page URL override
- *   persistence    — entity persistence mode
  *   entityName     — rename the canonical entity
- *   collection     — override the derived collection key
  *   traitOverrides — per-imported-trait `config`, `linkedEntity`,
  *                    `events`, `name`, `emitsScope`, `listens`.
  *                    `effects` is NOT exposed — `.lolo` removed it
@@ -127,12 +125,8 @@ export interface StdUiBuilderBoardBuilderBoardOrbitalParams {
   fields?: EntityField[];
   /** URL path override for the orbital's first page. */
   pagePath?: string;
-  /** Override the canonical entity persistence mode. */
-  persistence?: EntityPersistence;
   /** Rename the canonical entity (PascalCase singular, ≤32 chars). */
   entityName?: string;
-  /** Override derived collection key (defaults to plural(entityName).toLowerCase()). */
-  collection?: string;
   /**
    * Per-imported-trait override surface keyed on each imported
    * trait's canonical `name`. Accepts every override `.lolo`
@@ -154,7 +148,7 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
     uses: [],
     entity: {
       name: canonicalName,
-      persistence: params.persistence ?? 'runtime',
+      persistence: 'runtime',
       fields: ((): EntityField[] => {
         const canonical: EntityField[] = [
           {
@@ -258,6 +252,86 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'name': 'id',
                   'required': true,
                   'type': 'string',
+                },
+                'options': {
+                  'items': {
+                    'properties': {
+                      'componentId': {
+                        'name': 'componentId',
+                        'required': true,
+                        'type': 'string',
+                      },
+                      'iconUrl': {
+                        'name': 'iconUrl',
+                        'properties': {
+                          'animations': {
+                            'items': {
+                              'type': 'string',
+                            },
+                            'name': 'animations',
+                            'required': false,
+                            'type': 'array',
+                          },
+                          'aspect': {
+                            'name': 'aspect',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'category': {
+                            'name': 'category',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'dimension': {
+                            'name': 'dimension',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'name': {
+                            'name': 'name',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'role': {
+                            'name': 'role',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'style': {
+                            'name': 'style',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'thumbnailUrl': {
+                            'name': 'thumbnailUrl',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'url': {
+                            'name': 'url',
+                            'required': false,
+                            'type': 'string',
+                          },
+                        },
+                        'required': false,
+                        'type': 'object',
+                      },
+                      'label': {
+                        'name': 'label',
+                        'required': false,
+                        'type': 'string',
+                      },
+                      'slotId': {
+                        'name': 'slotId',
+                        'required': true,
+                        'type': 'string',
+                      },
+                    },
+                    'type': 'object',
+                  },
+                  'name': 'options',
+                  'required': false,
+                  'type': 'array',
                 },
                 'placedComponentId': {
                   'name': 'placedComponentId',
@@ -540,6 +614,86 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                   'required': true,
                   'type': 'string',
                 },
+                'options': {
+                  'items': {
+                    'properties': {
+                      'componentId': {
+                        'name': 'componentId',
+                        'required': true,
+                        'type': 'string',
+                      },
+                      'iconUrl': {
+                        'name': 'iconUrl',
+                        'properties': {
+                          'animations': {
+                            'items': {
+                              'type': 'string',
+                            },
+                            'name': 'animations',
+                            'required': false,
+                            'type': 'array',
+                          },
+                          'aspect': {
+                            'name': 'aspect',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'category': {
+                            'name': 'category',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'dimension': {
+                            'name': 'dimension',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'name': {
+                            'name': 'name',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'role': {
+                            'name': 'role',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'style': {
+                            'name': 'style',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'thumbnailUrl': {
+                            'name': 'thumbnailUrl',
+                            'required': false,
+                            'type': 'string',
+                          },
+                          'url': {
+                            'name': 'url',
+                            'required': false,
+                            'type': 'string',
+                          },
+                        },
+                        'required': false,
+                        'type': 'object',
+                      },
+                      'label': {
+                        'name': 'label',
+                        'required': false,
+                        'type': 'string',
+                      },
+                      'slotId': {
+                        'name': 'slotId',
+                        'required': true,
+                        'type': 'string',
+                      },
+                    },
+                    'type': 'object',
+                  },
+                  'name': 'options',
+                  'required': false,
+                  'type': 'array',
+                },
                 'placedComponentId': {
                   'name': 'placedComponentId',
                   'required': false,
@@ -762,7 +916,50 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                 [
                   'set',
                   '@entity.slots',
-                  '@config.slots',
+                  [
+                    'array/map',
+                    '@config.slots',
+                    [
+                      'fn',
+                      's',
+                      [
+                        'object/merge',
+                        '@s',
+                        {
+                          'options': [
+                            'array/map',
+                            '@config.components',
+                            [
+                              'fn',
+                              'c',
+                              {
+                                'componentId': [
+                                  'object/get',
+                                  '@c',
+                                  'id',
+                                ],
+                                'iconUrl': [
+                                  'object/get',
+                                  '@c',
+                                  'iconUrl',
+                                ],
+                                'label': [
+                                  'object/get',
+                                  '@c',
+                                  'label',
+                                ],
+                                'slotId': [
+                                  'object/get',
+                                  '@s',
+                                  'id',
+                                ],
+                              },
+                            ],
+                          ],
+                        },
+                      ],
+                    ],
+                  ],
                 ],
                 [
                   'set',
@@ -838,31 +1035,22 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                     'type': 'stack',
                                   },
                                   {
-                                    'entity': '@entity.components',
+                                    'entity': '@s.options',
                                     'fields': [],
                                     'gap': 'xs',
                                     'renderItem': [
                                       'fn',
-                                      'c',
+                                      'opt',
                                       {
                                         'action': 'PLACE',
                                         'actionPayload': {
-                                          'componentId': '@c.id',
-                                          'slotId': '@s.id',
+                                          'componentId': '@opt.componentId',
+                                          'slotId': '@opt.slotId',
                                         },
-                                        'iconAsset': '@c.iconUrl',
-                                        'label': '@c.label',
+                                        'iconAsset': '@opt.iconUrl',
+                                        'label': '@opt.label',
                                         'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedComponentId',
-                                            '@c.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
+                                        'variant': 'primary',
                                       },
                                     ],
                                     'type': 'data-list',
@@ -935,7 +1123,50 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                 [
                   'set',
                   '@entity.slots',
-                  '@config.slots',
+                  [
+                    'array/map',
+                    '@config.slots',
+                    [
+                      'fn',
+                      's',
+                      [
+                        'object/merge',
+                        '@s',
+                        {
+                          'options': [
+                            'array/map',
+                            '@config.components',
+                            [
+                              'fn',
+                              'c',
+                              {
+                                'componentId': [
+                                  'object/get',
+                                  '@c',
+                                  'id',
+                                ],
+                                'iconUrl': [
+                                  'object/get',
+                                  '@c',
+                                  'iconUrl',
+                                ],
+                                'label': [
+                                  'object/get',
+                                  '@c',
+                                  'label',
+                                ],
+                                'slotId': [
+                                  'object/get',
+                                  '@s',
+                                  'id',
+                                ],
+                              },
+                            ],
+                          ],
+                        },
+                      ],
+                    ],
+                  ],
                 ],
                 [
                   'set',
@@ -1011,31 +1242,22 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                     'type': 'stack',
                                   },
                                   {
-                                    'entity': '@entity.components',
+                                    'entity': '@s.options',
                                     'fields': [],
                                     'gap': 'xs',
                                     'renderItem': [
                                       'fn',
-                                      'c',
+                                      'opt',
                                       {
                                         'action': 'PLACE',
                                         'actionPayload': {
-                                          'componentId': '@c.id',
-                                          'slotId': '@s.id',
+                                          'componentId': '@opt.componentId',
+                                          'slotId': '@opt.slotId',
                                         },
-                                        'iconAsset': '@c.iconUrl',
-                                        'label': '@c.label',
+                                        'iconAsset': '@opt.iconUrl',
+                                        'label': '@opt.label',
                                         'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedComponentId',
-                                            '@c.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
+                                        'variant': 'primary',
                                       },
                                     ],
                                     'type': 'data-list',
@@ -1177,31 +1399,22 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                     'type': 'stack',
                                   },
                                   {
-                                    'entity': '@entity.components',
+                                    'entity': '@s.options',
                                     'fields': [],
                                     'gap': 'xs',
                                     'renderItem': [
                                       'fn',
-                                      'c',
+                                      'opt',
                                       {
                                         'action': 'PLACE',
                                         'actionPayload': {
-                                          'componentId': '@c.id',
-                                          'slotId': '@s.id',
+                                          'componentId': '@opt.componentId',
+                                          'slotId': '@opt.slotId',
                                         },
-                                        'iconAsset': '@c.iconUrl',
-                                        'label': '@c.label',
+                                        'iconAsset': '@opt.iconUrl',
+                                        'label': '@opt.label',
                                         'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedComponentId',
-                                            '@c.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
+                                        'variant': 'primary',
                                       },
                                     ],
                                     'type': 'data-list',
@@ -1329,31 +1542,22 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                     'type': 'stack',
                                   },
                                   {
-                                    'entity': '@entity.components',
+                                    'entity': '@s.options',
                                     'fields': [],
                                     'gap': 'xs',
                                     'renderItem': [
                                       'fn',
-                                      'c',
+                                      'opt',
                                       {
                                         'action': 'PLACE',
                                         'actionPayload': {
-                                          'componentId': '@c.id',
-                                          'slotId': '@s.id',
+                                          'componentId': '@opt.componentId',
+                                          'slotId': '@opt.slotId',
                                         },
-                                        'iconAsset': '@c.iconUrl',
-                                        'label': '@c.label',
+                                        'iconAsset': '@opt.iconUrl',
+                                        'label': '@opt.label',
                                         'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedComponentId',
-                                            '@c.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
+                                        'variant': 'primary',
                                       },
                                     ],
                                     'type': 'data-list',
@@ -1504,31 +1708,22 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                     'type': 'stack',
                                   },
                                   {
-                                    'entity': '@entity.components',
+                                    'entity': '@s.options',
                                     'fields': [],
                                     'gap': 'xs',
                                     'renderItem': [
                                       'fn',
-                                      'c',
+                                      'opt',
                                       {
                                         'action': 'PLACE',
                                         'actionPayload': {
-                                          'componentId': '@c.id',
-                                          'slotId': '@s.id',
+                                          'componentId': '@opt.componentId',
+                                          'slotId': '@opt.slotId',
                                         },
-                                        'iconAsset': '@c.iconUrl',
-                                        'label': '@c.label',
+                                        'iconAsset': '@opt.iconUrl',
+                                        'label': '@opt.label',
                                         'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedComponentId',
-                                            '@c.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
+                                        'variant': 'primary',
                                       },
                                     ],
                                     'type': 'data-list',
@@ -1624,7 +1819,50 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                 [
                   'set',
                   '@entity.slots',
-                  '@config.slots',
+                  [
+                    'array/map',
+                    '@config.slots',
+                    [
+                      'fn',
+                      's',
+                      [
+                        'object/merge',
+                        '@s',
+                        {
+                          'options': [
+                            'array/map',
+                            '@config.components',
+                            [
+                              'fn',
+                              'c',
+                              {
+                                'componentId': [
+                                  'object/get',
+                                  '@c',
+                                  'id',
+                                ],
+                                'iconUrl': [
+                                  'object/get',
+                                  '@c',
+                                  'iconUrl',
+                                ],
+                                'label': [
+                                  'object/get',
+                                  '@c',
+                                  'label',
+                                ],
+                                'slotId': [
+                                  'object/get',
+                                  '@s',
+                                  'id',
+                                ],
+                              },
+                            ],
+                          ],
+                        },
+                      ],
+                    ],
+                  ],
                 ],
                 [
                   'set',
@@ -1685,31 +1923,22 @@ export function stdUiBuilderBoardBuilderBoardOrbital(params: StdUiBuilderBoardBu
                                     'type': 'stack',
                                   },
                                   {
-                                    'entity': '@entity.components',
+                                    'entity': '@s.options',
                                     'fields': [],
                                     'gap': 'xs',
                                     'renderItem': [
                                       'fn',
-                                      'c',
+                                      'opt',
                                       {
                                         'action': 'PLACE',
                                         'actionPayload': {
-                                          'componentId': '@c.id',
-                                          'slotId': '@s.id',
+                                          'componentId': '@opt.componentId',
+                                          'slotId': '@opt.slotId',
                                         },
-                                        'iconAsset': '@c.iconUrl',
-                                        'label': '@c.label',
+                                        'iconAsset': '@opt.iconUrl',
+                                        'label': '@opt.label',
                                         'type': 'button',
-                                        'variant': [
-                                          'if',
-                                          [
-                                            '==',
-                                            '@s.placedComponentId',
-                                            '@c.id',
-                                          ],
-                                          'success',
-                                          'ghost',
-                                        ],
+                                        'variant': 'primary',
                                       },
                                     ],
                                     'type': 'data-list',
@@ -1833,9 +2062,7 @@ export const StdUiBuilderBoardBuilderBoardOrbitalManifest = {
   paramFields: [
     { name: 'fields', type: 'EntityField[]', description: 'Extra fields appended to the canonical entity.' },
     { name: 'pagePath', type: 'string', description: 'URL override for the orbital first page.' },
-    { name: 'persistence', type: "'persistent' | 'runtime' | 'singleton' | 'instance' | 'local'", description: 'Override the canonical entity persistence mode.' },
     { name: 'entityName', type: 'string', description: 'Rename the canonical entity. PascalCase singular, ≤32 chars. Threads through every trait\'s linkedEntity binding; compiler rewrites @Entity.x refs.' },
-    { name: 'collection', type: 'string', description: 'Override derived collection key. Defaults to plural(entityName).toLowerCase().' },
     { name: 'traitOverrides', type: "Partial<Record<TraitName, { config?, linkedEntity?, events?, name?, emitsScope?, listens? }>>", description: 'Per-imported-trait overrides — mirrors .lolo\'s native trait-composition surface 1:1. effects is excluded (atom-owned; use listens via a sibling trait).' },
   ] as const,
   traitNames: [

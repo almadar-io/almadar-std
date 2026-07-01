@@ -23,15 +23,9 @@ orbital EventHandlerBoardOrbital {
     label : string
   }
   type EventHandlerBoardRule = {
+    id         : string
     whenEvent  : string!
     thenAction : string!
-  }
-  type EventHandlerBoardActionOption = {
-    objectId  : string!
-    actionId  : string!
-    label     : string
-    whenEvent : string
-    isGoal    : boolean
   }
   type EventHandlerBoardObjectsItem = {
     id              : string!
@@ -43,7 +37,6 @@ orbital EventHandlerBoardOrbital {
     availableActions: [EventHandlerBoardEventOption]
     rules           : [EventHandlerBoardRule]
     maxRules        : number
-    options         : [EventHandlerBoardActionOption]
   }
 
   entity EventHandlerBoardItem [runtime] {
@@ -64,7 +57,7 @@ orbital EventHandlerBoardOrbital {
 
     state menu {
       START -> playing
-        (set @entity.objects      (array/map @config.objects (fn obj (object/merge @obj { options: (array/map (object/get @obj availableActions) (fn a { objectId: (object/get @obj id), actionId: (object/get @a id), label: (object/get @a label), whenEvent: (array/first @config.triggerEvents), isGoal: (== (object/get @a id) @config.goalEvent) })) }))))
+        (set @entity.objects      @config.objects)
         (set @entity.triggerEvents @config.triggerEvents)
         (set @entity.goalEvent    @config.goalEvent)
         (set @entity.goalCondition @config.goalCondition)
@@ -78,14 +71,14 @@ orbital EventHandlerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: EDIT_RULE, actionPayload: { objectId: @opt.objectId, rules: [{ whenEvent: @opt.whenEvent, thenAction: @opt.actionId }] }, label: @opt.label, variant: primary }) } ] }) }
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: object-rule-panel, object: @obj, rulesChangeEvent: EDIT_RULE }) }
           ]
         })
     }
 
     state playing {
       INIT -> playing
-        (set @entity.objects      (array/map @config.objects (fn obj (object/merge @obj { options: (array/map (object/get @obj availableActions) (fn a { objectId: (object/get @obj id), actionId: (object/get @a id), label: (object/get @a label), whenEvent: (array/first @config.triggerEvents), isGoal: (== (object/get @a id) @config.goalEvent) })) }))))
+        (set @entity.objects      @config.objects)
         (set @entity.triggerEvents @config.triggerEvents)
         (set @entity.goalEvent    @config.goalEvent)
         (set @entity.goalCondition @config.goalCondition)
@@ -99,7 +92,7 @@ orbital EventHandlerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: EDIT_RULE, actionPayload: { objectId: @opt.objectId, rules: [{ whenEvent: @opt.whenEvent, thenAction: @opt.actionId }] }, label: @opt.label, variant: primary }) } ] }) }
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: object-rule-panel, object: @obj, rulesChangeEvent: EDIT_RULE }) }
           ]
         })
 
@@ -110,7 +103,7 @@ orbital EventHandlerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: EDIT_RULE, actionPayload: { objectId: @opt.objectId, rules: [{ whenEvent: @opt.whenEvent, thenAction: @opt.actionId }] }, label: @opt.label, variant: primary }) } ] }) }
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: object-rule-panel, object: @obj, rulesChangeEvent: EDIT_RULE }) }
           ]
         })
 
@@ -122,7 +115,7 @@ orbital EventHandlerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: EDIT_RULE, actionPayload: { objectId: @opt.objectId, rules: [{ whenEvent: @opt.whenEvent, thenAction: @opt.actionId }] }, label: @opt.label, variant: primary }) } ] }) }
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: object-rule-panel, object: @obj, rulesChangeEvent: EDIT_RULE }) }
           ]
         })
 
@@ -133,14 +126,14 @@ orbital EventHandlerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: EDIT_RULE, actionPayload: { objectId: @opt.objectId, rules: [{ whenEvent: @opt.whenEvent, thenAction: @opt.actionId }] }, label: @opt.label, variant: primary }) } ] }) }
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: object-rule-panel, object: @obj, rulesChangeEvent: EDIT_RULE }) }
           ]
         })
     }
 
     state complete {
       PLAY_AGAIN -> menu
-        (set @entity.objects      (array/map @config.objects (fn obj (object/merge @obj { options: (array/map (object/get @obj availableActions) (fn a { objectId: (object/get @obj id), actionId: (object/get @a id), label: (object/get @a label), whenEvent: (array/first @config.triggerEvents), isGoal: (== (object/get @a id) @config.goalEvent) })) }))))
+        (set @entity.objects      @config.objects)
         (set @entity.triggerEvents @config.triggerEvents)
         (set @entity.goalEvent    @config.goalEvent)
         (set @entity.goalCondition @config.goalCondition)
@@ -154,7 +147,7 @@ orbital EventHandlerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: EDIT_RULE, actionPayload: { objectId: @opt.objectId, rules: [{ whenEvent: @opt.whenEvent, thenAction: @opt.actionId }] }, label: @opt.label, variant: primary }) } ] }) }
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: object-rule-panel, object: @obj, rulesChangeEvent: EDIT_RULE }) }
           ]
         })
 
@@ -164,7 +157,7 @@ orbital EventHandlerBoardOrbital {
           hud: { type: stack, direction: horizontal, gap: md, justify: between, children: [ { type: game-hud, stats: [ { label: "Goal", value: @entity.goalEvent }, { label: "Attempts", value: @entity.attempts }, { label: "Status", value: @entity.result } ] }, { type: stack, direction: horizontal, gap: sm, children: [ { type: button, action: PLAY, label: "Play", variant: primary }, { type: button, action: PLAY_AGAIN, label: "Reset", variant: secondary } ] } ] }
           children: [
             { type: card, children: [ { type: typography, variant: h4, content: @entity.title }, { type: typography, variant: body, content: @entity.description } ] },
-            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: card, children: [ { type: stack, direction: horizontal, gap: sm, justify: between, children: [ { type: typography, variant: label, content: @obj.name }, { type: badge, label: @obj.currentState }, { type: button, action: EDIT_RULE, actionPayload: { objectId: @obj.id, rules: [] }, label: "Clear", variant: ghost } ] }, { type: data-list, entity: @obj.rules, fields: [], gap: xs, renderItem: (fn r { type: badge, label: @r.thenAction }) }, { type: data-list, entity: @obj.options, fields: [], gap: xs, renderItem: (fn opt { type: button, action: EDIT_RULE, actionPayload: { objectId: @opt.objectId, rules: [{ whenEvent: @opt.whenEvent, thenAction: @opt.actionId }] }, label: @opt.label, variant: primary }) } ] }) }
+            { type: data-list, entity: @entity.objects, fields: [], gap: sm, renderItem: (fn obj { type: object-rule-panel, object: @obj, rulesChangeEvent: EDIT_RULE }) }
           ]
         })
     }
